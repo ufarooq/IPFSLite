@@ -8,4 +8,5 @@
     <string name="daemon_text">The IRI daemon handles the communication.</string>
     <string name="daemon_long_text">Daemon is running on \"%1$s\" and port \"%2$s\".</string>
     <string name="action_daemon">Daemon</string>
+    <string name="donation">Donation</string>
 </resources>
