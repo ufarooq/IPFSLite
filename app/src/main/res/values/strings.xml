@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Threads Server</string>
+    <string name="channel_id">SERVER_CHANGEL_ID</string>
+    <string name="channel_name">Incoming messages notification</string>
+    <string name="channel_description">Make sound and pop on screen</string>
+    <string name="stop">Stop</string>
+    <string name="daemon_title">IRI daemon is running</string>
+    <string name="daemon_text">The IRI daemon handles the communication.</string>
+    <string name="daemon_long_text">Daemon is running on \"%1$s\" and port \"%2$s\".</string>
+    <string name="action_daemon">Daemon</string>
 </resources>

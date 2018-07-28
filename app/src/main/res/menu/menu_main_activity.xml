@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:theme="@style/ThemeOverlay.AppCompat.Dark">
+
+
+    <item
+        android:id="@+id/action_daemon"
+        android:icon="@drawable/server_network"
+        android:iconTint="@android:color/white"
+        android:orderInCategory="50"
+        android:title="@string/action_daemon"
+        android:visible="true"
+        app:showAsAction="always" />
+
+
+</menu>
