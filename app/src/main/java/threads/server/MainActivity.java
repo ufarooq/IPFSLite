@@ -198,7 +198,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
 
                 if (console != null) {
-                    console.append(message);
+                    final String consoleOutput = message;
+                    MainActivity.this.runOnUiThread(new Runnable() {
+                        public void run() {
+                            console.append(consoleOutput);
+                        }
+                    });
                 }
 
             }
