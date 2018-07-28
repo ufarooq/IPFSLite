@@ -23,5 +23,7 @@
 
     </android.support.design.widget.AppBarLayout>
 
+    <include layout="@layout/console_view" />
+
 
 </android.support.design.widget.CoordinatorLayout>

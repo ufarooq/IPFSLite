@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import java.net.InetAddress;
 
+import threads.iri.Daemon;
 import threads.iri.IDaemon;
 
 public class DaemonService extends Service {
@@ -143,6 +144,8 @@ public class DaemonService extends Service {
             try {
                 ThreadsTangleDatabase tangleDatabase = Application.getThreadsTangleDatabase();
 
+                IDaemon daemon = Daemon.getInstance();
+                daemon.start(tangleDatabase, String.valueOf(IDaemon.TCP_DAEMON_PORT));
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage());
@@ -160,7 +163,10 @@ public class DaemonService extends Service {
             try {
                 ThreadsTangleDatabase tangleDatabase =
                         Application.getThreadsTangleDatabase();
-
+                IDaemon daemon = Daemon.getInstance();
+                if (!daemon.isDaemonRunning()) {
+                    daemon.shutdown();
+                }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage());
             }

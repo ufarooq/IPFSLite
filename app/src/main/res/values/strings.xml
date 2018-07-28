@@ -9,4 +9,6 @@
     <string name="daemon_long_text">Daemon is running on \"%1$s\" and port \"%2$s\".</string>
     <string name="action_daemon">Daemon</string>
     <string name="donation">Donation</string>
+    <string name="navigation_drawer_open">Naviagation open</string>
+    <string name="navigation_drawer_close">Navigation close</string>
 </resources>
