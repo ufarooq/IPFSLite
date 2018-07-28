@@ -3,6 +3,7 @@ package threads.server;
 import android.arch.persistence.room.RoomDatabase;
 import android.support.annotation.NonNull;
 
+import threads.iri.IDataStorage;
 import threads.iri.IThreadsTangle;
 import threads.iri.ITransactionStorage;
 
