@@ -30,7 +30,7 @@ public abstract class ThreadsTangleDatabase extends RoomDatabase implements IThr
     @Override
     public IDataStorage getDataStorage(@NonNull String address, int chunkIndex) {
         checkNotNull(address);
-        checkArgument(chunkIndex > 0);
+        checkArgument(chunkIndex >= 0);
         return storageDao().getDataStorage(address, chunkIndex);
     }
 
@@ -99,6 +99,16 @@ public abstract class ThreadsTangleDatabase extends RoomDatabase implements IThr
 
     @Override
     public ITransactionStorage createTransactionStorage(@NonNull String hash, @NonNull byte[] bytes) {
+        checkNotNull(hash);
+        checkNotNull(bytes);
         return TransactionStorage.createTransactionStorage(hash, bytes);
+    }
+
+    @Override
+    public IDataStorage createDataStorage(@NonNull String address, int chunkIndex, byte[] bytes) {
+        checkNotNull(address);
+        checkArgument(chunkIndex >= 0);
+        checkNotNull(bytes);
+        return DataStorage.createDataStorage(address, chunkIndex, bytes);
     }
 }

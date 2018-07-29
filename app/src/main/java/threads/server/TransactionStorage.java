@@ -80,7 +80,7 @@ public class TransactionStorage implements ITransactionStorage {
         TransactionStorage instance = new TransactionStorage(hash);
         instance.bytes = new byte[SIZE];
         System.arraycopy(bytes, 0, instance.bytes, 0, SIZE);
-        int[] trits = ITransactionStorage.trits(instance.getBytes());
+        byte[] trits = ITransactionStorage.trits(instance.getBytes());
 
         instance.tag = Converter.trytes(trits, TAG_TRINARY_OFFSET, TAG_TRINARY_SIZE);
         instance.obsoleteTag = Converter.trytes(trits, OBSOLETE_TAG_TRINARY_OFFSET, OBSOLETE_TAG_TRINARY_SIZE);

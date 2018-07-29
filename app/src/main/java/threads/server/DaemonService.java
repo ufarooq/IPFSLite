@@ -69,7 +69,7 @@ public class DaemonService extends Service {
                     ApplicationSettings.CHANNEL_ID);
 
             int port = IDaemon.TCP_DAEMON_PORT;
-            String host = InetAddress.getByName(Utility.getIPAddress(true)).getHostAddress();
+            String host = InetAddress.getByName(threads.iri.Utility.getIPAddress(true)).getHostAddress();
 
             builder.setContentTitle(getString(R.string.daemon_title));
             builder.setContentText(getString(R.string.daemon_text));
