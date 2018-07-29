@@ -40,7 +40,7 @@ public class ServerTest {
 
         System.out.println("Bytes : " + encBytes.length / 1000 + "[kb]");
 
-        byte[][] result = Utility.splitArray(encBytes, IUDPConnection.DATGAGRAM_PACKET_SIZE);
+        byte[][] result = threads.iri.Utility.splitArray(encBytes, IUDPConnection.DATGAGRAM_PACKET_SIZE);
 
 
         Runnable runnable = () -> {
@@ -76,7 +76,7 @@ public class ServerTest {
 
 
         Reader bytesReader = new Reader();
-        InetAddress server = InetAddress.getByName(Utility.getIPAddress(true));
+        InetAddress server = InetAddress.getByName(threads.iri.Utility.getIPAddress(true));
         UDPConnection.getInstance().startClient(address, bytesReader, server, IUDPConnection.UDP_DAEMON_DATA_PORT);
 
 
