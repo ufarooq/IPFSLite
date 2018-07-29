@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -17,6 +18,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 
 import java.util.HashMap;
@@ -26,6 +28,8 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 
+import threads.iri.Daemon;
+import threads.iri.IDaemon;
 import threads.iri.Logs;
 
 
@@ -41,10 +45,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private DrawerLayout drawer_layout;
     private NavigationView navigationView;
     private TextView console;
-
-    private static void addMessage(String message) {
-
-    }
+    private FloatingActionButton fab;
 
     private long mLastClickTime = 0;
 
@@ -100,6 +101,41 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toggle.syncState();
 
 
+        fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                // mis-clicking prevention, using threshold of 1000 ms
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    return;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+                IDaemon daemon = Daemon.getInstance();
+                if (!daemon.isDaemonRunning()) {
+
+                    Intent intent = new Intent(MainActivity.this, DaemonService.class);
+                    intent.setAction(DaemonService.ACTION_START_DAEMON_SERVICE);
+                    startService(intent);
+
+                    fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_pause));
+                } else {
+                    Intent intent = new Intent(MainActivity.this, DaemonService.class);
+                    intent.setAction(DaemonService.ACTION_STOP_DAEMON_SERVICE);
+                    startService(intent);
+
+                    fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
+                }
+            }
+        });
+        IDaemon daemon = Daemon.getInstance();
+        if (!daemon.isDaemonRunning()) {
+            fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
+        } else {
+            fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_pause));
+        }
+
     }
 
     @Override
@@ -108,8 +144,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         inflater.inflate(R.menu.menu_main_activity, menu);
 
 
-        MenuItem action_daemon = menu.findItem(R.id.action_daemon);
-        Drawable drawable = action_daemon.getIcon();
+        MenuItem action_info = menu.findItem(R.id.action_info);
+        Drawable drawable = action_info.getIcon();
         if (drawable != null) {
             drawable.mutate();
             drawable.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
@@ -127,16 +163,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
         switch (id) {
 
-
-            case R.id.action_daemon: {
+            case R.id.action_info: {
                 // mis-clicking prevention, using threshold of 1000 ms
                 if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
                     break;
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
-                Intent intent = new Intent(MainActivity.this, DaemonService.class);
-                intent.setAction(DaemonService.ACTION_START_DAEMON_SERVICE);
-                startService(intent);
 
                 return true;
             }

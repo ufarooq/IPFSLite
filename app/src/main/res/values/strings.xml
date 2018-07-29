@@ -11,4 +11,5 @@
     <string name="donation">Donation</string>
     <string name="navigation_drawer_open">Naviagation open</string>
     <string name="navigation_drawer_close">Navigation close</string>
+    <string name="action_info">Info</string>
 </resources>

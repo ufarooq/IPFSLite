@@ -16,6 +16,7 @@ import java.net.InetAddress;
 
 import threads.iri.Daemon;
 import threads.iri.IDaemon;
+import threads.iri.Logs;
 
 public class DaemonService extends Service {
     public static final int NOTIFICATION_ID = 999;
@@ -59,7 +60,9 @@ public class DaemonService extends Service {
             Utility.createChannel(getApplicationContext());
             // Create notification default intent.
             Intent intent = new Intent();
-            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+
+
 
             // Create notification builder.
             NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(),
@@ -83,15 +86,17 @@ public class DaemonService extends Service {
 
             // Create an explicit intent for an Activity in your app
             Intent defaultIntent = new Intent(getApplicationContext(), MainActivity.class);
+            int requestID = (int) System.currentTimeMillis();
             defaultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            PendingIntent defaultPendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+            PendingIntent defaultPendingIntent = PendingIntent.getActivity(
+                    getApplicationContext(), requestID, defaultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
             builder.setContentIntent(defaultPendingIntent);
 
             // Add Stop button intent in notification.
             Intent stopIntent = new Intent(getApplicationContext(), DaemonService.class);
             stopIntent.setAction(ACTION_STOP_DAEMON_SERVICE);
-            PendingIntent stopPendingIntent =
-                    PendingIntent.getService(getApplicationContext(), 0, stopIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+            PendingIntent stopPendingIntent = PendingIntent.getService(
+                    getApplicationContext(), 0, stopIntent, PendingIntent.FLAG_CANCEL_CURRENT);
 
             builder.setDeleteIntent(stopPendingIntent);
             builder.addAction(R.drawable.stop, getString(R.string.stop), stopPendingIntent);
@@ -145,7 +150,11 @@ public class DaemonService extends Service {
                 ThreadsTangleDatabase tangleDatabase = Application.getThreadsTangleDatabase();
 
                 IDaemon daemon = Daemon.getInstance();
-                daemon.start(tangleDatabase, String.valueOf(IDaemon.TCP_DAEMON_PORT));
+                if (!daemon.isDaemonRunning()) {
+                    daemon.start(tangleDatabase, String.valueOf(IDaemon.TCP_DAEMON_PORT));
+                } else {
+                    Logs.i("Daemon is already running ...");
+                }
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage());
@@ -164,8 +173,11 @@ public class DaemonService extends Service {
                 ThreadsTangleDatabase tangleDatabase =
                         Application.getThreadsTangleDatabase();
                 IDaemon daemon = Daemon.getInstance();
-                if (!daemon.isDaemonRunning()) {
+                if (daemon.isDaemonRunning()) {
                     daemon.shutdown();
+                    Logs.i("Daemon is shutting down ...");
+                } else {
+                    Logs.e("Daemon is not running ...");
                 }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage());

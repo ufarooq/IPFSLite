@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
-        android:name=".Application"
+        android:name="threads.server.Application"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -14,7 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/ThreadsServerTheme">
         <activity
-            android:name=".MainActivity"
+            android:name="threads.server.MainActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/ThreadsServerTheme">
@@ -27,7 +27,7 @@
 
         </activity>
         <service
-            android:name=".DaemonService"
+            android:name="threads.server.DaemonService"
             android:enabled="true"
             android:exported="true"></service>
     </application>
