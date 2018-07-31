@@ -13,23 +13,23 @@ public interface TransactionStorageDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertTransactionStorages(@NonNull TransactionStorage... transactionStorages);
 
-    @Query("SELECT * FROM TransactionStorage WHERE hash =:hash")
-    TransactionStorage getTransactionStorage(@NonNull String hash);
+    @Query("SELECT * FROM TransactionStorage WHERE hashID =:hashID")
+    TransactionStorage getTransactionStorage(@NonNull String hashID);
 
-    @Query("SELECT * FROM TransactionStorage WHERE address =:address")
-    TransactionStorage[] getAddresses(@NonNull String address);
+    @Query("SELECT * FROM TransactionStorage WHERE address =:hashID")
+    TransactionStorage[] getAddresses(@NonNull String hashID);
 
     @Query("DELETE FROM TransactionStorage")
     void clear();
 
-    @Query("SELECT COUNT(hash) FROM TransactionStorage")
+    @Query("SELECT COUNT(hashID) FROM TransactionStorage")
     int count();
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
     void update(@NonNull TransactionStorage transactionStorage);
 
-    @Query("DELETE FROM TransactionStorage WHERE hash =:hash")
-    void deleteTransactionStorage(@NonNull String hash);
+    @Query("DELETE FROM TransactionStorage WHERE hashID =:hashID")
+    void deleteTransactionStorage(@NonNull String hashID);
 
 
     @Query("SELECT * FROM TransactionStorage WHERE bundle =:bundle")

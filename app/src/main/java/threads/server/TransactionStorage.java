@@ -20,8 +20,8 @@ public class TransactionStorage implements ITransactionStorage {
 
     @PrimaryKey
     @NonNull
-    @ColumnInfo(name = "hash")
-    private final String hash;
+    @ColumnInfo(name = "hashID")
+    private final String hashID;
     @ColumnInfo(name = "height")
     private long height = 0;
     @ColumnInfo(name = "sender")
@@ -69,9 +69,9 @@ public class TransactionStorage implements ITransactionStorage {
     @ColumnInfo(name = "tag")
     private String tag;
 
-    public TransactionStorage(@NonNull String hash) {
-        checkNotNull(hash);
-        this.hash = hash;
+    public TransactionStorage(@NonNull String hashID) {
+        checkNotNull(hashID);
+        this.hashID = hashID;
     }
 
     public static ITransactionStorage createTransactionStorage(@NonNull String hash, @NonNull byte[] bytes) {
@@ -101,7 +101,9 @@ public class TransactionStorage implements ITransactionStorage {
         return instance;
     }
 
-
+    public Hash getHash() {
+        return Hash.convertToHash(getHashID());
+    }
     public long getHeight() {
         return height;
     }
@@ -199,8 +201,8 @@ public class TransactionStorage implements ITransactionStorage {
     }
 
     @NonNull
-    public String getHash() {
-        return hash;
+    public String getHashID() {
+        return hashID;
     }
 
     public byte[] getBytes() {

@@ -3,6 +3,8 @@ package threads.server;
 import android.arch.persistence.room.RoomDatabase;
 import android.support.annotation.NonNull;
 
+import com.iota.iri.model.Hash;
+
 import threads.iri.IDataStorage;
 import threads.iri.IThreadsTangle;
 import threads.iri.ITransactionStorage;
@@ -110,5 +112,16 @@ public abstract class ThreadsTangleDatabase extends RoomDatabase implements IThr
         checkArgument(chunkIndex >= 0);
         checkNotNull(bytes);
         return DataStorage.createDataStorage(address, chunkIndex, bytes);
+    }
+
+    @Override
+    public ITransactionStorage fromHash(@NonNull Hash hash) {
+        checkNotNull(hash);
+        String hashID = Hash.convertToString(hash);
+        ITransactionStorage transactionStorage = getTransactionStorage(hashID);
+        if (transactionStorage == null) {
+            transactionStorage = createTransactionStorage(hashID, hash.bytes());
+        }
+        return transactionStorage;
     }
 }
