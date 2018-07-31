@@ -8,6 +8,11 @@ import android.support.annotation.NonNull;
 import com.iota.iri.model.Hash;
 import com.iota.iri.utils.Converter;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+
 import threads.iri.ITransactionStorage;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -274,5 +279,73 @@ public class TransactionStorage implements ITransactionStorage {
 
     public void setValidity(int validity) {
         this.validity = validity;
+    }
+
+    private static byte[] trits(byte[] transactionBytes) {
+        byte[] trits = new byte[ITransactionStorage.TRINARY_SIZE];
+        if (transactionBytes != null) {
+            Converter.getTrits(transactionBytes, trits);
+        }
+        return trits;
+    }
+
+    public int getWeightMagnitude() {
+        return getHash().trailingZeros();
+    }
+
+    public Hash getBundleHash() {
+        return Hash.convertToHash(getBundle());
+    }
+
+    public Hash getTrunkTransactionHash() {
+        return Hash.convertToHash(getTrunk());
+    }
+
+    public Hash getAddressHash() {
+        return Hash.convertToHash(getAddress());
+    }
+
+    public byte[] getSignature() {
+        return Arrays.copyOfRange(trits(),
+                ITransactionStorage.SIGNATURE_MESSAGE_FRAGMENT_TRINARY_OFFSET, ITransactionStorage.SIGNATURE_MESSAGE_FRAGMENT_TRINARY_SIZE);
+    }
+
+    public synchronized byte[] trits() {
+        return trits(getBytes());
+    }
+
+    public byte[] getNonce() {
+        byte[] nonce = Converter.allocateBytesForTrits(ITransactionStorage.NONCE_TRINARY_SIZE);
+        Converter.bytes(trits(), ITransactionStorage.NONCE_TRINARY_OFFSET, nonce, 0, trits().length);
+        return nonce;
+    }
+
+    // TODO this might be not correct
+    public List<Hash> getApprovers() {
+        List<Hash> approovers = new ArrayList<>();
+        approovers.add(getBranchTransactionHash());
+        approovers.add(getTrunkTransactionHash());
+        return approovers;
+    }
+
+    public Hash getBranchTransactionHash() {
+        return Hash.convertToHash(getBranch());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        TransactionStorage other = (TransactionStorage) o;
+        return Objects.equals(getHashID(), other.getHashID());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getHashID());
     }
 }

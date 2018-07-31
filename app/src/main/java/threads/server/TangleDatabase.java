@@ -5,8 +5,12 @@ import android.support.annotation.NonNull;
 
 import com.iota.iri.model.Hash;
 
+import java.util.Iterator;
+import java.util.Set;
+import java.util.Stack;
+
 import threads.iri.IDataStorage;
-import threads.iri.IThreadsTangle;
+import threads.iri.ITangle;
 import threads.iri.ITransactionStorage;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -17,7 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 
 @android.arch.persistence.room.Database(entities = {DataStorage.class, TransactionStorage.class}, version = 1, exportSchema = false)
-public abstract class ThreadsTangleDatabase extends RoomDatabase implements IThreadsTangle {
+public abstract class TangleDatabase extends RoomDatabase implements ITangle {
 
     public abstract DataStorageDao storageDao();
 
@@ -124,4 +128,75 @@ public abstract class ThreadsTangleDatabase extends RoomDatabase implements IThr
         }
         return transactionStorage;
     }
+
+    @Override
+    public void updateTransactionStorage(ITransactionStorage transaction) {
+        transactionStorageDao().update((TransactionStorage) transaction);
+    }
+
+    @Override
+    public ITransactionStorage getBranchTransactionStorage(ITransactionStorage transaction) {
+        return fromHash(transaction.getBranchTransactionHash());
+
+    }
+
+    @Override
+    public ITransactionStorage getTrunkTransactionStorage(ITransactionStorage transaction) {
+        return fromHash(transaction.getTrunkTransactionHash());
+    }
+
+    @Override
+    public void updateHeights(@NonNull ITransactionStorage transaction) {
+        ITransactionStorage trunk = this.getTrunkTransactionStorage(transaction);
+        Stack<Hash> transactionViewModels = new Stack<>();
+        transactionViewModels.push(transaction.getHash());
+        while (trunk.getHeight() == 0 && !trunk.getHash().equals(Hash.NULL_HASH)) {
+            transaction = trunk;
+            trunk = this.getTrunkTransactionStorage(transaction);
+            transactionViewModels.push(transaction.getHash());
+        }
+        while (transactionViewModels.size() != 0) {
+            transaction = this.fromHash(transactionViewModels.pop());
+            long currentHeight = transaction.getHeight();
+            if (Hash.NULL_HASH.equals(trunk.getHash()) && trunk.getHeight() == 0
+                    && !Hash.NULL_HASH.equals(transaction.getHash())) {
+                if (currentHeight != 1L) {
+                    transaction.setHeight(1L);
+                    updateTransactionStorage(transaction);
+                }
+            } else if (transaction.getHeight() == 0) {
+                long newHeight = 1L + trunk.getHeight();
+                if (currentHeight != newHeight) {
+                    transaction.setHeight(newHeight);
+                    updateTransactionStorage(transaction);
+                }
+            } else {
+                break;
+            }
+            trunk = transaction;
+        }
+    }
+
+    @Override
+    public void updateSolidTransactions(final Set<Hash> analyzedHashes) {
+        Iterator<Hash> hashIterator = analyzedHashes.iterator();
+        ITransactionStorage transactionViewModel;
+        while (hashIterator.hasNext()) {
+            transactionViewModel = fromHash(hashIterator.next());
+
+            updateHeights(transactionViewModel);
+
+            if (!transactionViewModel.isSolid()) {
+                transactionViewModel.setSolid(true);
+                updateTransactionStorage(transactionViewModel);
+            }
+        }
+    }
+
+    @Override
+    public boolean existsTransactionStorage(@NonNull Hash hash) {
+        checkNotNull(hash);
+        return getTransactionStorage(Hash.convertToString(hash)) != null;
+    }
+
 }

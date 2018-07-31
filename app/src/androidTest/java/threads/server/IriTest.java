@@ -10,8 +10,7 @@ import org.junit.runner.RunWith;
 
 import threads.iri.Daemon;
 import threads.iri.IDaemon;
-import threads.iri.IThreadsTangle;
-
+import threads.iri.ITangle;
 
 @RunWith(AndroidJUnit4.class)
 public class IriTest {
@@ -21,7 +20,7 @@ public class IriTest {
     public void checkDaemon() {
 
         Context context = InstrumentationRegistry.getTargetContext();
-        IThreadsTangle tangle = Room.inMemoryDatabaseBuilder(context, ThreadsTangleDatabase.class).build();
+        ITangle tangle = Room.inMemoryDatabaseBuilder(context, TangleDatabase.class).build();
 
 
         //InputStream snapshot_mainnet = context.getResources().openRawResource(R.raw.snapshot_mainnet);

@@ -147,7 +147,7 @@ public class DaemonService extends Service {
         @Override
         protected Void doInBackground(Void... addresses) {
             try {
-                ThreadsTangleDatabase tangleDatabase = Application.getThreadsTangleDatabase();
+                TangleDatabase tangleDatabase = Application.getThreadsTangleDatabase();
 
                 IDaemon daemon = Daemon.getInstance();
                 if (!daemon.isDaemonRunning()) {
@@ -170,7 +170,7 @@ public class DaemonService extends Service {
         @Override
         protected Void doInBackground(Void... addresses) {
             try {
-                ThreadsTangleDatabase tangleDatabase =
+                TangleDatabase tangleDatabase =
                         Application.getThreadsTangleDatabase();
                 IDaemon daemon = Daemon.getInstance();
                 if (daemon.isDaemonRunning()) {

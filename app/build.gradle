@@ -16,7 +16,7 @@ ext {
     siteUrl = 'https://gitlab.com/remmer.wilts/threads-server'
     gitUrl = 'git@gitlab.com:remmer.wilts/threads-server.git'
 
-    libraryVersion = '0.0.2'
+    libraryVersion = '0.0.3'
 
     developerId = 'remmerw'
     developerName = 'Remmer Wilts'
@@ -32,8 +32,8 @@ android {
         applicationId "threads.server"
         minSdkVersion 24
         targetSdkVersion 28
-        versionCode 2
-        versionName "0.0.2"
+        versionCode 3
+        versionName "0.0.3"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -78,7 +78,7 @@ dependencies {
     annotationProcessor "android.arch.persistence.room:compiler:1.1.1"
 
     // API (LICENSE done)
-    implementation 'threads.iri:threads:0.3.5'
+    implementation 'threads.iri:threads:0.3.7'
 
     // ANDROID Architecture (LICENSE done)
     implementation 'android.arch.persistence.room:runtime:1.1.1'

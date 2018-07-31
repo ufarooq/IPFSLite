@@ -15,11 +15,11 @@ public class Application extends android.app.Application {
 
     public static final String CHANNEL_ID = "IRI_SERVER_CHANGEL_ID";
     private static final String TAG = "Application";
-    private static final String THREADS_TANGLE_DATABASE = "THREADS_TANGLE_DATABASE";
+    private static final String TANGLE_DATABASE = "TANGLE_DATABASE";
 
-    private static ThreadsTangleDatabase database;
+    private static TangleDatabase database;
 
-    public static ThreadsTangleDatabase getThreadsTangleDatabase() {
+    public static TangleDatabase getThreadsTangleDatabase() {
         return database;
     }
 
@@ -67,7 +67,7 @@ public class Application extends android.app.Application {
         super.onCreate();
 
         database = Room.databaseBuilder(this,
-                ThreadsTangleDatabase.class, THREADS_TANGLE_DATABASE).fallbackToDestructiveMigration().build();
+                TangleDatabase.class, TANGLE_DATABASE).fallbackToDestructiveMigration().build();
 
         Log.e(TAG, "...... start application");
 

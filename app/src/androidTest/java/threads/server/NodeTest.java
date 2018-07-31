@@ -9,7 +9,6 @@ import com.google.common.collect.Iterables;
 import com.iota.iri.TransactionValidator;
 import com.iota.iri.conf.Configuration;
 import com.iota.iri.controllers.TipsViewModel;
-import com.iota.iri.controllers.TransactionViewModel;
 import com.iota.iri.model.Hash;
 import com.iota.iri.network.Neighbor;
 import com.iota.iri.network.Node;
@@ -29,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jota.model.Transaction;
-import threads.iri.IThreadsTangle;
+import threads.iri.ITangle;
 import threads.iri.ITransactionStorage;
 import threads.iri.tangle.TangleUtils;
 
@@ -39,12 +38,12 @@ import static junit.framework.TestCase.assertEquals;
 public class NodeTest {
     private final static int TRYTES_SIZE = 2673;
 
-    private IThreadsTangle threadsDatabase;
+    private ITangle threadsDatabase;
 
     @Before
     public void createDb() {
         Context context = InstrumentationRegistry.getTargetContext();
-        threadsDatabase = Room.inMemoryDatabaseBuilder(context, ThreadsTangleDatabase.class).build();
+        threadsDatabase = Room.inMemoryDatabaseBuilder(context, TangleDatabase.class).build();
 
     }
 
@@ -101,8 +100,9 @@ public class NodeTest {
         Converter.bytes(trits, 0, transaction, 0, trits.length);
 
         Hash requestedHash = Hash.convertToHash(hash);
-        TransactionViewModel transactionViewModel =
-                new TransactionViewModel(threadsDatabase, transaction, requestedHash);
+
+
+        ITransactionStorage transactionViewModel = threadsDatabase.fromHash(requestedHash);
         assertEquals(transactionViewModel.getAddress(), address);
         InetAddress inetAddress = InetAddress.getLocalHost();
         Neighbor neighbor = new UDPNeighbor(
