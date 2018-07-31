@@ -55,6 +55,8 @@ public class TransactionStorage implements ITransactionStorage {
     private long lastIndex;
     @ColumnInfo(typeAffinity = ColumnInfo.BLOB)
     private byte[] bytes;
+    @ColumnInfo(typeAffinity = ColumnInfo.BLOB)
+    private byte[] trits;
     @NonNull
     @ColumnInfo(name = "address")
     private String address;
@@ -73,7 +75,6 @@ public class TransactionStorage implements ITransactionStorage {
     @NonNull
     @ColumnInfo(name = "tag")
     private String tag;
-
     public TransactionStorage(@NonNull String hashID) {
         checkNotNull(hashID);
         this.hashID = hashID;
@@ -85,30 +86,49 @@ public class TransactionStorage implements ITransactionStorage {
         TransactionStorage instance = new TransactionStorage(hash);
         instance.bytes = new byte[SIZE];
         System.arraycopy(bytes, 0, instance.bytes, 0, SIZE);
-        byte[] trits = ITransactionStorage.trits(instance.getBytes());
 
-        instance.tag = Converter.trytes(trits, TAG_TRINARY_OFFSET, TAG_TRINARY_SIZE);
-        instance.obsoleteTag = Converter.trytes(trits, OBSOLETE_TAG_TRINARY_OFFSET, OBSOLETE_TAG_TRINARY_SIZE);
+        instance.trits = new byte[ITransactionStorage.TRINARY_SIZE];
+        Converter.getTrits(instance.bytes, instance.trits);
 
-        instance.address = Hash.convertToString(new Hash(trits, ADDRESS_TRINARY_OFFSET));
-        instance.bundle = Hash.convertToString(new Hash(trits, BUNDLE_TRINARY_OFFSET));
-        instance.trunk = Hash.convertToString(new Hash(trits, TRUNK_TRANSACTION_TRINARY_OFFSET));
-        instance.branch = Hash.convertToString(new Hash(trits, BRANCH_TRANSACTION_TRINARY_OFFSET));
+        instance.tag = Converter.trytes(instance.trits, TAG_TRINARY_OFFSET, TAG_TRINARY_SIZE);
+        instance.obsoleteTag = Converter.trytes(instance.trits, OBSOLETE_TAG_TRINARY_OFFSET, OBSOLETE_TAG_TRINARY_SIZE);
 
-        instance.currentIndex = Converter.longValue(trits, CURRENT_INDEX_TRINARY_OFFSET, CURRENT_INDEX_TRINARY_SIZE);
-        instance.lastIndex = Converter.longValue(trits, LAST_INDEX_TRINARY_OFFSET, LAST_INDEX_TRINARY_SIZE);
-        instance.value = Converter.longValue(trits, VALUE_TRINARY_OFFSET, VALUE_USABLE_TRINARY_SIZE);
-        instance.timestamp = Converter.longValue(trits, TIMESTAMP_TRINARY_OFFSET, TIMESTAMP_TRINARY_SIZE);
+        instance.address = Hash.convertToString(new Hash(instance.trits, ADDRESS_TRINARY_OFFSET));
+        instance.bundle = Hash.convertToString(new Hash(instance.trits, BUNDLE_TRINARY_OFFSET));
+        instance.trunk = Hash.convertToString(new Hash(instance.trits, TRUNK_TRANSACTION_TRINARY_OFFSET));
+        instance.branch = Hash.convertToString(new Hash(instance.trits, BRANCH_TRANSACTION_TRINARY_OFFSET));
 
-        instance.attachmentTimestamp = Converter.longValue(trits, ATTACHMENT_TIMESTAMP_TRINARY_OFFSET, ATTACHMENT_TIMESTAMP_TRINARY_SIZE);
-        instance.attachmentTimestampLowerBound = Converter.longValue(trits, ATTACHMENT_TIMESTAMP_LOWER_BOUND_TRINARY_OFFSET, ATTACHMENT_TIMESTAMP_LOWER_BOUND_TRINARY_SIZE);
-        instance.attachmentTimestampUpperBound = Converter.longValue(trits, ATTACHMENT_TIMESTAMP_UPPER_BOUND_TRINARY_OFFSET, ATTACHMENT_TIMESTAMP_UPPER_BOUND_TRINARY_SIZE);
+        instance.currentIndex = Converter.longValue(instance.trits, CURRENT_INDEX_TRINARY_OFFSET, CURRENT_INDEX_TRINARY_SIZE);
+        instance.lastIndex = Converter.longValue(instance.trits, LAST_INDEX_TRINARY_OFFSET, LAST_INDEX_TRINARY_SIZE);
+        instance.value = Converter.longValue(instance.trits, VALUE_TRINARY_OFFSET, VALUE_USABLE_TRINARY_SIZE);
+        instance.timestamp = Converter.longValue(instance.trits, TIMESTAMP_TRINARY_OFFSET, TIMESTAMP_TRINARY_SIZE);
+
+        instance.attachmentTimestamp = Converter.longValue(instance.trits, ATTACHMENT_TIMESTAMP_TRINARY_OFFSET, ATTACHMENT_TIMESTAMP_TRINARY_SIZE);
+        instance.attachmentTimestampLowerBound = Converter.longValue(instance.trits, ATTACHMENT_TIMESTAMP_LOWER_BOUND_TRINARY_OFFSET, ATTACHMENT_TIMESTAMP_LOWER_BOUND_TRINARY_SIZE);
+        instance.attachmentTimestampUpperBound = Converter.longValue(instance.trits, ATTACHMENT_TIMESTAMP_UPPER_BOUND_TRINARY_OFFSET, ATTACHMENT_TIMESTAMP_UPPER_BOUND_TRINARY_SIZE);
         return instance;
+    }
+
+    private static byte[] trits(byte[] transactionBytes) {
+        byte[] trits = new byte[ITransactionStorage.TRINARY_SIZE];
+        if (transactionBytes != null) {
+            Converter.getTrits(transactionBytes, trits);
+        }
+        return trits;
+    }
+
+    public byte[] getTrits() {
+        return trits;
+    }
+
+    public void setTrits(byte[] trits) {
+        this.trits = trits;
     }
 
     public Hash getHash() {
         return Hash.convertToHash(getHashID());
     }
+
     public long getHeight() {
         return height;
     }
@@ -272,21 +292,12 @@ public class TransactionStorage implements ITransactionStorage {
         this.tag = tag;
     }
 
-
     public int getValidity() {
         return validity;
     }
 
     public void setValidity(int validity) {
         this.validity = validity;
-    }
-
-    private static byte[] trits(byte[] transactionBytes) {
-        byte[] trits = new byte[ITransactionStorage.TRINARY_SIZE];
-        if (transactionBytes != null) {
-            Converter.getTrits(transactionBytes, trits);
-        }
-        return trits;
     }
 
     public int getWeightMagnitude() {
@@ -306,17 +317,13 @@ public class TransactionStorage implements ITransactionStorage {
     }
 
     public byte[] getSignature() {
-        return Arrays.copyOfRange(trits(),
+        return Arrays.copyOfRange(trits,
                 ITransactionStorage.SIGNATURE_MESSAGE_FRAGMENT_TRINARY_OFFSET, ITransactionStorage.SIGNATURE_MESSAGE_FRAGMENT_TRINARY_SIZE);
-    }
-
-    public synchronized byte[] trits() {
-        return trits(getBytes());
     }
 
     public byte[] getNonce() {
         byte[] nonce = Converter.allocateBytesForTrits(ITransactionStorage.NONCE_TRINARY_SIZE);
-        Converter.bytes(trits(), ITransactionStorage.NONCE_TRINARY_OFFSET, nonce, 0, trits().length);
+        Converter.bytes(trits, ITransactionStorage.NONCE_TRINARY_OFFSET, nonce, 0, trits.length);
         return nonce;
     }
 
