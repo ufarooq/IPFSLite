@@ -40,7 +40,7 @@ public class ServerTest {
 
         System.out.println("Bytes : " + encBytes.length / 1000 + "[kb]");
 
-        byte[][] result = threads.iri.Utility.splitArray(encBytes, IUDPConnection.DATGAGRAM_PACKET_SIZE);
+        byte[][] result = TangleUtils.splitArray(encBytes, IUDPConnection.DATGAGRAM_PACKET_SIZE);
 
 
         Runnable runnable = () -> {

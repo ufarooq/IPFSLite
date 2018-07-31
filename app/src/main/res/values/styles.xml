@@ -13,6 +13,7 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
+
     <style name="ThreadsServerBarOverlay" parent="ThemeOverlay.AppCompat.Dark">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>

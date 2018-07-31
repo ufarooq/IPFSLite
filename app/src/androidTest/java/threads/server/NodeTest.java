@@ -94,7 +94,7 @@ public class NodeTest {
         Transaction trans = transactions.get(0);
         String hash = trans.getHash();
         String tryte = trans.toTrytes();
-        int[] trits = Converter.allocateTritsForTrytes(TRYTES_SIZE);
+        byte[] trits = Converter.allocateTritsForTrytes(TRYTES_SIZE);
         Converter.trits(tryte, trits, 0);
 
         byte[] transaction = Converter.allocateBytesForTrits(trits.length);

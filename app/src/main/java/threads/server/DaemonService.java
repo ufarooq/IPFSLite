@@ -57,16 +57,16 @@ public class DaemonService extends Service {
 
         try {
 
-            Utility.createChannel(getApplicationContext());
+            Application.createChannel(getApplicationContext());
             // Create notification default intent.
             Intent intent = new Intent();
             PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
 
-
             // Create notification builder.
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(),
-                    ApplicationSettings.CHANNEL_ID);
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(
+                    getApplicationContext(),
+                    Application.CHANNEL_ID);
 
             int port = IDaemon.TCP_DAEMON_PORT;
             String host = InetAddress.getByName(threads.iri.Utility.getIPAddress(true)).getHostAddress();
@@ -77,7 +77,7 @@ public class DaemonService extends Service {
                     .bigText(getString(R.string.daemon_long_text, host, String.valueOf(port))));
             builder.setWhen(System.currentTimeMillis());
             builder.setSmallIcon(R.mipmap.ic_launcher);
-            Bitmap largeIconBitmap = Utility.getBitmap(getApplicationContext(), R.drawable.server_network);
+            Bitmap largeIconBitmap = Application.getBitmap(getApplicationContext(), R.drawable.server_network);
             builder.setLargeIcon(largeIconBitmap);
             // Make the notification max priority.
             builder.setPriority(Notification.PRIORITY_MAX);
