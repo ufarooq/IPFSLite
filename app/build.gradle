@@ -9,9 +9,9 @@ ext {
 
     publishedGroupId = 'threads.server'
     libraryName = 'Threads Server App'
-    artifact = 'threads'
+    artifact = 'app'
 
-    libraryDescription = 'A implementation of IRI server for android.'
+    libraryDescription = 'An IRI server for Android.'
 
     siteUrl = 'https://gitlab.com/remmer.wilts/threads-server'
     gitUrl = 'git@gitlab.com:remmer.wilts/threads-server.git'
