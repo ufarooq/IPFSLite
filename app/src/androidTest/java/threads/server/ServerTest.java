@@ -1,22 +1,27 @@
 package threads.server;
 
+import android.arch.persistence.room.Room;
+import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.bouncycastle.util.Arrays;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.net.InetAddress;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import threads.iri.ITangle;
 import threads.iri.tangle.Encryption;
 import threads.iri.tangle.TangleUtils;
 import threads.iri.udp.IBytesReader;
 import threads.iri.udp.IBytesWriter;
-import threads.iri.udp.IUDPConnection;
-import threads.iri.udp.UDPConnection;
+import threads.iri.udp.IUDPApi;
+import threads.iri.udp.UDPApi;
 
 import static org.junit.Assert.assertEquals;
 
@@ -24,6 +29,14 @@ import static org.junit.Assert.assertEquals;
 public class ServerTest {
     private static final String TAG = ServerTest.class.getSimpleName();
 
+    private ITangle threadsDatabase;
+
+    @Before
+    public void createDb() {
+        Context context = InstrumentationRegistry.getTargetContext();
+        threadsDatabase = Room.inMemoryDatabaseBuilder(context, TangleDatabase.class).build();
+
+    }
     @Test
     public void simpleTest() throws Exception {
 
@@ -40,12 +53,12 @@ public class ServerTest {
 
         System.out.println("Bytes : " + encBytes.length / 1000 + "[kb]");
 
-        byte[][] result = TangleUtils.splitArray(encBytes, IUDPConnection.DATGAGRAM_PACKET_SIZE);
+        byte[][] result = TangleUtils.splitArray(encBytes, IUDPApi.DATGAGRAM_PACKET_SIZE);
 
 
         Runnable runnable = () -> {
             try {
-                UDPConnection.getInstance().startServer(new IBytesWriter() {
+                UDPApi.getInstance(threadsDatabase).startServer(new IBytesWriter() {
                     @Override
                     public byte[] getBytes(@NonNull String address, int chunkIndex) {
                         try {
@@ -55,7 +68,7 @@ public class ServerTest {
                         }
                         return new byte[0];
                     }
-                }, IUDPConnection.UDP_DAEMON_DATA_PORT);
+                }, UDPApi.UDP_DAEMON_DATA_PORT);
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
@@ -65,7 +78,7 @@ public class ServerTest {
         thread.start();
 
 
-        while (!UDPConnection.getInstance().isServerRunning()) {
+        while (!UDPApi.getInstance(threadsDatabase).isRunning()) {
             try {
                 // thread to sleep for 1000 milliseconds
                 Thread.sleep(1000);
@@ -77,7 +90,7 @@ public class ServerTest {
 
         Reader bytesReader = new Reader();
         InetAddress server = InetAddress.getByName(threads.iri.Utility.getIPAddress(true));
-        UDPConnection.getInstance().startClient(address, bytesReader, server, IUDPConnection.UDP_DAEMON_DATA_PORT);
+        UDPApi.getInstance(threadsDatabase).startClient(address, bytesReader, server, IUDPApi.UDP_DAEMON_DATA_PORT);
 
 
         while (!bytesReader.isFinised()) {

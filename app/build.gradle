@@ -78,7 +78,7 @@ dependencies {
     annotationProcessor "android.arch.persistence.room:compiler:1.1.1"
 
     // API (LICENSE done)
-    implementation 'threads.iri:threads:0.3.9'
+    implementation 'threads.iri:threads:0.4.2'
 
     // ANDROID Architecture (LICENSE done)
     implementation 'android.arch.persistence.room:runtime:1.1.1'

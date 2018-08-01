@@ -48,7 +48,7 @@ public abstract class TangleDatabase extends RoomDatabase implements ITangle {
 
     @Override
     public void clearDatabase() {
-
+        transactionStorageDao().clear();
         storageDao().clear();
     }
 
