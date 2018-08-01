@@ -9,6 +9,7 @@ import com.google.common.collect.Iterables;
 import com.iota.iri.TransactionValidator;
 import com.iota.iri.conf.Configuration;
 import com.iota.iri.controllers.TipsViewModel;
+import com.iota.iri.hash.SpongeFactory;
 import com.iota.iri.model.Hash;
 import com.iota.iri.network.Neighbor;
 import com.iota.iri.network.Node;
@@ -36,7 +37,6 @@ import static junit.framework.TestCase.assertEquals;
 
 @RunWith(AndroidJUnit4.class)
 public class NodeTest {
-    private final static int TRYTES_SIZE = 2673;
 
     private ITangle threadsDatabase;
 
@@ -93,17 +93,22 @@ public class NodeTest {
         Transaction trans = transactions.get(0);
         String hash = trans.getHash();
         String tryte = trans.toTrytes();
-        byte[] trits = Converter.allocateTritsForTrytes(TRYTES_SIZE);
+        byte[] trits = Converter.allocateTritsForTrytes(tryte.length());
         Converter.trits(tryte, trits, 0);
 
-        byte[] transaction = Converter.allocateBytesForTrits(trits.length);
-        Converter.bytes(trits, 0, transaction, 0, trits.length);
+        byte[] bytesT = Converter.allocateBytesForTrits(trits.length);
+        Converter.bytes(trits, 0, bytesT, 0, trits.length);
 
-        Hash requestedHash = Hash.convertToHash(hash);
+        Hash requestedHash = Hash.calculate(SpongeFactory.Mode.CURLP81, trits);
+        String hashCmp = requestedHash.toString();
+        assertEquals(hash, hashCmp);
 
-
-        ITransactionStorage transactionViewModel = threadsDatabase.fromHash(requestedHash);
+        ITransactionStorage transactionViewModel = threadsDatabase.fromTrits(trits);
         assertEquals(transactionViewModel.getAddress(), address);
+        assertEquals(new String(transactionViewModel.getTrits()), new String(trits));
+        assertEquals(new String(transactionViewModel.getBytes()), new String(bytesT));
+
+
         InetAddress inetAddress = InetAddress.getLocalHost();
         Neighbor neighbor = new UDPNeighbor(
                 new InetSocketAddress(inetAddress, udpPort), node.getUdpSocket(), true);
@@ -125,7 +130,7 @@ public class NodeTest {
         assertEquals(storage.getTag(), trans.getTag());
         assertEquals(storage.getBundle(), trans.getBundle());
         assertEquals(storage.getBranch(), trans.getBranchTransaction());
-        assertEquals(storage.getHash(), trans.getHash());
+        assertEquals(storage.getHashID(), trans.getHash());
 
         // TODO test shutdown
 

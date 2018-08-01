@@ -5,6 +5,7 @@ import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
 import android.support.annotation.NonNull;
 
+import com.iota.iri.hash.SpongeFactory;
 import com.iota.iri.model.Hash;
 import com.iota.iri.utils.Converter;
 
@@ -80,16 +81,35 @@ public class TransactionStorage implements ITransactionStorage {
         this.hashID = hashID;
     }
 
-    public static ITransactionStorage createTransactionStorage(@NonNull String hash, @NonNull byte[] bytes) {
-        checkNotNull(hash);
+    public static ITransactionStorage createTransactionStorageFromTrits(@NonNull byte[] trits) {
+        checkNotNull(trits);
+
+        Hash hash = Hash.calculate(SpongeFactory.Mode.CURLP81, trits);
+        TransactionStorage instance = new TransactionStorage(hash.toString());
+
+        instance.trits = trits;
+        instance.bytes = Converter.allocateBytesForTrits(trits.length);
+        Converter.bytes(trits, 0, instance.bytes, 0, trits.length);
+
+        fill(instance);
+        return instance;
+    }
+
+    public static ITransactionStorage createTransactionStorageFromBytes(@NonNull byte[] bytes) {
         checkNotNull(bytes);
-        TransactionStorage instance = new TransactionStorage(hash);
-        instance.bytes = new byte[SIZE];
-        System.arraycopy(bytes, 0, instance.bytes, 0, SIZE);
 
-        instance.trits = new byte[ITransactionStorage.TRINARY_SIZE];
-        Converter.getTrits(instance.bytes, instance.trits);
+        byte[] trits = new byte[ITransactionStorage.TRINARY_SIZE];
+        Converter.getTrits(bytes, trits);
+        Hash hash = Hash.calculate(trits, 0,
+                ITransactionStorage.TRINARY_SIZE, SpongeFactory.create(SpongeFactory.Mode.CURLP81));
+        TransactionStorage instance = new TransactionStorage(hash.toString());
+        instance.bytes = bytes;
+        instance.trits = trits;
+        fill(instance);
+        return instance;
+    }
 
+    private static void fill(@NonNull TransactionStorage instance) {
         instance.tag = Converter.trytes(instance.trits, TAG_TRINARY_OFFSET, TAG_TRINARY_SIZE);
         instance.obsoleteTag = Converter.trytes(instance.trits, OBSOLETE_TAG_TRINARY_OFFSET, OBSOLETE_TAG_TRINARY_SIZE);
 
@@ -106,15 +126,7 @@ public class TransactionStorage implements ITransactionStorage {
         instance.attachmentTimestamp = Converter.longValue(instance.trits, ATTACHMENT_TIMESTAMP_TRINARY_OFFSET, ATTACHMENT_TIMESTAMP_TRINARY_SIZE);
         instance.attachmentTimestampLowerBound = Converter.longValue(instance.trits, ATTACHMENT_TIMESTAMP_LOWER_BOUND_TRINARY_OFFSET, ATTACHMENT_TIMESTAMP_LOWER_BOUND_TRINARY_SIZE);
         instance.attachmentTimestampUpperBound = Converter.longValue(instance.trits, ATTACHMENT_TIMESTAMP_UPPER_BOUND_TRINARY_OFFSET, ATTACHMENT_TIMESTAMP_UPPER_BOUND_TRINARY_SIZE);
-        return instance;
-    }
 
-    private static byte[] trits(byte[] transactionBytes) {
-        byte[] trits = new byte[ITransactionStorage.TRINARY_SIZE];
-        if (transactionBytes != null) {
-            Converter.getTrits(transactionBytes, trits);
-        }
-        return trits;
     }
 
     public byte[] getTrits() {

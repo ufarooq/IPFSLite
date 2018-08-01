@@ -103,12 +103,7 @@ public abstract class TangleDatabase extends RoomDatabase implements ITangle {
         return transactionStorageDao().getObsoleteTags(tag);
     }
 
-    @Override
-    public ITransactionStorage createTransactionStorage(@NonNull String hash, @NonNull byte[] bytes) {
-        checkNotNull(hash);
-        checkNotNull(bytes);
-        return TransactionStorage.createTransactionStorage(hash, bytes);
-    }
+
 
     @Override
     public IDataStorage createDataStorage(@NonNull String address, int chunkIndex, byte[] bytes) {
@@ -122,11 +117,19 @@ public abstract class TangleDatabase extends RoomDatabase implements ITangle {
     public ITransactionStorage fromHash(@NonNull Hash hash) {
         checkNotNull(hash);
         String hashID = Hash.convertToString(hash);
-        ITransactionStorage transactionStorage = getTransactionStorage(hashID);
-        if (transactionStorage == null) {
-            transactionStorage = createTransactionStorage(hashID, hash.bytes());
-        }
-        return transactionStorage;
+        return getTransactionStorage(hashID);
+    }
+
+    @Override
+    public ITransactionStorage fromTrits(@NonNull byte[] trits) {
+        checkNotNull(trits);
+        return TransactionStorage.createTransactionStorageFromTrits(trits);
+    }
+
+    @Override
+    public ITransactionStorage fromBytes(@NonNull byte[] bytes) {
+        checkNotNull(bytes);
+        return TransactionStorage.createTransactionStorageFromBytes(bytes);
     }
 
     @Override

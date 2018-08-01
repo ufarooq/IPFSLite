@@ -30,7 +30,7 @@ public class IriTest {
         miri.start(tangle, "14265");
 
         try {
-            Thread.sleep(10000000);
+            Thread.sleep(1000);
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
         }
