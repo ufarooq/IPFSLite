@@ -2,12 +2,17 @@ package threads.server;
 
 import android.arch.persistence.room.RoomDatabase;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.iota.iri.model.Hash;
 
+import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.atomic.AtomicLong;
 
 import threads.iri.IDataStorage;
 import threads.iri.ITangle;
@@ -34,7 +39,7 @@ public abstract class TangleDatabase extends RoomDatabase implements ITangle {
     }
 
     @Override
-    public IDataStorage getDataStorage(@NonNull String address, int chunkIndex) {
+    public IDataStorage getDataStorage(@NonNull String address, @NonNull Long chunkIndex) {
         checkNotNull(address);
         checkArgument(chunkIndex >= 0);
         return storageDao().getDataStorage(address, chunkIndex);
@@ -106,7 +111,7 @@ public abstract class TangleDatabase extends RoomDatabase implements ITangle {
 
 
     @Override
-    public IDataStorage createDataStorage(@NonNull String address, int chunkIndex, byte[] bytes) {
+    public IDataStorage createDataStorage(@NonNull String address, Long chunkIndex, byte[] bytes) {
         checkNotNull(address);
         checkArgument(chunkIndex >= 0);
         checkNotNull(bytes);
@@ -201,5 +206,13 @@ public abstract class TangleDatabase extends RoomDatabase implements ITangle {
         checkNotNull(hash);
         return getTransactionStorage(Hash.convertToString(hash)) != null;
     }
+
+    @Override
+    public void insertDataStorages(@NonNull List<IDataStorage> dataStorages) {
+        checkNotNull(dataStorages);
+        storageDao().insertDataStorages(dataStorages.toArray(new DataStorage[dataStorages.size()]));
+    }
+
+
 
 }

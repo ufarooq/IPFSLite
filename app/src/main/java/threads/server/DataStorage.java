@@ -10,6 +10,9 @@ import java.util.Arrays;
 
 import threads.iri.IDataStorage;
 
+import static com.google.api.client.repackaged.com.google.common.base.Preconditions.checkArgument;
+import static com.google.api.client.repackaged.com.google.common.base.Preconditions.checkNotNull;
+
 
 @Entity(tableName = "DataStorage")
 public class DataStorage implements IDataStorage {
@@ -21,21 +24,31 @@ public class DataStorage implements IDataStorage {
     @NonNull
     @ColumnInfo(name = "address")
     private final String address;
+
     @NonNull
-    @ColumnInfo(name = "chunkIndex")
-    private final int chunkIndex;
+    @ColumnInfo(name = "cidx")
+    private final long cidx;
+
+    protected DataStorage(@NonNull String address, long cidx, byte[] data) {
+        this.address = address;
+        this.cidx = cidx;
+        this.data = data;
+    }
     @PrimaryKey(autoGenerate = true)
     private Long idx;
 
-    protected DataStorage(@NonNull String address, int chunkIndex, byte[] data) {
-        this.address = address;
-        this.chunkIndex = chunkIndex;
-        this.data = data;
+    public static DataStorage createDataStorage(@NonNull String address, long cidx, byte[] data) {
+        checkNotNull(address);
+        checkNotNull(data);
+        checkArgument(cidx >= 0);
+        return new DataStorage(address, cidx, data);
     }
 
-    public static DataStorage createDataStorage(@NonNull String fileUid, int chunkIndex, byte[] data) {
-        return new DataStorage(fileUid, chunkIndex, data);
+    @NonNull
+    public long getCidx() {
+        return cidx;
     }
+
 
     @NonNull
     public Long getIdx() {
@@ -49,7 +62,7 @@ public class DataStorage implements IDataStorage {
     @Override
     public String toString() {
         return "DataStorage{" +
-                ", chunkIndex=" + chunkIndex +
+                ", index=" + cidx +
                 ", address='" + address + '\'' +
                 ", data=" + Arrays.toString(data) +
                 '}';
@@ -65,12 +78,12 @@ public class DataStorage implements IDataStorage {
     }
 
     @NonNull
-    public int getChunkIndex() {
-        return chunkIndex;
+    public Long getIndex() {
+        return getCidx();
     }
 
     @Override
     public int compareTo(@NonNull IDataStorage storage) {
-        return Integer.valueOf(this.getChunkIndex()).compareTo(storage.getChunkIndex());
+        return Long.valueOf(this.getIndex()).compareTo(storage.getIndex());
     }
 }

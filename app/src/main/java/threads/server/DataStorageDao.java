@@ -11,8 +11,8 @@ public interface DataStorageDao {
     @Query("DELETE FROM DataStorage")
     void clear();
 
-    @Query("SELECT * FROM DataStorage WHERE address =:address AND chunkIndex =:chunkIndex")
-    DataStorage getDataStorage(@NonNull String address, @NonNull int chunkIndex);
+    @Query("SELECT * FROM DataStorage WHERE address =:address AND cidx =:index")
+    DataStorage getDataStorage(@NonNull String address, @NonNull Long index);
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertDataStorages(DataStorage... storages);
