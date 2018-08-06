@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.activity_main);
         Logs.LOGGER.setUseParentHandlers(false);
         Logs.LOGGER.setLevel(Level.ALL);
-        LOG_HANDLER.setLevel(Level.FINE);
+        LOG_HANDLER.setLevel(Level.ALL);
         /*
          * Mapping between Level.* and Log.*:
          * Level.FINEST  => Log.v
@@ -86,6 +86,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         console = findViewById(R.id.console);
+
+        console.setText("\n\n\n\n\nWelcome to the IRI android daemon.\n\n");
+        console.append("Please feel free to start the daemon ....\n\n");
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -214,31 +218,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         @Override
         @SuppressWarnings({"LogTagMismatch", "WrongConstant"})
         public void publish(final LogRecord logRecord) {
-            if (isLoggable(logRecord)) {
-                final int priority;
-                if (LEVEL_TO_LOG.containsKey(logRecord.getLevel())) {
-                    priority = LEVEL_TO_LOG.get(logRecord.getLevel());
-                } else {
-                    priority = Log.VERBOSE;
-                }
 
-                String message = logRecord.getMessage() + "\n";
+            String message = logRecord.getMessage() + "\n";
 
-                final Throwable error = logRecord.getThrown();
-                if (error != null) {
-                    message += Log.getStackTraceString(error);
-                }
-
-                if (console != null) {
-                    final String consoleOutput = message;
-                    MainActivity.this.runOnUiThread(new Runnable() {
-                        public void run() {
-                            console.append(consoleOutput);
-                        }
-                    });
-                }
-
+            final Throwable error = logRecord.getThrown();
+            if (error != null) {
+                message += Log.getStackTraceString(error);
             }
+
+            if (console != null) {
+                final String consoleOutput = message;
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        console.append(consoleOutput);
+                    }
+                });
+            }
+
+
         }
 
         @Override
