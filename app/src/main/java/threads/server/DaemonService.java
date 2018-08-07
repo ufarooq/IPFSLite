@@ -17,6 +17,7 @@ import java.net.InetAddress;
 import threads.iri.Daemon;
 import threads.iri.IDaemon;
 import threads.iri.Logs;
+import threads.iri.room.TangleDatabase;
 
 public class DaemonService extends Service {
     public static final int NOTIFICATION_ID = 999;

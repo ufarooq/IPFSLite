@@ -11,6 +11,8 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import threads.iri.room.TangleDatabase;
+
 public class Application extends android.app.Application {
 
     public static final String CHANNEL_ID = "IRI_SERVER_CHANGEL_ID";
