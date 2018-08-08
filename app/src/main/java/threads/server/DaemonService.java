@@ -152,7 +152,11 @@ public class DaemonService extends Service {
 
                 IDaemon daemon = Daemon.getInstance();
                 if (!daemon.isDaemonRunning()) {
-                    daemon.start(tangleDatabase, String.valueOf(IDaemon.TCP_DAEMON_PORT));
+                    daemon.start(
+                            getApplicationContext(),
+                            tangleDatabase,
+                            String.valueOf(IDaemon.TCP_DAEMON_PORT),
+                            true);
                 } else {
                     Logs.i("Daemon is already running ...");
                 }
