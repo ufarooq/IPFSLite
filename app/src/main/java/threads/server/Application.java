@@ -19,10 +19,14 @@ public class Application extends android.app.Application {
     private static final String TAG = "Application";
     private static final String TANGLE_DATABASE = "TANGLE_DATABASE";
 
-    private static TangleDatabase database;
+    private static TangleDatabase tangleDatabase;
+    private static MessageDatabase messageDatabase;
 
+    public static MessageDatabase getMessagesDatabase() {
+        return messageDatabase;
+    }
     public static TangleDatabase getThreadsTangleDatabase() {
-        return database;
+        return tangleDatabase;
     }
 
     public static void createChannel(@NonNull Context context) {
@@ -68,7 +72,8 @@ public class Application extends android.app.Application {
     public void onCreate() {
         super.onCreate();
 
-        database = Room.databaseBuilder(this,
+        messageDatabase = Room.inMemoryDatabaseBuilder(this, MessageDatabase.class).build();
+        tangleDatabase = Room.databaseBuilder(this,
                 TangleDatabase.class, TANGLE_DATABASE).fallbackToDestructiveMigration().build();
 
         Log.e(TAG, "...... start application");

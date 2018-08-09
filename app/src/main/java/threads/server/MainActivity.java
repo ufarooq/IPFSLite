@@ -1,5 +1,7 @@
 package threads.server;
 
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -7,21 +9,24 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.TextView;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -44,9 +49,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
      */
     private DrawerLayout drawer_layout;
     private NavigationView navigationView;
-    private TextView console;
     private FloatingActionButton fab;
-
+    private RecyclerView mRecyclerView;
+    private MessageViewAdapter messageViewAdapter;
     private long mLastClickTime = 0;
 
     /**
@@ -85,10 +90,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         addHandler(Logs.LOGGER, LOG_HANDLER);
 
 
-        console = findViewById(R.id.console);
+        mRecyclerView = findViewById(R.id.reyclerview_message_list);
+        LinearLayoutManager linearLayout = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(linearLayout);
+        messageViewAdapter = new MessageViewAdapter(this);
+        mRecyclerView.setAdapter(messageViewAdapter);
 
-        console.setText("\n\n\n\n\nWelcome to the IRI android daemon.\n\n");
-        console.append("Please feel free to start the daemon ....\n\n");
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -138,6 +145,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
         } else {
             fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_pause));
+        }
+
+
+        MessagesViewModel messagesViewModel = ViewModelProviders.of(this).get(MessagesViewModel.class);
+        messagesViewModel.getMessages().observe(this, new Observer<List<Message>>() {
+            @Override
+            public void onChanged(@Nullable List<Message> messages) {
+                try {
+                    Log.e(TAG, "Update Messages ");
+                    updateMessages(messages);
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage());
+                }
+            }
+        });
+
+    }
+
+    private void updateMessages(List<Message> messages) {
+        try {
+            messageViewAdapter.updateData(messages);
+
+            mRecyclerView.scrollToPosition(messageViewAdapter.getItemCount());
+        } catch (Throwable e) {
+            Log.e(TAG, e.getLocalizedMessage());
         }
 
     }
@@ -226,14 +258,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 message += Log.getStackTraceString(error);
             }
 
-            if (console != null) {
-                final String consoleOutput = message;
-                MainActivity.this.runOnUiThread(new Runnable() {
-                    public void run() {
-                        console.append(consoleOutput);
-                    }
-                });
-            }
+
+            final String finalMessage = message;
+            new java.lang.Thread(new Runnable() {
+                public void run() {
+                    Application.getMessagesDatabase().insertMessage(finalMessage);
+                }
+            }).start();
 
 
         }
