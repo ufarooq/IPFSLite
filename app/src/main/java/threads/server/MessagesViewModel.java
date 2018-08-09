@@ -10,7 +10,7 @@ public class MessagesViewModel extends AndroidViewModel {
     private final LiveData<List<Message>> messages;
     private final MessageDatabase messagesDatabase;
 
-    public MessagesViewModel(Application application) {
+    public MessagesViewModel(android.app.Application application) {
         super(application);
         messagesDatabase = Application.getMessagesDatabase();
 

@@ -54,12 +54,13 @@ public class MessageViewAdapter extends RecyclerView.Adapter<MessageViewAdapter.
         final Message message = messages.get(position);
 
         if (holder instanceof MessageViewHolder) {
-            MessageViewHolder threadViewHolder = (MessageViewHolder) holder;
+            MessageViewHolder messageViewHolder = (MessageViewHolder) holder;
 
             try {
 
-                threadViewHolder.view.setBackgroundColor(Color.WHITE);
+                messageViewHolder.view.setBackgroundColor(Color.WHITE);
 
+                messageViewHolder.text.setText(message.getMessage());
 
             } catch (Exception e) {
                 Log.e(TAG, e.getLocalizedMessage());

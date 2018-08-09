@@ -93,15 +93,6 @@ public class DaemonService extends Service {
                     getApplicationContext(), requestID, defaultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
             builder.setContentIntent(defaultPendingIntent);
 
-            // Add Stop button intent in notification.
-            Intent stopIntent = new Intent(getApplicationContext(), DaemonService.class);
-            stopIntent.setAction(ACTION_STOP_DAEMON_SERVICE);
-            PendingIntent stopPendingIntent = PendingIntent.getService(
-                    getApplicationContext(), 0, stopIntent, PendingIntent.FLAG_CANCEL_CURRENT);
-
-            builder.setDeleteIntent(stopPendingIntent);
-            builder.addAction(R.drawable.stop, getString(R.string.stop), stopPendingIntent);
-
 
             Notification notification = builder.build();
 

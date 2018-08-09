@@ -130,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     intent.setAction(DaemonService.ACTION_START_DAEMON_SERVICE);
                     startService(intent);
 
-                    fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_pause));
+                    fab.setImageDrawable(getDrawable(R.drawable.stop));
                 } else {
                     Intent intent = new Intent(MainActivity.this, DaemonService.class);
                     intent.setAction(DaemonService.ACTION_STOP_DAEMON_SERVICE);
@@ -144,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (!daemon.isDaemonRunning()) {
             fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
         } else {
-            fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_pause));
+            fab.setImageDrawable(getDrawable(R.drawable.stop));
         }
 
 
@@ -153,13 +153,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onChanged(@Nullable List<Message> messages) {
                 try {
-                    Log.e(TAG, "Update Messages ");
                     updateMessages(messages);
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage());
                 }
             }
         });
+
+
+        new java.lang.Thread(new Runnable() {
+            public void run() {
+                Application.getMessagesDatabase().insertMessage("\nWelcome to the IRI android daemon.");
+                Application.getMessagesDatabase().insertMessage("Please feel free to start the daemon ....\n\n");
+            }
+        }).start();
 
     }
 
@@ -169,7 +176,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             mRecyclerView.scrollToPosition(messageViewAdapter.getItemCount());
         } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage());
+            Log.e(TAG, "" + e.getLocalizedMessage());
         }
 
     }
@@ -251,11 +258,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         @SuppressWarnings({"LogTagMismatch", "WrongConstant"})
         public void publish(final LogRecord logRecord) {
 
-            String message = logRecord.getMessage() + "\n";
+            String message = logRecord.getMessage();
 
             final Throwable error = logRecord.getThrown();
             if (error != null) {
-                message += Log.getStackTraceString(error);
+                message += "\n" + Log.getStackTraceString(error);
             }
 
 
