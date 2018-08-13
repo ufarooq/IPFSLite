@@ -18,6 +18,10 @@ import threads.iri.Daemon;
 import threads.iri.IDaemon;
 import threads.iri.Logs;
 import threads.iri.room.TangleDatabase;
+import threads.iri.tangle.IServerConfig;
+import threads.iri.tangle.ITangleServer;
+import threads.iri.tangle.TangleServer;
+import threads.iri.tangle.TangleServerConfig;
 
 public class DaemonService extends Service {
     public static final int NOTIFICATION_ID = 999;
@@ -143,9 +147,15 @@ public class DaemonService extends Service {
 
                 IDaemon daemon = Daemon.getInstance();
                 if (!daemon.isDaemonRunning()) {
+                    IServerConfig serverConfig = TangleServerConfig.createServerConfig("https",
+                            "nodes.iota.fm", "443", false, false);
+
+                    ITangleServer tangleServer = TangleServer.getTangleServer(serverConfig);
+
                     daemon.start(
                             getApplicationContext(),
                             tangleDatabase,
+                            tangleServer,
                             String.valueOf(IDaemon.TCP_DAEMON_PORT),
                             false);
                 } else {
