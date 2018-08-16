@@ -157,6 +157,7 @@ public class DaemonService extends Service {
                             tangleDatabase,
                             tangleServer,
                             String.valueOf(IDaemon.TCP_DAEMON_PORT),
+                            true,
                             false);
                 } else {
                     Logs.i("Daemon is already running ...");
