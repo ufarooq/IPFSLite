@@ -33,9 +33,9 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 
-import threads.iri.Daemon;
 import threads.iri.IDaemon;
 import threads.iri.Logs;
+import threads.iri.daemon.Daemon;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {

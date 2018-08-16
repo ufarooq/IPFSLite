@@ -14,9 +14,9 @@ import android.widget.Toast;
 
 import java.net.InetAddress;
 
-import threads.iri.Daemon;
 import threads.iri.IDaemon;
 import threads.iri.Logs;
+import threads.iri.daemon.Daemon;
 import threads.iri.room.TangleDatabase;
 import threads.iri.tangle.IServerConfig;
 import threads.iri.tangle.ITangleServer;
@@ -74,7 +74,7 @@ public class DaemonService extends Service {
                     Application.CHANNEL_ID);
 
             int port = IDaemon.TCP_DAEMON_PORT;
-            String host = InetAddress.getByName(threads.iri.Utility.getIPAddress(true)).getHostAddress();
+            String host = InetAddress.getByName(IDaemon.getIPAddress(true)).getHostAddress(); // TODO
 
             builder.setContentTitle(getString(R.string.daemon_title));
             builder.setContentText(getString(R.string.daemon_text));
@@ -148,7 +148,7 @@ public class DaemonService extends Service {
                 IDaemon daemon = Daemon.getInstance();
                 if (!daemon.isDaemonRunning()) {
                     IServerConfig serverConfig = TangleServerConfig.createServerConfig("https",
-                            "nodes.iota.fm", "443", false, false);
+                            "nodes.iota.fm", "443", "", false);
 
                     ITangleServer tangleServer = TangleServer.getTangleServer(serverConfig);
 
