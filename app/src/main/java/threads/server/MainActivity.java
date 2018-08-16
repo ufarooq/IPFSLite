@@ -160,14 +160,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-
-        new java.lang.Thread(new Runnable() {
-            public void run() {
-                Application.getMessagesDatabase().insertMessage("\nWelcome to the IRI android daemon.");
-                Application.getMessagesDatabase().insertMessage("Please feel free to start the daemon ....\n\n");
-            }
-        }).start();
-
     }
 
     private void updateMessages(List<Message> messages) {

@@ -143,7 +143,7 @@ public class DaemonService extends Service {
         @Override
         protected Void doInBackground(Void... addresses) {
             try {
-                TangleDatabase tangleDatabase = Application.getThreadsTangleDatabase();
+                TangleDatabase tangleDatabase = Application.getTangleDatabase();
 
                 IDaemon daemon = Daemon.getInstance();
                 if (!daemon.isDaemonRunning()) {
@@ -152,6 +152,9 @@ public class DaemonService extends Service {
 
                     ITangleServer tangleServer = TangleServer.getTangleServer(serverConfig);
 
+                    Application.getMessagesDatabase().insertMessage("\nWelcome to the IRI android daemon.");
+                    Application.getMessagesDatabase().insertMessage("Please feel free to start the daemon ....\n\n");
+
                     daemon.start(
                             getApplicationContext(),
                             tangleDatabase,
@@ -159,6 +162,8 @@ public class DaemonService extends Service {
                             String.valueOf(IDaemon.TCP_DAEMON_PORT),
                             true,
                             false);
+
+
                 } else {
                     Logs.i("Daemon is already running ...");
                 }
@@ -178,7 +183,7 @@ public class DaemonService extends Service {
         protected Void doInBackground(Void... addresses) {
             try {
                 TangleDatabase tangleDatabase =
-                        Application.getThreadsTangleDatabase();
+                        Application.getTangleDatabase();
                 IDaemon daemon = Daemon.getInstance();
                 if (daemon.isDaemonRunning()) {
                     daemon.shutdown();

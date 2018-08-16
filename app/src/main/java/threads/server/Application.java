@@ -25,7 +25,8 @@ public class Application extends android.app.Application {
     public static MessageDatabase getMessagesDatabase() {
         return messageDatabase;
     }
-    public static TangleDatabase getThreadsTangleDatabase() {
+
+    public static TangleDatabase getTangleDatabase() {
         return tangleDatabase;
     }
 
