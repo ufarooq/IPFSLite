@@ -33,9 +33,9 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 
-import threads.iri.IDaemon;
+import threads.iri.ITangleDaemon;
 import threads.iri.Logs;
-import threads.iri.daemon.Daemon;
+import threads.iri.daemon.TangleDaemon;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                IDaemon daemon = Daemon.getInstance();
+                ITangleDaemon daemon = TangleDaemon.getInstance();
                 if (!daemon.isDaemonRunning()) {
 
                     Intent intent = new Intent(MainActivity.this, DaemonService.class);
@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
         });
-        IDaemon daemon = Daemon.getInstance();
+        ITangleDaemon daemon = TangleDaemon.getInstance();
         if (!daemon.isDaemonRunning()) {
             fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
         } else {

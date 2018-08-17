@@ -77,9 +77,15 @@ public class Application extends android.app.Application {
         tangleDatabase = Room.databaseBuilder(this,
                 TangleDatabase.class, TANGLE_DATABASE).fallbackToDestructiveMigration().build();
 
+        new java.lang.Thread(new Runnable() {
+            public void run() {
+                Application.getMessagesDatabase().insertMessage("\nWelcome to the IRI android daemon.");
+                Application.getMessagesDatabase().insertMessage("Please feel free to start the daemon ....\n\n");
 
-        messageDatabase.insertMessage("\nWelcome to the IRI android daemon.");
-        messageDatabase.insertMessage("Please feel free to start the daemon ....\n\n");
+            }
+        }).start();
+
+
 
         Log.e(TAG, "...... start application");
 
