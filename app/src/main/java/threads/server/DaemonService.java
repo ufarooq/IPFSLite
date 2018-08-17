@@ -152,15 +152,12 @@ public class DaemonService extends Service {
 
                     ITangleServer tangleServer = TangleServer.getTangleServer(serverConfig);
 
-                    Application.getMessagesDatabase().insertMessage("\nWelcome to the IRI android daemon.");
-                    Application.getMessagesDatabase().insertMessage("Please feel free to start the daemon ....\n\n");
 
                     daemon.start(
                             getApplicationContext(),
                             tangleDatabase,
                             tangleServer,
                             String.valueOf(IDaemon.TCP_DAEMON_PORT),
-                            true,
                             false);
 
 
