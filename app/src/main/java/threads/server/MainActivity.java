@@ -168,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             mRecyclerView.scrollToPosition(messageViewAdapter.getItemCount());
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage());
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
     }
