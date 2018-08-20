@@ -205,6 +205,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
+
+                DaemonCheckService task = new DaemonCheckService(getApplicationContext());
+                task.execute();
+
                 return true;
             }
         }
