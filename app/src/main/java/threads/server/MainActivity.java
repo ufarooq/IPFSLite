@@ -24,6 +24,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import java.util.HashMap;
 import java.util.List;
@@ -205,10 +206,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-
-                DaemonCheckService task = new DaemonCheckService(getApplicationContext());
+                DaemonCheckService task = new DaemonCheckService(new FinishResponse() {
+                    @Override
+                    public void finish(Boolean success) {
+                        if (success) {
+                            Toast.makeText(MainActivity.this, "Public IP is visible from outside.", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(MainActivity.this, "SHIT public IP is not visible.", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
                 task.execute();
-
                 return true;
             }
         }

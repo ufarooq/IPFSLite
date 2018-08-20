@@ -1,9 +1,8 @@
 package threads.server;
 
-import android.content.Context;
 import android.os.AsyncTask;
+import android.support.annotation.NonNull;
 import android.util.Log;
-import android.widget.Toast;
 
 import threads.iri.ITangleDaemon;
 import threads.iri.daemon.TangleDaemon;
@@ -11,16 +10,25 @@ import threads.iri.tangle.IServerConfig;
 import threads.iri.tangle.TangleServerConfig;
 import threads.iri.tangle.TangleUtils;
 
-public class DaemonCheckService extends AsyncTask<Void, Void, Void> {
+public class DaemonCheckService extends AsyncTask<Void, Void, Boolean> {
     private static final String TAG = "DaemonCheckService";
-    private final Context context;
 
-    public DaemonCheckService(Context context) {
-        this.context = context;
+
+    private final FinishResponse response;
+
+    public DaemonCheckService(@NonNull FinishResponse response) {
+
+        this.response = response;
     }
 
     @Override
-    protected Void doInBackground(Void... params) {
+    protected void onPostExecute(Boolean result) {
+        response.finish(result);
+    }
+
+
+    @Override
+    protected Boolean doInBackground(Void... params) {
         try {
 
             ITangleDaemon daemon = TangleDaemon.getInstance();
@@ -32,15 +40,11 @@ public class DaemonCheckService extends AsyncTask<Void, Void, Void> {
             IServerConfig publicServerConfig = TangleServerConfig.createServerConfig(serverConfig.getProtocol(),
                     publicIP, serverConfig.getPort(), serverConfig.getCert(), serverConfig.isLocalPow());
 
-            if (TangleUtils.isReachable(publicServerConfig)) {
-                Toast.makeText(context, "Public IP : " + publicIP + " is visible from outside.", Toast.LENGTH_LONG).show();
-            } else {
-                Toast.makeText(context, "SHIT IP : " + publicIP + " is not visible.", Toast.LENGTH_LONG).show();
-            }
+            return TangleUtils.isReachable(publicServerConfig);
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage());
         }
-        return null;
+        return false;
     }
 }
