@@ -16,7 +16,7 @@
 
     <item
         android:id="@+id/action_settings"
-        android:icon="@drawable/account_settings"
+        android:icon="@android:drawable/ic_menu_manage"
         android:iconTint="@android:color/white"
         android:orderInCategory="50"
         android:title="@string/action_info"

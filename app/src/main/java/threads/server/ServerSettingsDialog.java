@@ -31,7 +31,7 @@ public class ServerSettingsDialog extends DialogFragment implements DialogInterf
 
             Bundle bundle = new Bundle();
 
-            ServerInfoDialog fragment = new ServerInfoDialog();
+            ServerSettingsDialog fragment = new ServerSettingsDialog();
             fragment.setArguments(bundle);
             fragment.show(activity.getFragmentManager(), null);
         } catch (Throwable e) {

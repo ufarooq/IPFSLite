@@ -189,6 +189,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
+        MenuItem action_settings = menu.findItem(R.id.action_settings);
+        drawable = action_settings.getIcon();
+        if (drawable != null) {
+            drawable.mutate();
+            drawable.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
+        }
+
+
         return true;
     }
 
