@@ -37,6 +37,7 @@ import java.util.logging.LogRecord;
 import threads.iri.ITangleDaemon;
 import threads.iri.Logs;
 import threads.iri.daemon.TangleDaemon;
+import threads.iri.tangle.IServerConfig;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -198,8 +199,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         switch (id) {
-
-            case R.id.action_info: {
+            case R.id.action_settings: {
                 // mis-clicking prevention, using threshold of 1000 ms
                 if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
                     break;
@@ -217,6 +217,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                 });
                 task.execute();
+
+
+                return true;
+            }
+            case R.id.action_info: {
+                // mis-clicking prevention, using threshold of 1000 ms
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    break;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+
+                IServerConfig serverConfig = null; // TODO
+
+                ShowServerDialog.show(this, serverConfig);
                 return true;
             }
         }

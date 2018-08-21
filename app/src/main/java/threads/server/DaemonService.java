@@ -12,8 +12,6 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.net.InetAddress;
-
 import threads.iri.ITangleDaemon;
 import threads.iri.Logs;
 import threads.iri.daemon.TangleDaemon;
@@ -75,12 +73,11 @@ public class DaemonService extends Service {
                     Application.CHANNEL_ID);
 
             int port = ITangleDaemon.TCP_DAEMON_PORT;
-            String host = InetAddress.getByName(ITangleDaemon.getIPAddress(true)).getHostAddress(); // TODO
 
             builder.setContentTitle(getString(R.string.daemon_title));
             builder.setContentText(getString(R.string.daemon_text));
             builder.setStyle(new NotificationCompat.BigTextStyle()
-                    .bigText(getString(R.string.daemon_long_text, host, String.valueOf(port))));
+                    .bigText(getString(R.string.daemon_long_text, String.valueOf(port))));
             builder.setWhen(System.currentTimeMillis());
             builder.setSmallIcon(R.mipmap.ic_launcher);
             Bitmap largeIconBitmap = Application.getBitmap(getApplicationContext(), R.drawable.server_network);

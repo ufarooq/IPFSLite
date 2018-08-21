@@ -11,7 +11,12 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.gson.Gson;
+
+import java.util.Hashtable;
+
 import threads.iri.room.TangleDatabase;
+import threads.iri.tangle.IServerConfig;
 
 public class Application extends android.app.Application {
 
@@ -28,6 +33,35 @@ public class Application extends android.app.Application {
 
     public static TangleDatabase getTangleDatabase() {
         return tangleDatabase;
+    }
+
+    public static final int QR_CODE_SIZE = 800;
+    @NonNull
+    private final static Hashtable<String, Bitmap> generalHashtable = new Hashtable<>();
+
+    public static Bitmap getBitmap(@NonNull IServerConfig serverConfig) {
+
+        String qrCode = "";
+        Gson gson = new Gson();
+
+        qrCode = gson.toJson(serverConfig);
+
+        if (generalHashtable.containsKey(qrCode)) {
+            return generalHashtable.get(qrCode);
+        }
+        try {
+
+
+            Bitmap bitmap = net.glxn.qrgen.android.QRCode.from(qrCode).
+                    withSize(Application.QR_CODE_SIZE, Application.QR_CODE_SIZE).bitmap();
+
+
+            generalHashtable.put(qrCode, bitmap);
+            return bitmap;
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+        return null;
     }
 
     public static void createChannel(@NonNull Context context) {

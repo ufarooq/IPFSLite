@@ -7,7 +7,6 @@ import android.util.Log;
 import threads.iri.ITangleDaemon;
 import threads.iri.daemon.TangleDaemon;
 import threads.iri.tangle.IServerConfig;
-import threads.iri.tangle.TangleServerConfig;
 import threads.iri.tangle.TangleUtils;
 
 public class DaemonCheckService extends AsyncTask<Void, Void, Boolean> {
@@ -33,14 +32,9 @@ public class DaemonCheckService extends AsyncTask<Void, Void, Boolean> {
 
             ITangleDaemon daemon = TangleDaemon.getInstance();
 
-            String publicIP = daemon.getPublicIP();
-
             IServerConfig serverConfig = daemon.getServerConfig();
 
-            IServerConfig publicServerConfig = TangleServerConfig.createServerConfig(serverConfig.getProtocol(),
-                    publicIP, serverConfig.getPort(), serverConfig.getCert(), serverConfig.isLocalPow());
-
-            return TangleUtils.isReachable(publicServerConfig);
+            return TangleUtils.isReachable(serverConfig);
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage());
