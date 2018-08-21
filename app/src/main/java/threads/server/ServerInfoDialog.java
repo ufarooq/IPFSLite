@@ -70,8 +70,8 @@ public class ServerInfoDialog extends DialogFragment implements DialogInterface.
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
         LayoutInflater inflater = LayoutInflater.from(getActivity());
-        View view = inflater.inflate(R.layout.dialog_generated_qr_code, null, false);
-        imageView = view.findViewById(R.id.generated_qr_code_image);
+        View view = inflater.inflate(R.layout.dialog_server_info, null, false);
+        imageView = view.findViewById(R.id.dialog_server_info);
         Bundle bundle = getArguments();
         bitmap = bundle.getParcelable("bitmap");
         imageView.setImageBitmap(bitmap);
