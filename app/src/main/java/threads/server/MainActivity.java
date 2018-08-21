@@ -231,7 +231,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 IServerConfig serverConfig = null; // TODO
 
-                ShowServerDialog.show(this, serverConfig);
+                ServerInfoDialog.show(this, serverConfig);
                 return true;
             }
         }

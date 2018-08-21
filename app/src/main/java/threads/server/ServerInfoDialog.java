@@ -21,13 +21,13 @@ import threads.iri.tangle.IServerConfig;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class ShowServerDialog extends DialogFragment implements DialogInterface.OnClickListener {
-    private static final String TAG = "ShowServerDialog";
+public class ServerInfoDialog extends DialogFragment implements DialogInterface.OnClickListener {
+    private static final String TAG = "ServerInfoDialog";
 
     public ImageView imageView;
     private Bitmap bitmap;
 
-    public ShowServerDialog() {
+    public ServerInfoDialog() {
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
         StrictMode.setVmPolicy(builder.build());
     }
@@ -55,7 +55,7 @@ public class ShowServerDialog extends DialogFragment implements DialogInterface.
 
             Bundle bundle = new Bundle();
             bundle.putParcelable("bitmap", bitmap);
-            ShowServerDialog fragment = new ShowServerDialog();
+            ServerInfoDialog fragment = new ServerInfoDialog();
             fragment.setArguments(bundle);
             fragment.show(activity.getFragmentManager(), null);
         } catch (Throwable e) {
