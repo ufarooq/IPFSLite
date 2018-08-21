@@ -14,10 +14,11 @@ import android.widget.Toast;
 
 import threads.iri.ITangleDaemon;
 import threads.iri.Logs;
-import threads.iri.ServerConfig;
 import threads.iri.daemon.TangleDaemon;
 import threads.iri.daemon.TangleListener;
+import threads.iri.room.Certificate;
 import threads.iri.room.TangleDatabase;
+import threads.iri.server.ServerConfig;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.TangleServer;
 
@@ -144,21 +145,32 @@ public class DaemonService extends Service {
 
                 ITangleDaemon daemon = TangleDaemon.getInstance();
                 if (!daemon.isDaemonRunning()) {
+
+                    // TODO add much more server
                     ServerConfig serverConfig = ServerConfig.createServerConfig("https",
                             "nodes.iota.fm", "443", "", false);
 
                     ITangleServer tangleServer = TangleServer.getTangleServer(serverConfig);
 
-
+                    ServerConfig daemonConfig = Application.getServerConfig(getApplicationContext());
                     daemon.start(
                             getApplicationContext(),
                             tangleDatabase,
                             tangleServer,
                             new TangleListener(),
-                            String.valueOf(ITangleDaemon.TCP_DAEMON_PORT),
-                            false);
+                            daemonConfig.getPort(),
+                            daemonConfig.isLocalPow());
 
-
+                    Certificate certificate = daemon.getCertificate();
+                    String cert = certificate.getShaHash();
+                    if (!cert.equals(daemonConfig.getCert())) {
+                        Application.setServerConfig(getApplicationContext(), ServerConfig.createServerConfig(
+                                daemonConfig.getProtocol(),
+                                daemonConfig.getHost(),
+                                daemonConfig.getPort(),
+                                cert,
+                                daemonConfig.isLocalPow()));
+                    }
                 } else {
                     Logs.i("Daemon is already running ...");
                 }

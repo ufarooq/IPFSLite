@@ -36,8 +36,8 @@ import java.util.logging.LogRecord;
 
 import threads.iri.ITangleDaemon;
 import threads.iri.Logs;
-import threads.iri.ServerConfig;
 import threads.iri.daemon.TangleDaemon;
+import threads.iri.server.ServerConfig;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -237,6 +237,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
+                new ClearConsoleService().execute();
 
                 return true;
             }
@@ -248,7 +249,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 mLastClickTime = SystemClock.elapsedRealtime();
 
 
-                ServerConfig serverConfig = null; // TODO
+                ServerConfig serverConfig = Application.getServerConfig(this);
 
                 ServerInfoDialog.show(this, serverConfig);
                 return true;

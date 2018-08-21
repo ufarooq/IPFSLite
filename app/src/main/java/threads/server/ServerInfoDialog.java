@@ -17,7 +17,7 @@ import android.widget.ImageView;
 
 import java.io.File;
 
-import threads.iri.ServerConfig;
+import threads.iri.server.ServerConfig;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

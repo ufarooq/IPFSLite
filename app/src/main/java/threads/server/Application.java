@@ -4,6 +4,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.arch.persistence.room.Room;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
@@ -15,10 +16,20 @@ import com.google.gson.Gson;
 
 import java.util.Hashtable;
 
-import threads.iri.ServerConfig;
+import threads.iri.ITangleDaemon;
 import threads.iri.room.TangleDatabase;
+import threads.iri.server.ServerConfig;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Application extends android.app.Application {
+
+    public static final String TANGLE_PROTOCOL = "https";
+    public static final String TANGLE_HOST = "localhost";
+    public static final String TANGLE_PORT = String.valueOf(ITangleDaemon.TCP_DAEMON_PORT);
+    public static final String TANGLE_CERT = "";
+    public static boolean TANGLE_LOCAL_POW = false;
+
 
     public static final String CHANNEL_ID = "IRI_SERVER_CHANGEL_ID";
     private static final String TAG = "Application";
@@ -31,11 +42,39 @@ public class Application extends android.app.Application {
         return messageDatabase;
     }
 
+
     public static TangleDatabase getTangleDatabase() {
         return tangleDatabase;
     }
 
     public static final int QR_CODE_SIZE = 800;
+
+
+    public static ServerConfig getServerConfig(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences("SERVERCONFIG", Context.MODE_PRIVATE);
+        String protocol = sharedPref.getString("protocol", TANGLE_PROTOCOL);
+        String host = sharedPref.getString("host", TANGLE_HOST);
+        String port = sharedPref.getString("port", TANGLE_PORT);
+        boolean isLocalPow = sharedPref.getBoolean("TANGLE_LOCAL_POW", TANGLE_LOCAL_POW);
+        String cert = sharedPref.getString("cert", TANGLE_CERT);
+        return ServerConfig.createServerConfig(protocol, host, port, cert, isLocalPow);
+    }
+
+
+    public static void setServerConfig(@NonNull Context context, @NonNull ServerConfig serverConfig) {
+        checkNotNull(context);
+        checkNotNull(serverConfig);
+        SharedPreferences sharedPref = context.getSharedPreferences("SERVERCONFIG", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString("protocol", serverConfig.getProtocol());
+        editor.putString("host", serverConfig.getHost());
+        editor.putString("port", serverConfig.getPort());
+        editor.putString("cert", serverConfig.getCert());
+        editor.putBoolean("TANGLE_LOCAL_POW", serverConfig.isLocalPow());
+
+        editor.apply();
+    }
     @NonNull
     private final static Hashtable<String, Bitmap> generalHashtable = new Hashtable<>();
 
