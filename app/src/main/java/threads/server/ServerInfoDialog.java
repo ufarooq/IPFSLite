@@ -17,7 +17,7 @@ import android.widget.ImageView;
 
 import java.io.File;
 
-import threads.iri.tangle.IServerConfig;
+import threads.iri.ServerConfig;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -47,7 +47,7 @@ public class ServerInfoDialog extends DialogFragment implements DialogInterface.
     }
 
 
-    public static void show(@NonNull Activity activity, @NonNull IServerConfig serverConfig) {
+    public static void show(@NonNull Activity activity, @NonNull ServerConfig serverConfig) {
         checkNotNull(activity);
         checkNotNull(serverConfig);
         try {

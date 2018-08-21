@@ -14,13 +14,12 @@ import android.widget.Toast;
 
 import threads.iri.ITangleDaemon;
 import threads.iri.Logs;
+import threads.iri.ServerConfig;
 import threads.iri.daemon.TangleDaemon;
 import threads.iri.daemon.TangleListener;
 import threads.iri.room.TangleDatabase;
-import threads.iri.tangle.IServerConfig;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.TangleServer;
-import threads.iri.tangle.TangleServerConfig;
 
 public class DaemonService extends Service {
     public static final int NOTIFICATION_ID = 999;
@@ -145,7 +144,7 @@ public class DaemonService extends Service {
 
                 ITangleDaemon daemon = TangleDaemon.getInstance();
                 if (!daemon.isDaemonRunning()) {
-                    IServerConfig serverConfig = TangleServerConfig.createServerConfig("https",
+                    ServerConfig serverConfig = ServerConfig.createServerConfig("https",
                             "nodes.iota.fm", "443", "", false);
 
                     ITangleServer tangleServer = TangleServer.getTangleServer(serverConfig);

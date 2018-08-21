@@ -5,8 +5,8 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import threads.iri.ITangleDaemon;
+import threads.iri.ServerConfig;
 import threads.iri.daemon.TangleDaemon;
-import threads.iri.tangle.IServerConfig;
 import threads.iri.tangle.TangleUtils;
 
 public class DaemonCheckService extends AsyncTask<Void, Void, Boolean> {
@@ -32,7 +32,7 @@ public class DaemonCheckService extends AsyncTask<Void, Void, Boolean> {
 
             ITangleDaemon daemon = TangleDaemon.getInstance();
 
-            IServerConfig serverConfig = daemon.getServerConfig();
+            ServerConfig serverConfig = daemon.getServerConfig();
 
             return TangleUtils.isReachable(serverConfig);
 

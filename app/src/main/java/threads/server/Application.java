@@ -15,8 +15,8 @@ import com.google.gson.Gson;
 
 import java.util.Hashtable;
 
+import threads.iri.ServerConfig;
 import threads.iri.room.TangleDatabase;
-import threads.iri.tangle.IServerConfig;
 
 public class Application extends android.app.Application {
 
@@ -39,7 +39,7 @@ public class Application extends android.app.Application {
     @NonNull
     private final static Hashtable<String, Bitmap> generalHashtable = new Hashtable<>();
 
-    public static Bitmap getBitmap(@NonNull IServerConfig serverConfig) {
+    public static Bitmap getBitmap(@NonNull ServerConfig serverConfig) {
 
         String qrCode = "";
         Gson gson = new Gson();
