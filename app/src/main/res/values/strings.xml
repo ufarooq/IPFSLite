@@ -15,4 +15,5 @@
     <string name="tangle_server">Tangle Server</string>
     <string name="tangle_server_access">The QR code contains all necessary information to access this tangle server.</string>
     <string name="tangle_server_settings">Tangle Server Settings</string>
+    <string name="action_clear">Clear Console</string>
 </resources>

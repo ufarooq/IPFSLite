@@ -103,6 +103,16 @@ public class Application extends android.app.Application {
         return bitmap;
     }
 
+    public static void initMessageDatabase() {
+        new java.lang.Thread(new Runnable() {
+            public void run() {
+                Application.getMessagesDatabase().insertMessage("\nWelcome to the IRI android daemon.");
+                Application.getMessagesDatabase().insertMessage("Please feel free to start the daemon ....\n\n");
+
+            }
+        }).start();
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -111,14 +121,8 @@ public class Application extends android.app.Application {
         tangleDatabase = Room.databaseBuilder(this,
                 TangleDatabase.class, TANGLE_DATABASE).fallbackToDestructiveMigration().build();
 
-        new java.lang.Thread(new Runnable() {
-            public void run() {
-                Application.getMessagesDatabase().insertMessage("\nWelcome to the IRI android daemon.");
-                Application.getMessagesDatabase().insertMessage("Please feel free to start the daemon ....\n\n");
 
-            }
-        }).start();
-
+        initMessageDatabase();
 
 
         Log.e(TAG, "...... start application");

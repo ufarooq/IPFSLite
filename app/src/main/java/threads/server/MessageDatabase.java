@@ -15,4 +15,8 @@ public abstract class MessageDatabase extends RoomDatabase {
         checkNotNull(message);
         messageDao().insertMessages(Message.createMessage(message));
     }
+
+    public void clear() {
+        messageDao().clear();
+    }
 }

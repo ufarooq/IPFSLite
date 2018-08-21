@@ -230,6 +230,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 return true;
             }
+            case R.id.action_clear: {
+                // mis-clicking prevention, using threshold of 1000 ms
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    break;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+
+                return true;
+            }
             case R.id.action_info: {
                 // mis-clicking prevention, using threshold of 1000 ms
                 if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
