@@ -218,6 +218,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 });
                 task.execute();
 
+                ServerSettingsDialog.show(this);
 
                 return true;
             }

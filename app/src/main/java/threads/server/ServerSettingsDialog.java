@@ -14,11 +14,11 @@ import android.view.View;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class SettingsDialog extends DialogFragment implements DialogInterface.OnClickListener {
+public class ServerSettingsDialog extends DialogFragment implements DialogInterface.OnClickListener {
     private static final String TAG = "ServerInfoDialog";
 
 
-    public SettingsDialog() {
+    public ServerSettingsDialog() {
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
         StrictMode.setVmPolicy(builder.build());
     }
