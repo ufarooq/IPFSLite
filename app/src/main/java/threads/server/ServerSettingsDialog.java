@@ -12,6 +12,7 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.InputFilter;
+import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -136,7 +137,7 @@ public class ServerSettingsDialog extends DialogFragment implements DialogInterf
 
         TextInputLayout host_layout = view.findViewById(R.id.host_layout);
         TextInputEditText host_text = view.findViewById(R.id.host);
-
+        host_text.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         host_text.setText(host);
         host_text.addTextChangedListener(new TextWatcher() {
             @Override
@@ -208,6 +209,11 @@ public class ServerSettingsDialog extends DialogFragment implements DialogInterf
 
                         RestartDaemonService task = new RestartDaemonService(getActivity());
                         task.execute();
+                    }
+                } else {
+                    if (reset) {
+                        DaemonStatusService service = new DaemonStatusService(getActivity());
+                        service.execute();
                     }
                 }
 
