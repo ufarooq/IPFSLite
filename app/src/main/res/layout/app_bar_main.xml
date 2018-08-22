@@ -7,6 +7,7 @@
     tools:context="threads.server.MainActivity">
 
     <android.support.design.widget.AppBarLayout
+        android:id="@+id/appbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/side_nav_bar"
@@ -24,6 +25,17 @@
     </android.support.design.widget.AppBarLayout>
 
     <include layout="@layout/messages_view" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/trafic_light"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/fab_margin"
+        android:layout_marginTop="64dp"
+        app:backgroundTint="@android:color/transparent"
+        app:layout_anchor="@id/toolbar"
+        app:layout_anchorGravity="bottom|end"
+        app:srcCompat="@drawable/traffic_light_red" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"
