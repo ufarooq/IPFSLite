@@ -12,6 +12,9 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.net.Inet6Address;
+import java.net.InetAddress;
+
 import threads.iri.ITangleDaemon;
 import threads.iri.Logs;
 import threads.iri.daemon.TangleDaemon;
@@ -21,6 +24,7 @@ import threads.iri.room.TangleDatabase;
 import threads.iri.server.ServerConfig;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.TangleServer;
+import threads.iri.tangle.TangleUtils;
 
 public class DaemonService extends Service {
     public static final int NOTIFICATION_ID = 999;
@@ -162,15 +166,42 @@ public class DaemonService extends Service {
                             daemonConfig.isLocalPow());
 
                     Certificate certificate = daemon.getCertificate();
-                    String cert = certificate.getShaHash();
-                    if (!cert.equals(daemonConfig.getCert())) {
+                    String cert = daemonConfig.getCert();
+                    String daemonHost = daemonConfig.getHost();
+                    String publicHost = ITangleDaemon.receivePublicIP();
+                    boolean reset = false;
+                    if (daemonHost.equals(Application.LOCALHOST)) {
+                        daemonHost = publicHost;
+                        reset = true;
+                    }
+                    if (!cert.equals(certificate.getShaHash())) {
+                        cert = certificate.getShaHash();
+                        reset = true;
+                    }
+
+                    if (reset) {
                         Application.setServerConfig(getApplicationContext(), ServerConfig.createServerConfig(
                                 daemonConfig.getProtocol(),
-                                daemonConfig.getHost(),
+                                daemonHost,
                                 daemonConfig.getPort(),
                                 cert,
                                 daemonConfig.isLocalPow()));
                     }
+
+
+                    // TODO remove someday
+                    InetAddress inetAddress = InetAddress.getByName(publicHost);
+                    if (inetAddress instanceof Inet6Address) {
+                        publicHost = "[" + publicHost + "]";
+                    }
+                    Logs.e("Public Host : " + publicHost);
+                    Logs.e("Public Host Reachable :" + TangleUtils.isReachable(ServerConfig.createServerConfig(
+                            daemonConfig.getProtocol(),
+                            publicHost,
+                            daemonConfig.getPort(),
+                            cert,
+                            daemonConfig.isLocalPow())));
+                    // End TODO
 
                     DaemonStatusService service = new DaemonStatusService(getApplicationContext());
                     service.execute();

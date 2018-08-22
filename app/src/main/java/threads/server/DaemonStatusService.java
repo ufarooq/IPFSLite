@@ -29,13 +29,18 @@ public class DaemonStatusService extends AsyncTask<Void, Void, Void> {
             DaemonDatabase daemonDatabase = Application.getDaemonDatabase();
             threads.server.Status status = daemonDatabase.getStatus();
             ITangleDaemon tangleDaemon = TangleDaemon.getInstance();
+            status.setServerRunning(false);
+            status.setNetworkAvailable(false);
+            status.setServerReachable(false);
             if (tangleDaemon.isDaemonRunning()) {
                 status.setServerRunning(true);
                 if (Application.isNetworkAvailable(context)) {
                     status.setNetworkAvailable(true);
                     ServerConfig serverConfig = Application.getServerConfig(context);
-                    if (TangleUtils.isReachable(serverConfig)) {
-                        status.setServerReachable(true);
+                    if (!serverConfig.getHost().equals(Application.LOCALHOST)) {
+                        if (TangleUtils.isReachable(serverConfig)) {
+                            status.setServerReachable(true);
+                        }
                     }
                 }
             }

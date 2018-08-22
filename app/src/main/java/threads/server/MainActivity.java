@@ -292,6 +292,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 ServerInfoDialog.show(this, serverConfig);
                 return true;
             }
+
+
         }
 
         return super.onOptionsItemSelected(item);

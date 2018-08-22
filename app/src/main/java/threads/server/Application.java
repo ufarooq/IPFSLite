@@ -26,8 +26,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Application extends android.app.Application {
 
+    public static final String LOCALHOST = "localhost";
     public static final String TANGLE_PROTOCOL = "https";
-    public static final String TANGLE_HOST = "localhost";
+    public static final String TANGLE_HOST = LOCALHOST;
     public static final String TANGLE_PORT = String.valueOf(ITangleDaemon.TCP_DAEMON_PORT);
     public static final String TANGLE_CERT = "";
     public static final String CHANNEL_ID = "IRI_SERVER_CHANGEL_ID";
