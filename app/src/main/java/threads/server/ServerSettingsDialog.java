@@ -176,9 +176,19 @@ public class ServerSettingsDialog extends DialogFragment implements DialogInterf
 
 
                 ServerConfig serverConfig = Application.getServerConfig(getContext());
-                if (!serverConfig.getHost().equals(hostDaemon) ||
-                        !serverConfig.getPort().equals(portDaemon.toString()) ||
+
+                boolean restart = false;
+                boolean reset = false;
+                if (!serverConfig.getHost().equals(hostDaemon)) {
+                    reset = true;
+                }
+                if (!serverConfig.getPort().equals(portDaemon.toString()) ||
                         serverConfig.isLocalPow() != powDaemon) {
+                    reset = true;
+                    restart = true;
+                }
+
+                if (reset) {
                     Application.setServerConfig(getContext(),
                             ServerConfig.createServerConfig(
                                     serverConfig.getProtocol(),
@@ -187,6 +197,9 @@ public class ServerSettingsDialog extends DialogFragment implements DialogInterf
                                     serverConfig.getCert(),
                                     powDaemon));
 
+
+                }
+                if (restart) {
                     ITangleDaemon tangleDaemon = TangleDaemon.getInstance();
                     if (tangleDaemon.isDaemonRunning()) {
                         // now message and restart
@@ -196,8 +209,8 @@ public class ServerSettingsDialog extends DialogFragment implements DialogInterf
                         RestartDaemonService task = new RestartDaemonService(getActivity());
                         task.execute();
                     }
-
                 }
+
 
                 getDialog().dismiss();
                 break;

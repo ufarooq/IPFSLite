@@ -53,6 +53,9 @@ public class RestartDaemonService extends AsyncTask<Void, Void, Void> {
                     daemonConfig.getPort(),
                     daemonConfig.isLocalPow());
 
+            DaemonStatusService service = new DaemonStatusService(context);
+            service.execute();
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage());
         }

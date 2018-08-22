@@ -170,10 +170,7 @@ public class DaemonService extends Service {
                     String daemonHost = daemonConfig.getHost();
                     String publicHost = ITangleDaemon.receivePublicIP();
                     boolean reset = false;
-                    if (daemonHost.equals(Application.LOCALHOST)) {
-                        daemonHost = publicHost;
-                        reset = true;
-                    }
+
                     if (!cert.equals(certificate.getShaHash())) {
                         cert = certificate.getShaHash();
                         reset = true;
@@ -225,8 +222,6 @@ public class DaemonService extends Service {
         @Override
         protected Void doInBackground(Void... addresses) {
             try {
-                TangleDatabase tangleDatabase =
-                        Application.getTangleDatabase();
                 ITangleDaemon daemon = TangleDaemon.getInstance();
                 if (daemon.isDaemonRunning()) {
                     daemon.shutdown();
