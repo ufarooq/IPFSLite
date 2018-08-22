@@ -171,6 +171,9 @@ public class DaemonService extends Service {
                                 cert,
                                 daemonConfig.isLocalPow()));
                     }
+
+                    DaemonStatusService service = new DaemonStatusService(getApplicationContext());
+                    service.execute();
                 } else {
                     Logs.i("Daemon is already running ...");
                 }
@@ -198,6 +201,9 @@ public class DaemonService extends Service {
                 } else {
                     Logs.e("Daemon is not running ...");
                 }
+
+                DaemonStatusService service = new DaemonStatusService(getApplicationContext());
+                service.execute();
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage());
             }

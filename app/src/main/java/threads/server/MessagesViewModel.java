@@ -8,13 +8,13 @@ import java.util.List;
 public class MessagesViewModel extends AndroidViewModel {
 
     private final LiveData<List<Message>> messages;
-    private final MessageDatabase messagesDatabase;
+    private final DaemonDatabase daemonDatabase;
 
     public MessagesViewModel(android.app.Application application) {
         super(application);
-        messagesDatabase = Application.getMessagesDatabase();
+        daemonDatabase = Application.getDaemonDatabase();
 
-        messages = messagesDatabase.messageDao().getLiveDataMessages();
+        messages = daemonDatabase.messageDao().getLiveDataMessages();
     }
 
 

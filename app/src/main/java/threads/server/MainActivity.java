@@ -2,10 +2,14 @@ package threads.server;
 
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
@@ -24,7 +28,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 
 import java.util.HashMap;
 import java.util.List;
@@ -52,9 +55,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private DrawerLayout drawer_layout;
     private NavigationView navigationView;
     private FloatingActionButton fab;
+    private FloatingActionButton traffic_light;
     private RecyclerView mRecyclerView;
     private MessageViewAdapter messageViewAdapter;
     private long mLastClickTime = 0;
+
+
+    private BroadcastReceiver networkChangeReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            try {
+
+                DaemonStatusService service = new DaemonStatusService(getApplicationContext());
+                service.execute();
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+
+        }
+    };
+
 
     /**
      * Adds a {@link Handler} to a {@link Logs} if they are not already associated.
@@ -114,6 +136,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toggle.syncState();
 
 
+        traffic_light = findViewById(R.id.trafic_light);
         fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -156,6 +179,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onChanged(@Nullable List<Message> messages) {
                 try {
                     updateMessages(messages);
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage());
+                }
+            }
+        });
+
+
+        StatusViewModel statusViewModel = ViewModelProviders.of(this).get(StatusViewModel.class);
+        statusViewModel.getStatus().observe(this, new Observer<Status>() {
+            @Override
+            public void onChanged(@Nullable Status status) {
+                try {
+
+                    if (!status.isServerRunning()) {
+                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
+                        return;
+                    }
+                    if (!status.isNetworkAvailable()) {
+                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_orange));
+                        return;
+                    }
+                    if (!status.isServerReachable()) {
+                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_orange));
+                        return;
+                    }
+                    traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_green));
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage());
                 }
@@ -214,17 +263,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                DaemonCheckService task = new DaemonCheckService(new FinishResponse() {
-                    @Override
-                    public void finish(Boolean success) {
-                        if (success) {
-                            Toast.makeText(MainActivity.this, "Public IP is visible from outside.", Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(MainActivity.this, "SHIT public IP is not visible.", Toast.LENGTH_LONG).show();
-                        }
-                    }
-                });
-                task.execute();
 
                 ServerSettingsDialog.show(this);
 
@@ -262,7 +300,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onResume() {
         super.onResume();
+
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(networkChangeReceiver, intentFilter);
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        unregisterReceiver(networkChangeReceiver);
+    }
+
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
@@ -308,7 +359,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             final String finalMessage = message;
             new java.lang.Thread(new Runnable() {
                 public void run() {
-                    Application.getMessagesDatabase().insertMessage(finalMessage);
+                    Application.getDaemonDatabase().insertMessage(finalMessage);
                 }
             }).start();
 
