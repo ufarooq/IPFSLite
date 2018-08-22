@@ -201,6 +201,8 @@ public class DaemonService extends Service {
                             daemonConfig.getPort(),
                             cert,
                             daemonConfig.isLocalPow())));
+
+
                     // End TODO
 
                     DaemonStatusService service = new DaemonStatusService(getApplicationContext());

@@ -81,14 +81,14 @@ public class ServerInfoDialog extends DialogFragment implements DialogInterface.
                 .setMessage(R.string.tangle_server_access)
                 .setView(view)
                 .setCancelable(false)
-                .setNeutralButton(android.R.string.ok, this)
+                .setPositiveButton(android.R.string.ok, this)
                 .create();
     }
 
     @Override
     public void onClick(DialogInterface dialogInterface, int which) {
         switch (which) {
-            case AlertDialog.BUTTON_NEUTRAL:
+            case AlertDialog.BUTTON_POSITIVE:
                 getDialog().dismiss();
                 break;
         }

@@ -7,21 +7,37 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.annotation.NonNull;
+import android.support.design.widget.TextInputEditText;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AlertDialog;
+import android.text.Editable;
+import android.text.InputFilter;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.CompoundButton;
+import android.widget.Switch;
+import android.widget.Toast;
+
+import threads.iri.ITangleDaemon;
+import threads.iri.daemon.TangleDaemon;
+import threads.iri.server.ServerConfig;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ServerSettingsDialog extends DialogFragment implements DialogInterface.OnClickListener {
     private static final String TAG = "ServerInfoDialog";
 
+    private Integer portDaemon;
+    private Boolean powDaemon;
+    private String hostDaemon;
 
     public ServerSettingsDialog() {
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
         StrictMode.setVmPolicy(builder.build());
     }
+
 
 
     public static void show(@NonNull Activity activity) {
@@ -41,6 +57,14 @@ public class ServerSettingsDialog extends DialogFragment implements DialogInterf
 
     }
 
+    public void setLocalPow(@NonNull Boolean localPow) {
+        this.powDaemon = localPow;
+    }
+
+    private void setPort(@NonNull Integer port) {
+        portDaemon = port;
+    }
+
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -48,22 +72,139 @@ public class ServerSettingsDialog extends DialogFragment implements DialogInterf
         LayoutInflater inflater = LayoutInflater.from(getActivity());
         View view = inflater.inflate(R.layout.dialog_server_settings, null, false);
 
+
         Bundle bundle = getArguments();
+
+        ServerConfig serverConfig = Application.getServerConfig(getContext());
+
+        String host = serverConfig.getHost();
+        setHost(host);
+
+        Integer portDaemon = Integer.valueOf(serverConfig.getPort());
+        setPort(portDaemon);
+
+        Boolean powDaemon = serverConfig.isLocalPow();
+        setLocalPow(powDaemon);
+
+
+        TextInputLayout port_layout = view.findViewById(R.id.port_layout);
+        port_layout.setCounterEnabled(true);
+        port_layout.setCounterMaxLength(5);
+
+        TextInputEditText port = view.findViewById(R.id.port);
+        InputFilter[] filterAge = new InputFilter[1];
+        filterAge[0] = new InputFilter.LengthFilter(5);
+        port.setFilters(filterAge);
+        port.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String portStr = s.toString();
+                try {
+                    Integer port = Integer.valueOf(portStr);
+                    if (port >= Application.MIN_PORT &&
+                            port <= Application.MAX_PORT) {
+                        setPort(port);
+                        port_layout.setError(null);
+                    } else {
+                        port_layout.setError(getString(R.string.port_error));
+                    }
+                } catch (Exception e) {
+                    port_layout.setError(e.getLocalizedMessage());
+                }
+            }
+        });
+
+        port.setText(portDaemon.toString());
+
+        Switch pow_support = view.findViewById(R.id.pow_support);
+        pow_support.setChecked(powDaemon);
+        pow_support.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                setLocalPow(isChecked);
+            }
+        });
+
+        TextInputLayout host_layout = view.findViewById(R.id.host_layout);
+        TextInputEditText host_text = view.findViewById(R.id.host);
+
+        host_text.setText(host);
+        host_text.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                String host = s.toString();
+                setHost(host);
+                if (host.isEmpty()) {
+                    host_layout.setError(getString(R.string.host_invalid));
+                } else {
+                    host_layout.setError(null);
+                }
+            }
+        });
 
         return new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.tangle_server_settings)
                 .setView(view)
                 .setCancelable(true)
-                .setNeutralButton(android.R.string.ok, this)
+                .setPositiveButton(android.R.string.ok, this)
                 .create();
     }
 
     @Override
     public void onClick(DialogInterface dialogInterface, int which) {
         switch (which) {
-            case AlertDialog.BUTTON_NEUTRAL:
+            case AlertDialog.BUTTON_POSITIVE:
+
+
+                ServerConfig serverConfig = Application.getServerConfig(getContext());
+                if (!serverConfig.getHost().equals(hostDaemon) ||
+                        !serverConfig.getPort().equals(portDaemon.toString()) ||
+                        serverConfig.isLocalPow() != powDaemon) {
+                    Application.setServerConfig(getContext(),
+                            ServerConfig.createServerConfig(
+                                    serverConfig.getProtocol(),
+                                    hostDaemon,
+                                    portDaemon.toString(),
+                                    serverConfig.getCert(),
+                                    powDaemon));
+
+                    ITangleDaemon tangleDaemon = TangleDaemon.getInstance();
+                    if (tangleDaemon.isDaemonRunning()) {
+                        // now message and restart
+                        Toast.makeText(getActivity(), R.string.tangle_server_restart, Toast.LENGTH_LONG).show();
+
+
+                        RestartDaemonService task = new RestartDaemonService(getActivity());
+                        task.execute();
+                    }
+
+                }
+
                 getDialog().dismiss();
                 break;
         }
+    }
+
+    public void setHost(@NonNull String host) {
+        this.hostDaemon = host;
     }
 }

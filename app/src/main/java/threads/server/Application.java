@@ -37,6 +37,8 @@ public class Application extends android.app.Application {
     private static final String TANGLE_DATABASE = "TANGLE_DATABASE";
     @NonNull
     private final static Hashtable<String, Bitmap> generalHashtable = new Hashtable<>();
+    public static final Integer MIN_PORT = 443;
+    public static final Integer MAX_PORT = 99999;
     public static boolean TANGLE_LOCAL_POW = false;
     private static TangleDatabase tangleDatabase;
     private static DaemonDatabase daemonDatabase;
