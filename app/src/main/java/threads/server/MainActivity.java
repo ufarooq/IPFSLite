@@ -78,9 +78,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     };
 
 
-    /**
-     * Adds a {@link Handler} to a {@link Logs} if they are not already associated.
-     */
     private void addHandler(@NonNull final java.util.logging.Logger logger,
                             @NonNull final Handler handler) {
         final Handler[] currentHandlers = logger.getHandlers();
@@ -191,20 +188,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             @Override
             public void onChanged(@Nullable Status status) {
                 try {
-
-                    if (!status.isServerRunning()) {
+                    if (status != null) {
+                        if (!status.isServerRunning()) {
+                            traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
+                            return;
+                        }
+                        if (!status.isNetworkAvailable()) {
+                            traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_orange));
+                            return;
+                        }
+                        if (!status.isServerReachable()) {
+                            traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_orange));
+                            return;
+                        }
+                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_green));
+                    } else {
                         traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
-                        return;
                     }
-                    if (!status.isNetworkAvailable()) {
-                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_orange));
-                        return;
-                    }
-                    if (!status.isServerReachable()) {
-                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_orange));
-                        return;
-                    }
-                    traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_green));
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage());
                 }
