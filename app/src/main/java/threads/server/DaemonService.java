@@ -83,7 +83,7 @@ public class DaemonService extends Service {
             builder.setStyle(new NotificationCompat.BigTextStyle()
                     .bigText(getString(R.string.daemon_long_text, String.valueOf(port))));
             builder.setWhen(System.currentTimeMillis());
-            builder.setSmallIcon(R.mipmap.ic_launcher);
+            builder.setSmallIcon(R.drawable.server_network);
             Bitmap largeIconBitmap = Application.getBitmap(getApplicationContext(), R.drawable.server_network);
             builder.setLargeIcon(largeIconBitmap);
             // Make the notification max priority.
