@@ -21,6 +21,9 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import java.net.Inet6Address;
+import java.net.InetAddress;
+
 import threads.iri.ITangleDaemon;
 import threads.iri.daemon.TangleDaemon;
 import threads.iri.server.ServerConfig;
@@ -81,6 +84,23 @@ public class ServerSettingsDialog extends DialogFragment implements DialogInterf
         String host = serverConfig.getHost();
         setHost(host);
 
+        Boolean localhostAddress = false;
+        Boolean ipv6Address = false;
+
+        try {
+            if (!host.isEmpty()) {
+                if ("localhost".equals(host) || host.equals(ITangleDaemon.getIPAddress(true)) ||
+                        host.equals(ITangleDaemon.getIPAddress(false))) {
+                    localhostAddress = true;
+                }
+            }
+
+            InetAddress address = InetAddress.getByName(host);
+            ipv6Address = address instanceof Inet6Address;
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+
         Integer portDaemon = Integer.valueOf(serverConfig.getPort());
         setPort(portDaemon);
 
@@ -127,16 +147,51 @@ public class ServerSettingsDialog extends DialogFragment implements DialogInterf
 
         port.setText(portDaemon.toString());
 
+
         Switch pow_support = view.findViewById(R.id.pow_support);
         pow_support.setChecked(powDaemon);
+        Switch ipv6_support = view.findViewById(R.id.ipv6_support);
+        ipv6_support.setChecked(ipv6Address);
+        Switch localhost = view.findViewById(R.id.localhost);
+        localhost.setChecked(localhostAddress);
+        TextInputLayout host_layout = view.findViewById(R.id.host_layout);
+        TextInputEditText host_text = view.findViewById(R.id.host);
+
+
+
         pow_support.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 setLocalPow(isChecked);
             }
         });
 
-        TextInputLayout host_layout = view.findViewById(R.id.host_layout);
-        TextInputEditText host_text = view.findViewById(R.id.host);
+        if (localhostAddress) {
+            ipv6_support.setVisibility(View.VISIBLE);
+        } else {
+            ipv6_support.setVisibility(View.INVISIBLE);
+        }
+
+
+        ipv6_support.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                String host = ITangleDaemon.getIPAddress(!isChecked);
+                setHost(host);
+                host_text.setText(host);
+            }
+        });
+
+
+        localhost.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    ipv6_support.setVisibility(View.VISIBLE);
+                } else {
+                    ipv6_support.setVisibility(View.INVISIBLE);
+                }
+            }
+        });
+
+
         host_text.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         host_text.setText(host);
         host_text.addTextChangedListener(new TextWatcher() {

@@ -23,4 +23,6 @@
     <string name="port_error">Port should be in the range of[443-99999]</string>
     <string name="host_invalid">The host definition is invalid.</string>
     <string name="tangle_server_restart">The server configuration has changed. A restart of the  tangle server is required to take effect.</string>
+    <string name="localhost">Localhost</string>
+    <string name="ipv6_support">IPv6 Server Address</string>
 </resources>
