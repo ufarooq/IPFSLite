@@ -67,10 +67,8 @@ dependencies {
     implementation 'com.android.support.constraint:constraint-layout:1.1.2'
 
     // API (LICENSE TODO)
-    implementation 'threads.iri:threads:1.2.1'
+    implementation 'threads.iri:threads:1.2.7'
 
-    // QR Scanner (LICENSE TODO)
-    implementation 'com.github.kenglxn.QRGen:android:2.3.0'
 
     // ANDROID Architecture (LICENSE done)
     implementation 'android.arch.persistence.room:runtime:1.1.1'

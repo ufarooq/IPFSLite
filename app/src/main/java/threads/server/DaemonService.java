@@ -24,7 +24,6 @@ import threads.iri.room.TangleDatabase;
 import threads.iri.server.ServerConfig;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.TangleServer;
-import threads.iri.tangle.TangleUtils;
 
 public class DaemonService extends Service {
     public static final int NOTIFICATION_ID = 999;
@@ -156,7 +155,11 @@ public class DaemonService extends Service {
 
                     ITangleServer tangleServer = TangleServer.getTangleServer(serverConfig);
 
+
                     ServerConfig daemonConfig = Application.getServerConfig(getApplicationContext());
+
+                    Log.e(TAG, "Daemon Host : " + daemonConfig.getHost());
+                    Log.e(TAG, "Daemon Port : " + daemonConfig.getPort());
                     daemon.start(
                             getApplicationContext(),
                             tangleDatabase,
@@ -192,7 +195,7 @@ public class DaemonService extends Service {
                         publicHost = "[" + publicHost + "]";
                     }
                     Logs.e("Public Host : " + publicHost);
-                    Logs.e("Public Host Reachable :" + TangleUtils.isReachable(ServerConfig.createServerConfig(
+                    Logs.e("Public Host Reachable :" + ITangleDaemon.isReachable(ServerConfig.createServerConfig(
                             daemonConfig.getProtocol(),
                             publicHost,
                             daemonConfig.getPort(),

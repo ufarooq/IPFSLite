@@ -40,6 +40,7 @@ import java.util.logging.LogRecord;
 import threads.iri.ITangleDaemon;
 import threads.iri.Logs;
 import threads.iri.daemon.TangleDaemon;
+import threads.iri.dialog.ServerInfoDialog;
 import threads.iri.server.ServerConfig;
 
 

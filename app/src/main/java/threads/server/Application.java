@@ -14,10 +14,6 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.google.gson.Gson;
-
-import java.util.Hashtable;
-
 import threads.iri.ITangleDaemon;
 import threads.iri.room.TangleDatabase;
 import threads.iri.server.ServerConfig;
@@ -32,11 +28,9 @@ public class Application extends android.app.Application {
     public static final String TANGLE_PORT = String.valueOf(ITangleDaemon.TCP_DAEMON_PORT);
     public static final String TANGLE_CERT = "";
     public static final String CHANNEL_ID = "IRI_SERVER_CHANGEL_ID";
-    public static final int QR_CODE_SIZE = 800;
+
     private static final String TAG = "Application";
     private static final String TANGLE_DATABASE = "TANGLE_DATABASE";
-    @NonNull
-    private final static Hashtable<String, Bitmap> generalHashtable = new Hashtable<>();
     public static final Integer MIN_PORT = 443;
     public static final Integer MAX_PORT = 99999;
     public static boolean TANGLE_LOCAL_POW = false;
@@ -89,30 +83,7 @@ public class Application extends android.app.Application {
         editor.apply();
     }
 
-    public static Bitmap getBitmap(@NonNull ServerConfig serverConfig) {
 
-        String qrCode = "";
-        Gson gson = new Gson();
-
-        qrCode = gson.toJson(serverConfig);
-
-        if (generalHashtable.containsKey(qrCode)) {
-            return generalHashtable.get(qrCode);
-        }
-        try {
-
-
-            Bitmap bitmap = net.glxn.qrgen.android.QRCode.from(qrCode).
-                    withSize(Application.QR_CODE_SIZE, Application.QR_CODE_SIZE).bitmap();
-
-
-            generalHashtable.put(qrCode, bitmap);
-            return bitmap;
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-        return null;
-    }
 
     public static void createChannel(@NonNull Context context) {
         try {

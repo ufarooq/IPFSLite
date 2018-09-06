@@ -76,9 +76,6 @@ public class ServerSettingsDialog extends DialogFragment implements DialogInterf
         LayoutInflater inflater = LayoutInflater.from(getActivity());
         View view = inflater.inflate(R.layout.dialog_server_settings, null, false);
 
-
-        Bundle bundle = getArguments();
-
         ServerConfig serverConfig = Application.getServerConfig(getContext());
 
         String host = serverConfig.getHost();
@@ -92,11 +89,11 @@ public class ServerSettingsDialog extends DialogFragment implements DialogInterf
                 if ("localhost".equals(host) || host.equals(ITangleDaemon.getIPAddress(true)) ||
                         host.equals(ITangleDaemon.getIPAddress(false))) {
                     localhostAddress = true;
+                } else {
+                    InetAddress address = InetAddress.getByName(host);
+                    ipv6Address = address instanceof Inet6Address;
                 }
             }
-
-            InetAddress address = InetAddress.getByName(host);
-            ipv6Address = address instanceof Inet6Address;
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }

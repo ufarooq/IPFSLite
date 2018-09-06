@@ -8,7 +8,6 @@ import android.util.Log;
 import threads.iri.ITangleDaemon;
 import threads.iri.daemon.TangleDaemon;
 import threads.iri.server.ServerConfig;
-import threads.iri.tangle.TangleUtils;
 
 public class DaemonStatusService extends AsyncTask<Void, Void, Void> {
     private static final String TAG = "DaemonStatusService";
@@ -38,7 +37,7 @@ public class DaemonStatusService extends AsyncTask<Void, Void, Void> {
                     status.setNetworkAvailable(true);
                     ServerConfig serverConfig = Application.getServerConfig(context);
                     if (!serverConfig.getHost().equals(Application.LOCALHOST)) {
-                        if (TangleUtils.isReachable(serverConfig)) {
+                        if (ITangleDaemon.isReachable(serverConfig)) {
                             status.setServerReachable(true);
                         }
                     }
