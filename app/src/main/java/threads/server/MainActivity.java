@@ -2,14 +2,10 @@ package threads.server;
 
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
@@ -34,24 +30,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 
+import threads.core.api.ILink;
 import threads.iri.ITangleDaemon;
-import threads.iri.Logs;
-import threads.iri.daemon.TangleDaemon;
+import threads.iri.daemon.ServerVisibility;
+import threads.iri.dialog.ServerInfoDialog;
+import threads.iri.dialog.ServerSettingsDialog;
+import threads.iri.event.Event;
 import threads.iri.server.ServerConfig;
+import threads.iri.tangle.Pair;
+import threads.iri.task.LoadDaemonConfigTask;
+import threads.iri.task.LoadResponse;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private final LogHandler LOG_HANDLER = new LogHandler();
 
-    /**
-     * Sets up the {@link Logs}, {@link Handler}, and prevents any parent Handlers from being
-     * notified to avoid duplicated log messages.
-     */
     private DrawerLayout drawer_layout;
     private NavigationView navigationView;
     private FloatingActionButton fab;
@@ -61,55 +59,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private long mLastClickTime = 0;
 
 
-    private BroadcastReceiver networkChangeReceiver = new BroadcastReceiver() {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            try {
-
-                DaemonStatusService service = new DaemonStatusService(getApplicationContext());
-                service.execute();
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-
-        }
-    };
-
-
-    private void addHandler(@NonNull final java.util.logging.Logger logger,
-                            @NonNull final Handler handler) {
-        final Handler[] currentHandlers = logger.getHandlers();
-        for (final Handler currentHandler : currentHandlers) {
-            if (currentHandler.equals(handler)) {
-                return;
-            }
-        }
-        logger.addHandler(handler);
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Logs.LOGGER.setUseParentHandlers(false);
-        Logs.LOGGER.setLevel(Level.ALL);
-        LOG_HANDLER.setLevel(Level.ALL);
-        /*
-         * Mapping between Level.* and Log.*:
-         * Level.FINEST  => Log.v
-         * Level.FINER   => Log.v
-         * Level.FINE    => Log.v
-         * Level.CONFIG  => Log.d
-         * Level.INFO    => Log.i
-         * Level.WARNING => Log.w
-         * Level.SEVERE  => Log.e
-         */
-
-        LogManager.getLogManager().addLogger(Logs.LOGGER);
-        addHandler(Logs.LOGGER, LOG_HANDLER);
-
 
         mRecyclerView = findViewById(R.id.reyclerview_message_list);
         LinearLayoutManager linearLayout = new LinearLayoutManager(this);
@@ -145,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                ITangleDaemon daemon = TangleDaemon.getInstance();
+                ITangleDaemon daemon = Application.getTangleDaemon();
                 if (!daemon.isDaemonRunning()) {
 
                     Intent intent = new Intent(MainActivity.this, DaemonService.class);
@@ -162,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
         });
-        ITangleDaemon daemon = TangleDaemon.getInstance();
+        ITangleDaemon daemon = Application.getTangleDaemon();
         if (!daemon.isDaemonRunning()) {
             fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
         } else {
@@ -182,35 +136,71 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-
-        StatusViewModel statusViewModel = ViewModelProviders.of(this).get(StatusViewModel.class);
-        statusViewModel.getStatus().observe(this, new Observer<Status>() {
+        EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
+        eventViewModel.getDaemonServerOfflineEvent().observe(this, new Observer<Event>() {
             @Override
-            public void onChanged(@Nullable Status status) {
+            public void onChanged(@Nullable Event event) {
                 try {
-                    if (status != null) {
-                        if (!status.isServerRunning()) {
-                            traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
-                            return;
-                        }
-                        if (!status.isNetworkAvailable()) {
-                            traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_orange));
-                            return;
-                        }
-                        if (!status.isServerReachable()) {
-                            traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_orange));
-                            return;
-                        }
-                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_green));
-                    } else {
-                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
+                    if (event != null) {
+                        evalueServerVisibilty();
                     }
                 } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage());
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            }
+        });
+        eventViewModel.getDaemonServerOnlineEvent().observe(this, new Observer<Event>() {
+            @Override
+            public void onChanged(@Nullable Event event) {
+                try {
+                    if (event != null) {
+                        evalueServerVisibilty();
+                    }
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
             }
         });
 
+
+    }
+
+    private void evalueServerVisibilty() {
+
+        ITangleDaemon tangleDaemon = Application.getTangleDaemon();
+        LoadDaemonConfigTask task = new LoadDaemonConfigTask(getApplicationContext(),
+                new LoadResponse<Pair<ServerConfig, ServerVisibility>>() {
+                    @Override
+                    public void loaded(@NonNull Pair<ServerConfig, ServerVisibility> pair) {
+                        long start = System.currentTimeMillis();
+                        try {
+                            if (pair != null) {
+                                ServerVisibility serverVisibility = pair.second;
+                                switch (serverVisibility) {
+                                    case GLOBAL:
+                                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_green));
+                                        break;
+                                    case LOCAL:
+                                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_orange));
+                                        break;
+                                    case OFFLINE:
+                                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
+                                        break;
+                                    default:
+                                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
+                                        break;
+                                }
+                            } else {
+                                traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
+                            }
+                        } catch (Throwable e) {
+                            Log.e(TAG, e.getLocalizedMessage());
+                        } finally {
+                            Log.e(TAG, " finish running [" + (System.currentTimeMillis() - start) + "]...");
+                        }
+                    }
+                });
+        task.execute(tangleDaemon);
     }
 
     private void updateMessages(List<Message> messages) {
@@ -286,10 +276,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
+                String accountAddress = Application.getAccountAddress(getApplicationContext());
+                checkNotNull(accountAddress);
+                LoadLinkTask task = new LoadLinkTask(new LoadResponse<ILink>() {
+                    @Override
+                    public void loaded(ILink link) {
+                        try {
+                            ServerInfoDialog.show(MainActivity.this,
+                                    link.getAddress(), new AesKey().getAesKey());
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                        }
 
-                ServerConfig serverConfig = Application.getServerConfig(this);
-
-                ServerInfoDialog.show(this, serverConfig);
+                    }
+                });
+                task.execute(accountAddress);
                 return true;
             }
 
@@ -302,18 +303,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onResume() {
         super.onResume();
-
-
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-        registerReceiver(networkChangeReceiver, intentFilter);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-
-        unregisterReceiver(networkChangeReceiver);
     }
 
 

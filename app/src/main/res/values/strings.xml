@@ -12,8 +12,6 @@
     <string name="navigation_drawer_open">Naviagation open</string>
     <string name="navigation_drawer_close">Navigation close</string>
     <string name="action_info">Info</string>
-    <string name="tangle_server">Tangle Server</string>
-    <string name="tangle_server_access">The QR code contains all necessary information to access this tangle server.</string>
     <string name="tangle_server_settings">Tangle Server Settings</string>
     <string name="action_clear">Clear Console</string>
     <string name="action_check">Check</string>
@@ -25,4 +23,5 @@
     <string name="tangle_server_restart">The server configuration has changed. A restart of the  tangle server is required to take effect.</string>
     <string name="localhost">Localhost</string>
     <string name="ipv6_support">IPv6 Server Address</string>
+    <string name="daemon_port_text">Daemon is running on port \"%1$s\" as host \"%2$s\".\nThe detected public IP is \"%3$s\".\nThe detected IPv4 is \"%4$s\".\nThe detected IPv6 is \"%5$s\".</string>
 </resources>

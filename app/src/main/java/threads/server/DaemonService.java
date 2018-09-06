@@ -3,50 +3,126 @@ package threads.server;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
+import android.arch.lifecycle.LifecycleService;
+import android.arch.lifecycle.Observer;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
-import android.os.IBinder;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.net.Inet6Address;
-import java.net.InetAddress;
-
 import threads.iri.ITangleDaemon;
-import threads.iri.Logs;
-import threads.iri.daemon.TangleDaemon;
+import threads.iri.daemon.ServerVisibility;
 import threads.iri.daemon.TangleListener;
-import threads.iri.room.Certificate;
+import threads.iri.event.Event;
 import threads.iri.room.TangleDatabase;
 import threads.iri.server.ServerConfig;
 import threads.iri.tangle.ITangleServer;
+import threads.iri.tangle.Pair;
 import threads.iri.tangle.TangleServer;
-import threads.iri.tangle.TangleUtils;
+import threads.iri.task.LoadDaemonConfigTask;
+import threads.iri.task.LoadResponse;
 
-public class DaemonService extends Service {
+import static com.google.common.base.Preconditions.checkNotNull;
+
+public class DaemonService extends LifecycleService {
     public static final int NOTIFICATION_ID = 999;
     public static final String ACTION_START_DAEMON_SERVICE = "ACTION_START_DAEMON_SERVICE";
     public static final String ACTION_STOP_DAEMON_SERVICE = "ACTION_STOP_DAEMON_SERVICE";
+    public static final String ACTION_RESTART_DAEMON_SERVICE = "ACTION_RESTART_DAEMON_SERVICE";
     private static final String TAG = DaemonService.class.getSimpleName();
 
     public DaemonService() {
     }
 
+    private void evalueServerVisibilty() {
+
+        ITangleDaemon tangleDaemon = Application.getTangleDaemon();
+        LoadDaemonConfigTask task = new LoadDaemonConfigTask(getApplicationContext(),
+                new LoadResponse<Pair<ServerConfig, ServerVisibility>>() {
+                    @Override
+                    public void loaded(@NonNull Pair<ServerConfig, ServerVisibility> pair) {
+                        long start = System.currentTimeMillis();
+                        try {
+                            if (Application.getTangleDaemon().isDaemonRunning()) {
+
+                                ServerConfig serverConfig = pair.first;
+                                ServerVisibility serverVisibility = pair.second;
+                                String port = serverConfig.getPort();
+                                String host = serverConfig.getHost();
+                                Notification notification = buildNotification(serverVisibility, host, port);
+
+                                // Start foreground service.
+                                startForeground(NOTIFICATION_ID, notification);
+                            }
+                        } catch (Throwable e) {
+                            Log.e(TAG, e.getLocalizedMessage());
+                        } finally {
+                            Log.e(TAG, " finish running [" + (System.currentTimeMillis() - start) + "]...");
+                        }
+                    }
+                });
+        task.execute(tangleDaemon);
+    }
+
+
     @Override
-    public IBinder onBind(Intent intent) {
-        // TODO: Return the communication channel to the service.
-        throw new UnsupportedOperationException("Not yet implemented");
+    public void onCreate() {
+        super.onCreate();
+
+        EventViewModel eventViewModel = new EventViewModel(getApplication());
+        eventViewModel.getPublicIPChangeEvent().observe(this, new Observer<Event>() {
+            @Override
+            public void onChanged(@Nullable Event event) {
+                try {
+                    if (event != null) {
+                        String accountAddress = Application.getAccountAddress(getApplicationContext());
+                        LinkJobService.checkLink(getApplicationContext(), accountAddress);
+
+                        evalueServerVisibilty();
+                    }
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            }
+        });
+        eventViewModel.getHostNameChangeEvent().observe(this, new Observer<Event>() {
+            @Override
+            public void onChanged(@Nullable Event event) {
+                try {
+                    if (event != null) {
+                        String accountAddress = Application.getAccountAddress(getApplicationContext());
+                        LinkJobService.checkLink(getApplicationContext(), accountAddress);
+
+                        evalueServerVisibilty();
+                    }
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            }
+        });
+
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
         if (intent != null) {
             String action = intent.getAction();
 
             switch (action) {
+                case ACTION_RESTART_DAEMON_SERVICE:
+                    restartDaemonService();
+                    Toast.makeText(getApplicationContext(), "Daemon service is restarted.", Toast.LENGTH_LONG).show();
+                    break;
                 case ACTION_START_DAEMON_SERVICE:
                     startDaemonService();
                     Toast.makeText(getApplicationContext(), "Daemon service is started.", Toast.LENGTH_LONG).show();
@@ -60,54 +136,103 @@ public class DaemonService extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
+    private Notification buildNotification(@NonNull ServerVisibility serverVisibility,
+                                           @NonNull String host,
+                                           @NonNull String port) {
+
+        checkNotNull(serverVisibility);
+        checkNotNull(host);
+        checkNotNull(port);
+
+        Application.createChannel(getApplicationContext());
+
+        // Create notification default intent.
+        Intent intent = new Intent();
+        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
+
+        // Create notification builder.
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(
+                getApplicationContext(),
+                Application.CHANNEL_ID);
+
+        String publicIP = Application.getTangleDaemon().getPublicIP();
+        Pair<String, ServerVisibility> ipv4 = ITangleDaemon.getIPv4HostAddress();
+        Pair<String, ServerVisibility> ipv6 = ITangleDaemon.getIPv6HostAddress();
+
+        builder.setContentTitle(getString(R.string.daemon_title));
+        builder.setContentText(getString(R.string.daemon_port_text, port, host, publicIP, ipv4.first, ipv6.first));
+        builder.setStyle(new NotificationCompat.BigTextStyle()
+                .bigText(getString(R.string.daemon_port_text, port, host, publicIP, ipv4.first, ipv6.first)));
+        builder.setWhen(System.currentTimeMillis());
+        builder.setSmallIcon(R.drawable.graphql);
+        // builder.setGroup(Application.GROUP_KEY_TRAVEL_TANGLE); TODO not working for all android versions
+        Bitmap largeIconBitmap = null;
+        switch (serverVisibility) {
+            case GLOBAL:
+                largeIconBitmap = Application.getBitmap(getApplicationContext(), R.drawable.traffic_light_green);
+                break;
+            case LOCAL:
+                largeIconBitmap = Application.getBitmap(getApplicationContext(), R.drawable.traffic_light_orange);
+                builder.setLargeIcon(largeIconBitmap);
+                break;
+            case OFFLINE:
+                largeIconBitmap = Application.getBitmap(getApplicationContext(), R.drawable.traffic_light_red);
+                break;
+            default:
+                largeIconBitmap = Application.getBitmap(getApplicationContext(), R.drawable.server_network);
+                break;
+        }
+        builder.setLargeIcon(largeIconBitmap);
+        // Make the notification max priority.
+        builder.setPriority(Notification.PRIORITY_MAX);
+        // Make head-up notification.
+        builder.setFullScreenIntent(pendingIntent, true);
+
+        // Create an explicit intent for an Activity in your app
+        Intent defaultIntent = new Intent(getApplicationContext(), MainActivity.class);
+        int requestID = (int) System.currentTimeMillis();
+        defaultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent defaultPendingIntent = PendingIntent.getActivity(
+                getApplicationContext(), requestID, defaultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(defaultPendingIntent);
+
+
+        Notification notification = builder.build();
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        notificationManager.notify(NOTIFICATION_ID, notification);
+        return notification;
+    }
+
+    private void restartDaemonService() {
+        RestartDaemonTask task = new RestartDaemonTask(this, new FinishResponse() {
+            @Override
+            public void finish() {
+                evalueServerVisibilty();
+            }
+        });
+        task.execute();
+    }
+
     private void startDaemonService() {
         long start = System.currentTimeMillis();
 
         try {
 
             Application.createChannel(getApplicationContext());
-            // Create notification default intent.
-            Intent intent = new Intent();
-            PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
+            ITangleDaemon tangleDaemon = Application.getTangleDaemon();
+            Pair<ServerConfig, ServerVisibility> pair = ITangleDaemon.getDaemonConfig(
+                    getApplicationContext(), tangleDaemon);
+            ServerConfig serverConfig = pair.first;
+            ServerVisibility serverVisibility = pair.second;
+            String port = serverConfig.getPort();
+            String host = serverConfig.getHost();
 
-            // Create notification builder.
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(
-                    getApplicationContext(),
-                    Application.CHANNEL_ID);
-
-            int port = ITangleDaemon.TCP_DAEMON_PORT;
-
-            builder.setContentTitle(getString(R.string.daemon_title));
-            builder.setContentText(getString(R.string.daemon_text));
-            builder.setStyle(new NotificationCompat.BigTextStyle()
-                    .bigText(getString(R.string.daemon_long_text, String.valueOf(port))));
-            builder.setWhen(System.currentTimeMillis());
-            builder.setSmallIcon(R.drawable.server_network);
-            Bitmap largeIconBitmap = Application.getBitmap(getApplicationContext(), R.drawable.server_network);
-            builder.setLargeIcon(largeIconBitmap);
-            // Make the notification max priority.
-            builder.setPriority(Notification.PRIORITY_MAX);
-            // Make head-up notification.
-            builder.setFullScreenIntent(pendingIntent, true);
-
-            // Create an explicit intent for an Activity in your app
-            Intent defaultIntent = new Intent(getApplicationContext(), MainActivity.class);
-            int requestID = (int) System.currentTimeMillis();
-            defaultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            PendingIntent defaultPendingIntent = PendingIntent.getActivity(
-                    getApplicationContext(), requestID, defaultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-            builder.setContentIntent(defaultPendingIntent);
-
-
-            Notification notification = builder.build();
-
-            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            notificationManager.notify(NOTIFICATION_ID, notification);
-
+            Notification notification = buildNotification(serverVisibility, host, port);
 
             // Start foreground service.
-            startForeground(999, notification);
+            startForeground(NOTIFICATION_ID, notification);
 
             StartDaemonTask task = new StartDaemonTask();
             task.execute();
@@ -146,70 +271,33 @@ public class DaemonService extends Service {
         protected Void doInBackground(Void... addresses) {
             try {
                 TangleDatabase tangleDatabase = Application.getTangleDatabase();
-
-                ITangleDaemon daemon = TangleDaemon.getInstance();
+                ITangleDaemon daemon = Application.getTangleDaemon();
                 if (!daemon.isDaemonRunning()) {
 
-                    // TODO add much more server
-                    ServerConfig serverConfig = ServerConfig.createServerConfig("https",
-                            "nodes.iota.fm", "443", "", false);
+
+                    ServerConfig serverConfig = Application.getServerConfig(getApplicationContext());
 
                     ITangleServer tangleServer = TangleServer.getTangleServer(serverConfig);
 
-                    ServerConfig daemonConfig = Application.getServerConfig(getApplicationContext());
+
+                    ServerConfig daemonConfig = Application.getDaemonConfig(getApplicationContext());
+
+                    Log.e(TAG, "Daemon Host : " + daemonConfig.getHost());
+                    Log.e(TAG, "Daemon Port : " + daemonConfig.getPort());
                     daemon.start(
-                            getApplicationContext(),
                             tangleDatabase,
                             tangleServer,
                             new TangleListener(),
                             daemonConfig.getPort(),
                             daemonConfig.isLocalPow());
 
-                    Certificate certificate = daemon.getCertificate();
-                    String cert = daemonConfig.getCert();
-                    String daemonHost = daemonConfig.getHost();
-                    String publicHost = ITangleDaemon.receivePublicIP();
-                    boolean reset = false;
-
-                    if (!cert.equals(certificate.getShaHash())) {
-                        cert = certificate.getShaHash();
-                        reset = true;
-                    }
-
-                    if (reset) {
-                        Application.setServerConfig(getApplicationContext(), ServerConfig.createServerConfig(
-                                daemonConfig.getProtocol(),
-                                daemonHost,
-                                daemonConfig.getPort(),
-                                cert,
-                                daemonConfig.isLocalPow()));
-                    }
-
-
-                    // TODO remove someday
-                    InetAddress inetAddress = InetAddress.getByName(publicHost);
-                    if (inetAddress instanceof Inet6Address) {
-                        publicHost = "[" + publicHost + "]";
-                    }
-                    Logs.e("Public Host : " + publicHost);
-                    Logs.e("Public Host Reachable :" + TangleUtils.isReachable(ServerConfig.createServerConfig(
-                            daemonConfig.getProtocol(),
-                            publicHost,
-                            daemonConfig.getPort(),
-                            cert,
-                            daemonConfig.isLocalPow())));
-
-
-                    // End TODO
-
-                    DaemonStatusService service = new DaemonStatusService(getApplicationContext());
-                    service.execute();
+                    evalueServerVisibilty();
                 } else {
-                    Logs.i("Daemon is already running ...");
+                    Log.i(TAG, "Daemon is already running ...");
                 }
 
             } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage());
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
             return null;
         }
@@ -222,18 +310,17 @@ public class DaemonService extends Service {
         @Override
         protected Void doInBackground(Void... addresses) {
             try {
-                ITangleDaemon daemon = TangleDaemon.getInstance();
+                ITangleDaemon daemon = Application.getTangleDaemon();
                 if (daemon.isDaemonRunning()) {
                     daemon.shutdown();
-                    Logs.i("Daemon is shutting down ...");
+                    evalueServerVisibilty();
+                    Log.i(TAG, "Daemon is shutting down ...");
                 } else {
-                    Logs.e("Daemon is not running ...");
+                    Log.i(TAG, "Daemon is not running ...");
                 }
 
-                DaemonStatusService service = new DaemonStatusService(getApplicationContext());
-                service.execute();
             } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage());
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
             return null;
         }

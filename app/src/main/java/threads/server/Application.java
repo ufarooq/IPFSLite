@@ -8,40 +8,67 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.google.gson.Gson;
+import com.google.android.gms.common.internal.Preconditions;
 
-import java.util.Hashtable;
-
+import threads.core.IThreadsAPI;
+import threads.core.ThreadsAPI;
+import threads.core.api.ThreadsDatabase;
 import threads.iri.ITangleDaemon;
+import threads.iri.daemon.ServerVisibility;
+import threads.iri.daemon.TangleDaemon;
+import threads.iri.event.EventsDatabase;
 import threads.iri.room.TangleDatabase;
 import threads.iri.server.ServerConfig;
+import threads.iri.tangle.ITangleServer;
+import threads.iri.tangle.Pair;
+import threads.iri.tangle.TangleServer;
+import threads.iri.tangle.TangleUtils;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Application extends android.app.Application {
 
-    public static final String LOCALHOST = "localhost";
+    public static final String TANGLE_HOST = "nodes.iota.fm";
     public static final String TANGLE_PROTOCOL = "https";
-    public static final String TANGLE_HOST = LOCALHOST;
-    public static final String TANGLE_PORT = String.valueOf(ITangleDaemon.TCP_DAEMON_PORT);
+    public static final String TANGLE_PORT = "443";
+    public static final String APPLICATION_AES_KEY = "f2YSXkXvJfp5j45Q8OT+uA==";
     public static final String TANGLE_CERT = "";
+    private static final String ACCOUNT_ADDRESS_KEY = "ACCOUNT_ADDRESS_KEY";
+
     public static final String CHANNEL_ID = "IRI_SERVER_CHANGEL_ID";
-    public static final int QR_CODE_SIZE = 800;
+    private static final String THREADS_DATABASE = "THREADS_DATABASE";
     private static final String TAG = "Application";
     private static final String TANGLE_DATABASE = "TANGLE_DATABASE";
-    @NonNull
-    private final static Hashtable<String, Bitmap> generalHashtable = new Hashtable<>();
+    public static boolean TANGLE_LOCAL_POW = false;
     public static final Integer MIN_PORT = 443;
     public static final Integer MAX_PORT = 99999;
-    public static boolean TANGLE_LOCAL_POW = false;
+
     private static TangleDatabase tangleDatabase;
     private static DaemonDatabase daemonDatabase;
+    private static ITangleDaemon tangleDaemon;
+    private static EventsDatabase eventsDatabase;
+    private static IThreadsAPI ttApi;
+    private static ThreadsDatabase threadsDatabase;
+
+    public static ThreadsDatabase getThreadsDatabase() {
+        return threadsDatabase;
+    }
+
+    public static IThreadsAPI getThreadsAPI() {
+        return ttApi;
+    }
+
+    public static EventsDatabase getEventsDatabase() {
+        return eventsDatabase;
+    }
+
+    public static ITangleDaemon getTangleDaemon() {
+        return tangleDaemon;
+    }
 
     public static DaemonDatabase getDaemonDatabase() {
         return daemonDatabase;
@@ -51,68 +78,40 @@ public class Application extends android.app.Application {
         return tangleDatabase;
     }
 
-    public static boolean isNetworkAvailable(@NonNull Context context) {
-        checkNotNull(context);
-        try {
-            ConnectivityManager connectivityManager
-                    = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            throw e;
-        }
+    public static ITangleServer getTangleServer(@NonNull Context context) {
+        Preconditions.checkNotNull(context);
+        ITangleServer tangleServer = TangleServer.getTangleServer(
+                Application.getServerConfig(context));
+        return tangleServer;
     }
 
     public static ServerConfig getServerConfig(@NonNull Context context) {
-        checkNotNull(context);
+        Preconditions.checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences("SERVERCONFIG", Context.MODE_PRIVATE);
         String protocol = sharedPref.getString("protocol", TANGLE_PROTOCOL);
         String host = sharedPref.getString("host", TANGLE_HOST);
         String port = sharedPref.getString("port", TANGLE_PORT);
-        boolean isLocalPow = sharedPref.getBoolean("TANGLE_LOCAL_POW", TANGLE_LOCAL_POW);
+        boolean isLocalPow = sharedPref.getBoolean("pow", TANGLE_LOCAL_POW);
         String cert = sharedPref.getString("cert", TANGLE_CERT);
         return ServerConfig.createServerConfig(protocol, host, port, cert, isLocalPow);
     }
 
+
     public static void setServerConfig(@NonNull Context context, @NonNull ServerConfig serverConfig) {
-        checkNotNull(context);
-        checkNotNull(serverConfig);
+        Preconditions.checkNotNull(serverConfig);
         SharedPreferences sharedPref = context.getSharedPreferences("SERVERCONFIG", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString("protocol", serverConfig.getProtocol());
         editor.putString("host", serverConfig.getHost());
         editor.putString("port", serverConfig.getPort());
         editor.putString("cert", serverConfig.getCert());
-        editor.putBoolean("TANGLE_LOCAL_POW", serverConfig.isLocalPow());
+        editor.putBoolean("pow", serverConfig.isLocalPow());
 
         editor.apply();
     }
 
-    public static Bitmap getBitmap(@NonNull ServerConfig serverConfig) {
-
-        String qrCode = "";
-        Gson gson = new Gson();
-
-        qrCode = gson.toJson(serverConfig);
-
-        if (generalHashtable.containsKey(qrCode)) {
-            return generalHashtable.get(qrCode);
-        }
-        try {
 
 
-            Bitmap bitmap = net.glxn.qrgen.android.QRCode.from(qrCode).
-                    withSize(Application.QR_CODE_SIZE, Application.QR_CODE_SIZE).bitmap();
-
-
-            generalHashtable.put(qrCode, bitmap);
-            return bitmap;
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-        return null;
-    }
 
     public static void createChannel(@NonNull Context context) {
         try {
@@ -157,6 +156,41 @@ public class Application extends android.app.Application {
         }).start();
     }
 
+    public static ServerConfig getDaemonConfig(@NonNull Context context) {
+        checkNotNull(context);
+        ITangleDaemon tangleDaemon = getTangleDaemon();
+        Pair<ServerConfig, ServerVisibility> pair = ITangleDaemon.getDaemonConfig(
+                context, tangleDaemon);
+        return pair.first;
+    }
+
+    private static void setAccountAddress(@NonNull Context context, @NonNull String account) {
+        checkNotNull(context);
+        checkNotNull(account);
+        try {
+            // encrypt seed and add to preferences
+            SharedPreferences sharedPref = context.getSharedPreferences(
+                    Application.class.getName(), Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putString(ACCOUNT_ADDRESS_KEY, account);
+            editor.apply();
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
+    public static String getAccountAddress(@NonNull Context context) {
+
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                Application.class.getName(), Context.MODE_PRIVATE);
+
+        String accountAddress = sharedPref.getString(ACCOUNT_ADDRESS_KEY, "");
+        if (accountAddress.isEmpty()) {
+            accountAddress = TangleUtils.generateSeed();
+            setAccountAddress(context, accountAddress);
+        }
+        return accountAddress;
+    }
     @Override
     public void onTerminate() {
         super.onTerminate();
@@ -166,11 +200,15 @@ public class Application extends android.app.Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
+        eventsDatabase = Room.inMemoryDatabaseBuilder(this,
+                EventsDatabase.class).build();
+        tangleDaemon = TangleDaemon.getInstance(this, eventsDatabase);
+        threadsDatabase = Room.databaseBuilder(this,
+                ThreadsDatabase.class, THREADS_DATABASE).fallbackToDestructiveMigration().build();
         daemonDatabase = Room.inMemoryDatabaseBuilder(this, DaemonDatabase.class).build();
         tangleDatabase = Room.databaseBuilder(this,
                 TangleDatabase.class, TANGLE_DATABASE).fallbackToDestructiveMigration().build();
-
+        ttApi = ThreadsAPI.getThreadsAPI(threadsDatabase, eventsDatabase);
 
         initMessageDatabase();
 

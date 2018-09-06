@@ -6,55 +6,56 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 
 import threads.iri.ITangleDaemon;
-import threads.iri.Logs;
-import threads.iri.daemon.TangleDaemon;
+import threads.iri.daemon.ServerVisibility;
 import threads.iri.daemon.TangleListener;
 import threads.iri.room.TangleDatabase;
 import threads.iri.server.ServerConfig;
 import threads.iri.tangle.ITangleServer;
+import threads.iri.tangle.Pair;
 import threads.iri.tangle.TangleServer;
 
-public class RestartDaemonService extends AsyncTask<Void, Void, Void> {
-    private static final String TAG = "RestartDaemonService";
+public class RestartDaemonTask extends AsyncTask<Void, Void, Void> {
+    private static final String TAG = "RestartDaemonTask";
 
     private final Context context;
+    private final FinishResponse response;
 
-    public RestartDaemonService(@NonNull Context context) {
+    public RestartDaemonTask(@NonNull Context context, @NonNull FinishResponse response) {
+        this.response = response;
         this.context = context;
     }
 
+    @Override
+    protected void onPostExecute(Void result) {
+
+        response.finish();
+    }
 
     @Override
     protected Void doInBackground(Void... params) {
         try {
 
+            ITangleDaemon tangleDaemon = Application.getTangleDaemon();
 
-            ITangleDaemon tangleDaemon = TangleDaemon.getInstance();
             if (tangleDaemon.isDaemonRunning()) {
                 tangleDaemon.shutdown();
-                Logs.i("Daemon is shutting down ...");
             }
-            Thread.sleep(2000);
 
-
-            // TODO add much more server
-            ServerConfig serverConfig = ServerConfig.createServerConfig("https",
-                    "nodes.iota.fm", "443", "", false);
+            ServerConfig serverConfig = Application.getServerConfig(context);
 
             ITangleServer tangleServer = TangleServer.getTangleServer(serverConfig);
             TangleDatabase tangleDatabase = Application.getTangleDatabase();
 
-            ServerConfig daemonConfig = Application.getServerConfig(context);
+            Pair<ServerConfig, ServerVisibility> pair =
+                    ITangleDaemon.getDaemonConfig(context, tangleDaemon);
+            ServerConfig daemonConfig = pair.first;
+
             tangleDaemon.start(
-                    context,
                     tangleDatabase,
                     tangleServer,
                     new TangleListener(),
                     daemonConfig.getPort(),
                     daemonConfig.isLocalPow());
-
-            DaemonStatusService service = new DaemonStatusService(context);
-            service.execute();
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage());
