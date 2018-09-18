@@ -274,25 +274,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                String accountAddress = Application.getAccountAddress(getApplicationContext());
-                checkNotNull(accountAddress);
-                LoadLinkTask task = new LoadLinkTask(new LoadResponse<ILink>() {
-                    @Override
-                    public void loaded(ILink link) {
-                        try {
-                            if (link != null) {
-                                ServerInfoDialog.show(MainActivity.this,
-                                        link.getAddress(), new AesKey().getAesKey());
-                            } else {
-                                Toast.makeText(getApplicationContext(), getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
+                if (!Application.getTangleDaemon().isDaemonRunning()) {
+                    Toast.makeText(getApplicationContext(), getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
+                } else {
+                    String accountAddress = Application.getAccountAddress(getApplicationContext());
+                    checkNotNull(accountAddress);
+                    LoadLinkTask task = new LoadLinkTask(new LoadResponse<ILink>() {
+                        @Override
+                        public void loaded(ILink link) {
+                            try {
+                                if (link != null) {
+                                    ServerInfoDialog.show(MainActivity.this,
+                                            link.getAddress(), new AesKey().getAesKey());
+                                } else {
+                                    Toast.makeText(getApplicationContext(), getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
+                                }
+                            } catch (Throwable e) {
+                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
                             }
-                        } catch (Throwable e) {
-                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                        }
 
-                    }
-                });
-                task.execute(accountAddress);
+                        }
+                    });
+                    task.execute(accountAddress);
+                }
                 return true;
             }
 
