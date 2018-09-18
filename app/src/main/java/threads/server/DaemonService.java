@@ -23,6 +23,7 @@ import threads.iri.server.ServerConfig;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.Pair;
 import threads.iri.tangle.TangleServer;
+import threads.iri.task.FinishResponse;
 import threads.iri.task.LoadDaemonConfigTask;
 import threads.iri.task.LoadResponse;
 

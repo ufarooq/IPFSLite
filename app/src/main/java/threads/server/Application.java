@@ -48,7 +48,7 @@ public class Application extends android.app.Application {
     public static final Integer MAX_PORT = 99999;
 
     private static TangleDatabase tangleDatabase;
-    private static DaemonDatabase daemonDatabase;
+
     private static ITangleDaemon tangleDaemon;
     private static EventsDatabase eventsDatabase;
     private static IThreadsAPI ttApi;
@@ -68,10 +68,6 @@ public class Application extends android.app.Application {
 
     public static ITangleDaemon getTangleDaemon() {
         return tangleDaemon;
-    }
-
-    public static DaemonDatabase getDaemonDatabase() {
-        return daemonDatabase;
     }
 
     public static TangleDatabase getTangleDatabase() {
@@ -149,8 +145,8 @@ public class Application extends android.app.Application {
     public static void initMessageDatabase() {
         new java.lang.Thread(new Runnable() {
             public void run() {
-                Application.getDaemonDatabase().insertMessage("\nWelcome to the IRI android daemon.");
-                Application.getDaemonDatabase().insertMessage("Please feel free to start the daemon ....\n\n");
+                Application.getEventsDatabase().insertMessage("\nWelcome to the IRI android daemon.");
+                Application.getEventsDatabase().insertMessage("Please feel free to start the daemon ....\n\n");
 
             }
         }).start();
@@ -205,7 +201,6 @@ public class Application extends android.app.Application {
         tangleDaemon = TangleDaemon.getInstance(this, eventsDatabase);
         threadsDatabase = Room.databaseBuilder(this,
                 ThreadsDatabase.class, THREADS_DATABASE).fallbackToDestructiveMigration().build();
-        daemonDatabase = Room.inMemoryDatabaseBuilder(this, DaemonDatabase.class).build();
         tangleDatabase = Room.databaseBuilder(this,
                 TangleDatabase.class, TANGLE_DATABASE).fallbackToDestructiveMigration().build();
         ttApi = ThreadsAPI.getThreadsAPI(threadsDatabase, eventsDatabase);

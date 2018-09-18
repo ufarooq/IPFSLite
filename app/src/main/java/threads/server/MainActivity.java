@@ -25,12 +25,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
 
 import threads.core.api.ILink;
 import threads.iri.ITangleDaemon;
@@ -38,6 +33,7 @@ import threads.iri.daemon.ServerVisibility;
 import threads.iri.dialog.ServerInfoDialog;
 import threads.iri.dialog.ServerSettingsDialog;
 import threads.iri.event.Event;
+import threads.iri.event.Message;
 import threads.iri.server.ServerConfig;
 import threads.iri.tangle.Pair;
 import threads.iri.task.LoadDaemonConfigTask;
@@ -323,53 +319,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         drawer_layout.closeDrawer(GravityCompat.START);
         return true;
-    }
-
-    private final class LogHandler extends Handler {
-        private final Map<Level, Integer> LEVEL_TO_LOG = new HashMap<Level, Integer>(7);
-
-        public LogHandler() {
-
-            LEVEL_TO_LOG.put(Level.FINEST, Log.VERBOSE);
-            LEVEL_TO_LOG.put(Level.FINER, Log.VERBOSE);
-            LEVEL_TO_LOG.put(Level.FINE, Log.VERBOSE);
-            LEVEL_TO_LOG.put(Level.CONFIG, Log.DEBUG);
-            LEVEL_TO_LOG.put(Level.INFO, Log.INFO);
-            LEVEL_TO_LOG.put(Level.WARNING, Log.WARN);
-            LEVEL_TO_LOG.put(Level.SEVERE, Log.ERROR);
-        }
-
-
-        @Override
-        @SuppressWarnings({"LogTagMismatch", "WrongConstant"})
-        public void publish(final LogRecord logRecord) {
-
-            String message = logRecord.getMessage();
-
-            final Throwable error = logRecord.getThrown();
-            if (error != null) {
-                message += "\n" + Log.getStackTraceString(error);
-            }
-
-
-            final String finalMessage = message;
-            new java.lang.Thread(new Runnable() {
-                public void run() {
-                    Application.getDaemonDatabase().insertMessage(finalMessage);
-                }
-            }).start();
-
-
-        }
-
-        @Override
-        public void close() {
-        }
-
-        @Override
-        public void flush() {
-        }
-
     }
 
 }

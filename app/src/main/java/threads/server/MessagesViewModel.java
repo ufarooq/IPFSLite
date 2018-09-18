@@ -5,16 +5,19 @@ import android.arch.lifecycle.LiveData;
 
 import java.util.List;
 
+import threads.iri.event.EventsDatabase;
+import threads.iri.event.Message;
+
 public class MessagesViewModel extends AndroidViewModel {
 
     private final LiveData<List<Message>> messages;
-    private final DaemonDatabase daemonDatabase;
+    private final EventsDatabase eventsDatabase;
 
     public MessagesViewModel(android.app.Application application) {
         super(application);
-        daemonDatabase = Application.getDaemonDatabase();
+        eventsDatabase = Application.getEventsDatabase();
 
-        messages = daemonDatabase.messageDao().getLiveDataMessages();
+        messages = eventsDatabase.messageDao().getLiveDataMessages();
     }
 
 

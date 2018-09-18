@@ -13,6 +13,7 @@ import threads.iri.server.ServerConfig;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.Pair;
 import threads.iri.tangle.TangleServer;
+import threads.iri.task.FinishResponse;
 
 public class RestartDaemonTask extends AsyncTask<Void, Void, Void> {
     private static final String TAG = "RestartDaemonTask";
