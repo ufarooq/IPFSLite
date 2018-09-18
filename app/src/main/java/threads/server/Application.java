@@ -44,8 +44,6 @@ public class Application extends android.app.Application {
     private static final String TAG = "Application";
     private static final String TANGLE_DATABASE = "TANGLE_DATABASE";
     public static boolean TANGLE_LOCAL_POW = false;
-    public static final Integer MIN_PORT = 443;
-    public static final Integer MAX_PORT = 99999;
 
     private static TangleDatabase tangleDatabase;
 
@@ -53,10 +51,6 @@ public class Application extends android.app.Application {
     private static EventsDatabase eventsDatabase;
     private static IThreadsAPI ttApi;
     private static ThreadsDatabase threadsDatabase;
-
-    public static ThreadsDatabase getThreadsDatabase() {
-        return threadsDatabase;
-    }
 
     public static IThreadsAPI getThreadsAPI() {
         return ttApi;

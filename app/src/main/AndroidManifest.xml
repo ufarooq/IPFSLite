@@ -30,6 +30,11 @@
             android:name="threads.server.DaemonService"
             android:enabled="true"
             android:exported="true" />
+        <service
+            android:name="threads.server.LinkJobService"
+            android:enabled="true"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
     </application>
 
 </manifest>

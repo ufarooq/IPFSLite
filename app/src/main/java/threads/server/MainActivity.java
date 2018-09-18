@@ -24,12 +24,14 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import java.util.List;
 
 import threads.core.api.ILink;
 import threads.iri.ITangleDaemon;
 import threads.iri.daemon.ServerVisibility;
+import threads.iri.dialog.RestartServerListener;
 import threads.iri.dialog.ServerInfoDialog;
 import threads.iri.dialog.ServerSettingsDialog;
 import threads.iri.event.Event;
@@ -42,7 +44,7 @@ import threads.iri.task.LoadResponse;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, RestartServerListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -53,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private RecyclerView mRecyclerView;
     private MessageViewAdapter messageViewAdapter;
     private long mLastClickTime = 0;
-
+    private EventViewModel eventViewModel;
 
 
     @Override
@@ -132,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-        EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
+        eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
         eventViewModel.getDaemonServerOfflineEvent().observe(this, new Observer<Event>() {
             @Override
             public void onChanged(@Nullable Event event) {
@@ -278,8 +280,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     @Override
                     public void loaded(ILink link) {
                         try {
-                            ServerInfoDialog.show(MainActivity.this,
-                                    link.getAddress(), new AesKey().getAesKey());
+                            if (link != null) {
+                                ServerInfoDialog.show(MainActivity.this,
+                                        link.getAddress(), new AesKey().getAesKey());
+                            } else {
+                                Toast.makeText(getApplicationContext(), getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
+                            }
                         } catch (Throwable e) {
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
                         }
@@ -321,4 +327,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
+    @Override
+    public void restartServer() {
+        if (Application.getTangleDaemon().isDaemonRunning()) {
+            // now message and restart
+            Toast.makeText(this, R.string.tangle_server_restart, Toast.LENGTH_LONG).show();
+
+            Intent intent = new Intent(MainActivity.this, DaemonService.class);
+            intent.setAction(DaemonService.ACTION_RESTART_DAEMON_SERVICE);
+            startService(intent);
+        }
+    }
+
+    @Override
+    public void renameHost() {
+        if (Application.getTangleDaemon().isDaemonRunning()) {
+            eventViewModel.issueEvent(ITangleDaemon.DAEMON_SERVER_RENAME_HOST_EVENT);
+        }
+    }
 }
