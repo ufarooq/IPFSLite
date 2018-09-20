@@ -15,7 +15,6 @@ import threads.core.api.ILink;
 import threads.iri.ITangleDaemon;
 import threads.iri.daemon.ServerVisibility;
 import threads.iri.event.EventsDatabase;
-import threads.iri.event.IEvent;
 import threads.iri.server.ServerConfig;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.Pair;
@@ -63,8 +62,6 @@ public class LinkJobService extends JobService {
                     EventsDatabase eventsDatabase = Application.getEventsDatabase();
 
                     if (!ITangleDaemon.isReachable(Application.getServerConfig(getApplicationContext()))) {
-                        IEvent event = eventsDatabase.createEvent(IThreadsAPI.TANGLE_SERVER_OFFLINE_EVENT);
-                        eventsDatabase.insertEvent(event);
                         return;
                     }
 

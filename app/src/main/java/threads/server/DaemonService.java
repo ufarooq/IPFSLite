@@ -22,7 +22,6 @@ import threads.iri.room.TangleDatabase;
 import threads.iri.server.ServerConfig;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.Pair;
-import threads.iri.tangle.TangleServer;
 import threads.iri.task.FinishResponse;
 import threads.iri.task.LoadDaemonConfigTask;
 import threads.iri.task.LoadResponse;
@@ -275,10 +274,7 @@ public class DaemonService extends LifecycleService {
                 ITangleDaemon daemon = Application.getTangleDaemon();
                 if (!daemon.isDaemonRunning()) {
 
-
-                    ServerConfig serverConfig = Application.getServerConfig(getApplicationContext());
-
-                    ITangleServer tangleServer = TangleServer.getTangleServer(serverConfig);
+                    ITangleServer tangleServer = Application.getTangleServer(getApplicationContext());
 
 
                     ServerConfig daemonConfig = Application.getDaemonConfig(getApplicationContext());

@@ -12,7 +12,6 @@ import threads.iri.room.TangleDatabase;
 import threads.iri.server.ServerConfig;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.Pair;
-import threads.iri.tangle.TangleServer;
 import threads.iri.task.FinishResponse;
 
 public class RestartDaemonTask extends AsyncTask<Void, Void, Void> {
@@ -42,9 +41,7 @@ public class RestartDaemonTask extends AsyncTask<Void, Void, Void> {
                 tangleDaemon.shutdown();
             }
 
-            ServerConfig serverConfig = Application.getServerConfig(context);
-
-            ITangleServer tangleServer = TangleServer.getTangleServer(serverConfig);
+            ITangleServer tangleServer = Application.getTangleServer(context);
             TangleDatabase tangleDatabase = Application.getTangleDatabase();
 
             Pair<ServerConfig, ServerVisibility> pair =

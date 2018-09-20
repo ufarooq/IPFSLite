@@ -23,6 +23,7 @@ import threads.iri.daemon.TangleDaemon;
 import threads.iri.event.EventsDatabase;
 import threads.iri.room.TangleDatabase;
 import threads.iri.server.ServerConfig;
+import threads.iri.server.ServerDatabase;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.Pair;
 import threads.iri.tangle.TangleServer;
@@ -46,12 +47,13 @@ public class Application extends android.app.Application {
     private static final String THREADS_DATABASE = "THREADS_DATABASE";
     private static final String TAG = "Application";
     private static final String TANGLE_DATABASE = "TANGLE_DATABASE";
+    private static final String SERVER_DATABASE = "SERVER_DATABASE";
 
 
     private static TangleDatabase tangleDatabase;
-
     private static ITangleDaemon tangleDaemon;
     private static EventsDatabase eventsDatabase;
+    private static ServerDatabase serverDatabase;
     private static IThreadsAPI ttApi;
     private static ThreadsDatabase threadsDatabase;
 
@@ -59,6 +61,9 @@ public class Application extends android.app.Application {
         return ttApi;
     }
 
+    public static ServerDatabase getServerDatabase() {
+        return serverDatabase;
+    }
     public static EventsDatabase getEventsDatabase() {
         return eventsDatabase;
     }
@@ -73,7 +78,7 @@ public class Application extends android.app.Application {
 
     public static ITangleServer getTangleServer(@NonNull Context context) {
         Preconditions.checkNotNull(context);
-        ITangleServer tangleServer = TangleServer.getTangleServer(
+        ITangleServer tangleServer = TangleServer.getTangleServer(Application.getServerDatabase(),
                 Application.getServerConfig(context));
         return tangleServer;
     }
@@ -195,6 +200,7 @@ public class Application extends android.app.Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        serverDatabase = Room.inMemoryDatabaseBuilder(this, ServerDatabase.class).build();
         eventsDatabase = Room.inMemoryDatabaseBuilder(this,
                 EventsDatabase.class).build();
         tangleDaemon = TangleDaemon.getInstance(this, eventsDatabase);
