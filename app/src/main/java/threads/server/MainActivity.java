@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
@@ -102,13 +103,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     Intent intent = new Intent(MainActivity.this, DaemonService.class);
                     intent.setAction(DaemonService.ACTION_START_DAEMON_SERVICE);
-                    startService(intent);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        startForegroundService(intent);
+                    } else {
+                        startService(intent);
+                    }
+
 
                     fab.setImageDrawable(getDrawable(R.drawable.stop));
                 } else {
                     Intent intent = new Intent(MainActivity.this, DaemonService.class);
                     intent.setAction(DaemonService.ACTION_STOP_DAEMON_SERVICE);
-                    startService(intent);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        startForegroundService(intent);
+                    } else {
+                        startService(intent);
+                    }
+
 
                     fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
                 }
@@ -339,7 +350,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             Intent intent = new Intent(MainActivity.this, DaemonService.class);
             intent.setAction(DaemonService.ACTION_RESTART_DAEMON_SERVICE);
-            startService(intent);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent);
+            } else {
+                startService(intent);
+            }
         }
     }
 

@@ -32,18 +32,21 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Application extends android.app.Application {
 
-    public static final String TANGLE_HOST = "nodes.iota.fm";
+    public static final String TANGLE_HOST = "nodes.thetangle.org";
     public static final String TANGLE_PROTOCOL = "https";
     public static final String TANGLE_PORT = "443";
-    public static final String APPLICATION_AES_KEY = "f2YSXkXvJfp5j45Q8OT+uA==";
+    public static final String TANGLE_LINK = "";
     public static final String TANGLE_CERT = "";
+    public static final boolean TANGLE_LOCAL_POW = false;
+
+    public static final String APPLICATION_AES_KEY = "f2YSXkXvJfp5j45Q8OT+uA==";
     private static final String ACCOUNT_ADDRESS_KEY = "ACCOUNT_ADDRESS_KEY";
 
     public static final String CHANNEL_ID = "IRI_SERVER_CHANGEL_ID";
     private static final String THREADS_DATABASE = "THREADS_DATABASE";
     private static final String TAG = "Application";
     private static final String TANGLE_DATABASE = "TANGLE_DATABASE";
-    public static boolean TANGLE_LOCAL_POW = false;
+
 
     private static TangleDatabase tangleDatabase;
 
@@ -83,7 +86,8 @@ public class Application extends android.app.Application {
         String port = sharedPref.getString("port", TANGLE_PORT);
         boolean isLocalPow = sharedPref.getBoolean("pow", TANGLE_LOCAL_POW);
         String cert = sharedPref.getString("cert", TANGLE_CERT);
-        return ServerConfig.createServerConfig(protocol, host, port, cert, isLocalPow);
+        String link = sharedPref.getString("link", TANGLE_LINK);
+        return ServerConfig.createServerConfig(protocol, host, port, cert, link, isLocalPow);
     }
 
 
@@ -95,6 +99,7 @@ public class Application extends android.app.Application {
         editor.putString("host", serverConfig.getHost());
         editor.putString("port", serverConfig.getPort());
         editor.putString("cert", serverConfig.getCert());
+        editor.putString("link", serverConfig.getLink());
         editor.putBoolean("pow", serverConfig.isLocalPow());
 
         editor.apply();

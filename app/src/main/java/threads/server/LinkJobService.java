@@ -63,7 +63,7 @@ public class LinkJobService extends JobService {
                     EventsDatabase eventsDatabase = Application.getEventsDatabase();
 
                     if (!ITangleDaemon.isReachable(Application.getServerConfig(getApplicationContext()))) {
-                        IEvent event = eventsDatabase.createEvent(IThreadsAPI.TANGLE_SERVER_EVENT);
+                        IEvent event = eventsDatabase.createEvent(IThreadsAPI.TANGLE_SERVER_OFFLINE_EVENT);
                         eventsDatabase.insertEvent(event);
                         return;
                     }
@@ -91,11 +91,15 @@ public class LinkJobService extends JobService {
 
                     if (link == null) {
                         String address = travelTangleAPI.generateSeed();
-                        String nextAddress = travelTangleAPI.generateSeed();
+                        String nextLink = travelTangleAPI.generateSeed();
 
 
                         link = travelTangleAPI.createLink(
-                                accountAddress, address, nextAddress, token, serverConfig);
+                                accountAddress, address, nextLink, token,
+                                serverConfig.getProtocol(),
+                                serverConfig.getHost(),
+                                serverConfig.getPort(),
+                                serverConfig.getCert());
                         travelTangleAPI.storeLink(link);
                         travelTangleAPI.insertLink(tangleServer, link, new AesKey());
                     } else {
@@ -104,15 +108,22 @@ public class LinkJobService extends JobService {
                         if (!link.getToken().equals(token)) {
                             updateRequired = true;
                         }
-                        if (serverConfig != null && !serverConfig.equals(link.getServerConfig())) {
-                            updateRequired = true;
+                        if (serverConfig != null) {
+                            updateRequired = !serverConfig.getCert().equals(link.getCert()) ||
+                                    !serverConfig.getPort().equals(link.getPort()) ||
+                                    !serverConfig.getHost().equals(link.getHost()) ||
+                                    !serverConfig.getProtocol().equals(link.getProtocol());
                         }
 
                         if (updateRequired) {
-                            String nextAddress = travelTangleAPI.generateSeed();
+                            String nextLink = travelTangleAPI.generateSeed();
                             // should overwrite the old entry
                             link = travelTangleAPI.createLink(accountAddress,
-                                    link.getNextAddress(), nextAddress, token, serverConfig);
+                                    link.getLink(), nextLink, token,
+                                    serverConfig.getProtocol(),
+                                    serverConfig.getHost(),
+                                    serverConfig.getPort(),
+                                    serverConfig.getCert());
                             travelTangleAPI.updateLink(link);
                             travelTangleAPI.insertLink(tangleServer, link, new AesKey());
                         } else {
