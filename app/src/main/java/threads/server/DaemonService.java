@@ -205,7 +205,7 @@ public class DaemonService extends LifecycleService {
     }
 
     private void restartDaemonService() {
-        RestartDaemonTask task = new RestartDaemonTask(this, new FinishResponse() {
+        RestartDaemonTask task = new RestartDaemonTask(new FinishResponse() {
             @Override
             public void finish() {
                 evalueServerVisibilty();
@@ -261,6 +261,53 @@ public class DaemonService extends LifecycleService {
             stopSelf();
 
             Log.e(TAG, " finish running [" + (System.currentTimeMillis() - start) + "]...");
+        }
+    }
+
+
+    public class RestartDaemonTask extends AsyncTask<Void, Void, Void> {
+        private static final String TAG = "RestartDaemonTask";
+
+        private final FinishResponse response;
+
+        public RestartDaemonTask(@NonNull FinishResponse response) {
+            this.response = response;
+
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            response.finish();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+
+                ITangleDaemon tangleDaemon = Application.getTangleDaemon();
+
+                if (tangleDaemon.isDaemonRunning()) {
+                    tangleDaemon.shutdown();
+                }
+
+                ITangleServer tangleServer = Application.getTangleServer(getApplicationContext());
+                TangleDatabase tangleDatabase = Application.getTangleDatabase();
+
+                Pair<ServerConfig, ServerVisibility> pair =
+                        ITangleDaemon.getDaemonConfig(getApplicationContext(), tangleDaemon);
+                ServerConfig daemonConfig = pair.first;
+
+                tangleDaemon.start(
+                        tangleDatabase,
+                        tangleServer,
+                        new TangleListener(),
+                        daemonConfig.getPort(),
+                        daemonConfig.isLocalPow());
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage());
+            }
+            return null;
         }
     }
 
