@@ -67,7 +67,7 @@ dependencies {
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
 
     // API (LICENSE done)
-    implementation 'threads.core:threads:2.2.4'
+    implementation 'threads.core:threads:2.2.9'
 
 
     // ANDROID Architecture (LICENSE done)

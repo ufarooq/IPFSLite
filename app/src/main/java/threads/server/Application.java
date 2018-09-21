@@ -38,6 +38,7 @@ public class Application extends android.app.Application {
     public static final String TANGLE_PORT = "443";
     public static final String TANGLE_LINK = "";
     public static final String TANGLE_CERT = "";
+    public static final String TANGLE_ALIAS = "";
     public static final boolean TANGLE_LOCAL_POW = false;
 
     public static final String APPLICATION_AES_KEY = "f2YSXkXvJfp5j45Q8OT+uA==";
@@ -92,7 +93,8 @@ public class Application extends android.app.Application {
         boolean isLocalPow = sharedPref.getBoolean("pow", TANGLE_LOCAL_POW);
         String cert = sharedPref.getString("cert", TANGLE_CERT);
         String link = sharedPref.getString("link", TANGLE_LINK);
-        return ServerConfig.createServerConfig(protocol, host, port, cert, link, isLocalPow);
+        String alias = sharedPref.getString("alias", TANGLE_ALIAS);
+        return ServerConfig.createServerConfig(protocol, host, port, cert, link, alias, isLocalPow);
     }
 
 
@@ -105,6 +107,7 @@ public class Application extends android.app.Application {
         editor.putString("port", serverConfig.getPort());
         editor.putString("cert", serverConfig.getCert());
         editor.putString("link", serverConfig.getLink());
+        editor.putString("alias", serverConfig.getAlias());
         editor.putBoolean("pow", serverConfig.isLocalPow());
 
         editor.apply();
