@@ -3,12 +3,11 @@ package threads.server;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.arch.lifecycle.LifecycleService;
-import android.arch.lifecycle.Observer;
+import android.app.Service;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
-import android.support.annotation.NonNull;
+import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -17,99 +16,36 @@ import android.widget.Toast;
 import threads.iri.ITangleDaemon;
 import threads.iri.daemon.ServerVisibility;
 import threads.iri.daemon.TangleListener;
-import threads.iri.event.Event;
 import threads.iri.room.TangleDatabase;
 import threads.iri.server.ServerConfig;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.Pair;
-import threads.iri.task.FinishResponse;
-import threads.iri.task.LoadDaemonConfigTask;
-import threads.iri.task.LoadResponse;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-public class DaemonService extends LifecycleService {
+public class DaemonService extends Service {
     public static final int NOTIFICATION_ID = 999;
     public static final String ACTION_START_DAEMON_SERVICE = "ACTION_START_DAEMON_SERVICE";
     public static final String ACTION_STOP_DAEMON_SERVICE = "ACTION_STOP_DAEMON_SERVICE";
     public static final String ACTION_RESTART_DAEMON_SERVICE = "ACTION_RESTART_DAEMON_SERVICE";
     private static final String TAG = DaemonService.class.getSimpleName();
 
-    public DaemonService() {
-    }
-
-    private void evalueServerVisibilty() {
-
-        ITangleDaemon tangleDaemon = Application.getTangleDaemon();
-        LoadDaemonConfigTask task = new LoadDaemonConfigTask(getApplicationContext(),
-                new LoadResponse<Pair<ServerConfig, ServerVisibility>>() {
-                    @Override
-                    public void loaded(@NonNull Pair<ServerConfig, ServerVisibility> pair) {
-                        long start = System.currentTimeMillis();
-                        try {
-                            if (Application.getTangleDaemon().isDaemonRunning()) {
-
-                                ServerConfig serverConfig = pair.first;
-                                ServerVisibility serverVisibility = pair.second;
-                                String port = serverConfig.getPort();
-                                String host = serverConfig.getHost();
-                                Notification notification = buildNotification(serverVisibility, host, port);
-
-                                // Start foreground service.
-                                startForeground(NOTIFICATION_ID, notification);
-                            }
-                        } catch (Throwable e) {
-                            Log.e(TAG, e.getLocalizedMessage());
-                        } finally {
-                            Log.e(TAG, " finish running [" + (System.currentTimeMillis() - start) + "]...");
-                        }
-                    }
-                });
-        task.execute(tangleDaemon);
-    }
-
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-        EventViewModel eventViewModel = new EventViewModel(getApplication());
-        eventViewModel.getPublicIPChangeEvent().observe(this, new Observer<Event>() {
-            @Override
-            public void onChanged(@Nullable Event event) {
-                try {
-                    if (event != null) {
-                        String accountAddress = Application.getAccountAddress(getApplicationContext());
-                        LinkJobService.checkLink(getApplicationContext(), accountAddress);
+        Application.createChannel(getApplicationContext());
 
-                        evalueServerVisibilty();
-                    }
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-            }
-        });
-        eventViewModel.getHostNameChangeEvent().observe(this, new Observer<Event>() {
-            @Override
-            public void onChanged(@Nullable Event event) {
-                try {
-                    if (event != null) {
-                        String accountAddress = Application.getAccountAddress(getApplicationContext());
-                        LinkJobService.checkLink(getApplicationContext(), accountAddress);
+        Notification notification = buildNotification();
 
-                        evalueServerVisibilty();
-                    }
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-            }
-        });
+        // Start foreground service.
+        startForeground(NOTIFICATION_ID, notification);
 
     }
 
+    @Nullable
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public IBinder onBind(Intent intent) {
+        return null;
     }
 
     @Override
@@ -133,16 +69,11 @@ public class DaemonService extends LifecycleService {
                     break;
             }
         }
-        return super.onStartCommand(intent, flags, startId);
+
+        return START_NOT_STICKY;
     }
 
-    private Notification buildNotification(@NonNull ServerVisibility serverVisibility,
-                                           @NonNull String host,
-                                           @NonNull String port) {
-
-        checkNotNull(serverVisibility);
-        checkNotNull(host);
-        checkNotNull(port);
+    private Notification buildNotification() {
 
         Application.createChannel(getApplicationContext());
 
@@ -160,28 +91,14 @@ public class DaemonService extends LifecycleService {
         Pair<String, ServerVisibility> ipv6 = ITangleDaemon.getIPv6HostAddress();
 
         builder.setContentTitle(getString(R.string.daemon_title));
-        builder.setContentText(getString(R.string.daemon_port_text, port, host, publicIP, ipv4.first, ipv6.first));
+        builder.setContentText(getString(R.string.daemon_port_text, publicIP, ipv4.first, ipv6.first));
         builder.setStyle(new NotificationCompat.BigTextStyle()
-                .bigText(getString(R.string.daemon_port_text, port, host, publicIP, ipv4.first, ipv6.first)));
+                .bigText(getString(R.string.daemon_port_text, publicIP, ipv4.first, ipv6.first)));
         builder.setWhen(System.currentTimeMillis());
         builder.setSmallIcon(R.drawable.graphql);
         // builder.setGroup(Application.GROUP_KEY_TRAVEL_TANGLE); TODO not working for all android versions
-        Bitmap largeIconBitmap = null;
-        switch (serverVisibility) {
-            case GLOBAL:
-                largeIconBitmap = Application.getBitmap(getApplicationContext(), R.drawable.traffic_light_green);
-                break;
-            case LOCAL:
-                largeIconBitmap = Application.getBitmap(getApplicationContext(), R.drawable.traffic_light_orange);
-                builder.setLargeIcon(largeIconBitmap);
-                break;
-            case OFFLINE:
-                largeIconBitmap = Application.getBitmap(getApplicationContext(), R.drawable.traffic_light_red);
-                break;
-            default:
-                largeIconBitmap = Application.getBitmap(getApplicationContext(), R.drawable.server_network);
-                break;
-        }
+        Bitmap largeIconBitmap = Application.getBitmap(getApplicationContext(), R.drawable.server_network);
+
         builder.setLargeIcon(largeIconBitmap);
         // Make the notification max priority.
         builder.setPriority(Notification.PRIORITY_MAX);
@@ -205,12 +122,7 @@ public class DaemonService extends LifecycleService {
     }
 
     private void restartDaemonService() {
-        RestartDaemonTask task = new RestartDaemonTask(new FinishResponse() {
-            @Override
-            public void finish() {
-                evalueServerVisibilty();
-            }
-        });
+        RestartDaemonTask task = new RestartDaemonTask();
         task.execute();
     }
 
@@ -218,22 +130,6 @@ public class DaemonService extends LifecycleService {
         long start = System.currentTimeMillis();
 
         try {
-
-            Application.createChannel(getApplicationContext());
-
-            ITangleDaemon tangleDaemon = Application.getTangleDaemon();
-            Pair<ServerConfig, ServerVisibility> pair = ITangleDaemon.getDaemonConfig(
-                    getApplicationContext(), tangleDaemon);
-            ServerConfig serverConfig = pair.first;
-            ServerVisibility serverVisibility = pair.second;
-            String port = serverConfig.getPort();
-            String host = serverConfig.getHost();
-
-            Notification notification = buildNotification(serverVisibility, host, port);
-
-            // Start foreground service.
-            startForeground(NOTIFICATION_ID, notification);
-
             StartDaemonTask task = new StartDaemonTask();
             task.execute();
         } catch (Throwable e) {
@@ -267,18 +163,6 @@ public class DaemonService extends LifecycleService {
 
     public class RestartDaemonTask extends AsyncTask<Void, Void, Void> {
         private static final String TAG = "RestartDaemonTask";
-
-        private final FinishResponse response;
-
-        public RestartDaemonTask(@NonNull FinishResponse response) {
-            this.response = response;
-
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            response.finish();
-        }
 
         @Override
         protected Void doInBackground(Void... params) {
@@ -335,7 +219,6 @@ public class DaemonService extends LifecycleService {
                             daemonConfig.getPort(),
                             daemonConfig.isLocalPow());
 
-                    evalueServerVisibilty();
                 } else {
                     Log.i(TAG, "Daemon is already running ...");
                 }
@@ -357,7 +240,6 @@ public class DaemonService extends LifecycleService {
                 ITangleDaemon daemon = Application.getTangleDaemon();
                 if (daemon.isDaemonRunning()) {
                     daemon.shutdown();
-                    evalueServerVisibilty();
                     Log.i(TAG, "Daemon is shutting down ...");
                 } else {
                     Log.i(TAG, "Daemon is not running ...");

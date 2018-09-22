@@ -151,6 +151,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onChanged(@Nullable Event event) {
                 try {
                     if (event != null) {
+                        String accountAddress = Application.getAccountAddress(getApplicationContext());
+                        LinkJobService.checkLink(getApplicationContext(), accountAddress);
+
                         evalueServerVisibilty();
                     }
                 } catch (Throwable e) {
@@ -163,6 +166,40 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onChanged(@Nullable Event event) {
                 try {
                     if (event != null) {
+                        String accountAddress = Application.getAccountAddress(getApplicationContext());
+                        LinkJobService.checkLink(getApplicationContext(), accountAddress);
+
+                        evalueServerVisibilty();
+                    }
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            }
+        });
+
+        eventViewModel.getPublicIPChangeEvent().observe(this, new Observer<Event>() {
+            @Override
+            public void onChanged(@Nullable Event event) {
+                try {
+                    if (event != null) {
+                        String accountAddress = Application.getAccountAddress(getApplicationContext());
+                        LinkJobService.checkLink(getApplicationContext(), accountAddress);
+
+                        evalueServerVisibilty();
+                    }
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            }
+        });
+        eventViewModel.getHostNameChangeEvent().observe(this, new Observer<Event>() {
+            @Override
+            public void onChanged(@Nullable Event event) {
+                try {
+                    if (event != null) {
+                        String accountAddress = Application.getAccountAddress(getApplicationContext());
+                        LinkJobService.checkLink(getApplicationContext(), accountAddress);
+
                         evalueServerVisibilty();
                     }
                 } catch (Throwable e) {
