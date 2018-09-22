@@ -86,21 +86,10 @@ public class DaemonService extends Service {
                 getApplicationContext(),
                 Application.CHANNEL_ID);
 
-        Pair<String, ServerVisibility> ipv4 = ITangleDaemon.getIPv4HostAddress();
-        Pair<String, ServerVisibility> ipv6 = ITangleDaemon.getIPv6HostAddress();
-
-        String ipv4Addr = ipv4.first;
-        if (ipv4Addr.isEmpty()) {
-            ipv4Addr = getString(R.string.not_detected);
-        }
-        String ipv6Addr = ipv6.first;
-        if (ipv6Addr.isEmpty()) {
-            ipv6Addr = getString(R.string.not_detected);
-        }
         builder.setContentTitle(getString(R.string.daemon_title));
-        builder.setContentText(getString(R.string.daemon_port_text, ipv4Addr, ipv6Addr));
+        builder.setContentText(getString(R.string.daemon_port_text));
         builder.setStyle(new NotificationCompat.BigTextStyle()
-                .bigText(getString(R.string.daemon_port_text, ipv4Addr, ipv6Addr)));
+                .bigText(getString(R.string.daemon_port_text)));
         builder.setWhen(System.currentTimeMillis());
         builder.setSmallIcon(R.drawable.graphql);
         // builder.setGroup(Application.GROUP_KEY_TRAVEL_TANGLE); TODO not working for all android versions

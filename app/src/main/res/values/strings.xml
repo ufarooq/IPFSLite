@@ -23,7 +23,7 @@
     <string name="tangle_server_restart">The server configuration has changed. A restart of the  tangle server is required to take effect.</string>
     <string name="localhost">Localhost</string>
     <string name="ipv6_support">IPv6 Server Address</string>
-    <string name="daemon_port_text">Threads server is running.\nThe detected IPv4 is \"%1$s\".\nThe detected IPv6 is \"%2$s\".</string>
+    <string name="daemon_port_text">Threads server is running.</string>
     <string name="daemon_server_not_running">Threads server is not yet running.</string>
     <string name="not_detected">unresolved</string>
 </resources>
