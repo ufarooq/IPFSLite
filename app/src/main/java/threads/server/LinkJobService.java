@@ -13,9 +13,9 @@ import android.util.Log;
 import threads.core.IThreadsAPI;
 import threads.core.api.ILink;
 import threads.iri.ITangleDaemon;
-import threads.iri.daemon.ServerVisibility;
 import threads.iri.event.EventsDatabase;
 import threads.iri.server.ServerConfig;
+import threads.iri.server.ServerVisibility;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.Pair;
 
@@ -90,14 +90,23 @@ public class LinkJobService extends JobService {
                         String address = travelTangleAPI.generateSeed();
                         String nextLink = travelTangleAPI.generateSeed();
 
+                        String protocol = "";
+                        String host = "";
+                        String port = "";
+                        String cert = "";
+                        String alias = "";
+                        if (serverConfig != null) {
+                            protocol = serverConfig.getProtocol();
+                            host = serverConfig.getHost();
+                            port = serverConfig.getPort();
+                            cert = serverConfig.getCert();
+                            alias = serverConfig.getAlias();
+                        }
 
                         link = travelTangleAPI.createLink(
                                 accountAddress, address, nextLink, token,
-                                serverConfig.getProtocol(),
-                                serverConfig.getHost(),
-                                serverConfig.getPort(),
-                                serverConfig.getCert(),
-                                serverConfig.getAlias());
+                                protocol, host, port, cert, alias);
+
                         travelTangleAPI.storeLink(link);
                         travelTangleAPI.insertLink(tangleServer, link, new AesKey());
                     } else {

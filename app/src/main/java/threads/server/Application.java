@@ -18,12 +18,12 @@ import threads.core.IThreadsAPI;
 import threads.core.ThreadsAPI;
 import threads.core.api.ThreadsDatabase;
 import threads.iri.ITangleDaemon;
-import threads.iri.daemon.ServerVisibility;
 import threads.iri.daemon.TangleDaemon;
 import threads.iri.event.EventsDatabase;
 import threads.iri.room.TangleDatabase;
 import threads.iri.server.ServerConfig;
 import threads.iri.server.ServerDatabase;
+import threads.iri.server.ServerVisibility;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.Pair;
 import threads.iri.tangle.TangleServer;
@@ -43,6 +43,7 @@ public class Application extends android.app.Application {
 
     public static final String APPLICATION_AES_KEY = "f2YSXkXvJfp5j45Q8OT+uA==";
     private static final String ACCOUNT_ADDRESS_KEY = "ACCOUNT_ADDRESS_KEY";
+    private static final String SERVER_CONFIG_KEY = "SERVER_CONFIG_KEY";
 
     public static final String CHANNEL_ID = "IRI_SERVER_CHANGEL_ID";
     private static final String THREADS_DATABASE = "THREADS_DATABASE";
@@ -86,7 +87,7 @@ public class Application extends android.app.Application {
 
     public static ServerConfig getServerConfig(@NonNull Context context) {
         Preconditions.checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences("SERVERCONFIG", Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = context.getSharedPreferences(SERVER_CONFIG_KEY, Context.MODE_PRIVATE);
         String protocol = sharedPref.getString("protocol", TANGLE_PROTOCOL);
         String host = sharedPref.getString("host", TANGLE_HOST);
         String port = sharedPref.getString("port", TANGLE_PORT);
@@ -100,7 +101,7 @@ public class Application extends android.app.Application {
 
     public static void setServerConfig(@NonNull Context context, @NonNull ServerConfig serverConfig) {
         Preconditions.checkNotNull(serverConfig);
-        SharedPreferences sharedPref = context.getSharedPreferences("SERVERCONFIG", Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = context.getSharedPreferences(SERVER_CONFIG_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString("protocol", serverConfig.getProtocol());
         editor.putString("host", serverConfig.getHost());
@@ -183,7 +184,7 @@ public class Application extends android.app.Application {
     }
 
     public static String getAccountAddress(@NonNull Context context) {
-
+        checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(
                 Application.class.getName(), Context.MODE_PRIVATE);
 

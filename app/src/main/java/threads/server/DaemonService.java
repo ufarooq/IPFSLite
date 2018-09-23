@@ -14,10 +14,9 @@ import android.util.Log;
 import android.widget.Toast;
 
 import threads.iri.ITangleDaemon;
-import threads.iri.daemon.ServerVisibility;
-import threads.iri.daemon.TangleListener;
 import threads.iri.room.TangleDatabase;
 import threads.iri.server.ServerConfig;
+import threads.iri.server.ServerVisibility;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.Pair;
 
@@ -180,7 +179,6 @@ public class DaemonService extends Service {
                 tangleDaemon.start(
                         tangleDatabase,
                         tangleServer,
-                        new TangleListener(),
                         daemonConfig.getPort(),
                         daemonConfig.isLocalPow());
 
@@ -211,7 +209,6 @@ public class DaemonService extends Service {
                     daemon.start(
                             tangleDatabase,
                             tangleServer,
-                            new TangleListener(),
                             daemonConfig.getPort(),
                             daemonConfig.isLocalPow());
 
