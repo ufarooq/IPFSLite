@@ -14,7 +14,7 @@ import threads.core.IThreadsAPI;
 import threads.core.api.ILink;
 import threads.iri.ITangleDaemon;
 import threads.iri.event.EventsDatabase;
-import threads.iri.server.ServerConfig;
+import threads.iri.server.Server;
 import threads.iri.server.ServerVisibility;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.Pair;
@@ -61,7 +61,7 @@ public class LinkJobService extends JobService {
 
                     EventsDatabase eventsDatabase = Application.getEventsDatabase();
 
-                    if (!ITangleDaemon.isReachable(Application.getServerConfig(getApplicationContext()))) {
+                    if (!ITangleDaemon.isReachable(Application.getDefaultServer(getApplicationContext()))) {
                         return;
                     }
 
@@ -69,12 +69,12 @@ public class LinkJobService extends JobService {
                     ITangleServer tangleServer =
                             Application.getTangleServer(getApplicationContext());
 
-                    ServerConfig serverConfig = null;
+                    Server serverConfig = null;
                     ILink link = travelTangleAPI.getLinkByAccountAddress(accountAddress);
                     String token = "";
                     ITangleDaemon tangleDaemon = Application.getTangleDaemon();
                     if (tangleDaemon.isDaemonRunning()) {
-                        Pair<ServerConfig, ServerVisibility> pair = ITangleDaemon.getDaemonConfig(
+                        Pair<Server, ServerVisibility> pair = ITangleDaemon.getDaemonConfig(
                                 getApplicationContext(), tangleDaemon);
 
                         if (pair.second != ServerVisibility.OFFLINE) {
@@ -82,7 +82,7 @@ public class LinkJobService extends JobService {
                         }
                     } else {
                         if (tangleServer.getServerInfo().isSupportDataStorage()) {
-                            serverConfig = Application.getServerConfig(getApplicationContext());
+                            serverConfig = Application.getDefaultServer(getApplicationContext());
                         }
                     }
 

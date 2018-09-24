@@ -38,7 +38,7 @@ import threads.iri.dialog.ServerInfoDialog;
 import threads.iri.dialog.ServerSettingsDialog;
 import threads.iri.event.Event;
 import threads.iri.event.Message;
-import threads.iri.server.ServerConfig;
+import threads.iri.server.Server;
 import threads.iri.server.ServerVisibility;
 import threads.iri.tangle.Pair;
 
@@ -215,9 +215,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         ITangleDaemon tangleDaemon = Application.getTangleDaemon();
         LoadDaemonConfigTask task = new LoadDaemonConfigTask(getApplicationContext(),
-                new LoadResponse<Pair<ServerConfig, ServerVisibility>>() {
+                new LoadResponse<Pair<Server, ServerVisibility>>() {
                     @Override
-                    public void loaded(@NonNull Pair<ServerConfig, ServerVisibility> pair) {
+                    public void loaded(@NonNull Pair<Server, ServerVisibility> pair) {
                         long start = System.currentTimeMillis();
                         try {
                             if (pair != null) {

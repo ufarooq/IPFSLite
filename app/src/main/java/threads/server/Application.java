@@ -20,7 +20,7 @@ import threads.core.api.ThreadsDatabase;
 import threads.iri.ITangleDaemon;
 import threads.iri.daemon.TangleDaemon;
 import threads.iri.event.EventsDatabase;
-import threads.iri.server.ServerConfig;
+import threads.iri.server.Server;
 import threads.iri.server.ServerDatabase;
 import threads.iri.server.ServerVisibility;
 import threads.iri.tangle.ITangleServer;
@@ -39,7 +39,6 @@ public class Application extends android.app.Application {
     public static final String TANGLE_LINK = "";
     public static final String TANGLE_CERT = "";
     public static final String TANGLE_ALIAS = "";
-    public static final boolean TANGLE_LOCAL_POW = false;
 
     public static final String APPLICATION_AES_KEY = "f2YSXkXvJfp5j45Q8OT+uA==";
     private static final String ACCOUNT_ADDRESS_KEY = "ACCOUNT_ADDRESS_KEY";
@@ -81,35 +80,33 @@ public class Application extends android.app.Application {
     public static ITangleServer getTangleServer(@NonNull Context context) {
         Preconditions.checkNotNull(context);
         ITangleServer tangleServer = TangleServer.getTangleServer(Application.getServerDatabase(),
-                Application.getServerConfig(context));
+                Application.getDefaultServer(context));
         return tangleServer;
     }
 
-    public static ServerConfig getServerConfig(@NonNull Context context) {
+    public static Server getDefaultServer(@NonNull Context context) {
         Preconditions.checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(SERVER_CONFIG_KEY, Context.MODE_PRIVATE);
         String protocol = sharedPref.getString("protocol", TANGLE_PROTOCOL);
         String host = sharedPref.getString("host", TANGLE_HOST);
         String port = sharedPref.getString("port", TANGLE_PORT);
-        boolean isLocalPow = sharedPref.getBoolean("pow", TANGLE_LOCAL_POW);
         String cert = sharedPref.getString("cert", TANGLE_CERT);
         String link = sharedPref.getString("link", TANGLE_LINK);
         String alias = sharedPref.getString("alias", TANGLE_ALIAS);
-        return ServerConfig.createServerConfig(protocol, host, port, cert, link, alias, isLocalPow);
+        return Server.createServer(protocol, host, port, cert, link, alias);
     }
 
 
-    public static void setServerConfig(@NonNull Context context, @NonNull ServerConfig serverConfig) {
-        Preconditions.checkNotNull(serverConfig);
+    public static void setDefaultServer(@NonNull Context context, @NonNull Server server) {
+        Preconditions.checkNotNull(server);
         SharedPreferences sharedPref = context.getSharedPreferences(SERVER_CONFIG_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString("protocol", serverConfig.getProtocol());
-        editor.putString("host", serverConfig.getHost());
-        editor.putString("port", serverConfig.getPort());
-        editor.putString("cert", serverConfig.getCert());
-        editor.putString("link", serverConfig.getLink());
-        editor.putString("alias", serverConfig.getAlias());
-        editor.putBoolean("pow", serverConfig.isLocalPow());
+        editor.putString("protocol", server.getProtocol());
+        editor.putString("host", server.getHost());
+        editor.putString("port", server.getPort());
+        editor.putString("cert", server.getCert());
+        editor.putString("link", server.getLink());
+        editor.putString("alias", server.getAlias());
 
         editor.apply();
     }
@@ -160,10 +157,10 @@ public class Application extends android.app.Application {
         }).start();
     }
 
-    public static ServerConfig getDaemonConfig(@NonNull Context context) {
+    public static Server getDaemonConfig(@NonNull Context context) {
         checkNotNull(context);
         ITangleDaemon tangleDaemon = getTangleDaemon();
-        Pair<ServerConfig, ServerVisibility> pair = ITangleDaemon.getDaemonConfig(
+        Pair<Server, ServerVisibility> pair = ITangleDaemon.getDaemonConfig(
                 context, tangleDaemon);
         return pair.first;
     }

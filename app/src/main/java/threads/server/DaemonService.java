@@ -14,7 +14,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 import threads.iri.ITangleDaemon;
-import threads.iri.server.ServerConfig;
+import threads.iri.server.Server;
 import threads.iri.server.ServerVisibility;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.Pair;
@@ -170,15 +170,15 @@ public class DaemonService extends Service {
                 ITangleServer tangleServer = Application.getTangleServer(getApplicationContext());
                 TangleDatabase tangleDatabase = Application.getTangleDatabase();
 
-                Pair<ServerConfig, ServerVisibility> pair =
+                Pair<Server, ServerVisibility> pair =
                         ITangleDaemon.getDaemonConfig(getApplicationContext(), tangleDaemon);
-                ServerConfig daemonConfig = pair.first;
+                Server daemonConfig = pair.first;
 
                 tangleDaemon.start(
                         tangleDatabase,
                         tangleServer,
                         daemonConfig.getPort(),
-                        daemonConfig.isLocalPow());
+                        false); // TODO
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage());
@@ -200,7 +200,7 @@ public class DaemonService extends Service {
                     ITangleServer tangleServer = Application.getTangleServer(getApplicationContext());
 
 
-                    ServerConfig daemonConfig = Application.getDaemonConfig(getApplicationContext());
+                    Server daemonConfig = Application.getDaemonConfig(getApplicationContext());
 
                     Log.e(TAG, "Daemon Host : " + daemonConfig.getHost());
                     Log.e(TAG, "Daemon Port : " + daemonConfig.getPort());
@@ -208,7 +208,7 @@ public class DaemonService extends Service {
                             tangleDatabase,
                             tangleServer,
                             daemonConfig.getPort(),
-                            daemonConfig.isLocalPow());
+                            false); // TODO
 
                 } else {
                     Log.i(TAG, "Daemon is already running ...");
