@@ -31,6 +31,8 @@ import java.util.List;
 
 import threads.core.api.ILink;
 import threads.iri.ITangleDaemon;
+import threads.iri.dialog.LoadDaemonConfigTask;
+import threads.iri.dialog.LoadResponse;
 import threads.iri.dialog.RestartServerListener;
 import threads.iri.dialog.ServerInfoDialog;
 import threads.iri.dialog.ServerSettingsDialog;
@@ -39,8 +41,6 @@ import threads.iri.event.Message;
 import threads.iri.server.ServerConfig;
 import threads.iri.server.ServerVisibility;
 import threads.iri.tangle.Pair;
-import threads.iri.task.LoadDaemonConfigTask;
-import threads.iri.task.LoadResponse;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

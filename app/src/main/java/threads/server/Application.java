@@ -20,12 +20,12 @@ import threads.core.api.ThreadsDatabase;
 import threads.iri.ITangleDaemon;
 import threads.iri.daemon.TangleDaemon;
 import threads.iri.event.EventsDatabase;
-import threads.iri.room.TangleDatabase;
 import threads.iri.server.ServerConfig;
 import threads.iri.server.ServerDatabase;
 import threads.iri.server.ServerVisibility;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.Pair;
+import threads.iri.tangle.TangleDatabase;
 import threads.iri.tangle.TangleServer;
 import threads.iri.tangle.TangleUtils;
 

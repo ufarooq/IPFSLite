@@ -14,11 +14,11 @@ import android.util.Log;
 import android.widget.Toast;
 
 import threads.iri.ITangleDaemon;
-import threads.iri.room.TangleDatabase;
 import threads.iri.server.ServerConfig;
 import threads.iri.server.ServerVisibility;
 import threads.iri.tangle.ITangleServer;
 import threads.iri.tangle.Pair;
+import threads.iri.tangle.TangleDatabase;
 
 public class DaemonService extends Service {
     public static final int NOTIFICATION_ID = 999;
@@ -73,8 +73,6 @@ public class DaemonService extends Service {
     }
 
     private Notification buildNotification() {
-
-        Application.createChannel(getApplicationContext());
 
         // Create notification default intent.
         Intent intent = new Intent();

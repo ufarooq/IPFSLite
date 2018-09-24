@@ -5,7 +5,7 @@ import android.support.annotation.NonNull;
 
 import threads.core.IThreadsAPI;
 import threads.core.api.ILink;
-import threads.iri.task.LoadResponse;
+import threads.iri.dialog.LoadResponse;
 
 public class LoadLinkTask extends AsyncTask<String, String, ILink> {
     private static final String TAG = LoadLinkTask.class.getSimpleName();

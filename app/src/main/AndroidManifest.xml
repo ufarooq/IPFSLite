@@ -27,10 +27,12 @@
 
 
         </activity>
+
         <service
             android:name="threads.server.DaemonService"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="false" />
+
         <service
             android:name="threads.server.LinkJobService"
             android:enabled="true"
