@@ -157,10 +157,10 @@ public class Application extends android.app.Application {
         }).start();
     }
 
-    public static Server getDaemonConfig(@NonNull Context context) {
+    public static Server getDaemonServer(@NonNull Context context) {
         checkNotNull(context);
         ITangleDaemon tangleDaemon = getTangleDaemon();
-        Pair<Server, ServerVisibility> pair = ITangleDaemon.getDaemonConfig(
+        Pair<Server, ServerVisibility> pair = ITangleDaemon.getDaemonServer(
                 context, tangleDaemon);
         return pair.first;
     }

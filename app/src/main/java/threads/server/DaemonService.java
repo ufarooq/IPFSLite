@@ -171,14 +171,13 @@ public class DaemonService extends Service {
                 TangleDatabase tangleDatabase = Application.getTangleDatabase();
 
                 Pair<Server, ServerVisibility> pair =
-                        ITangleDaemon.getDaemonConfig(getApplicationContext(), tangleDaemon);
+                        ITangleDaemon.getDaemonServer(getApplicationContext(), tangleDaemon);
                 Server daemonConfig = pair.first;
 
                 tangleDaemon.start(
                         tangleDatabase,
                         tangleServer,
-                        daemonConfig.getPort(),
-                        false); // TODO
+                        daemonConfig.getPort());
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage());
@@ -200,15 +199,14 @@ public class DaemonService extends Service {
                     ITangleServer tangleServer = Application.getTangleServer(getApplicationContext());
 
 
-                    Server daemonConfig = Application.getDaemonConfig(getApplicationContext());
+                    Server daemonServer = Application.getDaemonServer(getApplicationContext());
 
-                    Log.e(TAG, "Daemon Host : " + daemonConfig.getHost());
-                    Log.e(TAG, "Daemon Port : " + daemonConfig.getPort());
+                    Log.e(TAG, "Daemon Host : " + daemonServer.getHost());
+                    Log.e(TAG, "Daemon Port : " + daemonServer.getPort());
                     daemon.start(
                             tangleDatabase,
                             tangleServer,
-                            daemonConfig.getPort(),
-                            false); // TODO
+                            daemonServer.getPort());
 
                 } else {
                     Log.i(TAG, "Daemon is already running ...");
