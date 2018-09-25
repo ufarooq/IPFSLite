@@ -333,7 +333,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             try {
                                 if (link != null) {
                                     ServerInfoDialog.show(MainActivity.this,
-                                            link.getAddress(), new AesKey().getAesKey());
+                                            link.getAddress(), Application.getAesKey().getAesKey());
                                 } else {
                                     Toast.makeText(getApplicationContext(), getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
                                 }

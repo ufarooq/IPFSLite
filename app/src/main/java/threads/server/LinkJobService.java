@@ -105,7 +105,7 @@ public class LinkJobService extends JobService {
                                 protocol, host, port, cert, alias);
 
                         travelTangleAPI.storeLink(link);
-                        travelTangleAPI.insertLink(tangleServer, link, new AesKey());
+                        travelTangleAPI.insertLink(tangleServer, link, Application.getAesKey());
                     } else {
                         boolean updateRequired = false;
 
@@ -130,9 +130,9 @@ public class LinkJobService extends JobService {
                                     serverConfig.getCert(),
                                     serverConfig.getAlias());
                             travelTangleAPI.updateLink(link);
-                            travelTangleAPI.insertLink(tangleServer, link, new AesKey());
+                            travelTangleAPI.insertLink(tangleServer, link, Application.getAesKey());
                         } else {
-                            travelTangleAPI.verifyLink(tangleServer, link, new AesKey());
+                            travelTangleAPI.verifyLink(tangleServer, link, Application.getAesKey());
                         }
                     }
                 } catch (Throwable e) {

@@ -14,6 +14,7 @@ import android.util.Log;
 
 import com.google.android.gms.common.internal.Preconditions;
 
+import threads.core.IAesKey;
 import threads.core.IThreadsAPI;
 import threads.core.ThreadsAPI;
 import threads.core.api.ThreadsDatabase;
@@ -57,7 +58,11 @@ public class Application extends android.app.Application {
     private static ServerDatabase serverDatabase;
     private static IThreadsAPI ttApi;
     private static ThreadsDatabase threadsDatabase;
+    private static IAesKey aesKey;
 
+    public static IAesKey getAesKey() {
+        return aesKey;
+    }
     public static IThreadsAPI getThreadsAPI() {
         return ttApi;
     }
@@ -201,6 +206,7 @@ public class Application extends android.app.Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        aesKey = new AesKey();
         serverDatabase = Room.inMemoryDatabaseBuilder(this, ServerDatabase.class).build();
         eventsDatabase = Room.inMemoryDatabaseBuilder(this,
                 EventsDatabase.class).build();
@@ -219,4 +225,12 @@ public class Application extends android.app.Application {
     }
 
 
+    private class AesKey implements IAesKey {
+
+        @Override
+        public String getAesKey() {
+            return BuildConfig.ApiAesKey;
+        }
+
+    }
 }
