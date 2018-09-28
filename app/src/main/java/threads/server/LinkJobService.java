@@ -12,7 +12,7 @@ import android.util.Log;
 
 import threads.core.IThreadsAPI;
 import threads.core.api.ILink;
-import threads.iri.ITangleDaemon;
+import threads.iri.IThreadsServer;
 import threads.iri.server.Server;
 import threads.iri.server.ServerVisibility;
 import threads.iri.tangle.ITangleServer;
@@ -58,7 +58,7 @@ public class LinkJobService extends JobService {
                 try {
                     Log.e(TAG, " still running ...");
 
-                    if (!ITangleDaemon.isReachable(Application.getDefaultServer(getApplicationContext()))) {
+                    if (!Server.isReachable(Application.getDefaultServer(getApplicationContext()))) {
                         return;
                     }
 
@@ -69,9 +69,9 @@ public class LinkJobService extends JobService {
                     Server serverConfig = null;
                     ILink link = travelTangleAPI.getLinkByAccountAddress(accountAddress);
                     String token = "";
-                    ITangleDaemon tangleDaemon = Application.getTangleDaemon();
-                    if (tangleDaemon.isDaemonRunning()) {
-                        Pair<Server, ServerVisibility> pair = ITangleDaemon.getDaemonServer(
+                    IThreadsServer tangleDaemon = Application.getTangleDaemon();
+                    if (tangleDaemon.isRunning()) {
+                        Pair<Server, ServerVisibility> pair = IThreadsServer.getServer(
                                 getApplicationContext(), tangleDaemon);
 
                         if (pair.second != ServerVisibility.OFFLINE) {

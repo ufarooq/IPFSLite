@@ -13,7 +13,7 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-import threads.iri.ITangleDaemon;
+import threads.iri.IThreadsServer;
 import threads.iri.server.Server;
 import threads.iri.server.ServerVisibility;
 import threads.iri.tangle.ITangleServer;
@@ -161,9 +161,9 @@ public class DaemonService extends Service {
         protected Void doInBackground(Void... params) {
             try {
 
-                ITangleDaemon tangleDaemon = Application.getTangleDaemon();
+                IThreadsServer tangleDaemon = Application.getTangleDaemon();
 
-                if (tangleDaemon.isDaemonRunning()) {
+                if (tangleDaemon.isRunning()) {
                     tangleDaemon.shutdown();
                 }
 
@@ -171,7 +171,7 @@ public class DaemonService extends Service {
                 TangleDatabase tangleDatabase = Application.getTangleDatabase();
 
                 Pair<Server, ServerVisibility> pair =
-                        ITangleDaemon.getDaemonServer(getApplicationContext(), tangleDaemon);
+                        IThreadsServer.getServer(getApplicationContext(), tangleDaemon);
                 Server daemonConfig = pair.first;
 
                 tangleDaemon.start(
@@ -193,8 +193,8 @@ public class DaemonService extends Service {
         protected Void doInBackground(Void... addresses) {
             try {
                 TangleDatabase tangleDatabase = Application.getTangleDatabase();
-                ITangleDaemon daemon = Application.getTangleDaemon();
-                if (!daemon.isDaemonRunning()) {
+                IThreadsServer daemon = Application.getTangleDaemon();
+                if (!daemon.isRunning()) {
 
                     ITangleServer tangleServer = Application.getTangleServer(getApplicationContext());
 
@@ -226,8 +226,8 @@ public class DaemonService extends Service {
         @Override
         protected Void doInBackground(Void... addresses) {
             try {
-                ITangleDaemon daemon = Application.getTangleDaemon();
-                if (daemon.isDaemonRunning()) {
+                IThreadsServer daemon = Application.getTangleDaemon();
+                if (daemon.isRunning()) {
                     daemon.shutdown();
                     Log.i(TAG, "Daemon is shutting down ...");
                 } else {

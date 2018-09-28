@@ -18,8 +18,8 @@ import threads.core.IAesKey;
 import threads.core.IThreadsAPI;
 import threads.core.ThreadsAPI;
 import threads.core.api.ThreadsDatabase;
-import threads.iri.ITangleDaemon;
-import threads.iri.daemon.TangleDaemon;
+import threads.iri.IThreadsServer;
+import threads.iri.daemon.ThreadsServer;
 import threads.iri.event.EventsDatabase;
 import threads.iri.server.Server;
 import threads.iri.server.ServerDatabase;
@@ -53,7 +53,7 @@ public class Application extends android.app.Application {
 
 
     private static TangleDatabase tangleDatabase;
-    private static ITangleDaemon tangleDaemon;
+    private static IThreadsServer tangleDaemon;
     private static EventsDatabase eventsDatabase;
     private static ServerDatabase serverDatabase;
     private static IThreadsAPI ttApi;
@@ -74,7 +74,7 @@ public class Application extends android.app.Application {
         return eventsDatabase;
     }
 
-    public static ITangleDaemon getTangleDaemon() {
+    public static IThreadsServer getTangleDaemon() {
         return tangleDaemon;
     }
 
@@ -164,8 +164,8 @@ public class Application extends android.app.Application {
 
     public static Server getDaemonServer(@NonNull Context context) {
         checkNotNull(context);
-        ITangleDaemon tangleDaemon = getTangleDaemon();
-        Pair<Server, ServerVisibility> pair = ITangleDaemon.getDaemonServer(
+        IThreadsServer tangleDaemon = getTangleDaemon();
+        Pair<Server, ServerVisibility> pair = IThreadsServer.getServer(
                 context, tangleDaemon);
         return pair.first;
     }
@@ -210,7 +210,7 @@ public class Application extends android.app.Application {
         serverDatabase = Room.inMemoryDatabaseBuilder(this, ServerDatabase.class).build();
         eventsDatabase = Room.inMemoryDatabaseBuilder(this,
                 EventsDatabase.class).build();
-        tangleDaemon = TangleDaemon.getInstance(this, eventsDatabase);
+        tangleDaemon = ThreadsServer.getInstance(this, eventsDatabase);
         threadsDatabase = Room.databaseBuilder(this,
                 ThreadsDatabase.class, THREADS_DATABASE).fallbackToDestructiveMigration().build();
         tangleDatabase = Room.databaseBuilder(this,
