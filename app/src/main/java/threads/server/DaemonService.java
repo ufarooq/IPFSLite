@@ -161,7 +161,7 @@ public class DaemonService extends Service {
         protected Void doInBackground(Void... params) {
             try {
 
-                IThreadsServer tangleDaemon = Application.getTangleDaemon();
+                IThreadsServer tangleDaemon = Application.getThreadsServer();
 
                 if (tangleDaemon.isRunning()) {
                     tangleDaemon.shutdown();
@@ -193,7 +193,7 @@ public class DaemonService extends Service {
         protected Void doInBackground(Void... addresses) {
             try {
                 TangleDatabase tangleDatabase = Application.getTangleDatabase();
-                IThreadsServer daemon = Application.getTangleDaemon();
+                IThreadsServer daemon = Application.getThreadsServer();
                 if (!daemon.isRunning()) {
 
                     ITangleServer tangleServer = Application.getTangleServer(getApplicationContext());
@@ -226,7 +226,7 @@ public class DaemonService extends Service {
         @Override
         protected Void doInBackground(Void... addresses) {
             try {
-                IThreadsServer daemon = Application.getTangleDaemon();
+                IThreadsServer daemon = Application.getThreadsServer();
                 if (daemon.isRunning()) {
                     daemon.shutdown();
                     Log.i(TAG, "Daemon is shutting down ...");

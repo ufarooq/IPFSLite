@@ -53,7 +53,7 @@ public class Application extends android.app.Application {
 
 
     private static TangleDatabase tangleDatabase;
-    private static IThreadsServer tangleDaemon;
+    private static IThreadsServer threadsServer;
     private static EventsDatabase eventsDatabase;
     private static ServerDatabase serverDatabase;
     private static IThreadsAPI ttApi;
@@ -74,8 +74,8 @@ public class Application extends android.app.Application {
         return eventsDatabase;
     }
 
-    public static IThreadsServer getTangleDaemon() {
-        return tangleDaemon;
+    public static IThreadsServer getThreadsServer() {
+        return threadsServer;
     }
 
     public static TangleDatabase getTangleDatabase() {
@@ -164,7 +164,7 @@ public class Application extends android.app.Application {
 
     public static Server getDaemonServer(@NonNull Context context) {
         checkNotNull(context);
-        IThreadsServer tangleDaemon = getTangleDaemon();
+        IThreadsServer tangleDaemon = getThreadsServer();
         Pair<Server, ServerVisibility> pair = IThreadsServer.getServer(
                 context, tangleDaemon);
         return pair.first;
@@ -210,7 +210,7 @@ public class Application extends android.app.Application {
         serverDatabase = Room.inMemoryDatabaseBuilder(this, ServerDatabase.class).build();
         eventsDatabase = Room.inMemoryDatabaseBuilder(this,
                 EventsDatabase.class).build();
-        tangleDaemon = ThreadsServer.getInstance(this, eventsDatabase);
+        threadsServer = ThreadsServer.getInstance(this, eventsDatabase);
         threadsDatabase = Room.databaseBuilder(this,
                 ThreadsDatabase.class, THREADS_DATABASE).fallbackToDestructiveMigration().build();
         tangleDatabase = Room.databaseBuilder(this,

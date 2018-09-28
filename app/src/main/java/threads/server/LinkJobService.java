@@ -69,7 +69,7 @@ public class LinkJobService extends JobService {
                     Server serverConfig = null;
                     ILink link = travelTangleAPI.getLinkByAccountAddress(accountAddress);
                     String token = "";
-                    IThreadsServer tangleDaemon = Application.getTangleDaemon();
+                    IThreadsServer tangleDaemon = Application.getThreadsServer();
                     if (tangleDaemon.isRunning()) {
                         Pair<Server, ServerVisibility> pair = IThreadsServer.getServer(
                                 getApplicationContext(), tangleDaemon);

@@ -30,7 +30,7 @@ import android.widget.Toast;
 import java.util.List;
 
 import threads.core.api.ILink;
-import threads.iri.ITangleDaemon;
+import threads.iri.IThreadsServer;
 import threads.iri.dialog.LoadDaemonConfigTask;
 import threads.iri.dialog.LoadResponse;
 import threads.iri.dialog.RestartServerListener;
@@ -98,8 +98,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                ITangleDaemon daemon = Application.getTangleDaemon();
-                if (!daemon.isDaemonRunning()) {
+                IThreadsServer daemon = Application.getThreadsServer();
+                if (!daemon.isRunning()) {
 
                     Intent intent = new Intent(MainActivity.this, DaemonService.class);
                     intent.setAction(DaemonService.ACTION_START_DAEMON_SERVICE);
@@ -125,8 +125,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
         });
-        ITangleDaemon daemon = Application.getTangleDaemon();
-        if (!daemon.isDaemonRunning()) {
+        IThreadsServer daemon = Application.getThreadsServer();
+        if (!daemon.isRunning()) {
             fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
         } else {
             fab.setImageDrawable(getDrawable(R.drawable.stop));
@@ -213,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void evalueServerVisibilty() {
 
-        ITangleDaemon tangleDaemon = Application.getTangleDaemon();
+        IThreadsServer tangleDaemon = Application.getThreadsServer();
         LoadDaemonConfigTask task = new LoadDaemonConfigTask(getApplicationContext(),
                 new LoadResponse<Pair<Server, ServerVisibility>>() {
                     @Override
@@ -322,7 +322,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                if (!Application.getTangleDaemon().isDaemonRunning()) {
+                if (!Application.getThreadsServer().isRunning()) {
                     Toast.makeText(getApplicationContext(), getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
                 } else {
                     String accountAddress = Application.getAccountAddress(getApplicationContext());
@@ -381,7 +381,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void restartServer() {
-        if (Application.getTangleDaemon().isDaemonRunning()) {
+        if (Application.getThreadsServer().isRunning()) {
             // now message and restart
             Toast.makeText(this, R.string.tangle_server_restart, Toast.LENGTH_LONG).show();
 
@@ -397,8 +397,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void renameHost() {
-        if (Application.getTangleDaemon().isDaemonRunning()) {
-            eventViewModel.issueEvent(ITangleDaemon.DAEMON_SERVER_RENAME_HOST_EVENT);
+        if (Application.getThreadsServer().isRunning()) {
+            eventViewModel.issueEvent(IThreadsServer.DAEMON_SERVER_RENAME_HOST_EVENT);
         }
     }
 }
