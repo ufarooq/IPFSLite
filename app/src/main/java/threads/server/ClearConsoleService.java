@@ -11,7 +11,7 @@ public class ClearConsoleService extends AsyncTask<Void, Void, Void> {
     protected Void doInBackground(Void... params) {
         try {
             Application.getEventsDatabase().clear();
-            Application.initMessageDatabase();
+            Application.init();
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage());
         }

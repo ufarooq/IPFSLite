@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         startService(intent);
                     }
 
-
+                    evalueServerVisibilty();
                     fab.setImageDrawable(getDrawable(R.drawable.stop));
                 } else {
                     Intent intent = new Intent(MainActivity.this, DaemonService.class);
@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         startService(intent);
                     }
 
-
+                    evalueServerVisibilty();
                     fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
                 }
             }
@@ -200,9 +200,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         Pair<String, ServerVisibility> pair = IThreadsServer.getIPv6HostAddress();
 
-        long start = System.currentTimeMillis();
         try {
-            if (pair != null) {
+            if (IThreadsServer.isConnected(this)
+                    && Application.getThreadsServer().isRunning()) {
                 ServerVisibility serverVisibility = pair.second;
                 switch (serverVisibility) {
                     case GLOBAL:
@@ -222,9 +222,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
             }
         } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage());
-        } finally {
-            Log.e(TAG, " finish running [" + (System.currentTimeMillis() - start) + "]...");
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
 
