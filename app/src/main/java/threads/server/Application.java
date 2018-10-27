@@ -31,7 +31,7 @@ public class Application extends android.app.Application {
     private static IThreadsServer threadsServer;
     private static EventsDatabase eventsDatabase;
     private static ServerDatabase serverDatabase;
-
+    private static String SSH_HASH;
 
     public static ServerDatabase getServerDatabase() {
         return serverDatabase;
@@ -44,7 +44,6 @@ public class Application extends android.app.Application {
     public static IThreadsServer getThreadsServer() {
         return threadsServer;
     }
-
 
     public static void createChannel(@NonNull Context context) {
         try {
@@ -79,8 +78,6 @@ public class Application extends android.app.Application {
         return bitmap;
     }
 
-    private static String SSH_HASH;
-
     public static void init() {
         new java.lang.Thread(new Runnable() {
             public void run() {
@@ -95,6 +92,7 @@ public class Application extends android.app.Application {
     private static String getSshHash() {
         return SSH_HASH;
     }
+
     public static Certificate getCertificate() {
         Certificate certificate = serverDatabase.getCertificate();
         if (certificate == null) {
