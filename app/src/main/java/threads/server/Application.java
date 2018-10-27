@@ -11,9 +11,6 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import threads.core.IAesKey;
-import threads.core.IThreadsAPI;
-import threads.core.api.ThreadsDatabase;
 import threads.iri.IThreadsServer;
 import threads.iri.daemon.ThreadsServer;
 import threads.iri.daemon.TransactionDatabase;
@@ -34,17 +31,7 @@ public class Application extends android.app.Application {
     private static IThreadsServer threadsServer;
     private static EventsDatabase eventsDatabase;
     private static ServerDatabase serverDatabase;
-    private static IThreadsAPI ttApi;
-    private static ThreadsDatabase threadsDatabase;
-    private static IAesKey aesKey;
 
-    public static IAesKey getAesKey() {
-        return aesKey;
-    }
-
-    public static IThreadsAPI getThreadsAPI() {
-        return ttApi;
-    }
 
     public static ServerDatabase getServerDatabase() {
         return serverDatabase;
@@ -128,7 +115,6 @@ public class Application extends android.app.Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        aesKey = new AesKey();
         serverDatabase = Room.inMemoryDatabaseBuilder(this, ServerDatabase.class).build();
         eventsDatabase = Room.inMemoryDatabaseBuilder(this,
                 EventsDatabase.class).build();
@@ -137,11 +123,6 @@ public class Application extends android.app.Application {
                 TransactionDatabase.class.getSimpleName()).fallbackToDestructiveMigration().build();
         threadsServer = ThreadsServer.createThreadServer(this, transactionDatabase, eventsDatabase);
 
-        threadsDatabase = Room.databaseBuilder(this,
-                ThreadsDatabase.class, ThreadsDatabase.class.getSimpleName()).fallbackToDestructiveMigration().build();
-
-        ttApi = IThreadsAPI.createThreadsAPI(threadsDatabase, eventsDatabase);
-
         initMessageDatabase();
 
 
@@ -149,12 +130,4 @@ public class Application extends android.app.Application {
 
     }
 
-    private class AesKey implements IAesKey {
-
-        @Override
-        public String getAesKey() {
-            return BuildConfig.ApiAesKey;
-        }
-
-    }
 }

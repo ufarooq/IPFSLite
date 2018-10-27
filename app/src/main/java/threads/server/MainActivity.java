@@ -309,7 +309,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Server server = Application.getDefaultThreadsServer();
                     Gson gson = new Gson();
                     ServerInfoDialog.show(this,
-                            gson.toJson(server), Application.getAesKey().getAesKey());
+                            gson.toJson(server), BuildConfig.ApiAesKey);
 
                 }
                 return true;
