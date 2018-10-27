@@ -27,12 +27,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
 import java.util.List;
 
-import threads.core.api.ILink;
 import threads.iri.IThreadsServer;
-import threads.iri.dialog.LoadDaemonConfigTask;
-import threads.iri.dialog.LoadResponse;
 import threads.iri.dialog.RestartServerListener;
 import threads.iri.dialog.ServerInfoDialog;
 import threads.iri.dialog.ServerSettingsDialog;
@@ -41,8 +40,6 @@ import threads.iri.event.Message;
 import threads.iri.server.Server;
 import threads.iri.server.ServerVisibility;
 import threads.iri.tangle.Pair;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, RestartServerListener {
@@ -151,9 +148,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onChanged(@Nullable Event event) {
                 try {
                     if (event != null) {
-                        String accountAddress = Application.getAccountAddress(getApplicationContext());
-                        LinkJobService.checkLink(getApplicationContext(), accountAddress);
-
                         evalueServerVisibilty();
                     }
                 } catch (Throwable e) {
@@ -166,9 +160,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onChanged(@Nullable Event event) {
                 try {
                     if (event != null) {
-                        String accountAddress = Application.getAccountAddress(getApplicationContext());
-                        LinkJobService.checkLink(getApplicationContext(), accountAddress);
-
                         evalueServerVisibilty();
                     }
                 } catch (Throwable e) {
@@ -182,9 +173,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onChanged(@Nullable Event event) {
                 try {
                     if (event != null) {
-                        String accountAddress = Application.getAccountAddress(getApplicationContext());
-                        LinkJobService.checkLink(getApplicationContext(), accountAddress);
-
                         evalueServerVisibilty();
                     }
                 } catch (Throwable e) {
@@ -197,9 +185,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onChanged(@Nullable Event event) {
                 try {
                     if (event != null) {
-                        String accountAddress = Application.getAccountAddress(getApplicationContext());
-                        LinkJobService.checkLink(getApplicationContext(), accountAddress);
-
                         evalueServerVisibilty();
                     }
                 } catch (Throwable e) {
@@ -213,40 +198,36 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void evalueServerVisibilty() {
 
-        IThreadsServer tangleDaemon = Application.getThreadsServer();
-        LoadDaemonConfigTask task = new LoadDaemonConfigTask(getApplicationContext(),
-                new LoadResponse<Pair<Server, ServerVisibility>>() {
-                    @Override
-                    public void loaded(@NonNull Pair<Server, ServerVisibility> pair) {
-                        long start = System.currentTimeMillis();
-                        try {
-                            if (pair != null) {
-                                ServerVisibility serverVisibility = pair.second;
-                                switch (serverVisibility) {
-                                    case GLOBAL:
-                                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_green));
-                                        break;
-                                    case LOCAL:
-                                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_orange));
-                                        break;
-                                    case OFFLINE:
-                                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
-                                        break;
-                                    default:
-                                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
-                                        break;
-                                }
-                            } else {
-                                traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
-                            }
-                        } catch (Throwable e) {
-                            Log.e(TAG, e.getLocalizedMessage());
-                        } finally {
-                            Log.e(TAG, " finish running [" + (System.currentTimeMillis() - start) + "]...");
-                        }
-                    }
-                });
-        task.execute(tangleDaemon);
+        Pair<String, ServerVisibility> pair = IThreadsServer.getIPv6HostAddress();
+
+        long start = System.currentTimeMillis();
+        try {
+            if (pair != null) {
+                ServerVisibility serverVisibility = pair.second;
+                switch (serverVisibility) {
+                    case GLOBAL:
+                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_green));
+                        break;
+                    case LOCAL:
+                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_orange));
+                        break;
+                    case OFFLINE:
+                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
+                        break;
+                    default:
+                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
+                        break;
+                }
+            } else {
+                traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, e.getLocalizedMessage());
+        } finally {
+            Log.e(TAG, " finish running [" + (System.currentTimeMillis() - start) + "]...");
+        }
+
+
     }
 
     private void updateMessages(List<Message> messages) {
@@ -325,25 +306,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (!Application.getThreadsServer().isRunning()) {
                     Toast.makeText(getApplicationContext(), getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
                 } else {
-                    String accountAddress = Application.getAccountAddress(getApplicationContext());
-                    checkNotNull(accountAddress);
-                    LoadLinkTask task = new LoadLinkTask(new LoadResponse<ILink>() {
-                        @Override
-                        public void loaded(ILink link) {
-                            try {
-                                if (link != null) {
-                                    ServerInfoDialog.show(MainActivity.this,
-                                            link.getAddress(), Application.getAesKey().getAesKey());
-                                } else {
-                                    Toast.makeText(getApplicationContext(), getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
-                                }
-                            } catch (Throwable e) {
-                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                            }
+                    Server server = Application.getDefaultThreadsServer();
+                    Gson gson = new Gson();
+                    ServerInfoDialog.show(this,
+                            gson.toJson(server), Application.getAesKey().getAesKey());
 
-                        }
-                    });
-                    task.execute(accountAddress);
                 }
                 return true;
             }

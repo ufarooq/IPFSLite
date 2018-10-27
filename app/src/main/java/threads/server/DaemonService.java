@@ -14,11 +14,9 @@ import android.util.Log;
 import android.widget.Toast;
 
 import threads.iri.IThreadsServer;
+import threads.iri.server.Certificate;
 import threads.iri.server.Server;
-import threads.iri.server.ServerVisibility;
-import threads.iri.tangle.ITangleServer;
-import threads.iri.tangle.Pair;
-import threads.iri.tangle.TangleDatabase;
+
 
 public class DaemonService extends Service {
     public static final int NOTIFICATION_ID = 999;
@@ -154,30 +152,23 @@ public class DaemonService extends Service {
     }
 
 
-    public class RestartDaemonTask extends AsyncTask<Void, Void, Void> {
-        private static final String TAG = "RestartDaemonTask";
+    public static class RestartDaemonTask extends AsyncTask<Void, Void, Void> {
+        private static final String TAG = RestartDaemonTask.class.getSimpleName();
 
         @Override
         protected Void doInBackground(Void... params) {
             try {
 
-                IThreadsServer tangleDaemon = Application.getThreadsServer();
+                IThreadsServer threadsServer = Application.getThreadsServer();
 
-                if (tangleDaemon.isRunning()) {
-                    tangleDaemon.shutdown();
+                if (threadsServer.isRunning()) {
+                    threadsServer.shutdown();
                 }
 
-                ITangleServer tangleServer = Application.getTangleServer(getApplicationContext());
-                TangleDatabase tangleDatabase = Application.getTangleDatabase();
 
-                Pair<Server, ServerVisibility> pair =
-                        IThreadsServer.getServer(getApplicationContext(), tangleDaemon);
-                Server daemonConfig = pair.first;
-
-                tangleDaemon.start(
-                        tangleDatabase,
-                        tangleServer,
-                        daemonConfig.getPort());
+                Server server = Application.getDefaultThreadsServer();
+                Certificate certificate = Application.getCertificate();
+                threadsServer.start(certificate, server.getPort());
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage());
@@ -186,27 +177,24 @@ public class DaemonService extends Service {
         }
     }
 
-    public class StartDaemonTask extends AsyncTask<Void, Void, Void> {
-        private static final String TAG = "StartDaemonTask";
+    public static class StartDaemonTask extends AsyncTask<Void, Void, Void> {
+        private static final String TAG = StartDaemonTask.class.getSimpleName();
 
         @Override
         protected Void doInBackground(Void... addresses) {
             try {
-                TangleDatabase tangleDatabase = Application.getTangleDatabase();
-                IThreadsServer daemon = Application.getThreadsServer();
-                if (!daemon.isRunning()) {
-
-                    ITangleServer tangleServer = Application.getTangleServer(getApplicationContext());
+                IThreadsServer threadsServer = Application.getThreadsServer();
+                if (!threadsServer.isRunning()) {
 
 
-                    Server daemonServer = Application.getDaemonServer(getApplicationContext());
+                    Server server = Application.getDefaultThreadsServer();
+                    Certificate certificate = Application.getCertificate();
+                    Log.e(TAG, "Daemon Prot : " + server.getProtocol());
+                    Log.e(TAG, "Daemon Host : " + server.getHost());
+                    Log.e(TAG, "Daemon Port : " + server.getPort());
 
-                    Log.e(TAG, "Daemon Host : " + daemonServer.getHost());
-                    Log.e(TAG, "Daemon Port : " + daemonServer.getPort());
-                    daemon.start(
-                            tangleDatabase,
-                            tangleServer,
-                            daemonServer.getPort());
+
+                    threadsServer.start(certificate, server.getPort());
 
                 } else {
                     Log.i(TAG, "Daemon is already running ...");
@@ -219,16 +207,16 @@ public class DaemonService extends Service {
         }
     }
 
-    public class StopDaemonTask extends AsyncTask<Void, Void, Void> {
-        private static final String TAG = "StopDaemonTask";
+    public static class StopDaemonTask extends AsyncTask<Void, Void, Void> {
+        private static final String TAG = StopDaemonTask.class.getSimpleName();
 
 
         @Override
         protected Void doInBackground(Void... addresses) {
             try {
-                IThreadsServer daemon = Application.getThreadsServer();
-                if (daemon.isRunning()) {
-                    daemon.shutdown();
+                IThreadsServer threadsServer = Application.getThreadsServer();
+                if (threadsServer.isRunning()) {
+                    threadsServer.shutdown();
                     Log.i(TAG, "Daemon is shutting down ...");
                 } else {
                     Log.i(TAG, "Daemon is not running ...");
