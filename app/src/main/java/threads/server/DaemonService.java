@@ -165,7 +165,6 @@ public class DaemonService extends Service {
                     threadsServer.shutdown();
                 }
 
-
                 Server server = Application.getDefaultThreadsServer();
                 Certificate certificate = Application.getCertificate();
                 threadsServer.start(certificate, server.getPort());
