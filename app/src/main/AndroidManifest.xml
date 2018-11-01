@@ -17,7 +17,6 @@
         <activity
             android:name="threads.server.MainActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait"
             android:theme="@style/ThreadsServerTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
