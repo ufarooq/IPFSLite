@@ -333,10 +333,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
         int id = menuItem.getItemId();
         if (id == R.id.nav_donation) {
-            /*
-           Intent menuIntent = new Intent(MainActivity.this,
+            Intent menuIntent = new Intent(MainActivity.this,
                     DonationActivity.class);
-            startActivity(menuIntent);*/
+            startActivity(menuIntent);
         }
 
         drawer_layout.closeDrawer(GravityCompat.START);

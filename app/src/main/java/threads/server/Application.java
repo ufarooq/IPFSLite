@@ -25,8 +25,8 @@ public class Application extends android.app.Application {
 
 
     public static final String CHANNEL_ID = "IRI_SERVER_CHANGEL_ID";
+    public static final int QR_CODE_SIZE = 800;
     private static final String TAG = Application.class.getSimpleName();
-
     private static TransactionDatabase transactionDatabase;
     private static IThreadsServer threadsServer;
     private static EventsDatabase eventsDatabase;
@@ -43,6 +43,10 @@ public class Application extends android.app.Application {
 
     public static IThreadsServer getThreadsServer() {
         return threadsServer;
+    }
+
+    public static String getDonationsAddress() {
+        return BuildConfig.DONATION_ADDRESS;
     }
 
     public static void createChannel(@NonNull Context context) {
@@ -109,6 +113,20 @@ public class Application extends android.app.Application {
                 pair.first, String.valueOf(IThreadsServer.TCP_PORT), getSshHash(), Server.getDefaultServerAlias());
     }
 
+    public static String getHtmlAddressLink(@NonNull String name, @NonNull String address, boolean bundle) {
+        if (bundle) {
+            return "<a 'https://thetangle.org/bundle/" + address + "'><u>" + name + "</u></a>";
+        }
+        return "<a 'https://thetangle.org/address/" + address + "'><u>" + name + "</u></a>";
+    }
+
+    public static String getAddressLink(@NonNull String address, boolean bundle) {
+        if (bundle) {
+            return "https://thetangle.org/bundle/" + address;
+        }
+        return "https://thetangle.org/address/" + address;
+    }
+
     @Override
     public void onTerminate() {
         super.onTerminate();
@@ -132,5 +150,4 @@ public class Application extends android.app.Application {
         Log.e(TAG, "...... start application");
 
     }
-
 }

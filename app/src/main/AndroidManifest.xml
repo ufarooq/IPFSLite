@@ -26,7 +26,16 @@
 
 
         </activity>
-
+        <activity
+            android:name=".DonationActivity"
+            android:label="@string/title_activity_donation"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/ThreadsServerTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="threads.server.MainActivity" />
+        </activity>
         <service
             android:name="threads.server.DaemonService"
             android:enabled="true"

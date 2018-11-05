@@ -40,11 +40,13 @@ android {
     buildTypes {
         debug {
             buildConfigField 'String', "ApiAesKey", ApiAesKey
+            buildConfigField 'String', "DONATION_ADDRESS", DONATION_ADDRESS
         }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             buildConfigField 'String', "ApiAesKey", ApiAesKey
+            buildConfigField 'String', "DONATION_ADDRESS", DONATION_ADDRESS
         }
     }
     configurations.all {
