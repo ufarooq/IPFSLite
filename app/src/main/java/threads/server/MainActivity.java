@@ -27,8 +27,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
-
 import java.util.List;
 
 import threads.iri.IThreadsServer;
@@ -38,6 +36,7 @@ import threads.iri.dialog.ServerSettingsDialog;
 import threads.iri.event.Event;
 import threads.iri.event.Message;
 import threads.iri.server.Server;
+import threads.iri.server.ServerData;
 import threads.iri.server.ServerVisibility;
 import threads.iri.tangle.Pair;
 
@@ -305,9 +304,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Toast.makeText(getApplicationContext(), getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
                 } else {
                     Server server = Application.getDefaultThreadsServer();
-                    Gson gson = new Gson();
+                    ServerData serverData = server.getServerData();
                     ServerInfoDialog.show(this,
-                            gson.toJson(server), BuildConfig.ApiAesKey);
+                            ServerData.toString(serverData), BuildConfig.ApiAesKey);
 
                 }
                 return true;
