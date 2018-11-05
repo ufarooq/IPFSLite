@@ -103,6 +103,7 @@ public class Application extends android.app.Application {
         return certificate;
     }
 
+
     public static Server getDefaultThreadsServer() {
         Pair<String, ServerVisibility> pair = IThreadsServer.getIPv6HostAddress();
         return Server.createServer(IThreadsServer.HTTPS_PROTOCOL,

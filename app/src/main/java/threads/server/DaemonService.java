@@ -193,8 +193,6 @@ public class DaemonService extends Service {
 
                     threadsServer.start(certificate, server.getPort());
 
-                } else {
-                    Log.i(TAG, "Daemon is already running ...");
                 }
 
             } catch (Throwable e) {

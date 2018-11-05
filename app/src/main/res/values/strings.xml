@@ -9,7 +9,6 @@
     <string name="daemon_long_text">Daemon is running on port \"%1$s\".</string>
     <string name="action_daemon">Daemon</string>
     <string name="copy_address_to_clipboard">Copy Address to Clipboard</string>
-    <string name="donation">Donation</string>
     <string name="navigation_drawer_open">Naviagation open</string>
     <string name="navigation_drawer_close">Navigation close</string>
     <string name="action_info">Info</string>
@@ -30,4 +29,5 @@
     <string name="title_activity_donation">Donation</string>
     <string name="donation_address">IOTA Donation Address</string>
     <string name="details">Tangle Details</string>
+    <string name="donation">Donation</string>
 </resources>

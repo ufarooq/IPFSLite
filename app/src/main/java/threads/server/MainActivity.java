@@ -32,7 +32,6 @@ import java.util.List;
 import threads.iri.IThreadsServer;
 import threads.iri.dialog.RestartServerListener;
 import threads.iri.dialog.ServerInfoDialog;
-import threads.iri.dialog.ServerSettingsDialog;
 import threads.iri.event.Event;
 import threads.iri.event.Message;
 import threads.iri.server.Server;
@@ -252,14 +251,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-        MenuItem action_settings = menu.findItem(R.id.action_settings);
-        drawable = action_settings.getIcon();
-        if (drawable != null) {
-            drawable.mutate();
-            drawable.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
-        }
-
-
         return true;
     }
 
@@ -270,18 +261,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         switch (id) {
-            case R.id.action_settings: {
-                // mis-clicking prevention, using threshold of 1000 ms
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-
-                ServerSettingsDialog.show(this);
-
-                return true;
-            }
             case R.id.action_clear: {
                 // mis-clicking prevention, using threshold of 1000 ms
                 if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
