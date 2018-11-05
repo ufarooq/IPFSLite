@@ -27,15 +27,11 @@ public class Application extends android.app.Application {
     public static final String CHANNEL_ID = "IRI_SERVER_CHANGEL_ID";
     public static final int QR_CODE_SIZE = 800;
     private static final String TAG = Application.class.getSimpleName();
-    private static TransactionDatabase transactionDatabase;
     private static IThreadsServer threadsServer;
     private static EventsDatabase eventsDatabase;
     private static ServerDatabase serverDatabase;
     private static String SSH_HASH;
 
-    public static ServerDatabase getServerDatabase() {
-        return serverDatabase;
-    }
 
     public static EventsDatabase getEventsDatabase() {
         return eventsDatabase;
@@ -139,7 +135,7 @@ public class Application extends android.app.Application {
         serverDatabase = Room.inMemoryDatabaseBuilder(this, ServerDatabase.class).build();
         eventsDatabase = Room.inMemoryDatabaseBuilder(this,
                 EventsDatabase.class).build();
-        transactionDatabase = Room.databaseBuilder(this,
+        TransactionDatabase transactionDatabase = Room.databaseBuilder(this,
                 TransactionDatabase.class,
                 TransactionDatabase.class.getSimpleName()).fallbackToDestructiveMigration().build();
         threadsServer = ThreadsServer.createThreadServer(this, transactionDatabase, eventsDatabase);

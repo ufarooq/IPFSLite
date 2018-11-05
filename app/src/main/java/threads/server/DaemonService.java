@@ -152,7 +152,7 @@ public class DaemonService extends Service {
     }
 
 
-    public static class RestartDaemonTask extends AsyncTask<Void, Void, Void> {
+    private static class RestartDaemonTask extends AsyncTask<Void, Void, Void> {
         private static final String TAG = RestartDaemonTask.class.getSimpleName();
 
         @Override
@@ -176,7 +176,7 @@ public class DaemonService extends Service {
         }
     }
 
-    public static class StartDaemonTask extends AsyncTask<Void, Void, Void> {
+    private static class StartDaemonTask extends AsyncTask<Void, Void, Void> {
         private static final String TAG = StartDaemonTask.class.getSimpleName();
 
         @Override
@@ -184,14 +184,12 @@ public class DaemonService extends Service {
             try {
                 IThreadsServer threadsServer = Application.getThreadsServer();
                 if (!threadsServer.isRunning()) {
-
-
                     Server server = Application.getDefaultThreadsServer();
                     Certificate certificate = Application.getCertificate();
+
                     Log.e(TAG, "Daemon Prot : " + server.getProtocol());
                     Log.e(TAG, "Daemon Host : " + server.getHost());
                     Log.e(TAG, "Daemon Port : " + server.getPort());
-
 
                     threadsServer.start(certificate, server.getPort());
 
@@ -206,7 +204,7 @@ public class DaemonService extends Service {
         }
     }
 
-    public static class StopDaemonTask extends AsyncTask<Void, Void, Void> {
+    private static class StopDaemonTask extends AsyncTask<Void, Void, Void> {
         private static final String TAG = StopDaemonTask.class.getSimpleName();
 
 
