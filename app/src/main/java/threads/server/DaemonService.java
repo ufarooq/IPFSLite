@@ -5,7 +5,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -72,10 +71,6 @@ public class DaemonService extends Service {
 
     private Notification buildNotification() {
 
-        // Create notification default intent.
-        Intent intent = new Intent();
-        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
-
         // Create notification builder.
         NotificationCompat.Builder builder = new NotificationCompat.Builder(
                 getApplicationContext(),
@@ -83,18 +78,10 @@ public class DaemonService extends Service {
 
         builder.setContentTitle(getString(R.string.daemon_title));
         builder.setContentText(getString(R.string.daemon_port_text));
-        builder.setStyle(new NotificationCompat.BigTextStyle()
-                .bigText(getString(R.string.daemon_port_text)));
-        builder.setWhen(System.currentTimeMillis());
         builder.setSmallIcon(R.drawable.graphql);
-        // builder.setGroup(Application.GROUP_KEY_TRAVEL_TANGLE); TODO not working for all android versions
-        Bitmap largeIconBitmap = Application.getBitmap(getApplicationContext(), R.drawable.server_network);
-
-        builder.setLargeIcon(largeIconBitmap);
-        // Make the notification max priority.
+        builder.setGroup(Application.GROUP_ID);
+        builder.setGroupSummary(true);
         builder.setPriority(Notification.PRIORITY_MAX);
-        // Make head-up notification.
-        builder.setFullScreenIntent(pendingIntent, true);
 
         // Create an explicit intent for an Activity in your app
         Intent defaultIntent = new Intent(getApplicationContext(), MainActivity.class);
@@ -214,8 +201,6 @@ public class DaemonService extends Service {
                 if (threadsServer.isRunning()) {
                     threadsServer.shutdown();
                     Log.i(TAG, "Daemon is shutting down ...");
-                } else {
-                    Log.i(TAG, "Daemon is not running ...");
                 }
 
             } catch (Throwable e) {

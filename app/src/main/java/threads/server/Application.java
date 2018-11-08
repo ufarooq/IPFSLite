@@ -25,6 +25,7 @@ public class Application extends android.app.Application {
 
 
     public static final String CHANNEL_ID = "IRI_SERVER_CHANGEL_ID";
+    public static final String GROUP_ID = "IRI_SERVER_GROUP_ID";
     public static final int QR_CODE_SIZE = 800;
     private static final String TAG = Application.class.getSimpleName();
     private static IThreadsServer threadsServer;
