@@ -11,17 +11,16 @@ import threads.iri.event.Message;
 public class MessagesViewModel extends AndroidViewModel {
 
     private final LiveData<List<Message>> messages;
-    private final EventsDatabase eventsDatabase;
 
     public MessagesViewModel(android.app.Application application) {
         super(application);
-        eventsDatabase = Application.getEventsDatabase();
+        EventsDatabase eventsDatabase = Application.getEventsDatabase();
 
         messages = eventsDatabase.messageDao().getLiveDataMessages();
     }
 
 
-    public LiveData<List<Message>> getMessages() {
+    LiveData<List<Message>> getMessages() {
         return messages;
     }
 }

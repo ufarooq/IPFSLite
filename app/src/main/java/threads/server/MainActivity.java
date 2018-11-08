@@ -45,7 +45,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private DrawerLayout drawer_layout;
-    private NavigationView navigationView;
     private FloatingActionButton fab;
     private FloatingActionButton traffic_light;
     private RecyclerView mRecyclerView;
@@ -62,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mRecyclerView = findViewById(R.id.reyclerview_message_list);
         LinearLayoutManager linearLayout = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(linearLayout);
-        messageViewAdapter = new MessageViewAdapter(this);
+        messageViewAdapter = new MessageViewAdapter();
         mRecyclerView.setAdapter(messageViewAdapter);
 
 
@@ -71,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         drawer_layout = findViewById(R.id.drawer_layout);
-        navigationView = findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
 

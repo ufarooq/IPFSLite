@@ -1,6 +1,5 @@
 package threads.server;
 
-import android.app.Activity;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.v7.util.DiffUtil;
@@ -18,26 +17,18 @@ import threads.iri.event.Message;
 
 public class MessageViewAdapter extends RecyclerView.Adapter<MessageViewAdapter.ViewHolder> {
     private static final String TAG = "MessageViewAdapter";
-    private final Activity activity;
     private final List<Message> messages = new ArrayList<>();
-
-    // Provide a suitable constructor (depends on the kind of dataset)
-    public MessageViewAdapter(@NonNull Activity activity) {
-        this.activity = activity;
-    }
 
 
     @Override
     public int getItemViewType(int position) {
-
-        return 0; // default message
+        return 0;
     }
 
-    // Create new views (invoked by the layout manager)
+
     @Override
     public MessageViewAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
                                                             int viewType) {
-        // create a new view
 
         View v = null;
         switch (viewType) {
