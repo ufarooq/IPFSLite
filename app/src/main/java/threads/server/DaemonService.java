@@ -190,6 +190,7 @@ public class DaemonService extends Service {
                     Log.e(TAG, "Daemon Prot : " + server.getProtocol());
                     Log.e(TAG, "Daemon Host : " + server.getHost());
                     Log.e(TAG, "Daemon Port : " + server.getPort());
+                    Log.e(TAG, "Daemon Cert : " + certificate.getShaHash());
 
                     threadsServer.start(certificate, server.getPort());
 
