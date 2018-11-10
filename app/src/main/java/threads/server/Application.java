@@ -18,8 +18,6 @@ import threads.iri.event.EventsDatabase;
 import threads.iri.server.Certificate;
 import threads.iri.server.Server;
 import threads.iri.server.ServerDatabase;
-import threads.iri.server.ServerVisibility;
-import threads.iri.tangle.Pair;
 
 public class Application extends android.app.Application {
 
@@ -31,7 +29,6 @@ public class Application extends android.app.Application {
     private static IThreadsServer threadsServer;
     private static EventsDatabase eventsDatabase;
     private static ServerDatabase serverDatabase;
-    private static String SSH_HASH;
 
 
     public static EventsDatabase getEventsDatabase() {
@@ -90,26 +87,15 @@ public class Application extends android.app.Application {
         }).start();
     }
 
-    private static String getSshHash() {
-        return SSH_HASH;
-    }
-
     public static Certificate getCertificate() {
         Certificate certificate = serverDatabase.getCertificate();
         if (certificate == null) {
             certificate = Server.createCertificate();
             serverDatabase.insertCertificate(certificate);
         }
-        SSH_HASH = certificate.getShaHash();
         return certificate;
     }
 
-
-    public static Server getDefaultThreadsServer() {
-        Pair<String, ServerVisibility> pair = IThreadsServer.getIPv6HostAddress();
-        return Server.createServer(IThreadsServer.HTTPS_PROTOCOL,
-                pair.first, String.valueOf(IThreadsServer.TCP_PORT), getSshHash(), Server.getDefaultServerAlias());
-    }
 
     public static String getHtmlAddressLink(@NonNull String name, @NonNull String address, boolean bundle) {
         if (bundle) {
@@ -134,13 +120,20 @@ public class Application extends android.app.Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        serverDatabase = Room.inMemoryDatabaseBuilder(this, ServerDatabase.class).build();
-        eventsDatabase = Room.inMemoryDatabaseBuilder(this,
-                EventsDatabase.class).build();
+        serverDatabase = Room.databaseBuilder(this,
+                ServerDatabase.class,
+                ServerDatabase.class.getSimpleName()).fallbackToDestructiveMigration().build();
+
         TransactionDatabase transactionDatabase = Room.databaseBuilder(this,
                 TransactionDatabase.class,
                 TransactionDatabase.class.getSimpleName()).fallbackToDestructiveMigration().build();
-        threadsServer = ThreadsServer.createThreadServer(this, transactionDatabase, eventsDatabase);
+
+
+        eventsDatabase = Room.inMemoryDatabaseBuilder(this,
+                EventsDatabase.class).build();
+
+        threadsServer = ThreadsServer.createThreadServer(this,
+                transactionDatabase, eventsDatabase);
 
         init();
 

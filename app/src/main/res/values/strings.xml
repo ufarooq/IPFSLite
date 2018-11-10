@@ -30,4 +30,6 @@
     <string name="donation_address">IOTA Donation Address</string>
     <string name="details">Tangle Details</string>
     <string name="donation">Donation</string>
+    <string name="offline_modus">Network is offline</string>
+    <string name="network">Network</string>
 </resources>

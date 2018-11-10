@@ -2,10 +2,14 @@ package threads.server;
 
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -13,6 +17,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -28,16 +33,17 @@ import android.view.View;
 import android.widget.Toast;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.iri.IThreadsServer;
 import threads.iri.dialog.RestartServerListener;
 import threads.iri.dialog.ServerInfoDialog;
+import threads.iri.dialog.ServerSettingsDialog;
 import threads.iri.event.Event;
 import threads.iri.event.Message;
+import threads.iri.server.Certificate;
 import threads.iri.server.Server;
 import threads.iri.server.ServerData;
-import threads.iri.server.ServerVisibility;
-import threads.iri.tangle.Pair;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, RestartServerListener {
@@ -51,8 +57,51 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private MessageViewAdapter messageViewAdapter;
     private long mLastClickTime = 0;
     private EventViewModel eventViewModel;
+    private AtomicBoolean networkAvailable = new AtomicBoolean(true);
 
 
+    private BroadcastReceiver networkChangeReceiver = new BroadcastReceiver() {
+        private Snackbar snackbar;
+        private AtomicBoolean wasOffline = new AtomicBoolean(false);
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            try {
+                if (IThreadsServer.isConnected(context)) {
+                    findViewById(R.id.fab).setVisibility(View.VISIBLE);
+                    if (snackbar != null) {
+                        snackbar.dismiss();
+                        snackbar = null;
+                    }
+
+
+                    networkAvailable.set(true);
+
+                } else {
+                    findViewById(R.id.fab).setVisibility(View.GONE);
+                    networkAvailable.set(false);
+                    wasOffline.set(true);
+                    if (snackbar == null) {
+                        snackbar = Snackbar.make(drawer_layout,
+                                getString(R.string.offline_modus), Snackbar.LENGTH_INDEFINITE);
+                        snackbar.setAction(R.string.network, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent intent = new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                context.startActivity(intent);
+                            }
+                        });
+                    }
+                    snackbar.show();
+                }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+
+        }
+    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -103,7 +152,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         startService(intent);
                     }
 
-                    evalueServerVisibilty();
+                    evalueServerStatus();
                     fab.setImageDrawable(getDrawable(R.drawable.stop));
                 } else {
                     Intent intent = new Intent(MainActivity.this, DaemonService.class);
@@ -114,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         startService(intent);
                     }
 
-                    evalueServerVisibilty();
+                    evalueServerStatus();
                     fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
                 }
             }
@@ -145,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onChanged(@Nullable Event event) {
                 try {
                     if (event != null) {
-                        evalueServerVisibilty();
+                        evalueServerStatus();
                     }
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -157,7 +206,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onChanged(@Nullable Event event) {
                 try {
                     if (event != null) {
-                        evalueServerVisibilty();
+                        evalueServerStatus();
                     }
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -170,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onChanged(@Nullable Event event) {
                 try {
                     if (event != null) {
-                        evalueServerVisibilty();
+                        evalueServerStatus();
                     }
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -182,7 +231,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void onChanged(@Nullable Event event) {
                 try {
                     if (event != null) {
-                        evalueServerVisibilty();
+                        evalueServerStatus();
                     }
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -193,28 +242,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    private void evalueServerVisibilty() {
-
-        Pair<String, ServerVisibility> pair = IThreadsServer.getIPv6HostAddress();
+    private void evalueServerStatus() {
 
         try {
             if (IThreadsServer.isConnected(this)
                     && Application.getThreadsServer().isRunning()) {
-                ServerVisibility serverVisibility = pair.second;
-                switch (serverVisibility) {
-                    case GLOBAL:
-                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_green));
-                        break;
-                    case LOCAL:
-                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_orange));
-                        break;
-                    case OFFLINE:
-                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
-                        break;
-                    default:
-                        traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
-                        break;
-                }
+                traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_green));
             } else {
                 traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
             }
@@ -250,6 +283,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
+        MenuItem action_settings = menu.findItem(R.id.action_settings);
+        drawable = action_settings.getIcon();
+        if (drawable != null) {
+            drawable.mutate();
+            drawable.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
+        }
+
+
         return true;
     }
 
@@ -260,6 +301,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         switch (id) {
+            case R.id.action_settings: {
+                // mis-clicking prevention, using threshold of 1000 ms
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    break;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+
+                ServerSettingsDialog.show(this);
+
+                return true;
+            }
             case R.id.action_clear: {
                 // mis-clicking prevention, using threshold of 1000 ms
                 if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
@@ -280,12 +333,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 if (!Application.getThreadsServer().isRunning()) {
                     Toast.makeText(getApplicationContext(), getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
+                } else if (!IThreadsServer.isConnected(getApplicationContext())) {
+                    Toast.makeText(getApplicationContext(), getString(R.string.offline_modus), Toast.LENGTH_LONG).show();
                 } else {
-                    Server server = Application.getDefaultThreadsServer();
-                    ServerData serverData = server.getServerData();
-                    ServerInfoDialog.show(this,
-                            ServerData.toString(serverData), BuildConfig.ApiAesKey);
-
+                    new java.lang.Thread(new Runnable() {
+                        public void run() {
+                            Certificate certificate = Application.getCertificate();
+                            Server server = IThreadsServer.getServer(getApplicationContext(), certificate);
+                            ServerData serverData = server.getServerData();
+                            ServerInfoDialog.show(MainActivity.this,
+                                    ServerData.toString(serverData), BuildConfig.ApiAesKey);
+                        }
+                    }).start();
                 }
                 return true;
             }
@@ -299,11 +358,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onResume() {
         super.onResume();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(networkChangeReceiver, intentFilter);
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        unregisterReceiver(networkChangeReceiver);
     }
 
 

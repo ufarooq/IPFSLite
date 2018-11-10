@@ -5,7 +5,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
@@ -100,18 +99,53 @@ public class DaemonService extends Service {
     }
 
     private void restartDaemonService() {
-        RestartDaemonTask task = new RestartDaemonTask();
-        task.execute();
+        long start = System.currentTimeMillis();
+
+        try {
+            new java.lang.Thread(new Runnable() {
+                public void run() {
+                    IThreadsServer threadsServer = Application.getThreadsServer();
+
+                    if (threadsServer.isRunning()) {
+                        threadsServer.shutdown();
+                    }
+                    Certificate certificate = Application.getCertificate();
+                    Server server = IThreadsServer.getServer(getApplicationContext(),
+                            Application.getCertificate());
+
+                    threadsServer.start(certificate, server.getPort());
+                }
+            }).start();
+        } catch (Throwable e) {
+            Log.e(TAG, e.getLocalizedMessage(), e);
+        } finally {
+            Log.e(TAG, " finish running [" + (System.currentTimeMillis() - start) + "]...");
+        }
     }
 
     private void startDaemonService() {
         long start = System.currentTimeMillis();
 
         try {
-            StartDaemonTask task = new StartDaemonTask();
-            task.execute();
+            new java.lang.Thread(new Runnable() {
+                public void run() {
+                    IThreadsServer threadsServer = Application.getThreadsServer();
+                    if (!threadsServer.isRunning()) {
+                        Certificate certificate = Application.getCertificate();
+                        Server server = IThreadsServer.getServer(getApplicationContext(),
+                                Application.getCertificate());
+                        Log.e(TAG, "Daemon Prot : " + server.getProtocol());
+                        Log.e(TAG, "Daemon Host : " + server.getHost());
+                        Log.e(TAG, "Daemon Port : " + server.getPort());
+                        Log.e(TAG, "Daemon Cert : " + certificate.getShaHash());
+
+                        threadsServer.start(certificate, server.getPort());
+                    }
+                }
+            }).start();
+
         } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage());
+            Log.e(TAG, e.getLocalizedMessage(), e);
         } finally {
             Log.e(TAG, " finish running [" + (System.currentTimeMillis() - start) + "]...");
         }
@@ -121,12 +155,18 @@ public class DaemonService extends Service {
         long start = System.currentTimeMillis();
 
         try {
-
-            StopDaemonTask task = new StopDaemonTask();
-            task.execute();
+            new java.lang.Thread(new Runnable() {
+                public void run() {
+                    IThreadsServer threadsServer = Application.getThreadsServer();
+                    if (threadsServer.isRunning()) {
+                        threadsServer.shutdown();
+                        Log.i(TAG, "Daemon is shutting down ...");
+                    }
+                }
+            }).start();
 
         } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage());
+            Log.e(TAG, e.getLocalizedMessage(), e);
         } finally {
             // Stop foreground service and remove the notification.
             stopForeground(true);
@@ -135,78 +175,6 @@ public class DaemonService extends Service {
             stopSelf();
 
             Log.e(TAG, " finish running [" + (System.currentTimeMillis() - start) + "]...");
-        }
-    }
-
-
-    private static class RestartDaemonTask extends AsyncTask<Void, Void, Void> {
-        private static final String TAG = RestartDaemonTask.class.getSimpleName();
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            try {
-
-                IThreadsServer threadsServer = Application.getThreadsServer();
-
-                if (threadsServer.isRunning()) {
-                    threadsServer.shutdown();
-                }
-
-                Server server = Application.getDefaultThreadsServer();
-                Certificate certificate = Application.getCertificate();
-                threadsServer.start(certificate, server.getPort());
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage());
-            }
-            return null;
-        }
-    }
-
-    private static class StartDaemonTask extends AsyncTask<Void, Void, Void> {
-        private static final String TAG = StartDaemonTask.class.getSimpleName();
-
-        @Override
-        protected Void doInBackground(Void... addresses) {
-            try {
-                IThreadsServer threadsServer = Application.getThreadsServer();
-                if (!threadsServer.isRunning()) {
-                    Server server = Application.getDefaultThreadsServer();
-                    Certificate certificate = Application.getCertificate();
-
-                    Log.e(TAG, "Daemon Prot : " + server.getProtocol());
-                    Log.e(TAG, "Daemon Host : " + server.getHost());
-                    Log.e(TAG, "Daemon Port : " + server.getPort());
-                    Log.e(TAG, "Daemon Cert : " + certificate.getShaHash());
-
-                    threadsServer.start(certificate, server.getPort());
-
-                }
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-            return null;
-        }
-    }
-
-    private static class StopDaemonTask extends AsyncTask<Void, Void, Void> {
-        private static final String TAG = StopDaemonTask.class.getSimpleName();
-
-
-        @Override
-        protected Void doInBackground(Void... addresses) {
-            try {
-                IThreadsServer threadsServer = Application.getThreadsServer();
-                if (threadsServer.isRunning()) {
-                    threadsServer.shutdown();
-                    Log.i(TAG, "Daemon is shutting down ...");
-                }
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-            return null;
         }
     }
 
