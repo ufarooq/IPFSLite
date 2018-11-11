@@ -11,9 +11,9 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
+import threads.iri.IThreadsConfig;
 import threads.iri.IThreadsServer;
 import threads.iri.server.Certificate;
-import threads.iri.server.Server;
 
 
 public class DaemonService extends Service {
@@ -110,10 +110,17 @@ public class DaemonService extends Service {
                         threadsServer.shutdown();
                     }
                     Certificate certificate = Application.getCertificate();
-                    Server server = IThreadsServer.getServer(getApplicationContext(),
+                    IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(
+                            getApplicationContext(),
                             Application.getCertificate());
 
-                    threadsServer.start(certificate, server.getPort());
+
+                    Log.e(TAG, "Daemon Prot : " + IThreadsServer.HTTPS_PROTOCOL);
+                    Log.e(TAG, "Daemon Host : " + threadsConfig.getHostname());
+                    Log.e(TAG, "Daemon Port : " + threadsConfig.getPort());
+                    Log.e(TAG, "Daemon Cert : " + certificate.getShaHash());
+
+                    threadsServer.start(threadsConfig);
                 }
             }).start();
         } catch (Throwable e) {
@@ -132,14 +139,16 @@ public class DaemonService extends Service {
                     IThreadsServer threadsServer = Application.getThreadsServer();
                     if (!threadsServer.isRunning()) {
                         Certificate certificate = Application.getCertificate();
-                        Server server = IThreadsServer.getServer(getApplicationContext(),
+
+                        IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(
+                                getApplicationContext(),
                                 Application.getCertificate());
-                        Log.e(TAG, "Daemon Prot : " + server.getProtocol());
-                        Log.e(TAG, "Daemon Host : " + server.getHost());
-                        Log.e(TAG, "Daemon Port : " + server.getPort());
+                        Log.e(TAG, "Daemon Prot : " + IThreadsServer.HTTPS_PROTOCOL);
+                        Log.e(TAG, "Daemon Host : " + threadsConfig.getHostname());
+                        Log.e(TAG, "Daemon Port : " + threadsConfig.getPort());
                         Log.e(TAG, "Daemon Cert : " + certificate.getShaHash());
 
-                        threadsServer.start(certificate, server.getPort());
+                        threadsServer.start(threadsConfig);
                     }
                 }
             }).start();

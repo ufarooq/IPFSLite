@@ -35,13 +35,13 @@ import android.widget.Toast;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import threads.iri.IThreadsConfig;
 import threads.iri.IThreadsServer;
 import threads.iri.dialog.RestartServerListener;
 import threads.iri.dialog.ServerInfoDialog;
 import threads.iri.dialog.ServerSettingsDialog;
 import threads.iri.event.Event;
 import threads.iri.event.Message;
-import threads.iri.server.Certificate;
 import threads.iri.server.Server;
 import threads.iri.server.ServerData;
 
@@ -338,8 +338,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 } else {
                     new java.lang.Thread(new Runnable() {
                         public void run() {
-                            Certificate certificate = Application.getCertificate();
-                            Server server = IThreadsServer.getServer(getApplicationContext(), certificate);
+                            IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(
+                                    getApplicationContext(),
+                                    Application.getCertificate());
+                            Server server = IThreadsServer.getServer(getApplicationContext(),
+                                    threadsConfig);
                             ServerData serverData = server.getServerData();
                             ServerInfoDialog.show(MainActivity.this,
                                     ServerData.toString(serverData), BuildConfig.ApiAesKey);
