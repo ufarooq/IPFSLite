@@ -60,8 +60,7 @@ public class PowTest {
         for (String tryte : result) {
             Log.e(TAG, tryte);
         }
-        Log.e(TAG, "Number of Transfers (Pre) : " + result.size() +
-                " Time : " + ((System.currentTimeMillis() - now) / 100) + "[s]");
+
         Thread.sleep(1000);
         now = System.currentTimeMillis();
         GetAttachToTangleResponse res = TangleUtils.localPow(

@@ -240,5 +240,4 @@ static void outconverterSearch(long *result, const State *accum) {
     rsDebug("Out", accum->nonce);
     *result = accum->nonce;
 
-
 }
