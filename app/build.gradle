@@ -33,6 +33,10 @@ android {
         applicationId "threads.server"
         minSdkVersion 24
         targetSdkVersion 28
+
+        renderscriptTargetApi 24
+        renderscriptSupportModeEnabled true
+
         versionCode 9
         versionName "0.0.9"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -76,7 +80,7 @@ dependencies {
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
 
     // API (LICENSE done)
-    implementation 'threads.iri:threads:2.2.7'
+    implementation 'threads.iri:threads:2.2.8'
 
 
     // ANDROID Architecture (LICENSE done)

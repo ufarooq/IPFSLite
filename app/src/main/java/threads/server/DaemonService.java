@@ -134,8 +134,10 @@ public class DaemonService extends Service {
         long start = System.currentTimeMillis();
 
         try {
-            new java.lang.Thread(new Runnable() {
+            new Thread(new Runnable() {
                 public void run() {
+
+
                     IThreadsServer threadsServer = Application.getThreadsServer();
                     if (!threadsServer.isRunning()) {
                         Certificate certificate = Application.getCertificate();
