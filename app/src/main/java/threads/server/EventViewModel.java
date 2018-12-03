@@ -5,10 +5,10 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
 
-import threads.iota.daemon.IThreadsServer;
 import threads.iota.event.Event;
 import threads.iota.event.EventsDatabase;
 import threads.iota.event.IEvent;
+import threads.server.daemon.IThreadsServer;
 
 public class EventViewModel extends AndroidViewModel {
 

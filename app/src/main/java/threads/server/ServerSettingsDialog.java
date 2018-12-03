@@ -20,7 +20,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 
-import threads.iota.daemon.IThreadsServer;
+import threads.server.daemon.IThreadsServer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

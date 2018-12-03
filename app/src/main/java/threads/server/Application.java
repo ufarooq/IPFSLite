@@ -11,13 +11,13 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import threads.iota.daemon.IThreadsServer;
-import threads.iota.daemon.ThreadsServer;
-import threads.iota.daemon.TransactionDatabase;
 import threads.iota.event.EventsDatabase;
 import threads.iota.server.Certificate;
 import threads.iota.server.Server;
 import threads.iota.server.ServerDatabase;
+import threads.server.daemon.IThreadsServer;
+import threads.server.daemon.ThreadsServer;
+import threads.server.daemon.TransactionDatabase;
 
 public class Application extends android.app.Application {
 

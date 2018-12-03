@@ -11,9 +11,9 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-import threads.iota.daemon.IThreadsConfig;
-import threads.iota.daemon.IThreadsServer;
 import threads.iota.server.Certificate;
+import threads.server.daemon.IThreadsConfig;
+import threads.server.daemon.IThreadsServer;
 
 
 public class DaemonService extends Service {
