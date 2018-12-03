@@ -32,4 +32,15 @@
     <string name="donation">Donation</string>
     <string name="offline_modus">Network is offline</string>
     <string name="network">Network</string>
+
+    <string name="daemon_server">Daemon Server</string>
+    <string name="daemon_server_settings">Daemon Server Settings</string>
+    <string name="daemon_server_access">The QR code contains all necessary information to access the daemon server.</string>
+    <string name="camera_error">Camera error</string>
+    <string name="camera_error_open">Can\'t connect to the camera</string>
+    <string name="camera_error_dependencies">Mobile Vision API dependencies are not available yet</string>
+    <string name="camera_error_low_storage">Mobile Vision API dependencies are not available due to low storage</string>
+    <string name="camera_error_dismiss">Dismiss</string>
+    <string name="camera_error_valid_address">QR code is not a valid address.</string>
+    <string name="camera_error_decrypt_failed">Decryption of QR code failed.</string>
 </resources>

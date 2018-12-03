@@ -37,9 +37,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.iri.IThreadsConfig;
 import threads.iri.IThreadsServer;
-import threads.iri.dialog.RestartServerListener;
-import threads.iri.dialog.ServerInfoDialog;
-import threads.iri.dialog.ServerSettingsDialog;
 import threads.iri.event.Event;
 import threads.iri.event.Message;
 import threads.iri.server.Server;
