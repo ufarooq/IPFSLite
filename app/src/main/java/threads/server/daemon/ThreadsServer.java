@@ -16,11 +16,11 @@ import java.util.List;
 import javax.net.ssl.SSLServerSocketFactory;
 
 import threads.iota.Pair;
-import threads.iota.event.EventsDatabase;
-import threads.iota.event.IEvent;
 import threads.iota.server.Certificate;
 import threads.iota.server.IServer;
 import threads.iota.server.ServerVisibility;
+import threads.server.event.EventsDatabase;
+import threads.server.event.IEvent;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

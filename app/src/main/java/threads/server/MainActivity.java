@@ -35,12 +35,12 @@ import android.widget.Toast;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import threads.iota.event.Event;
-import threads.iota.event.Message;
 import threads.iota.server.Server;
 import threads.iota.server.ServerData;
 import threads.server.daemon.IThreadsConfig;
 import threads.server.daemon.IThreadsServer;
+import threads.server.event.Event;
+import threads.server.event.Message;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, RestartServerListener {

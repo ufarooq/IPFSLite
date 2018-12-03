@@ -12,7 +12,6 @@ import org.junit.runner.RunWith;
 
 import threads.iota.IOTA;
 import threads.iota.PearlDiver;
-import threads.iota.event.EventsDatabase;
 import threads.iota.server.Certificate;
 import threads.iota.server.Server;
 import threads.iota.server.ServerDatabase;
@@ -20,6 +19,7 @@ import threads.server.daemon.IThreadsConfig;
 import threads.server.daemon.IThreadsServer;
 import threads.server.daemon.ThreadsServer;
 import threads.server.daemon.TransactionDatabase;
+import threads.server.event.EventsDatabase;
 
 import static junit.framework.TestCase.assertTrue;
 

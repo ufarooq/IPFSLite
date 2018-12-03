@@ -23,7 +23,6 @@ import threads.iota.IotaClient;
 import threads.iota.TangleUtils;
 import threads.iota.dto.response.FindTransactionResponse;
 import threads.iota.dto.response.GetAttachToTangleResponse;
-import threads.iota.event.EventsDatabase;
 import threads.iota.model.Hash;
 import threads.iota.server.IServer;
 import threads.iota.utils.Converter;
@@ -37,6 +36,7 @@ import threads.server.daemon.dto.GetNodeInfoResponse;
 import threads.server.daemon.dto.GetTipsResponse;
 import threads.server.daemon.dto.GetTransactionsToApproveResponse;
 import threads.server.daemon.dto.GetTrytesResponse;
+import threads.server.event.EventsDatabase;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -507,7 +507,7 @@ public class WebServer extends NanoServer implements IServer {
         }
         final String response = gson.toJson(res);
         byte[] body = response.getBytes();
-        return threads.iota.daemon.WebServer.newFixedLengthResponse(status, NanoServer.MIME_PLAINTEXT, new ByteArrayInputStream(body), body.length);
+        return WebServer.newFixedLengthResponse(status, NanoServer.MIME_PLAINTEXT, new ByteArrayInputStream(body), body.length);
     }
 
     @Override
