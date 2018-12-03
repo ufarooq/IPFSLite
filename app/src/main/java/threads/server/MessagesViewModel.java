@@ -5,8 +5,8 @@ import android.arch.lifecycle.LiveData;
 
 import java.util.List;
 
-import threads.iri.event.EventsDatabase;
-import threads.iri.event.Message;
+import threads.iota.event.EventsDatabase;
+import threads.iota.event.Message;
 
 public class MessagesViewModel extends AndroidViewModel {
 

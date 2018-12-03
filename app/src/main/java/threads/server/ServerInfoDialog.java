@@ -16,7 +16,7 @@ import android.widget.ImageView;
 
 import java.util.Hashtable;
 
-import threads.iri.tangle.Encryption;
+import threads.iota.Encryption;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

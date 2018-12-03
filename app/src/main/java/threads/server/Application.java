@@ -11,13 +11,13 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import threads.iri.IThreadsServer;
-import threads.iri.daemon.ThreadsServer;
-import threads.iri.daemon.TransactionDatabase;
-import threads.iri.event.EventsDatabase;
-import threads.iri.server.Certificate;
-import threads.iri.server.Server;
-import threads.iri.server.ServerDatabase;
+import threads.iota.daemon.IThreadsServer;
+import threads.iota.daemon.ThreadsServer;
+import threads.iota.daemon.TransactionDatabase;
+import threads.iota.event.EventsDatabase;
+import threads.iota.server.Certificate;
+import threads.iota.server.Server;
+import threads.iota.server.ServerDatabase;
 
 public class Application extends android.app.Application {
 

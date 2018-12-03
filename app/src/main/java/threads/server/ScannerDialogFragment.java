@@ -19,7 +19,7 @@ import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
-import threads.iri.tangle.Encryption;
+import threads.iota.Encryption;
 
 public class ScannerDialogFragment extends DialogFragment implements CameraSourcePreview.OnCameraErrorListener {
 
