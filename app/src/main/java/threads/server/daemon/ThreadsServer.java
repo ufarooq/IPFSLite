@@ -13,10 +13,7 @@ import java.net.NetworkInterface;
 import java.util.Collections;
 import java.util.List;
 
-import javax.net.ssl.SSLServerSocketFactory;
-
 import threads.iota.Pair;
-import threads.iota.server.Certificate;
 import threads.iota.server.IServer;
 import threads.iota.server.ServerVisibility;
 import threads.server.event.EventsDatabase;
@@ -200,11 +197,6 @@ public class ThreadsServer implements IThreadsServer {
             String hostname = threadsConfig.getHostname();
             checkNotNull(hostname);
 
-            Certificate certificate = threadsConfig.getCertificate();
-            String shaHash = "";
-            if (certificate != null) {
-                shaHash = certificate.getShaHash();
-            }
 
             if (!hostname.isEmpty()) {
                 eventsDatabase.insertMessage(
@@ -213,14 +205,10 @@ public class ThreadsServer implements IThreadsServer {
             eventsDatabase.insertMessage("Threads IRI Server runs on port " + port + " ...");
 
             server = WebServer.getInstance(hostname, Integer.valueOf(port),
-                    transactionDatabase, eventsDatabase, shaHash);
+                    transactionDatabase, eventsDatabase);
 
 
-            if (certificate != null) {
-                SSLServerSocketFactory factory = IThreadsServer.createSSLServerSocketFactory(
-                        certificate);
-                ((WebServer) server).makeSecure(factory, null);
-            }
+
             server.start();
 
             IEvent event = eventsDatabase.createEvent(

@@ -11,8 +11,6 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import threads.iota.server.Certificate;
-import threads.iota.server.Server;
 import threads.iota.server.ServerDatabase;
 import threads.server.daemon.IThreadsServer;
 import threads.server.daemon.ThreadsServer;
@@ -79,21 +77,11 @@ public class Application extends android.app.Application {
     public static void init() {
         new java.lang.Thread(new Runnable() {
             public void run() {
-                Application.getCertificate();
                 Application.getEventsDatabase().insertMessage("\nWelcome to the IRI android daemon.");
                 Application.getEventsDatabase().insertMessage("Please feel free to start the daemon ....\n\n");
 
             }
         }).start();
-    }
-
-    public static Certificate getCertificate() {
-        Certificate certificate = serverDatabase.getCertificate();
-        if (certificate == null) {
-            certificate = Server.createCertificate();
-            serverDatabase.insertCertificate(certificate);
-        }
-        return certificate;
     }
 
 

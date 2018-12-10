@@ -12,7 +12,6 @@ import org.junit.runner.RunWith;
 
 import threads.iota.IOTA;
 import threads.iota.PearlDiver;
-import threads.iota.server.Certificate;
 import threads.iota.server.Server;
 import threads.iota.server.ServerDatabase;
 import threads.server.daemon.IThreadsConfig;
@@ -29,7 +28,6 @@ public class DefaultDemonServerDown {
     private static IThreadsServer threadsServer;
     private static Context context;
     private static ServerDatabase serverDatabase;
-    private static Certificate certificate = Server.createCertificate();
 
     @BeforeClass
     public static void setUp() {
@@ -42,7 +40,7 @@ public class DefaultDemonServerDown {
         serverDatabase = Room.inMemoryDatabaseBuilder(context, ServerDatabase.class).build();
         threadsServer = ThreadsServer.createThreadServer(context, transactionDatabase, eventsDatabase);
 
-        IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(context, certificate);
+        IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(context);
         threadsServer.start(threadsConfig);
 
     }
@@ -57,7 +55,7 @@ public class DefaultDemonServerDown {
 
         assertTrue(threadsServer.isRunning());
 
-        IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(context, certificate);
+        IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(context);
         Server server = IThreadsServer.getServer(context, threadsConfig);
 
         IOTA tangleServerConnect = IOTA.getIota(serverDatabase, server, new PearlDiver());

@@ -15,7 +15,6 @@ import java.net.InetAddress;
 import threads.iota.IOTA;
 import threads.iota.Pair;
 import threads.iota.PearlDiver;
-import threads.iota.server.Certificate;
 import threads.iota.server.Server;
 import threads.iota.server.ServerDatabase;
 import threads.iota.server.ServerInfo;
@@ -38,7 +37,6 @@ public class IriTest {
     private static Context context;
     private static IThreadsServer threadsServer;
     private static ServerDatabase serverDatabase;
-    private static Certificate certificate = Server.createCertificate();
 
 
     @BeforeClass
@@ -50,7 +48,7 @@ public class IriTest {
         context = InstrumentationRegistry.getTargetContext();
 
         Server serverConfig = Server.createServer("https",
-                "nodes.thetangle.org", "443", "", Server.getDefaultServerAlias());
+                "nodes.thetangle.org", "443");
         EventsDatabase eventsDatabase = Room.inMemoryDatabaseBuilder(context, EventsDatabase.class).build();
         TransactionDatabase transactionDatabase = Room.inMemoryDatabaseBuilder(context, TransactionDatabase.class).build();
 
@@ -102,11 +100,6 @@ public class IriTest {
             }
 
             @Override
-            public Certificate getCertificate() {
-                return certificate;
-            }
-
-            @Override
             public String getHostname() {
                 return ipv6.first.getHostAddress();
             }
@@ -116,7 +109,7 @@ public class IriTest {
 
         Server server = Server.createServer(IThreadsServer.HTTPS_PROTOCOL,
                 IThreadsServer.getIPv6HostAddress().first,
-                String.valueOf(IThreadsServer.TCP_PORT), certificate.getShaHash(), Server.getDefaultServerAlias());
+                String.valueOf(IThreadsServer.TCP_PORT));
 
         boolean result = Server.isReachable(server);
         assertTrue(result);

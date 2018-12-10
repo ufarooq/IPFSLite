@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private DrawerLayout drawer_layout;
-    private FloatingActionButton fab;
+    private FloatingActionButton server;
     private FloatingActionButton traffic_light;
     private RecyclerView mRecyclerView;
     private MessageViewAdapter messageViewAdapter;
@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public void onReceive(Context context, Intent intent) {
             try {
                 if (IThreadsServer.isConnected(context)) {
-                    findViewById(R.id.fab).setVisibility(View.VISIBLE);
+                    findViewById(R.id.server).setVisibility(View.VISIBLE);
                     if (snackbar != null) {
                         snackbar.dismiss();
                         snackbar = null;
@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     networkAvailable.set(true);
 
                 } else {
-                    findViewById(R.id.fab).setVisibility(View.GONE);
+                    findViewById(R.id.server).setVisibility(View.GONE);
                     networkAvailable.set(false);
                     wasOffline.set(true);
                     if (snackbar == null) {
@@ -127,8 +127,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         traffic_light = findViewById(R.id.trafic_light);
-        fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        server = findViewById(R.id.server);
+        server.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
@@ -150,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
 
                     evalueServerStatus();
-                    fab.setImageDrawable(getDrawable(R.drawable.stop));
+                    server.setImageDrawable(getDrawable(R.drawable.stop));
                 } else {
                     Intent intent = new Intent(MainActivity.this, DaemonService.class);
                     intent.setAction(DaemonService.ACTION_STOP_DAEMON_SERVICE);
@@ -161,15 +161,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
 
                     evalueServerStatus();
-                    fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
+                    server.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
                 }
             }
         });
         IThreadsServer daemon = Application.getThreadsServer();
         if (!daemon.isRunning()) {
-            fab.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
+            server.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
         } else {
-            fab.setImageDrawable(getDrawable(R.drawable.stop));
+            server.setImageDrawable(getDrawable(R.drawable.stop));
         }
 
 
@@ -336,13 +336,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     new java.lang.Thread(new Runnable() {
                         public void run() {
                             IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(
-                                    getApplicationContext(),
-                                    Application.getCertificate());
+                                    getApplicationContext());
                             Server server = IThreadsServer.getServer(getApplicationContext(),
                                     threadsConfig);
                             ServerData serverData = server.getServerData();
-                            ServerInfoDialog.show(MainActivity.this,
-                                    ServerData.toString(serverData), BuildConfig.ApiAesKey);
+                            ServerInfoDialog.show(MainActivity.this, ServerData.toString(serverData));
                         }
                     }).start();
                 }

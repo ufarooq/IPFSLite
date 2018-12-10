@@ -16,8 +16,6 @@ import android.widget.ImageView;
 
 import java.util.Hashtable;
 
-import threads.iota.Encryption;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ServerInfoDialog extends DialogFragment implements DialogInterface.OnClickListener {
@@ -36,12 +34,11 @@ public class ServerInfoDialog extends DialogFragment implements DialogInterface.
 
 
     public static void show(@NonNull Activity activity,
-                            @NonNull String address,
-                            @NonNull String aesKey) {
+                            @NonNull String address) {
         checkNotNull(activity);
         checkNotNull(address);
         try {
-            String qrCode = ServerInfoDialog.getBitmap(address, aesKey);
+            String qrCode = ServerInfoDialog.getBitmap(address);
 
             Bundle bundle = new Bundle();
             bundle.putString(QRCODE, qrCode);
@@ -55,11 +52,8 @@ public class ServerInfoDialog extends DialogFragment implements DialogInterface.
 
     }
 
-    private static String getBitmap(@NonNull String address, @NonNull String aesKey) {
-        String qrCode = "";
-
+    private static String getBitmap(@NonNull String qrCode) {
         try {
-            qrCode = Encryption.encrypt(address, aesKey);
 
             if (generalHashtable.containsKey(qrCode)) {
                 generalHashtable.get(qrCode);

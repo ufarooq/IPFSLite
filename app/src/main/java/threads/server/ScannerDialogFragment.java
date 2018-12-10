@@ -19,7 +19,6 @@ import com.google.android.gms.vision.Tracker;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
-import threads.iota.Encryption;
 
 public class ScannerDialogFragment extends DialogFragment implements CameraSourcePreview.OnCameraErrorListener {
 
@@ -63,10 +62,8 @@ public class ScannerDialogFragment extends DialogFragment implements CameraSourc
 
                         String qrCode = barcode.displayValue;
                         if (qrCode != null) {
-
                             try {
-                                String address = Encryption.decrypt(qrCode, mCallback.getAesKey());
-                                mCallback.handleScannerCode(address);
+                                mCallback.handleScannerCode(qrCode);
                             } catch (Throwable e) {
                                 mCallback.onCameraError(R.string.camera_error_decrypt_failed);
                             } finally {

@@ -45,7 +45,7 @@ public class WebServer extends NanoServer implements IServer {
     private static final String TAG = WebServer.class.getSimpleName();
     private final static int HASH_SIZE = 81;
     private final static int TRYTES_SIZE = 2673;
-    private final String authentification;
+
     private final Gson gson = new GsonBuilder().create();
     private final TransactionDatabase transactionDatabase;
     private final IotaAPI iotaAPI;
@@ -56,15 +56,13 @@ public class WebServer extends NanoServer implements IServer {
     private WebServer(@NonNull String hostname,
                       @NonNull Integer port,
                       @NonNull TransactionDatabase transactionDatabase,
-                      @NonNull EventsDatabase eventsDatabase,
-                      @NonNull String authentification) {
+                      @NonNull EventsDatabase eventsDatabase) {
         super(hostname, port);
         checkNotNull(transactionDatabase);
         checkNotNull(eventsDatabase);
-        checkNotNull(authentification);
+
         this.eventsDatabase = eventsDatabase;
         this.transactionDatabase = transactionDatabase;
-        this.authentification = authentification;
 
         IotaAPI.Builder builder = new IotaAPI.Builder();
         builder = builder.protocol("https");
@@ -85,14 +83,12 @@ public class WebServer extends NanoServer implements IServer {
     public static WebServer getInstance(@NonNull String hostname,
                                         @NonNull Integer port,
                                         @NonNull TransactionDatabase transactionDatabase,
-                                        @NonNull EventsDatabase eventsDatabase,
-                                        @NonNull String authentification) {
+                                        @NonNull EventsDatabase eventsDatabase) {
         checkNotNull(hostname);
         checkNotNull(port);
         checkNotNull(transactionDatabase);
         checkNotNull(eventsDatabase);
-        checkNotNull(authentification);
-        return new WebServer(hostname, port, transactionDatabase, eventsDatabase, authentification);
+        return new WebServer(hostname, port, transactionDatabase, eventsDatabase);
     }
 
     private static void setupResponseHeaders(final NanoServer.IHTTPSession exchange) {
@@ -125,19 +121,6 @@ public class WebServer extends NanoServer implements IServer {
                 remoteHosts.add(remoteHost);
             }
 
-
-            if (!authentification.isEmpty()) {
-                String remoteAuthentification = session.getHeaders().get(
-                        IThreadsServer.AUTHENTIFICATION.toLowerCase());
-                if (remoteAuthentification == null || remoteAuthentification.isEmpty()) {
-                    eventsDatabase.insertMessage("Authentification required ...");
-                    return newFixedErrorLengthResponse("Authentification required");
-                }
-                if (!remoteAuthentification.equals(authentification)) {
-                    eventsDatabase.insertMessage("Authentification failure ...");
-                    return newFixedErrorLengthResponse("Authentification failure");
-                }
-            }
 
             response = process(map, timeMillis);
 

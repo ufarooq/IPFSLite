@@ -9,18 +9,7 @@ import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 import android.telephony.TelephonyManager;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.security.KeyStore;
-
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLServerSocketFactory;
-import javax.net.ssl.TrustManagerFactory;
-
 import threads.iota.Pair;
-import threads.iota.server.Certificate;
 import threads.iota.server.Server;
 import threads.iota.server.ServerVisibility;
 
@@ -39,7 +28,6 @@ public interface IThreadsServer {
     String PUBLIC_IP_CHANGE_EVENT = "PUBLIC_IP_CHANGE_EVENT";
     String HTTPS_PROTOCOL = "https";
     String HTTP_PROTOCOL = "http";
-    String AUTHENTIFICATION = "AUTHENTIFICATION";
     String CONFIG = "CONFIG";
     String CONFIG_HOST = "host";
     String CONFIG_PORT = "port";
@@ -78,17 +66,11 @@ public interface IThreadsServer {
                 }
             }
         }
-        Certificate certificate = threadsConfig.getCertificate();
+
         String protocol = IThreadsServer.HTTP_PROTOCOL;
-        String cert = "";
-        if (certificate != null) {
-            protocol = IThreadsServer.HTTPS_PROTOCOL;
-            cert = certificate.getShaHash();
-        }
         String port = threadsConfig.getPort();
 
-        return Server.createServer(
-                protocol, host, port, cert, Server.getDefaultServerAlias());
+        return Server.createServer(protocol, host, port);
     }
 
 
@@ -116,10 +98,6 @@ public interface IThreadsServer {
                 return String.valueOf(port);
             }
 
-            @Override
-            public Certificate getCertificate() {
-                return null;
-            }
 
             @NonNull
             @Override
@@ -131,10 +109,9 @@ public interface IThreadsServer {
     }
 
 
-    static IThreadsConfig getHttpsThreadsConfig(@NonNull Context context,
-                                                @NonNull Certificate certificate) {
+    static IThreadsConfig getHttpsThreadsConfig(@NonNull Context context) {
         checkNotNull(context);
-        checkNotNull(certificate);
+
         SharedPreferences sharedPref = context.getSharedPreferences(CONFIG, Context.MODE_PRIVATE);
         String host = "";
         int port = sharedPref.getInt(CONFIG_PORT, IThreadsServer.TCP_PORT);
@@ -154,11 +131,6 @@ public interface IThreadsServer {
                 return String.valueOf(port);
             }
 
-            @Override
-            public Certificate getCertificate() {
-                return certificate;
-            }
-
             @NonNull
             @Override
             public String getHostname() {
@@ -175,35 +147,6 @@ public interface IThreadsServer {
 
     static Pair<String, ServerVisibility> getIPv6HostAddress() {
         return ThreadsServer.getIPAddress(false);
-    }
-
-    static SSLServerSocketFactory createSSLServerSocketFactory(@NonNull Certificate certificate) {
-        checkNotNull(certificate);
-
-        InputStream keystoreStream = null;
-        try {
-            checkNotNull(certificate);
-            keystoreStream = new ByteArrayInputStream(certificate.getBytes());
-            KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-            keystore.load(keystoreStream, certificate.getPassphrase().toCharArray());
-
-            TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            trustManagerFactory.init(keystore);
-            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            keyManagerFactory.init(keystore, certificate.getPassphrase().toCharArray());
-            SSLContext ctx = SSLContext.getInstance("TLS");
-            ctx.init(keyManagerFactory.getKeyManagers(), trustManagerFactory.getTrustManagers(), null);
-            return ctx.getServerSocketFactory();
-        } catch (Throwable e) {
-            throw new RuntimeException(e.getMessage());
-        } finally {
-            if (keystoreStream != null) {
-                try {
-                    keystoreStream.close();
-                } catch (IOException ignored) {
-                }
-            }
-        }
     }
 
     static NetworkInfo getNetworkInfo(@NonNull Context context) {

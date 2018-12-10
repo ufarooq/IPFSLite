@@ -11,7 +11,6 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-import threads.iota.server.Certificate;
 import threads.server.daemon.IThreadsConfig;
 import threads.server.daemon.IThreadsServer;
 
@@ -109,16 +108,14 @@ public class DaemonService extends Service {
                     if (threadsServer.isRunning()) {
                         threadsServer.shutdown();
                     }
-                    Certificate certificate = Application.getCertificate();
+
                     IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(
-                            getApplicationContext(),
-                            Application.getCertificate());
+                            getApplicationContext());
 
 
                     Log.e(TAG, "Daemon Prot : " + IThreadsServer.HTTPS_PROTOCOL);
                     Log.e(TAG, "Daemon Host : " + threadsConfig.getHostname());
                     Log.e(TAG, "Daemon Port : " + threadsConfig.getPort());
-                    Log.e(TAG, "Daemon Cert : " + certificate.getShaHash());
 
                     threadsServer.start(threadsConfig);
                 }
@@ -140,15 +137,12 @@ public class DaemonService extends Service {
 
                     IThreadsServer threadsServer = Application.getThreadsServer();
                     if (!threadsServer.isRunning()) {
-                        Certificate certificate = Application.getCertificate();
 
                         IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(
-                                getApplicationContext(),
-                                Application.getCertificate());
+                                getApplicationContext());
                         Log.e(TAG, "Daemon Prot : " + IThreadsServer.HTTPS_PROTOCOL);
                         Log.e(TAG, "Daemon Host : " + threadsConfig.getHostname());
                         Log.e(TAG, "Daemon Port : " + threadsConfig.getPort());
-                        Log.e(TAG, "Daemon Cert : " + certificate.getShaHash());
 
                         threadsServer.start(threadsConfig);
                     }

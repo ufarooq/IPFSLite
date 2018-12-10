@@ -12,7 +12,6 @@ import org.junit.runner.RunWith;
 
 import threads.iota.IOTA;
 import threads.iota.PearlDiver;
-import threads.iota.server.Certificate;
 import threads.iota.server.Server;
 import threads.iota.server.ServerDatabase;
 import threads.server.daemon.IThreadsConfig;
@@ -32,7 +31,6 @@ public class WebServerTest {
 
     private static Context context;
     private static ServerDatabase serverDatabase;
-    private static Certificate certificate = Server.createCertificate();
 
     @BeforeClass
     public static void setUp() {
@@ -47,7 +45,7 @@ public class WebServerTest {
 
 
         threadsServer = ThreadsServer.createThreadServer(context, transactionDatabase, eventsDatabase);
-        IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(context, certificate);
+        IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(context);
         threadsServer.start(threadsConfig);
 
     }
@@ -60,7 +58,7 @@ public class WebServerTest {
     @Test
     public void testConnection() {
 
-        IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(context, certificate);
+        IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(context);
         Server server = IThreadsServer.getServer(context, threadsConfig);
         assertTrue(Server.isReachable(server));
     }
@@ -68,7 +66,7 @@ public class WebServerTest {
     @Test
     public void testTangleConnection() {
 
-        IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(context, certificate);
+        IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(context);
         Server server = IThreadsServer.getServer(context, threadsConfig);
         assertNotNull(server);
 

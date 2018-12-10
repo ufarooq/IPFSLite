@@ -10,7 +10,4 @@ public interface ScannerListener {
 
     @UiThread
     void onCameraError(@StringRes int errorTextRes);
-
-    @UiThread
-    String getAesKey();
 }
