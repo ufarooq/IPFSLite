@@ -35,8 +35,6 @@ import android.widget.Toast;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import threads.iota.server.Server;
-import threads.iota.server.ServerData;
 import threads.server.daemon.IThreadsConfig;
 import threads.server.daemon.IThreadsServer;
 import threads.server.event.Event;
@@ -337,9 +335,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         public void run() {
                             IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(
                                     getApplicationContext());
-                            Server server = IThreadsServer.getServer(getApplicationContext(),
+                            ServerData serverData = IThreadsServer.getServer(getApplicationContext(),
                                     threadsConfig);
-                            ServerData serverData = server.getServerData();
                             ServerInfoDialog.show(MainActivity.this, ServerData.toString(serverData));
                         }
                     }).start();

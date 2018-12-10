@@ -11,7 +11,6 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import threads.iota.server.ServerDatabase;
 import threads.server.daemon.IThreadsServer;
 import threads.server.daemon.ThreadsServer;
 import threads.server.daemon.TransactionDatabase;
@@ -26,7 +25,6 @@ public class Application extends android.app.Application {
     private static final String TAG = Application.class.getSimpleName();
     private static IThreadsServer threadsServer;
     private static EventsDatabase eventsDatabase;
-    private static ServerDatabase serverDatabase;
 
 
     public static EventsDatabase getEventsDatabase() {
@@ -108,9 +106,6 @@ public class Application extends android.app.Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        serverDatabase = Room.databaseBuilder(this,
-                ServerDatabase.class,
-                ServerDatabase.class.getSimpleName()).fallbackToDestructiveMigration().build();
 
         TransactionDatabase transactionDatabase = Room.databaseBuilder(this,
                 TransactionDatabase.class,

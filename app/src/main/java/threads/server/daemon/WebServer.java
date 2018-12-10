@@ -185,7 +185,7 @@ public class WebServer extends NanoServer implements IServer {
 
             switch (command) {
                 case "getNodeInfo": {
-                    threads.iota.dto.response.GetNodeInfoResponse res = iotaAPI.getNodeInfo();
+                    GetNodeInfoResponse res = iotaAPI.getNodeInfo();
                     checkNotNull(res);
 
 

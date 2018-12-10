@@ -8,10 +8,10 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 import android.telephony.TelephonyManager;
+import android.util.Pair;
 
-import threads.iota.Pair;
-import threads.iota.server.Server;
-import threads.iota.server.ServerVisibility;
+import threads.server.ServerData;
+import threads.server.ServerVisibility;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -46,7 +46,7 @@ public interface IThreadsServer {
         editor.apply();
     }
 
-    static Server getServer(@NonNull Context context, @NonNull IThreadsConfig threadsConfig) {
+    static ServerData getServer(@NonNull Context context, @NonNull IThreadsConfig threadsConfig) {
         checkNotNull(context);
         checkNotNull(threadsConfig);
         SharedPreferences sharedPref = context.getSharedPreferences(CONFIG, Context.MODE_PRIVATE);
@@ -70,7 +70,7 @@ public interface IThreadsServer {
         String protocol = IThreadsServer.HTTP_PROTOCOL;
         String port = threadsConfig.getPort();
 
-        return Server.createServer(protocol, host, port);
+        return ServerData.createServerData(protocol, host, port);
     }
 
 

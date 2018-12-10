@@ -5,6 +5,7 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.util.Pair;
 
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -13,9 +14,7 @@ import java.net.NetworkInterface;
 import java.util.Collections;
 import java.util.List;
 
-import threads.iota.Pair;
-import threads.iota.server.IServer;
-import threads.iota.server.ServerVisibility;
+import threads.server.ServerVisibility;
 import threads.server.event.EventsDatabase;
 import threads.server.event.IEvent;
 
@@ -66,7 +65,7 @@ public class ThreadsServer implements IThreadsServer {
             }).start();
         }
     };
-    private IServer server;
+    private WebServer server;
 
     private ThreadsServer(@NonNull Context context,
                           @NonNull TransactionDatabase transactionDatabase,
