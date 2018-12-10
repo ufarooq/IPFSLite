@@ -10,10 +10,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.IOException;
+
 import threads.iota.IOTA;
 import threads.iota.PearlDiver;
-import threads.iota.server.Server;
-import threads.iota.server.ServerDatabase;
 import threads.server.daemon.IThreadsConfig;
 import threads.server.daemon.IThreadsServer;
 import threads.server.daemon.ThreadsServer;
@@ -30,7 +30,6 @@ public class WebServerTest {
     private static IThreadsServer threadsServer;
 
     private static Context context;
-    private static ServerDatabase serverDatabase;
 
     @BeforeClass
     public static void setUp() {
@@ -40,9 +39,6 @@ public class WebServerTest {
 
         EventsDatabase eventsDatabase = Room.inMemoryDatabaseBuilder(context, EventsDatabase.class).build();
         TransactionDatabase transactionDatabase = Room.inMemoryDatabaseBuilder(context, TransactionDatabase.class).build();
-
-        serverDatabase = Room.inMemoryDatabaseBuilder(context, ServerDatabase.class).build();
-
 
         threadsServer = ThreadsServer.createThreadServer(context, transactionDatabase, eventsDatabase);
         IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(context);
@@ -55,24 +51,17 @@ public class WebServerTest {
         threadsServer.shutdown();
     }
 
-    @Test
-    public void testConnection() {
-
-        IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(context);
-        Server server = IThreadsServer.getServer(context, threadsConfig);
-        assertTrue(Server.isReachable(server));
-    }
 
     @Test
-    public void testTangleConnection() {
+    public void testTangleConnection() throws IOException {
 
         IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(context);
-        Server server = IThreadsServer.getServer(context, threadsConfig);
-        assertNotNull(server);
+        ServerData serverData = IThreadsServer.getServer(context, threadsConfig);
+        assertNotNull(serverData);
 
-        IOTA tangleClient = IOTA.getIota(serverDatabase, server, new PearlDiver());
+        IOTA tangleClient = IOTA.getIota(serverData.getProtocol(), serverData.getHost(), serverData.getPort(), new PearlDiver());
 
-        assertTrue(tangleClient.getServerInfo().isOnline());
+        assertTrue(tangleClient.getNodeInfo() != null);
 
     }
 

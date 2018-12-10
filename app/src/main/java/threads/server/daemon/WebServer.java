@@ -20,11 +20,9 @@ import java.util.Set;
 
 import threads.iota.IotaAPI;
 import threads.iota.IotaClient;
-import threads.iota.TangleUtils;
 import threads.iota.dto.response.FindTransactionResponse;
 import threads.iota.dto.response.GetAttachToTangleResponse;
 import threads.iota.model.Hash;
-import threads.iota.server.IServer;
 import threads.iota.utils.Converter;
 import threads.server.daemon.dto.AbstractResponse;
 import threads.server.daemon.dto.AccessLimitedResponse;
@@ -40,7 +38,7 @@ import threads.server.event.EventsDatabase;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class WebServer extends NanoServer implements IServer {
+public class WebServer extends NanoServer {
 
     private static final String TAG = WebServer.class.getSimpleName();
     private final static int HASH_SIZE = 81;
@@ -185,7 +183,7 @@ public class WebServer extends NanoServer implements IServer {
 
             switch (command) {
                 case "getNodeInfo": {
-                    GetNodeInfoResponse res = iotaAPI.getNodeInfo();
+                    threads.iota.dto.response.GetNodeInfoResponse res = iotaAPI.getNodeInfo();
                     checkNotNull(res);
 
 
@@ -218,7 +216,7 @@ public class WebServer extends NanoServer implements IServer {
                     final List<String> trytes = getParameterAsList(request, "trytes", TRYTES_SIZE);
 
                     try {
-                        GetAttachToTangleResponse res = TangleUtils.localPow(trunkTransaction.toString(),
+                        GetAttachToTangleResponse res = iotaAPI.attachToTangle(trunkTransaction.toString(),
                                 branchTransaction.toString(),
                                 minWeightMagnitude,
                                 Iterables.toArray(trytes, String.class));
