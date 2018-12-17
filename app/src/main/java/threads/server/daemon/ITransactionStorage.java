@@ -2,10 +2,9 @@ package threads.server.daemon;
 
 import java.util.List;
 
-import threads.iota.ITransaction;
 import threads.iota.model.Hash;
 
-public interface ITransactionStorage extends ITransaction {
+public interface ITransactionStorage {
     int SIZE = 1604;
     long SUPPLY = 2779530283277761L; // = (3^33 - 1) / 2
     int SIGNATURE_MESSAGE_FRAGMENT_TRINARY_OFFSET = 0, SIGNATURE_MESSAGE_FRAGMENT_TRINARY_SIZE = 6561;
@@ -102,4 +101,5 @@ public interface ITransactionStorage extends ITransaction {
 
     int getWeightMagnitude();
 
+    String toTrytes();
 }

@@ -19,7 +19,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import threads.iota.IotaAPI;
-import threads.iota.IotaClient;
 import threads.iota.dto.response.FindTransactionResponse;
 import threads.iota.dto.response.GetAttachToTangleResponse;
 import threads.iota.model.Hash;
@@ -350,7 +349,7 @@ public class WebServer extends NanoServer {
                     transactionDatabase, txTrits,
                     /*instance.transactionValidator.getMinWeightMagnitude()*/1);
 
-            if (transactionStorage.getWeightMagnitude() >= IotaClient.MIN_WEIGHT_MAGNITUDE) {
+            if (transactionStorage.getWeightMagnitude() >= 14) {
                 transfer.add(tryte);
             } else {
                 // only with small minWeightMagnitude will be store locally (TODO maybe change in future)

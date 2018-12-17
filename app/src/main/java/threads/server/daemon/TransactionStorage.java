@@ -249,7 +249,7 @@ public class TransactionStorage implements ITransactionStorage {
         this.lastIndex = lastIndex;
     }
 
-    @Override
+
     public String getTrunkTransaction() {
         return getTrunk();
     }
@@ -259,7 +259,7 @@ public class TransactionStorage implements ITransactionStorage {
         return hash;
     }
 
-    @Override
+
     public String toTrytes() {
         return Converter.trytes(trits);
     }

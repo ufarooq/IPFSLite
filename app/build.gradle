@@ -84,7 +84,7 @@ dependencies {
     implementation 'android.arch.persistence.room:runtime:1.1.1'
 
     // API (LICENSE done)
-    implementation 'threads.iota:threads:2.4.2'
+    implementation 'threads.iota:threads:2.4.3'
 
     // QR Scanner (LICENSE TODO)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'
