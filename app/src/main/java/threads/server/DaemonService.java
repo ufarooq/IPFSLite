@@ -11,15 +11,17 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-import threads.server.daemon.IThreadsConfig;
+import threads.ipfs.IPFS;
+import threads.ipfs.api.PID;
+import threads.ipfs.api.Profile;
 import threads.server.daemon.IThreadsServer;
+import threads.server.event.IEvent;
 
 
 public class DaemonService extends Service {
     public static final int NOTIFICATION_ID = 999;
     public static final String ACTION_START_DAEMON_SERVICE = "ACTION_START_DAEMON_SERVICE";
     public static final String ACTION_STOP_DAEMON_SERVICE = "ACTION_STOP_DAEMON_SERVICE";
-    public static final String ACTION_RESTART_DAEMON_SERVICE = "ACTION_RESTART_DAEMON_SERVICE";
     private static final String TAG = DaemonService.class.getSimpleName();
 
 
@@ -49,13 +51,8 @@ public class DaemonService extends Service {
             String action = intent.getAction();
 
             switch (action) {
-                case ACTION_RESTART_DAEMON_SERVICE:
-                    restartDaemonService();
-                    Toast.makeText(getApplicationContext(), "Daemon service is restarted.", Toast.LENGTH_LONG).show();
-                    break;
                 case ACTION_START_DAEMON_SERVICE:
                     startDaemonService();
-                    Toast.makeText(getApplicationContext(), "Daemon service is started.", Toast.LENGTH_LONG).show();
                     break;
                 case ACTION_STOP_DAEMON_SERVICE:
                     stopDaemonService();
@@ -75,11 +72,10 @@ public class DaemonService extends Service {
                 Application.CHANNEL_ID);
 
         builder.setContentTitle(getString(R.string.daemon_title));
-        builder.setContentText(getString(R.string.daemon_port_text));
         builder.setSmallIcon(R.drawable.graphql);
         builder.setGroup(Application.GROUP_ID);
         builder.setGroupSummary(true);
-        builder.setPriority(Notification.PRIORITY_MAX);
+        builder.setPriority(NotificationManager.IMPORTANCE_MAX);
 
         // Create an explicit intent for an Activity in your app
         Intent defaultIntent = new Intent(getApplicationContext(), MainActivity.class);
@@ -93,60 +89,37 @@ public class DaemonService extends Service {
         Notification notification = builder.build();
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        notificationManager.notify(NOTIFICATION_ID, notification);
+        if (notificationManager != null) {
+            notificationManager.notify(NOTIFICATION_ID, notification);
+        }
         return notification;
     }
 
-    private void restartDaemonService() {
-        long start = System.currentTimeMillis();
-
-        try {
-            new java.lang.Thread(new Runnable() {
-                public void run() {
-                    IThreadsServer threadsServer = Application.getThreadsServer();
-
-                    if (threadsServer.isRunning()) {
-                        threadsServer.shutdown();
-                    }
-
-                    IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(
-                            getApplicationContext());
-
-
-                    Log.e(TAG, "Daemon Prot : " + IThreadsServer.HTTPS_PROTOCOL);
-                    Log.e(TAG, "Daemon Host : " + threadsConfig.getHostname());
-                    Log.e(TAG, "Daemon Port : " + threadsConfig.getPort());
-
-                    threadsServer.start(threadsConfig);
-                }
-            }).start();
-        } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage(), e);
-        } finally {
-            Log.e(TAG, " finish running [" + (System.currentTimeMillis() - start) + "]...");
-        }
-    }
 
     private void startDaemonService() {
         long start = System.currentTimeMillis();
 
         try {
-            new Thread(new Runnable() {
-                public void run() {
+            new Thread(() -> {
+
+                try {
+                    IPFS ipfs = Application.getIpfs();
+                    if (!ipfs.isRunning()) {
+                        boolean success = ipfs.start(Profile.SERVER, false, 30000L);
+                        if (success) {
+                            PID pid = ipfs.getPeersID();
+                            Application.setPid(getApplicationContext(), pid.getPid());
+                        }
 
 
-                    IThreadsServer threadsServer = Application.getThreadsServer();
-                    if (!threadsServer.isRunning()) {
-
-                        IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(
-                                getApplicationContext());
-                        Log.e(TAG, "Daemon Prot : " + IThreadsServer.HTTPS_PROTOCOL);
-                        Log.e(TAG, "Daemon Host : " + threadsConfig.getHostname());
-                        Log.e(TAG, "Daemon Port : " + threadsConfig.getPort());
-
-                        threadsServer.start(threadsConfig);
+                        IEvent event = Application.getEventsDatabase().createEvent(
+                                IThreadsServer.DAEMON_SERVER_ONLINE_EVENT);
+                        Application.getEventsDatabase().insertEvent(event);
                     }
+                } catch (Throwable e) {
+                    Log.e(TAG, e.getLocalizedMessage(), e);
                 }
+
             }).start();
 
         } catch (Throwable e) {
@@ -160,14 +133,19 @@ public class DaemonService extends Service {
         long start = System.currentTimeMillis();
 
         try {
-            new java.lang.Thread(new Runnable() {
-                public void run() {
-                    IThreadsServer threadsServer = Application.getThreadsServer();
-                    if (threadsServer.isRunning()) {
-                        threadsServer.shutdown();
-                        Log.i(TAG, "Daemon is shutting down ...");
-                    }
+            new java.lang.Thread(() -> {
+                IPFS ipfs = Application.getIpfs();
+                if (ipfs.isRunning()) {
+                    ipfs.shutdown();
+
+                    Application.getEventsDatabase().insertMessage(
+                            getApplicationContext().getString(R.string.server_shutdown));
+                    IEvent event = Application.getEventsDatabase().createEvent(
+                            IThreadsServer.DAEMON_SERVER_OFFLINE_EVENT);
+                    Application.getEventsDatabase().insertEvent(event);
+
                 }
+
             }).start();
 
         } catch (Throwable e) {

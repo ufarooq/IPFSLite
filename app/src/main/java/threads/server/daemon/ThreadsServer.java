@@ -207,7 +207,6 @@ public class ThreadsServer implements IThreadsServer {
                     transactionDatabase, eventsDatabase);
 
 
-
             server.start();
 
             IEvent event = eventsDatabase.createEvent(
@@ -241,7 +240,7 @@ public class ThreadsServer implements IThreadsServer {
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {
-                eventsDatabase.insertMessage("Threads Server finished ...");
+                eventsDatabase.insertMessage("Threads IRI Server finished ...");
                 IEvent event = eventsDatabase.createEvent(
                         IThreadsServer.DAEMON_SERVER_OFFLINE_EVENT);
                 eventsDatabase.insertEvent(event);

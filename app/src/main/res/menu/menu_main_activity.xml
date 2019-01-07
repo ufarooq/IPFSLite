@@ -3,6 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
+    <item
+        android:id="@+id/action_clear"
+        android:icon="@drawable/delete"
+        android:iconTint="@android:color/white"
+        android:orderInCategory="40"
+        android:title="@string/action_delete"
+        app:showAsAction="always" />
+
 
     <item
         android:id="@+id/action_info"
@@ -11,25 +19,17 @@
         android:orderInCategory="50"
         android:title="@string/action_info"
         android:visible="true"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/action_settings"
-        android:icon="@android:drawable/ic_menu_manage"
+        android:id="@+id/action_webui"
+        android:icon="@android:drawable/ic_menu_compass"
         android:iconTint="@android:color/white"
         android:orderInCategory="50"
         android:title="@string/action_info"
         android:visible="true"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
 
-    <item
-        android:id="@+id/action_clear"
-        android:icon="@android:drawable/ic_notification_clear_all"
-        android:iconTint="@android:color/white"
-        android:orderInCategory="50"
-        android:title="@string/action_clear"
-        android:visible="true"
-        app:showAsAction="never" />
 
 
 </menu>

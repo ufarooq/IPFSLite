@@ -11,12 +11,12 @@ ext {
     libraryName = 'Threads Server App'
     artifact = 'app'
 
-    libraryDescription = 'An IRI server for Android.'
+    libraryDescription = 'An IPFS server for Android.'
 
     siteUrl = 'https://gitlab.com/remmer.wilts/threads-server'
     gitUrl = 'git@gitlab.com:remmer.wilts/threads-server.git'
 
-    libraryVersion = '0.0.9'
+    libraryVersion = '0.1.0'
 
     developerId = 'remmerw'
     developerName = 'Remmer Wilts'
@@ -31,21 +31,19 @@ android {
     buildToolsVersion '28.0.3'
     defaultConfig {
         applicationId "threads.server"
-        minSdkVersion 24
+        minSdkVersion 26
         targetSdkVersion 28
-        versionCode 9
-        versionName "0.0.9"
+        versionCode 10
+        versionName "0.1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         debug {
-            buildConfigField 'String', "ApiAesKey", ApiAesKey
             buildConfigField 'String', "DONATION_ADDRESS", DONATION_ADDRESS
         }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            buildConfigField 'String', "ApiAesKey", ApiAesKey
             buildConfigField 'String', "DONATION_ADDRESS", DONATION_ADDRESS
         }
     }
@@ -84,7 +82,9 @@ dependencies {
     implementation 'android.arch.persistence.room:runtime:1.1.1'
 
     // API (LICENSE done)
+    // API (LICENSE done)
     implementation 'threads.iota:threads:2.4.3'
+    implementation 'threads.ipfs:threads:0.3.6'
 
     // QR Scanner (LICENSE TODO)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'

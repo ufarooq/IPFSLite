@@ -1,12 +1,12 @@
 <resources>
-    <string name="app_name">Threads Server</string>
+    <string name="app_name">IPFS Server</string>
     <string name="channel_id">SERVER_CHANGEL_ID</string>
     <string name="channel_name">Incoming messages notification</string>
     <string name="channel_description">Make sound and pop on screen</string>
     <string name="stop">Stop</string>
-    <string name="daemon_title">IRI daemon is running</string>
-    <string name="daemon_text">The IRI daemon handles the communication.</string>
-    <string name="daemon_long_text">Daemon is running on port \"%1$s\".</string>
+    <string name="daemon_title">IPFS daemon is running</string>
+    <string name="daemon_text">The IPFS daemon handles the communication.</string>
+    <string name="daemon_long_text">IPFS server is running on port \"%1$s\".</string>
     <string name="action_daemon">Daemon</string>
     <string name="copy_address_to_clipboard">Copy Address to Clipboard</string>
     <string name="navigation_drawer_open">Naviagation open</string>
@@ -20,11 +20,10 @@
     <string name="hint_host">Host</string>
     <string name="port_error">Port should be in the range of[443–99999]</string>
     <string name="host_invalid">The host definition is invalid.</string>
-    <string name="tangle_server_restart">The server configuration has changed. A restart of the  tangle server is required to take effect.</string>
+    <string name="server_restart">The server configuration has changed. A restart of the  tangle server is required to take effect.</string>
     <string name="localhost">Localhost</string>
     <string name="ipv6_support">IPv6 Server Address</string>
-    <string name="daemon_port_text">Threads server is running.</string>
-    <string name="daemon_server_not_running">Threads server is not yet running.</string>
+    <string name="daemon_server_not_running">IPFS server is not yet running.</string>
     <string name="not_detected">unresolved</string>
     <string name="title_activity_donation">Donation</string>
     <string name="donation_address">IOTA Donation Address</string>
@@ -33,9 +32,9 @@
     <string name="offline_modus">Network is offline</string>
     <string name="network">Network</string>
 
-    <string name="daemon_server">Daemon Server</string>
-    <string name="daemon_server_settings">Daemon Server Settings</string>
-    <string name="daemon_server_access">The QR code contains all necessary information to access the daemon server.</string>
+    <string name="daemon_server">IPFS Server</string>
+    <string name="daemon_server_settings">IPFS Server Settings</string>
+    <string name="daemon_server_access">The QR code contains all necessary information to access the IPFS server.</string>
     <string name="camera_error">Camera error</string>
     <string name="camera_error_open">Can\'t connect to the camera</string>
     <string name="camera_error_dependencies">Mobile Vision API dependencies are not available yet</string>
@@ -43,4 +42,11 @@
     <string name="camera_error_dismiss">Dismiss</string>
     <string name="camera_error_valid_address">QR code is not a valid address.</string>
     <string name="camera_error_decrypt_failed">Decryption of QR code failed.</string>
+
+    <string name="ipfs_running">Local IPFS server is running</string>
+    <string name="action_peers">Show Peers</string>
+    <string name="ipfs_webui">IPFS WebUI</string>
+    <string name="ipfs_command">Execute ipfs CLI commands</string>
+    <string name="server_shutdown">IPFS server shutdown</string>
+    <string name="action_delete">Delete</string>
 </resources>

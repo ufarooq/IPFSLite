@@ -4,6 +4,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.arch.persistence.room.Room;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
@@ -11,8 +12,10 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import threads.server.daemon.IThreadsServer;
-import threads.server.daemon.ThreadsServer;
+import com.google.android.gms.common.internal.Preconditions;
+
+import threads.ipfs.IPFS;
+import threads.ipfs.api.CmdListener;
 import threads.server.daemon.TransactionDatabase;
 import threads.server.event.EventsDatabase;
 
@@ -22,21 +25,50 @@ public class Application extends android.app.Application {
     public static final String CHANNEL_ID = "IRI_SERVER_CHANGEL_ID";
     public static final String GROUP_ID = "IRI_SERVER_GROUP_ID";
     public static final int QR_CODE_SIZE = 800;
+    public static final String PID_KEY = "pidKey";
+    public static final String PREF_KEY = "prefKey";
     private static final String TAG = Application.class.getSimpleName();
-    private static IThreadsServer threadsServer;
+    //private static IThreadsServer threadsServer;
     private static EventsDatabase eventsDatabase;
+    private static CmdListener cmdListener;
+    private static IPFS ipfs;
 
+    public static IPFS getIpfs() {
+        return ipfs;
+    }
 
     public static EventsDatabase getEventsDatabase() {
         return eventsDatabase;
     }
 
-    public static IThreadsServer getThreadsServer() {
+    /*public static IThreadsServer getThreadsServer() {
         return threadsServer;
+    }*/
+
+
+    public static CmdListener getCmdListener() {
+        return cmdListener;
     }
 
     public static String getDonationsAddress() {
         return BuildConfig.DONATION_ADDRESS;
+    }
+
+    public static void setPid(@NonNull Context context, @NonNull String pid) {
+        Preconditions.checkNotNull(context);
+        Preconditions.checkNotNull(pid);
+        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(PID_KEY, pid);
+        editor.apply();
+    }
+
+    public static String getPid(@NonNull Context context) {
+        Preconditions.checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+        String pid = sharedPref.getString(PID_KEY, "");
+        Log.e(TAG, "PID : " + pid);
+        return pid;
     }
 
     public static void createChannel(@NonNull Context context) {
@@ -52,7 +84,9 @@ public class Application extends android.app.Application {
                 // or other notification behaviors after this
                 NotificationManager notificationManager = (NotificationManager) context.getSystemService(
                         Context.NOTIFICATION_SERVICE);
-                notificationManager.createNotificationChannel(mChannel);
+                if (notificationManager != null) {
+                    notificationManager.createNotificationChannel(mChannel);
+                }
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage());
@@ -73,12 +107,10 @@ public class Application extends android.app.Application {
     }
 
     public static void init() {
-        new java.lang.Thread(new Runnable() {
-            public void run() {
-                Application.getEventsDatabase().insertMessage("\nWelcome to the IRI android daemon.");
-                Application.getEventsDatabase().insertMessage("Please feel free to start the daemon ....\n\n");
+        new java.lang.Thread(() -> {
+            Application.getEventsDatabase().insertMessage("\nWelcome to the IPFS android daemon.");
+            Application.getEventsDatabase().insertMessage("Please feel free to start the daemon ....\n\n");
 
-            }
         }).start();
     }
 
@@ -111,17 +143,39 @@ public class Application extends android.app.Application {
                 TransactionDatabase.class,
                 TransactionDatabase.class.getSimpleName()).fallbackToDestructiveMigration().build();
 
+        cmdListener = new ConsoleListener();
+
+        ipfs = new IPFS.Builder().context(getApplicationContext()).listener(cmdListener).build();
 
         eventsDatabase = Room.inMemoryDatabaseBuilder(this,
                 EventsDatabase.class).build();
 
+        /*
         threadsServer = ThreadsServer.createThreadServer(this,
-                transactionDatabase, eventsDatabase);
+                transactionDatabase, eventsDatabase);*/
 
         init();
 
 
         Log.e(TAG, "...... start application");
 
+    }
+
+
+    private class ConsoleListener implements CmdListener {
+
+        @Override
+        public void info(@NonNull String message) {
+            new java.lang.Thread(() -> {
+                Application.getEventsDatabase().insertMessage(message);
+            }).start();
+        }
+
+        @Override
+        public void error(@NonNull String message) {
+            new java.lang.Thread(() -> {
+                Application.getEventsDatabase().insertMessage(message);
+            }).start();
+        }
     }
 }

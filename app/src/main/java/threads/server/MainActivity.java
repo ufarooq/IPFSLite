@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -25,33 +26,43 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import threads.server.daemon.IThreadsConfig;
+import threads.ipfs.IPFS;
 import threads.server.daemon.IThreadsServer;
 import threads.server.event.Event;
 import threads.server.event.Message;
 
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, RestartServerListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private DrawerLayout drawer_layout;
     private FloatingActionButton server;
-    private FloatingActionButton traffic_light;
+    //private FloatingActionButton traffic_light;
     private RecyclerView mRecyclerView;
     private MessageViewAdapter messageViewAdapter;
     private long mLastClickTime = 0;
     private EventViewModel eventViewModel;
+    private EditText console_box;
+
     private AtomicBoolean networkAvailable = new AtomicBoolean(true);
 
 
@@ -97,6 +108,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         }
     };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -124,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toggle.syncState();
 
 
-        traffic_light = findViewById(R.id.trafic_light);
+        //traffic_light = findViewById(R.id.trafic_light);
         server = findViewById(R.id.server);
         server.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -136,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                IThreadsServer daemon = Application.getThreadsServer();
+                IPFS daemon = Application.getIpfs();
                 if (!daemon.isRunning()) {
 
                     Intent intent = new Intent(MainActivity.this, DaemonService.class);
@@ -147,7 +159,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         startService(intent);
                     }
 
-                    evalueServerStatus();
+                    //evalueServerStatus();
                     server.setImageDrawable(getDrawable(R.drawable.stop));
                 } else {
                     Intent intent = new Intent(MainActivity.this, DaemonService.class);
@@ -158,17 +170,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         startService(intent);
                     }
 
-                    evalueServerStatus();
+                    //evalueServerStatus();
                     server.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
                 }
             }
         });
-        IThreadsServer daemon = Application.getThreadsServer();
-        if (!daemon.isRunning()) {
-            server.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
-        } else {
-            server.setImageDrawable(getDrawable(R.drawable.stop));
-        }
+        evalueServerStatus();
 
 
         MessagesViewModel messagesViewModel = ViewModelProviders.of(this).get(MessagesViewModel.class);
@@ -209,47 +216,109 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-        eventViewModel.getPublicIPChangeEvent().observe(this, new Observer<Event>() {
+
+        ImageView console_send = findViewById(R.id.console_send);
+        console_send.setEnabled(false);
+
+        console_box = findViewById(R.id.console_box);
+        console_box.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onChanged(@Nullable Event event) {
-                try {
-                    if (event != null) {
-                        evalueServerStatus();
-                    }
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
             }
-        });
-        eventViewModel.getHostNameChangeEvent().observe(this, new Observer<Event>() {
+
             @Override
-            public void onChanged(@Nullable Event event) {
-                try {
-                    if (event != null) {
-                        evalueServerStatus();
-                    }
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+                if (s.length() > 0) {
+                    console_send.setEnabled(true);
+                } else {
+                    console_send.setEnabled(false);
                 }
+
+
             }
         });
 
+
+        console_send.setOnClickListener((view) -> {
+
+            // mis-clicking prevention, using threshold of 1500 ms
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1500) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            removeKeyboards();
+
+            String text = console_box.getText().toString();
+
+            console_box.setText("");
+
+            String[] parts = text.split("\\s+");
+            if (parts.length > 0) {
+
+                if (parts[0].equalsIgnoreCase("ipfs")) {
+                    String[] commands = Arrays.copyOfRange(parts, 1, parts.length);
+                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                    executor.submit(() -> {
+                        try {
+                            IPFS ipfs = Application.getIpfs();
+                            Application.getCmdListener().info(text);
+                            ipfs.cmd(commands);
+
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                        }
+                    });
+                } else {
+                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                    executor.submit(() -> {
+                        try {
+                            IPFS ipfs = Application.getIpfs();
+                            Application.getCmdListener().info(text);
+                            ipfs.cmd(parts);
+
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                        }
+                    });
+                }
+
+
+            }
+
+
+        });
 
     }
+
+
+    private void removeKeyboards() {
+        InputMethodManager imm = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) {
+            imm.hideSoftInputFromWindow(console_box.getWindowToken(), 0);
+        }
+    }
+
 
     private void evalueServerStatus() {
 
         try {
-            if (IThreadsServer.isConnected(this)
-                    && Application.getThreadsServer().isRunning()) {
-                traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_green));
+            IPFS daemon = Application.getIpfs();
+            if (!daemon.isRunning()) {
+                server.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
             } else {
-                traffic_light.setImageDrawable(getDrawable(R.drawable.traffic_light_red));
+                server.setImageDrawable(getDrawable(R.drawable.stop));
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-
 
     }
 
@@ -278,7 +347,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-        MenuItem action_settings = menu.findItem(R.id.action_settings);
+        MenuItem action_settings = menu.findItem(R.id.action_webui);
         drawable = action_settings.getIcon();
         if (drawable != null) {
             drawable.mutate();
@@ -296,16 +365,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         switch (id) {
-            case R.id.action_settings: {
+            case R.id.action_webui: {
                 // mis-clicking prevention, using threshold of 1000 ms
                 if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
                     break;
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
-
-
-                ServerSettingsDialog.show(this);
-
+                if (!Application.getIpfs().isRunning()) {
+                    Toast.makeText(getApplicationContext(),
+                            getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
+                } else {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse("http://127.0.0.1:5001/webui"));
+                    startActivity(intent);
+                }
                 return true;
             }
             case R.id.action_clear: {
@@ -326,20 +399,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                if (!Application.getThreadsServer().isRunning()) {
+                String pid = Application.getPid(getApplicationContext());
+                if (pid.isEmpty()) {
                     Toast.makeText(getApplicationContext(), getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
-                } else if (!IThreadsServer.isConnected(getApplicationContext())) {
-                    Toast.makeText(getApplicationContext(), getString(R.string.offline_modus), Toast.LENGTH_LONG).show();
                 } else {
-                    new java.lang.Thread(new Runnable() {
-                        public void run() {
-                            IThreadsConfig threadsConfig = IThreadsServer.getHttpsThreadsConfig(
-                                    getApplicationContext());
-                            ServerData serverData = IThreadsServer.getServer(getApplicationContext(),
-                                    threadsConfig);
-                            ServerInfoDialog.show(MainActivity.this, ServerData.toString(serverData));
-                        }
-                    }).start();
+                    ServerInfoDialog.show(this, pid);
                 }
                 return true;
             }
@@ -379,26 +443,4 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    @Override
-    public void restartServer() {
-        if (Application.getThreadsServer().isRunning()) {
-            // now message and restart
-            Toast.makeText(this, R.string.tangle_server_restart, Toast.LENGTH_LONG).show();
-
-            Intent intent = new Intent(MainActivity.this, DaemonService.class);
-            intent.setAction(DaemonService.ACTION_RESTART_DAEMON_SERVICE);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                startForegroundService(intent);
-            } else {
-                startService(intent);
-            }
-        }
-    }
-
-    @Override
-    public void renameHost() {
-        if (Application.getThreadsServer().isRunning()) {
-            eventViewModel.issueEvent(IThreadsServer.DAEMON_SERVER_RENAME_HOST_EVENT);
-        }
-    }
 }
