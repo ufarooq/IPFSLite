@@ -24,20 +24,20 @@ public abstract class EventsDatabase extends RoomDatabase {
         messageDao().clear();
     }
 
-    public void insertEvent(@NonNull IEvent event) {
+    public void insertEvent(@NonNull Event event) {
         checkNotNull(event);
-        eventDao().insertEvent((Event) event);
+        eventDao().insertEvent(event);
     }
 
 
-    public IEvent createEvent(@NonNull String identifier) {
+    public Event createEvent(@NonNull String identifier) {
         checkNotNull(identifier);
         return Event.createEvent(identifier);
     }
 
 
-    public void deleteEvent(@NonNull IEvent event) {
+    public void deleteEvent(@NonNull Event event) {
         checkNotNull(event);
-        eventDao().deleteEvent((Event) event);
+        eventDao().deleteEvent(event);
     }
 }

@@ -3,6 +3,7 @@ package threads.server.event;
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
+import android.arch.persistence.room.TypeConverter;
 import android.arch.persistence.room.TypeConverters;
 import android.support.annotation.NonNull;
 
@@ -11,7 +12,7 @@ import java.util.Date;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Entity(tableName = "Event")
-public class Event implements IEvent {
+public class Event {
 
     @PrimaryKey
     @NonNull
@@ -20,7 +21,7 @@ public class Event implements IEvent {
 
 
     @NonNull
-    @TypeConverters(IEvent.class)
+    @TypeConverters(Event.class)
     @ColumnInfo(name = "date")
     private final Date date;
 
@@ -42,10 +43,22 @@ public class Event implements IEvent {
 
 
     @NonNull
-    @Override
     public String getIdentifier() {
         return identifier;
     }
 
 
+    @TypeConverter
+    public static Date toDate(Long value) {
+        return value == null ? null : new Date(value);
+    }
+
+    @TypeConverter
+    public static Long toLong(Date date) {
+        if (date == null) {
+            return null;
+        } else {
+            return date.getTime();
+        }
+    }
 }

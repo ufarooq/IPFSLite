@@ -14,8 +14,7 @@ import android.widget.Toast;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.Profile;
-import threads.server.daemon.IThreadsServer;
-import threads.server.event.IEvent;
+import threads.server.event.Event;
 
 
 public class DaemonService extends Service {
@@ -112,8 +111,8 @@ public class DaemonService extends Service {
                         }
 
 
-                        IEvent event = Application.getEventsDatabase().createEvent(
-                                IThreadsServer.DAEMON_SERVER_ONLINE_EVENT);
+                        Event event = Application.getEventsDatabase().createEvent(
+                                Application.DAEMON_SERVER_ONLINE_EVENT);
                         Application.getEventsDatabase().insertEvent(event);
                     }
                 } catch (Throwable e) {
@@ -140,8 +139,8 @@ public class DaemonService extends Service {
 
                     Application.getEventsDatabase().insertMessage(
                             getApplicationContext().getString(R.string.server_shutdown));
-                    IEvent event = Application.getEventsDatabase().createEvent(
-                            IThreadsServer.DAEMON_SERVER_OFFLINE_EVENT);
+                    Event event = Application.getEventsDatabase().createEvent(
+                            Application.DAEMON_SERVER_OFFLINE_EVENT);
                     Application.getEventsDatabase().insertEvent(event);
 
                 }

@@ -5,7 +5,12 @@ import android.app.NotificationManager;
 import android.arch.persistence.room.Room;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.android.gms.common.internal.Preconditions;
@@ -22,6 +27,8 @@ public class Application extends android.app.Application {
     public static final int QR_CODE_SIZE = 800;
     public static final String PID_KEY = "pidKey";
     public static final String PREF_KEY = "prefKey";
+    public static final String DAEMON_SERVER_ONLINE_EVENT = "DAEMON_SERVER_ONLINE_EVENT";
+    public static final String DAEMON_SERVER_OFFLINE_EVENT = "DAEMON_SERVER_OFFLINE_EVENT";
     private static final String TAG = Application.class.getSimpleName();
 
     private static EventsDatabase eventsDatabase;
@@ -36,6 +43,28 @@ public class Application extends android.app.Application {
         return eventsDatabase;
     }
 
+    @Nullable
+    public static NetworkInfo getNetworkInfo(@NonNull Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm != null) {
+            return cm.getActiveNetworkInfo();
+        }
+        return null;
+    }
+
+    public static boolean isConnected(@NonNull Context context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        if (connectivityManager == null) return false;
+
+        Network network = connectivityManager.getActiveNetwork();
+        if (network == null) return false;
+
+        NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
+        return capabilities != null
+                && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+
+    }
 
     public static CmdListener getCmdListener() {
         return cmdListener;

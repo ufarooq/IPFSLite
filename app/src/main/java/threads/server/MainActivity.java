@@ -44,7 +44,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.ipfs.IPFS;
-import threads.server.daemon.IThreadsServer;
 import threads.server.event.Event;
 import threads.server.event.Message;
 
@@ -55,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private DrawerLayout drawer_layout;
     private FloatingActionButton server;
-    //private FloatingActionButton traffic_light;
+
     private RecyclerView mRecyclerView;
     private MessageViewAdapter messageViewAdapter;
     private long mLastClickTime = 0;
@@ -72,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
-                if (IThreadsServer.isConnected(context)) {
+                if (Application.isConnected(context)) {
                     findViewById(R.id.server).setVisibility(View.VISIBLE);
                     if (snackbar != null) {
                         snackbar.dismiss();
