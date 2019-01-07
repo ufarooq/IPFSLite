@@ -26,7 +26,7 @@
         android:icon="@android:drawable/ic_menu_compass"
         android:iconTint="@android:color/white"
         android:orderInCategory="50"
-        android:title="@string/action_info"
+        android:title="@string/ipfs_webui"
         android:visible="true"
         app:showAsAction="ifRoom" />
 

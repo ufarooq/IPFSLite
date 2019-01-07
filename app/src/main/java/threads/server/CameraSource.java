@@ -267,12 +267,8 @@ public class CameraSource {
                     // developer wants to display a preview we must use a SurfaceHolder.  If the developer doesn't
                     // want to display a preview we use a SurfaceTexture if we are running at least Honeycomb.
 
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
-                        mCamera.setPreviewTexture(null);
+                    mCamera.setPreviewTexture(null);
 
-                    } else {
-                        mCamera.setPreviewDisplay(null);
-                    }
                 } catch (Exception e) {
                     Log.e(TAG, "Failed to clear camera preview: " + e);
                 }
@@ -493,9 +489,7 @@ public class CameraSource {
      */
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     public boolean setAutoFocusMoveCallback(@Nullable AutoFocusMoveCallback cb) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-            return false;
-        }
+
 
         synchronized (mCameraLock) {
             if (mCamera != null) {
