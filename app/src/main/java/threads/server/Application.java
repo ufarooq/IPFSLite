@@ -84,7 +84,6 @@ public class Application extends android.app.Application {
 
     public static void createChannel(@NonNull Context context) {
         try {
-
             // Create the NotificationChannel
             CharSequence name = context.getString(R.string.channel_name);
             String description = context.getString(R.string.channel_description);
@@ -100,15 +99,15 @@ public class Application extends android.app.Application {
             }
 
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage());
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
 
     public static void init() {
         new java.lang.Thread(() -> {
-            Application.getEventsDatabase().insertMessage("\nWelcome to the IPFS server.");
-            Application.getEventsDatabase().insertMessage("Please feel free to start a local IPFS node ....\n\n");
+            Application.getEventsDatabase().insertMessage("\nWelcome to IPFS");
+            Application.getEventsDatabase().insertMessage("Please feel free to start an IPFS daemon ...\n\n");
 
         }).start();
     }
