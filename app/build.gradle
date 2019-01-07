@@ -85,8 +85,11 @@ dependencies {
     // API (LICENSE done)
     implementation 'threads.ipfs:threads:0.3.6'
 
-    // QR Scanner (LICENSE TODO)
+    // QR Scanner (LICENSE done)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'
+
+    // UI (for showing licences file) (LICENSE done)
+    implementation 'de.psdev.licensesdialog:licensesdialog:1.8.3'
 
     // API (LICENSE done)
     implementation 'com.google.api-client:google-api-client:1.23.0'

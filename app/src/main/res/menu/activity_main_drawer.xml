@@ -9,6 +9,11 @@
             android:icon="@android:drawable/ic_dialog_dialer"
             android:iconTint="@color/midGrey"
             android:title="@string/donation" />
+        <item
+            android:id="@+id/nav_licences"
+            android:icon="@android:drawable/ic_menu_help"
+            android:iconTint="@color/midGrey"
+            android:title="@string/licences" />
     </group>
 
 </menu>

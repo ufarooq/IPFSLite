@@ -41,6 +41,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import de.psdev.licensesdialog.LicensesDialog;
 import threads.ipfs.IPFS;
 import threads.server.event.Message;
 
@@ -445,6 +446,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Intent menuIntent = new Intent(MainActivity.this,
                     DonationActivity.class);
             startActivity(menuIntent);
+        } else if (id == R.id.nav_licences) {
+            try {
+                new LicensesDialog.Builder(this)
+                        .setNotices(R.raw.licenses)
+                        .setTitle(R.string.licences)
+                        .setIncludeOwnLicense(true)
+                        .setCloseText(android.R.string.ok)
+                        .build()
+                        .showAppCompat();
+
+            } catch (Exception e) {
+                Log.e(TAG, e.getLocalizedMessage());
+            }
+
         }
 
         drawer_layout.closeDrawer(GravityCompat.START);

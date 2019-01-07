@@ -20,4 +20,5 @@
     <string name="ipfs_command">Execute IPFS CLI commands</string>
     <string name="server_shutdown">IPFS server shutdown</string>
     <string name="action_delete">Delete</string>
+    <string name="licences">Licences</string>
 </resources>
