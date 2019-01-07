@@ -11,7 +11,6 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
@@ -153,22 +152,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     Intent intent = new Intent(MainActivity.this, DaemonService.class);
                     intent.setAction(DaemonService.ACTION_START_DAEMON_SERVICE);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        startForegroundService(intent);
-                    } else {
-                        startService(intent);
-                    }
+                    startForegroundService(intent);
+
 
                     //evalueServerStatus();
                     server.setImageDrawable(getDrawable(R.drawable.stop));
                 } else {
                     Intent intent = new Intent(MainActivity.this, DaemonService.class);
                     intent.setAction(DaemonService.ACTION_STOP_DAEMON_SERVICE);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                        startForegroundService(intent);
-                    } else {
-                        startService(intent);
-                    }
+                    startForegroundService(intent);
+
 
                     //evalueServerStatus();
                     server.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
@@ -220,6 +213,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ImageView console_send = findViewById(R.id.console_send);
         console_send.setEnabled(false);
 
+
         console_box = findViewById(R.id.console_box);
         console_box.addTextChangedListener(new TextWatcher() {
             @Override
@@ -256,40 +250,44 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             removeKeyboards();
 
-            String text = console_box.getText().toString();
+            if (!Application.getIpfs().isRunning()) {
+                Toast.makeText(getApplicationContext(),
+                        getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
+            } else {
+                String text = console_box.getText().toString();
 
-            console_box.setText("");
+                console_box.setText("");
 
-            String[] parts = text.split("\\s+");
-            if (parts.length > 0) {
+                String[] parts = text.split("\\s+");
+                if (parts.length > 0) {
 
-                if (parts[0].equalsIgnoreCase("ipfs")) {
-                    String[] commands = Arrays.copyOfRange(parts, 1, parts.length);
-                    ExecutorService executor = Executors.newSingleThreadExecutor();
-                    executor.submit(() -> {
-                        try {
-                            IPFS ipfs = Application.getIpfs();
-                            Application.getCmdListener().info(text);
-                            ipfs.cmd(commands);
+                    if (parts[0].equalsIgnoreCase("ipfs")) {
+                        String[] commands = Arrays.copyOfRange(parts, 1, parts.length);
+                        ExecutorService executor = Executors.newSingleThreadExecutor();
+                        executor.submit(() -> {
+                            try {
+                                IPFS ipfs = Application.getIpfs();
+                                Application.getCmdListener().info(text);
+                                ipfs.cmd(commands);
 
-                        } catch (Throwable e) {
-                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                        }
-                    });
-                } else {
-                    ExecutorService executor = Executors.newSingleThreadExecutor();
-                    executor.submit(() -> {
-                        try {
-                            IPFS ipfs = Application.getIpfs();
-                            Application.getCmdListener().info(text);
-                            ipfs.cmd(parts);
+                            } catch (Throwable e) {
+                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                            }
+                        });
+                    } else {
+                        ExecutorService executor = Executors.newSingleThreadExecutor();
+                        executor.submit(() -> {
+                            try {
+                                IPFS ipfs = Application.getIpfs();
+                                Application.getCmdListener().info(text);
+                                ipfs.cmd(parts);
 
-                        } catch (Throwable e) {
-                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                        }
-                    });
+                            } catch (Throwable e) {
+                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                            }
+                        });
+                    }
                 }
-
 
             }
 

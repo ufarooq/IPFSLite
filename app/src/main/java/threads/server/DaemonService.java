@@ -105,7 +105,7 @@ public class DaemonService extends Service {
                 try {
                     IPFS ipfs = Application.getIpfs();
                     if (!ipfs.isRunning()) {
-                        boolean success = ipfs.start(Profile.SERVER, false, 30000L);
+                        boolean success = ipfs.start(Profile.LOW_POWER, false, 30000L);
                         if (success) {
                             PID pid = ipfs.getPeersID();
                             Application.setPid(getApplicationContext(), pid.getPid());
