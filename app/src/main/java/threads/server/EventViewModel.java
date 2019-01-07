@@ -18,11 +18,11 @@ public class EventViewModel extends AndroidViewModel {
     }
 
 
-    public LiveData<Event> getDaemonServerOnlineEvent() {
+    LiveData<Event> getDaemonServerOnlineEvent() {
         return eventsDatabase.eventDao().getEvent(threads.server.Application.DAEMON_SERVER_ONLINE_EVENT);
     }
 
-    public LiveData<Event> getDaemonServerOfflineEvent() {
+    LiveData<Event> getDaemonServerOfflineEvent() {
         return eventsDatabase.eventDao().getEvent(threads.server.Application.DAEMON_SERVER_OFFLINE_EVENT);
     }
 

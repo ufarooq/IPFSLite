@@ -1,6 +1,5 @@
 package threads.server;
 
-import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -14,7 +13,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -44,7 +42,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.ipfs.IPFS;
-import threads.server.event.Event;
 import threads.server.event.Message;
 
 
@@ -58,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private RecyclerView mRecyclerView;
     private MessageViewAdapter messageViewAdapter;
     private long mLastClickTime = 0;
-    private EventViewModel eventViewModel;
+
     private EditText console_box;
 
     private AtomicBoolean networkAvailable = new AtomicBoolean(true);
@@ -88,14 +85,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (snackbar == null) {
                         snackbar = Snackbar.make(drawer_layout,
                                 getString(R.string.offline_modus), Snackbar.LENGTH_INDEFINITE);
-                        snackbar.setAction(R.string.network, new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                Intent intent = new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS);
-                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                context.startActivity(intent);
-                            }
+                        snackbar.setAction(R.string.network, (v) -> {
+
+                            Intent neti = new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS);
+                            neti.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            neti.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            context.startActivity(neti);
+
                         });
                     }
                     snackbar.show();
@@ -160,76 +156,72 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         //traffic_light = findViewById(R.id.trafic_light);
         server = findViewById(R.id.server);
-        server.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                // mis-clicking prevention, using threshold of 1000 ms
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                    return;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                IPFS daemon = Application.getIpfs();
-                if (!daemon.isRunning()) {
-
-                    Intent intent = new Intent(MainActivity.this, DaemonService.class);
-                    intent.setAction(DaemonService.ACTION_START_DAEMON_SERVICE);
-                    startForegroundService(intent);
+        server.setOnClickListener((view) -> {
 
 
-                    //evalueServerStatus();
-                    server.setImageDrawable(getDrawable(R.drawable.stop));
-                } else {
-                    Intent intent = new Intent(MainActivity.this, DaemonService.class);
-                    intent.setAction(DaemonService.ACTION_STOP_DAEMON_SERVICE);
-                    startForegroundService(intent);
-
-
-                    //evalueServerStatus();
-                    server.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
-                }
+            // mis-clicking prevention, using threshold of 1000 ms
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                return;
             }
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            IPFS daemon = Application.getIpfs();
+            if (!daemon.isRunning()) {
+
+                Intent intent = new Intent(MainActivity.this, DaemonService.class);
+                intent.setAction(DaemonService.ACTION_START_DAEMON_SERVICE);
+                startForegroundService(intent);
+
+
+                //evalueServerStatus();
+                server.setImageDrawable(getDrawable(R.drawable.stop));
+            } else {
+                Intent intent = new Intent(MainActivity.this, DaemonService.class);
+                intent.setAction(DaemonService.ACTION_STOP_DAEMON_SERVICE);
+                startForegroundService(intent);
+
+
+                //evalueServerStatus();
+                server.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
+            }
+
         });
         evalueServerStatus();
 
 
         MessagesViewModel messagesViewModel = ViewModelProviders.of(this).get(MessagesViewModel.class);
-        messagesViewModel.getMessages().observe(this, new Observer<List<Message>>() {
-            @Override
-            public void onChanged(@Nullable List<Message> messages) {
-                try {
-                    updateMessages(messages);
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage());
-                }
+        messagesViewModel.getMessages().observe(this, (messages) -> {
+
+            try {
+                updateMessages(messages);
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage());
             }
+
         });
 
-        eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
-        eventViewModel.getDaemonServerOfflineEvent().observe(this, new Observer<Event>() {
-            @Override
-            public void onChanged(@Nullable Event event) {
-                try {
-                    if (event != null) {
-                        evalueServerStatus();
-                    }
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
+        eventViewModel.getDaemonServerOfflineEvent().observe(this, (event) -> {
+
+            try {
+                if (event != null) {
+                    evalueServerStatus();
                 }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
+
         });
-        eventViewModel.getDaemonServerOnlineEvent().observe(this, new Observer<Event>() {
-            @Override
-            public void onChanged(@Nullable Event event) {
-                try {
-                    if (event != null) {
-                        evalueServerStatus();
-                    }
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        eventViewModel.getDaemonServerOnlineEvent().observe(this, (event) -> {
+
+            try {
+                if (event != null) {
+                    evalueServerStatus();
                 }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
+
         });
 
 

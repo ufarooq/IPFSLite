@@ -7,7 +7,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @android.arch.persistence.room.Database(entities = {Event.class, Message.class}, version = 3, exportSchema = false)
 public abstract class EventsDatabase extends RoomDatabase {
-    private static final String TAG = EventsDatabase.class.getSimpleName();
 
     public abstract EventDao eventDao();
 

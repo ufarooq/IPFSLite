@@ -10,7 +10,7 @@ public class MessageDiffCallback extends DiffUtil.Callback {
     private final List<Message> mOldList;
     private final List<Message> mNewList;
 
-    public MessageDiffCallback(List<Message> oldNotes, List<Message> newNotes) {
+    MessageDiffCallback(List<Message> oldNotes, List<Message> newNotes) {
         this.mOldList = oldNotes;
         this.mNewList = newNotes;
     }

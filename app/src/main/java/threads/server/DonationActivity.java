@@ -6,12 +6,12 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.TextInputEditText;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.util.Log;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,7 +35,11 @@ public class DonationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_donation);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        ActionBar bar = getSupportActionBar();
+        if (bar != null) {
+            bar.setDisplayHomeAsUpEnabled(true);
+        }
 
         String donationAddress = Application.getDonationsAddress();
         try {
@@ -52,44 +56,39 @@ public class DonationActivity extends AppCompatActivity {
         donations_address.setKeyListener(null);
 
         TextView dontations_to_clipboard = findViewById(R.id.dontations_to_clipboard);
-        dontations_to_clipboard.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                donations_address.requestFocus();
-                donations_address.selectAll();
+        dontations_to_clipboard.setOnClickListener((v) -> {
 
-                android.content.ClipboardManager clipboard = (android.content.ClipboardManager)
-                        getSystemService(Context.CLIPBOARD_SERVICE);
-                android.content.ClipData clip = android.content.ClipData.newPlainText(
-                        getString(R.string.copy_address_to_clipboard),
-                        donationAddress);
+            donations_address.requestFocus();
+            donations_address.selectAll();
+
+            android.content.ClipboardManager clipboard = (android.content.ClipboardManager)
+                    getSystemService(Context.CLIPBOARD_SERVICE);
+            android.content.ClipData clip = android.content.ClipData.newPlainText(
+                    getString(R.string.copy_address_to_clipboard),
+                    donationAddress);
+            if (clipboard != null) {
                 clipboard.setPrimaryClip(clip);
-                Toast.makeText(getApplicationContext(),
-                        "Copied " + donationAddress + " to clipboard",
-                        Toast.LENGTH_LONG).show();
-
             }
+            Toast.makeText(getApplicationContext(),
+                    "Copied " + donationAddress + " to clipboard",
+                    Toast.LENGTH_LONG).show();
+
+
         });
 
         TextView donations_tangle_details = findViewById(R.id.donations_tangle_details);
         String addressLink = Application.getHtmlAddressLink(
                 this.getString(R.string.details),
                 donationAddress, false);
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            donations_tangle_details.setText(
-                    Html.fromHtml(addressLink, Html.FROM_HTML_MODE_LEGACY));
-        } else {
-            donations_tangle_details.setText(
-                    Html.fromHtml(addressLink));
-        }
+        donations_tangle_details.setText(
+                Html.fromHtml(addressLink, Html.FROM_HTML_MODE_LEGACY));
         donations_tangle_details.setClickable(true);
-        donations_tangle_details.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(Application.getAddressLink(donationAddress, false)));
-                DonationActivity.this.startActivity(intent);
-            }
+        donations_tangle_details.setOnClickListener((v) -> {
+
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(Application.getAddressLink(donationAddress, false)));
+            DonationActivity.this.startActivity(intent);
+
         });
     }
 

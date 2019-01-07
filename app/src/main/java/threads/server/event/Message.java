@@ -15,12 +15,12 @@ public class Message {
     @PrimaryKey(autoGenerate = true)
     private Long idx;
 
-    protected Message(@NonNull String message) {
+    Message(@NonNull String message) {
         checkNotNull(message);
         this.message = message;
     }
 
-    public static Message createMessage(@NonNull String message) {
+    static Message createMessage(@NonNull String message) {
         return new Message(message);
     }
 

@@ -16,6 +16,8 @@ import threads.ipfs.api.PID;
 import threads.ipfs.api.Profile;
 import threads.server.event.Event;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 
 public class DaemonService extends Service {
     public static final int NOTIFICATION_ID = 999;
@@ -48,7 +50,7 @@ public class DaemonService extends Service {
 
         if (intent != null) {
             String action = intent.getAction();
-
+            checkNotNull(action);
             switch (action) {
                 case ACTION_START_DAEMON_SERVICE:
                     startDaemonService();

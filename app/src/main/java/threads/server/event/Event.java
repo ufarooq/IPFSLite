@@ -32,21 +32,9 @@ public class Event {
         this.date = date;
     }
 
-    public static Event createEvent(@NonNull String identifier) {
+    static Event createEvent(@NonNull String identifier) {
         return new Event(identifier, new Date());
     }
-
-    @NonNull
-    public Date getDate() {
-        return date;
-    }
-
-
-    @NonNull
-    public String getIdentifier() {
-        return identifier;
-    }
-
 
     @TypeConverter
     public static Date toDate(Long value) {
@@ -60,5 +48,15 @@ public class Event {
         } else {
             return date.getTime();
         }
+    }
+
+    @NonNull
+    public Date getDate() {
+        return date;
+    }
+
+    @NonNull
+    public String getIdentifier() {
+        return identifier;
     }
 }

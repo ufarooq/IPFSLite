@@ -16,7 +16,7 @@ import java.util.List;
 import threads.server.event.Message;
 
 public class MessageViewAdapter extends RecyclerView.Adapter<MessageViewAdapter.ViewHolder> {
-    private static final String TAG = "MessageViewAdapter";
+    private static final String TAG = MessageViewAdapter.class.getSimpleName();
     private final List<Message> messages = new ArrayList<>();
 
 
@@ -27,22 +27,23 @@ public class MessageViewAdapter extends RecyclerView.Adapter<MessageViewAdapter.
 
 
     @Override
-    public MessageViewAdapter.ViewHolder onCreateViewHolder(ViewGroup parent,
+    @NonNull
+    public MessageViewAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent,
                                                             int viewType) {
 
-        View v = null;
+        View v;
         switch (viewType) {
             case 0:
                 v = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.message_item, parent, false);
                 return new MessageViewHolder(v);
         }
-        return null;
+        throw new RuntimeException("Type not found.");
     }
 
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
 
         final Message message = messages.get(position);
 
@@ -71,17 +72,8 @@ public class MessageViewAdapter extends RecyclerView.Adapter<MessageViewAdapter.
         return messages.size();
     }
 
-    public Message getItemAtPosition(int position) {
-        try {
-            return messages.get(position);
-        } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage());
-        }
-        return null;
-    }
 
-
-    public void updateData(@NonNull List<Message> messageThreads) {
+    void updateData(@NonNull List<Message> messageThreads) {
 
         final MessageDiffCallback diffCallback = new MessageDiffCallback(this.messages, messageThreads);
         final DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
@@ -94,17 +86,7 @@ public class MessageViewAdapter extends RecyclerView.Adapter<MessageViewAdapter.
     }
 
 
-    private int getPositionOfItem(@NonNull Message message) {
-        try {
-            return messages.indexOf(message);
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage());
-        }
-        return -1;
-    }
-
-
-    public static class ViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
         final View view;
 

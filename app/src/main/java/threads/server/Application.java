@@ -8,9 +8,7 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.android.gms.common.internal.Preconditions;
@@ -43,17 +41,10 @@ public class Application extends android.app.Application {
         return eventsDatabase;
     }
 
-    @Nullable
-    public static NetworkInfo getNetworkInfo(@NonNull Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (cm != null) {
-            return cm.getActiveNetworkInfo();
-        }
-        return null;
-    }
 
     public static boolean isConnected(@NonNull Context context) {
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager connectivityManager = (ConnectivityManager)
+                context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
         if (connectivityManager == null) return false;
 
@@ -168,14 +159,14 @@ public class Application extends android.app.Application {
         @Override
         public void info(@NonNull String message) {
             new Thread(() -> {
-                Application.getEventsDatabase().insertMessage(message);
+                getEventsDatabase().insertMessage(message);
             }).start();
         }
 
         @Override
         public void error(@NonNull String message) {
             new Thread(() -> {
-                Application.getEventsDatabase().insertMessage(message);
+                getEventsDatabase().insertMessage(message);
             }).start();
         }
     }

@@ -4,8 +4,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 public class ClearConsoleService extends AsyncTask<Void, Void, Void> {
-    private static final String TAG = "DaemonStatusService";
-
+    private static final String TAG = ClearConsoleService.class.getSimpleName();
 
     @Override
     protected Void doInBackground(Void... params) {
