@@ -51,8 +51,8 @@
     </notice>
 
     <notice>
-        <name>threads-server</name>
-        <url>https://gitlab.com/remmer.wilts/threads-server</url>
+        <name>threads-ipfs</name>
+        <url>https://gitlab.com/remmer.wilts/threads-ipfs</url>
         <copyright />
         <license>Apache Software License 2.0</license>
     </notice>
