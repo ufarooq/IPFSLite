@@ -5,10 +5,6 @@ import android.app.NotificationManager;
 import android.arch.persistence.room.Room;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -16,7 +12,6 @@ import com.google.android.gms.common.internal.Preconditions;
 
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CmdListener;
-import threads.server.daemon.TransactionDatabase;
 import threads.server.event.EventsDatabase;
 
 public class Application extends android.app.Application {
@@ -28,7 +23,7 @@ public class Application extends android.app.Application {
     public static final String PID_KEY = "pidKey";
     public static final String PREF_KEY = "prefKey";
     private static final String TAG = Application.class.getSimpleName();
-    //private static IThreadsServer threadsServer;
+
     private static EventsDatabase eventsDatabase;
     private static CmdListener cmdListener;
     private static IPFS ipfs;
@@ -40,10 +35,6 @@ public class Application extends android.app.Application {
     public static EventsDatabase getEventsDatabase() {
         return eventsDatabase;
     }
-
-    /*public static IThreadsServer getThreadsServer() {
-        return threadsServer;
-    }*/
 
 
     public static CmdListener getCmdListener() {
@@ -73,38 +64,26 @@ public class Application extends android.app.Application {
 
     public static void createChannel(@NonNull Context context) {
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                // Create the NotificationChannel
-                CharSequence name = context.getString(R.string.channel_name);
-                String description = context.getString(R.string.channel_description);
-                int importance = NotificationManager.IMPORTANCE_HIGH;
-                NotificationChannel mChannel = new NotificationChannel(Application.CHANNEL_ID, name, importance);
-                mChannel.setDescription(description);
-                // Register the channel with the system; you can't change the importance
-                // or other notification behaviors after this
-                NotificationManager notificationManager = (NotificationManager) context.getSystemService(
-                        Context.NOTIFICATION_SERVICE);
-                if (notificationManager != null) {
-                    notificationManager.createNotificationChannel(mChannel);
-                }
+
+            // Create the NotificationChannel
+            CharSequence name = context.getString(R.string.channel_name);
+            String description = context.getString(R.string.channel_description);
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel mChannel = new NotificationChannel(Application.CHANNEL_ID, name, importance);
+            mChannel.setDescription(description);
+            // Register the channel with the system; you can't change the importance
+            // or other notification behaviors after this
+            NotificationManager notificationManager = (NotificationManager) context.getSystemService(
+                    Context.NOTIFICATION_SERVICE);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(mChannel);
             }
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage());
         }
     }
 
-    public static Bitmap getBitmap(@NonNull Context context, int resource) {
-
-        Drawable drawable = context.getDrawable(resource);
-        Canvas canvas = new Canvas();
-
-        Bitmap bitmap = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888);
-        canvas.setBitmap(bitmap);
-        drawable.setBounds(0, 0, 64, 64);
-
-        drawable.draw(canvas);
-        return bitmap;
-    }
 
     public static void init() {
         new java.lang.Thread(() -> {
@@ -139,10 +118,6 @@ public class Application extends android.app.Application {
     public void onCreate() {
         super.onCreate();
 
-        TransactionDatabase transactionDatabase = Room.databaseBuilder(this,
-                TransactionDatabase.class,
-                TransactionDatabase.class.getSimpleName()).fallbackToDestructiveMigration().build();
-
         cmdListener = new ConsoleListener();
 
         ipfs = new IPFS.Builder().context(getApplicationContext()).listener(cmdListener).build();
@@ -163,14 +138,14 @@ public class Application extends android.app.Application {
 
         @Override
         public void info(@NonNull String message) {
-            new java.lang.Thread(() -> {
+            new Thread(() -> {
                 Application.getEventsDatabase().insertMessage(message);
             }).start();
         }
 
         @Override
         public void error(@NonNull String message) {
-            new java.lang.Thread(() -> {
+            new Thread(() -> {
                 Application.getEventsDatabase().insertMessage(message);
             }).start();
         }
