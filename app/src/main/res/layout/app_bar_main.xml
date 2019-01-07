@@ -25,17 +25,6 @@
 
     <include layout="@layout/messages_view" />
 
-    <!--android.support.design.widget.FloatingActionButton
-        android:id="@+id/trafic_light"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/fab_margin"
-        android:layout_marginTop="64dp"
-        app:backgroundTint="@android:color/transparent"
-        app:layout_anchor="@id/toolbar"
-        app:layout_anchorGravity="bottom|end"
-        app:srcCompat="@drawable/traffic_light_red" /-->
-
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/server"
         android:layout_width="wrap_content"

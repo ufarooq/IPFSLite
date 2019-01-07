@@ -18,9 +18,6 @@ public interface MessageDao {
     void insertMessages(Message... messages);
 
     @Query("SELECT * FROM Message")
-    Message[] getMessages();
-
-    @Query("SELECT * FROM Message")
     LiveData<List<Message>> getLiveDataMessages();
 
 }

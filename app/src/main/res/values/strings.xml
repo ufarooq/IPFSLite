@@ -4,7 +4,7 @@
     <string name="channel_description">Make sound and pop on screen</string>
     <string name="daemon_title">IPFS server is running.</string>
     <string name="copy_address_to_clipboard">Copy Address to Clipboard</string>
-    <string name="navigation_drawer_open">Naviagation open</string>
+    <string name="navigation_drawer_open">Navigation open</string>
     <string name="navigation_drawer_close">Navigation close</string>
     <string name="action_info">Info</string>
     <string name="daemon_server_not_running">IPFS server is not yet running.</string>
@@ -12,11 +12,11 @@
     <string name="donation_address">IOTA Donation Address</string>
     <string name="details">Tangle Details</string>
     <string name="donation">Donation</string>
-    <string name="offline_modus">Network is offline</string>
+    <string name="offline">Network is offline</string>
     <string name="network">Network</string>
     <string name="daemon_server">IPFS Server</string>
     <string name="daemon_server_access">The QR code contains all necessary information to access the IPFS server.</string>
-    <string name="ipfs_webui">IPFS WebUI</string>
+    <string name="ipfs_web_cmd">IPFS WebUI</string>
     <string name="ipfs_command">Execute IPFS CLI commands</string>
     <string name="server_shutdown">IPFS server shutdown</string>
     <string name="action_delete">Delete</string>

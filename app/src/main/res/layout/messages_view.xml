@@ -10,7 +10,7 @@
 
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/reyclerview_message_list"
+        android:id="@+id/view_message_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="100"

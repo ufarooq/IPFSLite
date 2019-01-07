@@ -84,13 +84,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     wasOffline.set(true);
                     if (snackbar == null) {
                         snackbar = Snackbar.make(drawer_layout,
-                                getString(R.string.offline_modus), Snackbar.LENGTH_INDEFINITE);
+                                getString(R.string.offline), Snackbar.LENGTH_INDEFINITE);
                         snackbar.setAction(R.string.network, (v) -> {
 
-                            Intent neti = new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS);
-                            neti.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            neti.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            context.startActivity(neti);
+                            Intent nIntent = new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS);
+                            nIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            nIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            context.startActivity(nIntent);
 
                         });
                     }
@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mRecyclerView = findViewById(R.id.reyclerview_message_list);
+        mRecyclerView = findViewById(R.id.view_message_list);
         LinearLayoutManager linearLayout = new LinearLayoutManager(this);
         mRecyclerView.addOnLayoutChangeListener((View v,
                                                  int left, int top, int right, int bottom,
@@ -355,7 +355,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-        MenuItem action_settings = menu.findItem(R.id.action_webui);
+        MenuItem action_settings = menu.findItem(R.id.action_web_ui);
         drawable = action_settings.getIcon();
         if (drawable != null) {
             drawable.mutate();
@@ -373,7 +373,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         switch (id) {
-            case R.id.action_webui: {
+            case R.id.action_web_ui: {
                 // mis-clicking prevention, using threshold of 1000 ms
                 if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
                     break;

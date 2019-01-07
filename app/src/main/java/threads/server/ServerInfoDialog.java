@@ -20,10 +20,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ServerInfoDialog extends DialogFragment implements DialogInterface.OnClickListener {
     private static final int QR_CODE_SIZE = 800;
-    private static final String TAG = "ServerInfoDialog";
+    private static final String TAG = ServerInfoDialog.class.getSimpleName();
+    @SuppressWarnings("SpellCheckingInspection")
     private static final String QRCODE = "QRCODE";
     @NonNull
-    private final static Hashtable<String, Bitmap> generalHashtable = new Hashtable<>();
+    private final static Hashtable<String, Bitmap> bitmaps = new Hashtable<>();
 
 
     public ServerInfoDialog() {
@@ -54,8 +55,8 @@ public class ServerInfoDialog extends DialogFragment implements DialogInterface.
     private static String getBitmap(@NonNull String qrCode) {
         try {
 
-            if (generalHashtable.containsKey(qrCode)) {
-                generalHashtable.get(qrCode);
+            if (bitmaps.containsKey(qrCode)) {
+                bitmaps.get(qrCode);
                 return qrCode;
 
             }
@@ -64,7 +65,7 @@ public class ServerInfoDialog extends DialogFragment implements DialogInterface.
                     withSize(ServerInfoDialog.QR_CODE_SIZE, ServerInfoDialog.QR_CODE_SIZE).bitmap();
 
 
-            generalHashtable.put(qrCode, bitmap);
+            bitmaps.put(qrCode, bitmap);
             return qrCode;
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -81,7 +82,7 @@ public class ServerInfoDialog extends DialogFragment implements DialogInterface.
         ImageView imageView = view.findViewById(R.id.dialog_server_info);
         Bundle bundle = getArguments();
         String qrCode = bundle.getString(QRCODE);
-        Bitmap bitmap = generalHashtable.get(qrCode);
+        Bitmap bitmap = bitmaps.get(qrCode);
         imageView.setImageBitmap(bitmap);
 
         return new AlertDialog.Builder(getActivity())
