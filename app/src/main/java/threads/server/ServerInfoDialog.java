@@ -19,13 +19,12 @@ import java.util.Hashtable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ServerInfoDialog extends DialogFragment implements DialogInterface.OnClickListener {
-    public static final int QR_CODE_SIZE = 800;
+    private static final int QR_CODE_SIZE = 800;
     private static final String TAG = "ServerInfoDialog";
     private static final String QRCODE = "QRCODE";
     @NonNull
     private final static Hashtable<String, Bitmap> generalHashtable = new Hashtable<>();
 
-    public ImageView imageView;
 
     public ServerInfoDialog() {
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
@@ -79,7 +78,7 @@ public class ServerInfoDialog extends DialogFragment implements DialogInterface.
 
         LayoutInflater inflater = LayoutInflater.from(getActivity());
         View view = inflater.inflate(R.layout.dialog_server_info, null, false);
-        imageView = view.findViewById(R.id.dialog_server_info);
+        ImageView imageView = view.findViewById(R.id.dialog_server_info);
         Bundle bundle = getArguments();
         String qrCode = bundle.getString(QRCODE);
         Bitmap bitmap = generalHashtable.get(qrCode);

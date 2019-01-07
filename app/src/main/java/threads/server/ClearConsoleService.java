@@ -3,7 +3,7 @@ package threads.server;
 import android.os.AsyncTask;
 import android.util.Log;
 
-public class ClearConsoleService extends AsyncTask<Void, Void, Void> {
+class ClearConsoleService extends AsyncTask<Void, Void, Void> {
     private static final String TAG = ClearConsoleService.class.getSimpleName();
 
     @Override

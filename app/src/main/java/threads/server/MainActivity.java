@@ -58,12 +58,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private EditText console_box;
 
-    private AtomicBoolean networkAvailable = new AtomicBoolean(true);
+    private final AtomicBoolean networkAvailable = new AtomicBoolean(true);
 
 
-    private BroadcastReceiver networkChangeReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver networkChangeReceiver = new BroadcastReceiver() {
         private Snackbar snackbar;
-        private AtomicBoolean wasOffline = new AtomicBoolean(false);
+        private final AtomicBoolean wasOffline = new AtomicBoolean(false);
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -153,8 +153,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawer_layout.addDrawerListener(toggle);
         toggle.syncState();
 
-
-        //traffic_light = findViewById(R.id.trafic_light);
         server = findViewById(R.id.server);
         server.setOnClickListener((view) -> {
 
@@ -173,20 +171,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startForegroundService(intent);
 
 
-                //evalueServerStatus();
                 server.setImageDrawable(getDrawable(R.drawable.stop));
             } else {
                 Intent intent = new Intent(MainActivity.this, DaemonService.class);
                 intent.setAction(DaemonService.ACTION_STOP_DAEMON_SERVICE);
                 startForegroundService(intent);
 
-
-                //evalueServerStatus();
                 server.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
             }
 
         });
-        evalueServerStatus();
+        serverStatus();
 
 
         MessagesViewModel messagesViewModel = ViewModelProviders.of(this).get(MessagesViewModel.class);
@@ -205,7 +200,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             try {
                 if (event != null) {
-                    evalueServerStatus();
+                    serverStatus();
                 }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -216,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             try {
                 if (event != null) {
-                    evalueServerStatus();
+                    serverStatus();
                 }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -320,7 +315,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-    private void evalueServerStatus() {
+    private void serverStatus() {
 
         try {
             IPFS daemon = Application.getIpfs();

@@ -55,7 +55,7 @@ public class DonationActivity extends AppCompatActivity {
         donations_address.selectAll();
         donations_address.setKeyListener(null);
 
-        TextView dontations_to_clipboard = findViewById(R.id.dontations_to_clipboard);
+        TextView dontations_to_clipboard = findViewById(R.id.donations_to_clipboard);
         dontations_to_clipboard.setOnClickListener((v) -> {
 
             donations_address.requestFocus();

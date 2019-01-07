@@ -45,7 +45,7 @@
 
 
         <TextView
-            android:id="@+id/dontations_to_clipboard"
+            android:id="@+id/donations_to_clipboard"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"

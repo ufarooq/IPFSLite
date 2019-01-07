@@ -20,13 +20,13 @@ import threads.server.event.EventsDatabase;
 public class Application extends android.app.Application {
 
 
-    public static final String CHANNEL_ID = "IRI_SERVER_CHANGEL_ID";
-    public static final String GROUP_ID = "IRI_SERVER_GROUP_ID";
+    public static final String CHANNEL_ID = "SERVER_CHANGE_ID";
+    public static final String GROUP_ID = "SERVER_GROUP_ID";
     public static final int QR_CODE_SIZE = 800;
-    public static final String PID_KEY = "pidKey";
-    public static final String PREF_KEY = "prefKey";
-    public static final String DAEMON_SERVER_ONLINE_EVENT = "DAEMON_SERVER_ONLINE_EVENT";
-    public static final String DAEMON_SERVER_OFFLINE_EVENT = "DAEMON_SERVER_OFFLINE_EVENT";
+    public static final String SERVER_ONLINE_EVENT = "SERVER_ONLINE_EVENT";
+    public static final String SERVER_OFFLINE_EVENT = "SERVER_OFFLINE_EVENT";
+    private static final String PID_KEY = "pidKey";
+    private static final String PREF_KEY = "prefKey";
     private static final String TAG = Application.class.getSimpleName();
 
     private static EventsDatabase eventsDatabase;

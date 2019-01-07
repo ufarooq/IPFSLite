@@ -6,7 +6,7 @@ import java.util.List;
 
 import threads.server.event.Message;
 
-public class MessageDiffCallback extends DiffUtil.Callback {
+class MessageDiffCallback extends DiffUtil.Callback {
     private final List<Message> mOldList;
     private final List<Message> mNewList;
 

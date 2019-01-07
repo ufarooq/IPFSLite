@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 public class DaemonService extends Service {
-    public static final int NOTIFICATION_ID = 999;
+    private static final int NOTIFICATION_ID = 999;
     public static final String ACTION_START_DAEMON_SERVICE = "ACTION_START_DAEMON_SERVICE";
     public static final String ACTION_STOP_DAEMON_SERVICE = "ACTION_STOP_DAEMON_SERVICE";
     private static final String TAG = DaemonService.class.getSimpleName();
@@ -114,7 +114,7 @@ public class DaemonService extends Service {
 
 
                         Event event = Application.getEventsDatabase().createEvent(
-                                Application.DAEMON_SERVER_ONLINE_EVENT);
+                                Application.SERVER_ONLINE_EVENT);
                         Application.getEventsDatabase().insertEvent(event);
                     }
                 } catch (Throwable e) {
@@ -142,7 +142,7 @@ public class DaemonService extends Service {
                     Application.getEventsDatabase().insertMessage(
                             getApplicationContext().getString(R.string.server_shutdown));
                     Event event = Application.getEventsDatabase().createEvent(
-                            Application.DAEMON_SERVER_OFFLINE_EVENT);
+                            Application.SERVER_OFFLINE_EVENT);
                     Application.getEventsDatabase().insertEvent(event);
 
                 }

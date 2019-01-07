@@ -42,6 +42,6 @@ public class Message {
     }
 
     public boolean sameContent(@NonNull Message message) {
-        return message.message.equals(message.message);
+        return this.getMessage().equals(message.getMessage());
     }
 }

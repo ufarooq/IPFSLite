@@ -8,7 +8,7 @@ import java.util.List;
 import threads.server.event.EventsDatabase;
 import threads.server.event.Message;
 
-public class MessagesViewModel extends AndroidViewModel {
+class MessagesViewModel extends AndroidViewModel {
 
     private final LiveData<List<Message>> messages;
 
