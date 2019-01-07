@@ -108,8 +108,8 @@ public class Application extends android.app.Application {
 
     public static void init() {
         new java.lang.Thread(() -> {
-            Application.getEventsDatabase().insertMessage("\nWelcome to the IPFS android daemon.");
-            Application.getEventsDatabase().insertMessage("Please feel free to start the daemon ....\n\n");
+            Application.getEventsDatabase().insertMessage("\nWelcome to the IPFS server daemon.");
+            Application.getEventsDatabase().insertMessage("Please feel free to start the server ....\n\n");
 
         }).start();
     }
@@ -150,9 +150,6 @@ public class Application extends android.app.Application {
         eventsDatabase = Room.inMemoryDatabaseBuilder(this,
                 EventsDatabase.class).build();
 
-        /*
-        threadsServer = ThreadsServer.createThreadServer(this,
-                transactionDatabase, eventsDatabase);*/
 
         init();
 
