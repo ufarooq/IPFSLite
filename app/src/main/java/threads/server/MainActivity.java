@@ -115,6 +115,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         mRecyclerView = findViewById(R.id.reyclerview_message_list);
         LinearLayoutManager linearLayout = new LinearLayoutManager(this);
+        mRecyclerView.addOnLayoutChangeListener((View v,
+                                                 int left, int top, int right, int bottom,
+                                                 int oldLeft, int oldTop,
+                                                 int oldRight, int oldBottom) -> {
+
+            if (bottom < oldBottom) {
+                mRecyclerView.postDelayed(() -> {
+
+                    try {
+                        RecyclerView.Adapter adapter = mRecyclerView.getAdapter();
+                        if (adapter != null) {
+                            mRecyclerView.smoothScrollToPosition(
+                                    adapter.getItemCount());
+                        }
+                    } catch (Throwable e) {
+                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    }
+
+                }, 50);
+            }
+
+        });
+
+
         mRecyclerView.setLayoutManager(linearLayout);
         messageViewAdapter = new MessageViewAdapter();
         mRecyclerView.setAdapter(messageViewAdapter);

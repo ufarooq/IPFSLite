@@ -16,7 +16,7 @@ ext {
     siteUrl = 'https://gitlab.com/remmer.wilts/threads-server'
     gitUrl = 'git@gitlab.com:remmer.wilts/threads-server.git'
 
-    libraryVersion = '0.1.0'
+    libraryVersion = '0.1.1'
 
     developerId = 'remmerw'
     developerName = 'Remmer Wilts'
@@ -33,8 +33,8 @@ android {
         applicationId "threads.server"
         minSdkVersion 26
         targetSdkVersion 28
-        versionCode 10
-        versionName "0.1.0"
+        versionCode 11
+        versionName "0.1.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -66,24 +66,28 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    // ANDROID SUPPORT (LICENSE done)
     implementation "com.android.support:support-compat:28.0.0"
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support:design:28.0.0'
     implementation 'com.android.support:support-v4:28.0.0'
     implementation 'com.android.support:design:28.0.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+
+
+    // API (LICENSE done)
     implementation 'com.google.android.gms:play-services-vision:17.0.2'
-
-
-    // ANDROID SUPPORT (LICENSE done)
+    // API (LICENSE done)
     implementation "android.arch.lifecycle:extensions:1.1.1"
 
     // ANDROID Architecture (LICENSE done)
     implementation 'android.arch.persistence.room:runtime:1.1.1'
 
     // API (LICENSE done)
-    // API (LICENSE done)
     implementation 'threads.iota:threads:2.4.3'
+
+    // API (LICENSE done)
     implementation 'threads.ipfs:threads:0.3.6'
 
     // QR Scanner (LICENSE TODO)
@@ -92,7 +96,7 @@ dependencies {
     // Apache (LICENSE TODO)
     implementation 'org.apache.commons:commons-lang3:3.8.1'
 
-    // Colllections (LICENSE done)
+    // API (LICENSE done)
     implementation 'com.google.api-client:google-api-client:1.23.0'
 
     // Gson (LICENSE done)
