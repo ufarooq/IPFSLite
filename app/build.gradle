@@ -77,9 +77,6 @@ dependencies {
 
 
     // API (LICENSE done)
-    implementation 'com.google.android.gms:play-services-vision:17.0.2'
-
-    // API (LICENSE done)
     implementation "android.arch.lifecycle:extensions:1.1.1"
 
     // ANDROID Architecture (LICENSE done)
@@ -91,14 +88,8 @@ dependencies {
     // QR Scanner (LICENSE TODO)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'
 
-    // Apache (LICENSE TODO)
-    implementation 'org.apache.commons:commons-lang3:3.8.1'
-
     // API (LICENSE done)
     implementation 'com.google.api-client:google-api-client:1.23.0'
-
-    // Gson (LICENSE done)
-    implementation 'com.google.code.gson:gson:2.8.2'
 
     // ANDROID Architecture (LICENSE done)
     implementation 'android.arch.persistence.room:runtime:1.1.1'

@@ -13,7 +13,7 @@ public class Message {
     @ColumnInfo(name = "message")
     private final String message;
     @PrimaryKey(autoGenerate = true)
-    private Long idx;
+    private long idx;
 
     Message(@NonNull String message) {
         checkNotNull(message);
@@ -24,11 +24,11 @@ public class Message {
         return new Message(message);
     }
 
-    public Long getIdx() {
+    public long getIdx() {
         return idx;
     }
 
-    public void setIdx(Long idx) {
+    public void setIdx(long idx) {
         this.idx = idx;
     }
 

@@ -11,7 +11,7 @@ import android.net.NetworkCapabilities;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.google.android.gms.common.internal.Preconditions;
+import com.google.common.base.Preconditions;
 
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CmdListener;
