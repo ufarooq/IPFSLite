@@ -19,11 +19,19 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 public class DaemonService extends Service {
-    private static final int NOTIFICATION_ID = 999;
     public static final String ACTION_START_DAEMON_SERVICE = "ACTION_START_DAEMON_SERVICE";
     public static final String ACTION_STOP_DAEMON_SERVICE = "ACTION_STOP_DAEMON_SERVICE";
+    private static final int NOTIFICATION_ID = 999;
     private static final String TAG = DaemonService.class.getSimpleName();
+    private static boolean ipfsRunning = false;
 
+    public static boolean isIpfsRunning() {
+        return ipfsRunning;
+    }
+
+    public static void setIpfsRunning(boolean running) {
+        ipfsRunning = running;
+    }
 
     @Override
     public void onCreate() {
@@ -104,18 +112,21 @@ public class DaemonService extends Service {
 
                 try {
                     IPFS ipfs = Application.getIpfs();
-                    if (!ipfs.isRunning()) {
+                    if (ipfs != null) {
                         boolean success = ipfs.start(Profile.LOW_POWER, false, 30000L);
-                        if (success) {
-                            PID pid = ipfs.getPeersID();
-                            Application.setPid(getApplicationContext(), pid.getPid());
-                        }
-
-
+                        PID pid = ipfs.getPeersID();
+                        Application.setPid(getApplicationContext(), pid.getPid());
+                        setIpfsRunning(true);
                         Event event = Application.getEventsDatabase().createEvent(
                                 Application.SERVER_ONLINE_EVENT);
                         Application.getEventsDatabase().insertEvent(event);
+                        if (!success) {
+                            Toast.makeText(getApplicationContext(),
+                                    R.string.daemon_server_running, Toast.LENGTH_LONG).show();
+                        }
                     }
+
+
                 } catch (Throwable e) {
                     Log.e(TAG, e.getLocalizedMessage(), e);
                 }
@@ -135,15 +146,14 @@ public class DaemonService extends Service {
         try {
             new java.lang.Thread(() -> {
                 IPFS ipfs = Application.getIpfs();
-                if (ipfs.isRunning()) {
+                if (ipfs != null) {
                     ipfs.shutdown();
-
+                    setIpfsRunning(false);
                     Application.getEventsDatabase().insertMessage(
                             getApplicationContext().getString(R.string.server_shutdown));
                     Event event = Application.getEventsDatabase().createEvent(
                             Application.SERVER_OFFLINE_EVENT);
                     Application.getEventsDatabase().insertEvent(event);
-
                 }
 
             }).start();

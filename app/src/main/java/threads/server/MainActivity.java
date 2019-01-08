@@ -48,22 +48,11 @@ import threads.ipfs.IPFS;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-
-    private DrawerLayout drawer_layout;
-    private FloatingActionButton server;
-
-    private RecyclerView mRecyclerView;
-    private MessageViewAdapter messageViewAdapter;
-    private long mLastClickTime = 0;
-
-    private EditText console_box;
-
     private final AtomicBoolean networkAvailable = new AtomicBoolean(true);
-
-
+    private DrawerLayout drawer_layout;
     private final BroadcastReceiver networkChangeReceiver = new BroadcastReceiver() {
-        private Snackbar snackbar;
         private final AtomicBoolean wasOffline = new AtomicBoolean(false);
+        private Snackbar snackbar;
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -102,6 +91,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         }
     };
+    private FloatingActionButton server;
+    private RecyclerView mRecyclerView;
+    private MessageViewAdapter messageViewAdapter;
+    private long mLastClickTime = 0;
+    private EditText console_box;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -163,19 +157,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            IPFS daemon = Application.getIpfs();
-            if (!daemon.isRunning()) {
+            if (!DaemonService.isIpfsRunning()) {
 
                 Intent intent = new Intent(MainActivity.this, DaemonService.class);
                 intent.setAction(DaemonService.ACTION_START_DAEMON_SERVICE);
-                startForegroundService(intent);
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    startForegroundService(intent);
+                } else {
+                    startService(intent);
+                }
 
 
                 server.setImageDrawable(getDrawable(R.drawable.stop));
             } else {
                 Intent intent = new Intent(MainActivity.this, DaemonService.class);
                 intent.setAction(DaemonService.ACTION_STOP_DAEMON_SERVICE);
-                startForegroundService(intent);
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    startForegroundService(intent);
+                } else {
+                    startService(intent);
+                }
 
                 server.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
             }
@@ -260,45 +261,44 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             removeKeyboards();
 
-            if (!Application.getIpfs().isRunning()) {
-                Toast.makeText(getApplicationContext(),
-                        getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
-            } else {
-                String text = console_box.getText().toString();
+            String text = console_box.getText().toString();
 
-                console_box.setText("");
+            console_box.setText("");
 
-                String[] parts = text.split("\\s+");
-                if (parts.length > 0) {
+            String[] parts = text.split("\\s+");
+            if (parts.length > 0) {
 
-                    if (parts[0].equalsIgnoreCase("ipfs")) {
-                        String[] commands = Arrays.copyOfRange(parts, 1, parts.length);
-                        ExecutorService executor = Executors.newSingleThreadExecutor();
-                        executor.submit(() -> {
-                            try {
-                                IPFS ipfs = Application.getIpfs();
-                                Application.getCmdListener().info(text);
+                if (parts[0].equalsIgnoreCase("ipfs")) {
+                    String[] commands = Arrays.copyOfRange(parts, 1, parts.length);
+                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                    executor.submit(() -> {
+                        try {
+                            IPFS ipfs = Application.getIpfs();
+
+                            Application.getCmdListener().info(text);
+                            if (ipfs != null) {
                                 ipfs.cmd(commands);
-
-                            } catch (Throwable e) {
-                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
                             }
-                        });
-                    } else {
-                        ExecutorService executor = Executors.newSingleThreadExecutor();
-                        executor.submit(() -> {
-                            try {
-                                IPFS ipfs = Application.getIpfs();
-                                Application.getCmdListener().info(text);
+
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                        }
+                    });
+                } else {
+                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                    executor.submit(() -> {
+                        try {
+                            IPFS ipfs = Application.getIpfs();
+                            Application.getCmdListener().info(text);
+                            if (ipfs != null) {
                                 ipfs.cmd(parts);
-
-                            } catch (Throwable e) {
-                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
                             }
-                        });
-                    }
-                }
 
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                        }
+                    });
+                }
             }
 
 
@@ -318,8 +318,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void serverStatus() {
 
         try {
-            IPFS daemon = Application.getIpfs();
-            if (!daemon.isRunning()) {
+            if (!DaemonService.isIpfsRunning()) {
                 server.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
             } else {
                 server.setImageDrawable(getDrawable(R.drawable.stop));
@@ -386,7 +385,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     break;
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
-                if (!Application.getIpfs().isRunning()) {
+                if (!DaemonService.isIpfsRunning()) {
                     Toast.makeText(getApplicationContext(),
                             getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
                 } else {

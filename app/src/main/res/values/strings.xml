@@ -21,4 +21,5 @@
     <string name="server_shutdown">IPFS server shutdown</string>
     <string name="action_delete">Delete</string>
     <string name="licences">Licences</string>
+    <string name="daemon_server_running">Looks like that a daemon is already running on the device.</string>
 </resources>

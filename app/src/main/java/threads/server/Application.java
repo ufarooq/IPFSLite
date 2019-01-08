@@ -9,6 +9,7 @@ import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.common.base.Preconditions;
@@ -32,6 +33,7 @@ public class Application extends android.app.Application {
     private static CmdListener cmdListener;
     private static IPFS ipfs;
 
+    @Nullable
     public static IPFS getIpfs() {
         return ipfs;
     }
@@ -82,23 +84,25 @@ public class Application extends android.app.Application {
     }
 
     public static void createChannel(@NonNull Context context) {
-        try {
-            // Create the NotificationChannel
-            CharSequence name = context.getString(R.string.channel_name);
-            String description = context.getString(R.string.channel_description);
-            int importance = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel mChannel = new NotificationChannel(Application.CHANNEL_ID, name, importance);
-            mChannel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
-            NotificationManager notificationManager = (NotificationManager) context.getSystemService(
-                    Context.NOTIFICATION_SERVICE);
-            if (notificationManager != null) {
-                notificationManager.createNotificationChannel(mChannel);
-            }
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            try {
+                // Create the NotificationChannel
+                CharSequence name = context.getString(R.string.channel_name);
+                String description = context.getString(R.string.channel_description);
+                int importance = NotificationManager.IMPORTANCE_HIGH;
+                NotificationChannel mChannel = new NotificationChannel(Application.CHANNEL_ID, name, importance);
+                mChannel.setDescription(description);
+                // Register the channel with the system; you can't change the importance
+                // or other notification behaviors after this
+                NotificationManager notificationManager = (NotificationManager) context.getSystemService(
+                        Context.NOTIFICATION_SERVICE);
+                if (notificationManager != null) {
+                    notificationManager.createNotificationChannel(mChannel);
+                }
 
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
         }
     }
 
@@ -126,6 +130,7 @@ public class Application extends android.app.Application {
         return "https://thetangle.org/address/" + address;
     }
 
+
     @Override
     public void onTerminate() {
         super.onTerminate();
@@ -138,8 +143,13 @@ public class Application extends android.app.Application {
 
         cmdListener = new ConsoleListener();
 
-        ipfs = new IPFS.Builder().context(getApplicationContext()).listener(cmdListener).build();
-
+        try {
+            ipfs = new IPFS.Builder().context(getApplicationContext()).listener(cmdListener).build();
+        } catch (Throwable e) {
+            new Thread(() -> {
+                getEventsDatabase().insertMessage("Installation problems : " + e.getLocalizedMessage());
+            }).start();
+        }
         eventsDatabase = Room.inMemoryDatabaseBuilder(this, EventsDatabase.class).build();
 
         init();
