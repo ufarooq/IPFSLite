@@ -140,9 +140,7 @@ public class Application extends android.app.Application {
 
         ipfs = new IPFS.Builder().context(getApplicationContext()).listener(cmdListener).build();
 
-        eventsDatabase = Room.inMemoryDatabaseBuilder(this,
-                EventsDatabase.class).fallbackToDestructiveMigration().build();
-
+        eventsDatabase = Room.inMemoryDatabaseBuilder(this, EventsDatabase.class).build();
 
         init();
 
