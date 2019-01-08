@@ -14,7 +14,6 @@ import android.widget.Toast;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.Profile;
-import threads.server.event.Event;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

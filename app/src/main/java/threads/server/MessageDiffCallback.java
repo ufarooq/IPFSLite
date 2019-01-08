@@ -4,9 +4,7 @@ import android.support.v7.util.DiffUtil;
 
 import java.util.List;
 
-import threads.server.event.Message;
-
-class MessageDiffCallback extends DiffUtil.Callback {
+public class MessageDiffCallback extends DiffUtil.Callback {
     private final List<Message> mOldList;
     private final List<Message> mNewList;
 

@@ -5,10 +5,7 @@ import android.arch.lifecycle.LiveData;
 
 import java.util.List;
 
-import threads.server.event.EventsDatabase;
-import threads.server.event.Message;
-
-class MessagesViewModel extends AndroidViewModel {
+public class MessagesViewModel extends AndroidViewModel {
 
     private final LiveData<List<Message>> messages;
 

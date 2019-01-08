@@ -43,7 +43,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import de.psdev.licensesdialog.LicensesDialog;
 import threads.ipfs.IPFS;
-import threads.server.event.Message;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {

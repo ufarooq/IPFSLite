@@ -13,8 +13,6 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import threads.server.event.Message;
-
 public class MessageViewAdapter extends RecyclerView.Adapter<MessageViewAdapter.ViewHolder> {
     private static final String TAG = MessageViewAdapter.class.getSimpleName();
     private final List<Message> messages = new ArrayList<>();

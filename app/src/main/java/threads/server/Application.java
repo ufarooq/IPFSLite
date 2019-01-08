@@ -15,7 +15,6 @@ import com.google.common.base.Preconditions;
 
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CmdListener;
-import threads.server.event.EventsDatabase;
 
 public class Application extends android.app.Application {
 
@@ -142,7 +141,7 @@ public class Application extends android.app.Application {
         ipfs = new IPFS.Builder().context(getApplicationContext()).listener(cmdListener).build();
 
         eventsDatabase = Room.inMemoryDatabaseBuilder(this,
-                EventsDatabase.class).build();
+                EventsDatabase.class).fallbackToDestructiveMigration().build();
 
 
         init();

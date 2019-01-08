@@ -5,10 +5,7 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
 
-import threads.server.event.Event;
-import threads.server.event.EventsDatabase;
-
-class EventViewModel extends AndroidViewModel {
+public class EventViewModel extends AndroidViewModel {
 
     private final EventsDatabase eventsDatabase;
 
