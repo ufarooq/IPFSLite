@@ -3,6 +3,7 @@ package threads.server;
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.PrimaryKey;
+import android.arch.persistence.room.TypeConverters;
 import android.support.annotation.NonNull;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -12,16 +13,34 @@ public class Message {
     @NonNull
     @ColumnInfo(name = "message")
     private final String message;
+    @NonNull
+    @TypeConverters(MessageKind.class)
+    @ColumnInfo(name = "messageKind")
+    private final MessageKind messageKind;
     @PrimaryKey(autoGenerate = true)
     private long idx;
 
-    Message(@NonNull String message) {
+    Message(@NonNull MessageKind messageKind, @NonNull String message) {
         checkNotNull(message);
         this.message = message;
+        this.messageKind = messageKind;
     }
 
-    static Message createMessage(@NonNull String message) {
-        return new Message(message);
+    static Message createMessage(@NonNull MessageKind messageKind, @NonNull String message) {
+        return new Message(messageKind, message);
+    }
+
+    public MessageKind getMessageKind() {
+        return messageKind;
+    }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "message='" + message + '\'' +
+                ", messageKind=" + messageKind +
+                ", idx=" + idx +
+                '}';
     }
 
     public long getIdx() {

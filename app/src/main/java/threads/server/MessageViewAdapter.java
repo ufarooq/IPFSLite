@@ -52,6 +52,18 @@ public class MessageViewAdapter extends RecyclerView.Adapter<MessageViewAdapter.
 
                 messageViewHolder.view.setBackgroundColor(Color.WHITE);
 
+                switch (message.getMessageKind()) {
+                    case CMD:
+                        messageViewHolder.text.setTextColor(Color.BLUE);
+                        break;
+                    case INFO:
+                        messageViewHolder.text.setTextColor(Color.BLACK);
+                        break;
+                    case ERROR:
+                        messageViewHolder.text.setTextColor(Color.RED);
+                        break;
+                }
+
                 messageViewHolder.text.setText(message.getMessage());
 
             } catch (Exception e) {

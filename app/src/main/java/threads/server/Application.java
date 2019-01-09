@@ -110,8 +110,8 @@ public class Application extends android.app.Application {
 
     public static void init() {
         new java.lang.Thread(() -> {
-            Application.getEventsDatabase().insertMessage("\nWelcome to IPFS");
-            Application.getEventsDatabase().insertMessage("Please feel free to start an IPFS daemon ...\n\n");
+            Application.getEventsDatabase().insertMessage(MessageKind.INFO, "\nWelcome to IPFS");
+            Application.getEventsDatabase().insertMessage(MessageKind.INFO, "Please feel free to start an IPFS daemon ...\n\n");
 
         }).start();
     }
@@ -148,7 +148,8 @@ public class Application extends android.app.Application {
             ipfs = new IPFS.Builder().context(getApplicationContext()).listener(cmdListener).build();
         } catch (Throwable e) {
             new Thread(() -> {
-                getEventsDatabase().insertMessage("Installation problems : " + e.getLocalizedMessage());
+                getEventsDatabase().insertMessage(MessageKind.ERROR,
+                        "Installation problems : " + e.getLocalizedMessage());
             }).start();
         }
         eventsDatabase = Room.inMemoryDatabaseBuilder(this, EventsDatabase.class).build();
@@ -166,14 +167,21 @@ public class Application extends android.app.Application {
         @Override
         public void info(@NonNull String message) {
             new Thread(() -> {
-                getEventsDatabase().insertMessage(message);
+                getEventsDatabase().insertMessage(MessageKind.INFO, message);
             }).start();
         }
 
         @Override
         public void error(@NonNull String message) {
             new Thread(() -> {
-                getEventsDatabase().insertMessage(message);
+                getEventsDatabase().insertMessage(MessageKind.ERROR, message);
+            }).start();
+        }
+
+        @Override
+        public void cmd(@NonNull String message) {
+            new Thread(() -> {
+                getEventsDatabase().insertMessage(MessageKind.CMD, message);
             }).start();
         }
     }
