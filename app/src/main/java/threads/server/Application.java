@@ -12,10 +12,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
-import com.google.common.base.Preconditions;
-
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CmdListener;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Application extends android.app.Application {
 
@@ -67,8 +67,8 @@ public class Application extends android.app.Application {
     }
 
     public static void setPid(@NonNull Context context, @NonNull String pid) {
-        Preconditions.checkNotNull(context);
-        Preconditions.checkNotNull(pid);
+        checkNotNull(context);
+        checkNotNull(pid);
         SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(PID_KEY, pid);
@@ -76,7 +76,7 @@ public class Application extends android.app.Application {
     }
 
     public static String getPid(@NonNull Context context) {
-        Preconditions.checkNotNull(context);
+        checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
         String pid = sharedPref.getString(PID_KEY, "");
         Log.e(TAG, "PID : " + pid);
@@ -84,6 +84,7 @@ public class Application extends android.app.Application {
     }
 
     public static void createChannel(@NonNull Context context) {
+        checkNotNull(context);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             try {
                 // Create the NotificationChannel

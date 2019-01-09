@@ -113,17 +113,13 @@ public class DaemonService extends Service {
                 try {
                     IPFS ipfs = Application.getIpfs();
                     if (ipfs != null) {
-                        boolean success = ipfs.start(Profile.LOW_POWER, false, 30000L);
+                        ipfs.start(Profile.LOW_POWER, false, 30000L);
                         PID pid = ipfs.getPeersID();
                         Application.setPid(getApplicationContext(), pid.getPid());
                         setIpfsRunning(true);
                         Event event = Application.getEventsDatabase().createEvent(
                                 Application.SERVER_ONLINE_EVENT);
                         Application.getEventsDatabase().insertEvent(event);
-                        if (!success) {
-                            Toast.makeText(getApplicationContext(),
-                                    R.string.daemon_server_running, Toast.LENGTH_LONG).show();
-                        }
                     }
 
 

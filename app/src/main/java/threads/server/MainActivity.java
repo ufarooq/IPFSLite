@@ -447,11 +447,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
         int id = menuItem.getItemId();
-        if (id == R.id.nav_donation) {
-            Intent menuIntent = new Intent(MainActivity.this,
-                    DonationActivity.class);
-            startActivity(menuIntent);
-        } else if (id == R.id.nav_licences) {
+        if (id == R.id.nav_licences) {
             try {
                 new LicensesDialog.Builder(this)
                         .setNotices(R.raw.licenses)
