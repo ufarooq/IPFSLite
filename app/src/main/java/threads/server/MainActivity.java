@@ -275,7 +275,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         try {
                             IPFS ipfs = Application.getIpfs();
 
-                            Application.getCmdListener().info(text);
                             if (ipfs != null) {
                                 ipfs.cmd(commands);
                             }
@@ -289,7 +288,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     executor.submit(() -> {
                         try {
                             IPFS ipfs = Application.getIpfs();
-                            Application.getCmdListener().info(text);
+
                             if (ipfs != null) {
                                 ipfs.cmd(parts);
                             }
@@ -329,11 +328,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    private void updateMessages(List<Message> messages) {
+    private void updateMessages(@NonNull List<Message> messages) {
         try {
             messageViewAdapter.updateData(messages);
 
-            mRecyclerView.scrollToPosition(messageViewAdapter.getItemCount());
+            mRecyclerView.scrollToPosition(messageViewAdapter.getItemCount() - 1);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
