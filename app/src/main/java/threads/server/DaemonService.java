@@ -114,7 +114,7 @@ public class DaemonService extends Service {
                     IPFS ipfs = Application.getIpfs();
                     if (ipfs != null) {
                         ipfs.start(Profile.LOW_POWER, false, 30000L);
-                        PID pid = ipfs.getPeersID();
+                        PID pid = ipfs.getPeerID();
                         Application.setPid(getApplicationContext(), pid.getPid());
                         setIpfsRunning(true);
                         Event event = Application.getEventsDatabase().createEvent(
