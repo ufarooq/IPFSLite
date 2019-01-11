@@ -141,7 +141,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer_layout.addDrawerListener(toggle);
@@ -360,13 +359,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             drawable.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
         }
 
-        MenuItem action_settings = menu.findItem(R.id.action_web_ui);
-        drawable = action_settings.getIcon();
-        if (drawable != null) {
-            drawable.mutate();
-            drawable.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
-        }
-
 
         return true;
     }
@@ -378,22 +370,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         switch (id) {
-            case R.id.action_web_ui: {
-                // mis-clicking prevention, using threshold of 1000 ms
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-                if (!DaemonService.isIpfsRunning()) {
-                    Toast.makeText(getApplicationContext(),
-                            getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
-                } else {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse("http://127.0.0.1:5001/webui"));
-                    startActivity(intent);
-                }
-                return true;
-            }
             case R.id.action_clear: {
                 // mis-clicking prevention, using threshold of 1000 ms
                 if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
@@ -445,21 +421,50 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-        int id = menuItem.getItemId();
-        if (id == R.id.nav_licences) {
-            try {
-                new LicensesDialog.Builder(this)
-                        .setNotices(R.raw.licenses)
-                        .setTitle(R.string.licences)
-                        .setIncludeOwnLicense(true)
-                        .setCloseText(android.R.string.ok)
-                        .build()
-                        .showAppCompat();
 
-            } catch (Exception e) {
-                Log.e(TAG, e.getLocalizedMessage());
+        switch (menuItem.getItemId()) {
+            case R.id.nav_licences: {
+                try {
+                    new LicensesDialog.Builder(this)
+                            .setNotices(R.raw.licenses)
+                            .setTitle(R.string.licences)
+                            .setIncludeOwnLicense(true)
+                            .setCloseText(android.R.string.ok)
+                            .build()
+                            .showAppCompat();
+
+                } catch (Exception e) {
+                    Log.e(TAG, e.getLocalizedMessage());
+                }
+                break;
             }
+            case R.id.nav_webui: {
+                // mis-clicking prevention, using threshold of 1000 ms
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    break;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+                if (!DaemonService.isIpfsRunning()) {
+                    Toast.makeText(getApplicationContext(),
+                            getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
+                } else {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse("http://127.0.0.1:5001/webui"));
+                    startActivity(intent);
+                }
+            }
+            case R.id.nav_help: {
+                // mis-clicking prevention, using threshold of 1000 ms
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    break;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
 
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse("https://docs.ipfs.io/reference/api/cli"));
+                startActivity(intent);
+
+            }
         }
 
         drawer_layout.closeDrawer(GravityCompat.START);

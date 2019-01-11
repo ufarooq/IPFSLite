@@ -16,4 +16,6 @@
     <string name="server_shutdown">IPFS daemon shutdown</string>
     <string name="action_delete">Delete</string>
     <string name="licences">Licences</string>
+    <string name="webui">WebUI</string>
+    <string name="help">Help</string>
 </resources>
