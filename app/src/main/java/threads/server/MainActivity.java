@@ -380,7 +380,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     InfoDialog.show(this, multihash.toBase58(),
                             getString(R.string.multihash),
-                            getString(R.string.multihash_add));
+                            getString(R.string.multihash_add, multihash.toBase58()));
 
                 }
 
@@ -479,7 +479,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 } else {
                     InfoDialog.show(this, pid,
                             getString(R.string.peer_id),
-                            getString(R.string.daemon_server_access));
+                            getString(R.string.daemon_server_access, pid));
                 }
                 return true;
             }
@@ -539,6 +539,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             IntentIntegrator integrator = new IntentIntegrator(this);
                             integrator.setOrientationLocked(false);
                             integrator.initiateScan();
+                        } else {
+                            Toast.makeText(getApplicationContext(),
+                                    getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
                         }
 
                     }
@@ -560,6 +563,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             IntentIntegrator integrator = new IntentIntegrator(this);
                             integrator.setOrientationLocked(false);
                             integrator.initiateScan();
+                        } else {
+                            Toast.makeText(getApplicationContext(),
+                                    getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
                         }
                     }
                 } catch (Throwable e) {
