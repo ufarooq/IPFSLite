@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
@@ -531,9 +532,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
                     } else {
                         idScan.set(false);
-                        IntentIntegrator integrator = new IntentIntegrator(this);
-                        integrator.setOrientationLocked(false);
-                        integrator.initiateScan();
+                        // Check that the device will let you use the camera
+                        PackageManager pm = getPackageManager();
+
+                        if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+                            IntentIntegrator integrator = new IntentIntegrator(this);
+                            integrator.setOrientationLocked(false);
+                            integrator.initiateScan();
+                        }
+
                     }
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage());
@@ -547,9 +554,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
                     } else {
                         idScan.set(true);
-                        IntentIntegrator integrator = new IntentIntegrator(this);
-                        integrator.setOrientationLocked(false);
-                        integrator.initiateScan();
+                        PackageManager pm = getPackageManager();
+
+                        if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+                            IntentIntegrator integrator = new IntentIntegrator(this);
+                            integrator.setOrientationLocked(false);
+                            integrator.initiateScan();
+                        }
                     }
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage());
