@@ -18,31 +18,39 @@ import java.util.Hashtable;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class ServerInfoDialog extends DialogFragment implements DialogInterface.OnClickListener {
+public class InfoDialog extends DialogFragment implements DialogInterface.OnClickListener {
     private static final int QR_CODE_SIZE = 800;
-    private static final String TAG = ServerInfoDialog.class.getSimpleName();
+    private static final String TAG = InfoDialog.class.getSimpleName();
     @SuppressWarnings("SpellCheckingInspection")
     private static final String QRCODE = "QRCODE";
+    private static final String MESSAGE = "MESSAGE";
+    private static final String TITLE = "TITLE";
     @NonNull
     private final static Hashtable<String, Bitmap> bitmaps = new Hashtable<>();
 
 
-    public ServerInfoDialog() {
+    public InfoDialog() {
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
         StrictMode.setVmPolicy(builder.build());
     }
 
 
     public static void show(@NonNull Activity activity,
-                            @NonNull String address) {
+                            @NonNull String code,
+                            @NonNull String title,
+                            @NonNull String message) {
         checkNotNull(activity);
-        checkNotNull(address);
+        checkNotNull(code);
+        checkNotNull(title);
+        checkNotNull(message);
         try {
-            String qrCode = ServerInfoDialog.getBitmap(address);
+            String qrCode = InfoDialog.getBitmap(code);
 
             Bundle bundle = new Bundle();
             bundle.putString(QRCODE, qrCode);
-            ServerInfoDialog fragment = new ServerInfoDialog();
+            bundle.putString(MESSAGE, message);
+            bundle.putString(TITLE, title);
+            InfoDialog fragment = new InfoDialog();
             fragment.setArguments(bundle);
             fragment.show(activity.getFragmentManager(), null);
         } catch (Throwable e) {
@@ -62,7 +70,7 @@ public class ServerInfoDialog extends DialogFragment implements DialogInterface.
             }
 
             Bitmap bitmap = net.glxn.qrgen.android.QRCode.from(qrCode).
-                    withSize(ServerInfoDialog.QR_CODE_SIZE, ServerInfoDialog.QR_CODE_SIZE).bitmap();
+                    withSize(InfoDialog.QR_CODE_SIZE, InfoDialog.QR_CODE_SIZE).bitmap();
 
 
             bitmaps.put(qrCode, bitmap);
@@ -81,13 +89,15 @@ public class ServerInfoDialog extends DialogFragment implements DialogInterface.
         View view = inflater.inflate(R.layout.dialog_server_info, null, false);
         ImageView imageView = view.findViewById(R.id.dialog_server_info);
         Bundle bundle = getArguments();
+        String title = bundle.getString(TITLE);
+        String message = bundle.getString(MESSAGE);
         String qrCode = bundle.getString(QRCODE);
         Bitmap bitmap = bitmaps.get(qrCode);
         imageView.setImageBitmap(bitmap);
 
         return new AlertDialog.Builder(getActivity())
-                .setTitle(R.string.peer_id)
-                .setMessage(R.string.daemon_server_access)
+                .setTitle(title)
+                .setMessage(message)
                 .setView(view)
                 .setCancelable(false)
                 .setPositiveButton(android.R.string.ok, this)

@@ -22,7 +22,7 @@ public class Application extends android.app.Application {
 
     public static final String CHANNEL_ID = "SERVER_CHANGE_ID";
     public static final String GROUP_ID = "SERVER_GROUP_ID";
-    public static final int QR_CODE_SIZE = 800;
+
     public static final String SERVER_ONLINE_EVENT = "SERVER_ONLINE_EVENT";
     public static final String SERVER_OFFLINE_EVENT = "SERVER_OFFLINE_EVENT";
     private static final String PID_KEY = "pidKey";

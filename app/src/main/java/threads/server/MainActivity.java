@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
@@ -12,6 +13,7 @@ import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -38,6 +40,7 @@ import android.widget.Toast;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -45,14 +48,18 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import de.psdev.licensesdialog.LicensesDialog;
+import io.ipfs.multihash.Multihash;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
-
+    private static final int SELECT_MEDIA_FILE = 1;
     private static final String TAG = MainActivity.class.getSimpleName();
     private final AtomicBoolean networkAvailable = new AtomicBoolean(true);
+    private final AtomicBoolean idScan = new AtomicBoolean(false);
     private DrawerLayout drawer_layout;
     private final BroadcastReceiver networkChangeReceiver = new BroadcastReceiver() {
         private final AtomicBoolean wasOffline = new AtomicBoolean(false);
@@ -192,7 +199,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         messagesViewModel.getMessages().observe(this, (messages) -> {
 
             try {
-                updateMessages(messages);
+                if (messages != null) {
+                    updateMessages(messages);
+                }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage());
             }
@@ -311,27 +320,73 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
-        if (result != null) {
-            if (result.getContents() != null) {
-                String content = result.getContents();
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.submit(() -> {
-                    try {
-                        IPFS ipfs = Application.getIpfs();
-                        PID pid = PID.create(content);
-                        if (ipfs != null) {
-                            ipfs.id(pid);
-                        }
-                    } catch (Throwable e) {
-                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    }
-                });
-
-            }
+        if (requestCode == SELECT_MEDIA_FILE && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            Uri uri = data.getData();
+            storeData(uri);
         } else {
-            super.onActivityResult(requestCode, resultCode, data);
+            IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+            if (result != null) {
+                if (result.getContents() != null) {
+                    String content = result.getContents();
+                    final IPFS ipfs = Application.getIpfs();
+                    if (ipfs != null) {
+                        ExecutorService executor = Executors.newSingleThreadExecutor();
+                        executor.submit(() -> {
+                            try {
+                                if (idScan.get()) {
+                                    PID pid = PID.create(content);
+
+                                    ipfs.id(pid);
+
+                                } else {
+                                    ipfs.cmd("cat", content);
+                                }
+                            } catch (Throwable e) {
+                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                            }
+                        });
+                    }
+                }
+            } else {
+                super.onActivityResult(requestCode, resultCode, data);
+            }
         }
+    }
+
+    private void storeData(@NonNull final Uri uri) {
+        Cursor returnCursor = getApplicationContext().getContentResolver().query(
+                uri, null, null, null, null);
+
+        checkNotNull(returnCursor);
+        int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+        //int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
+        returnCursor.moveToFirst();
+
+        final String filename = returnCursor.getString(nameIndex);
+        returnCursor.close();
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                IPFS ipfs = Application.getIpfs();
+                InputStream inputStream =
+                        getApplicationContext().getContentResolver().openInputStream(uri);
+                checkNotNull(inputStream);
+
+                if (ipfs != null) {
+                    Multihash multihash = ipfs.add(inputStream);
+                    checkNotNull(multihash);
+                    ipfs.files_cp(multihash, "/" + filename);
+
+                    InfoDialog.show(this, multihash.toBase58(),
+                            getString(R.string.multihash),
+                            getString(R.string.multihash_add));
+
+                }
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        });
     }
 
     private void removeKeyboards() {
@@ -421,7 +476,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (pid.isEmpty()) {
                     Toast.makeText(getApplicationContext(), getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
                 } else {
-                    ServerInfoDialog.show(this, pid);
+                    InfoDialog.show(this, pid,
+                            getString(R.string.peer_id),
+                            getString(R.string.daemon_server_access));
                 }
                 return true;
             }
@@ -452,12 +509,44 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
 
         switch (menuItem.getItemId()) {
+            case R.id.nav_add: {
+                try {
+                    Intent intent = new Intent();
+                    intent.setType("*/*");
+
+                    String[] mimetypes = {"audio/*", "image/*", "video/*", "application/pdf"};
+                    intent.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes);
+                    intent.setAction(Intent.ACTION_GET_CONTENT);
+                    startActivityForResult(Intent.createChooser(intent, "Select Media File"), SELECT_MEDIA_FILE);
+
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage());
+                }
+                break;
+            }
+            case R.id.nav_get: {
+                try {
+                    if (!DaemonService.isIpfsRunning()) {
+                        Toast.makeText(getApplicationContext(),
+                                getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
+                    } else {
+                        idScan.set(false);
+                        IntentIntegrator integrator = new IntentIntegrator(this);
+                        integrator.setOrientationLocked(false);
+                        integrator.initiateScan();
+                    }
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage());
+                }
+                break;
+            }
             case R.id.nav_connect: {
                 try {
                     if (!DaemonService.isIpfsRunning()) {
                         Toast.makeText(getApplicationContext(),
                                 getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
                     } else {
+                        idScan.set(true);
                         IntentIntegrator integrator = new IntentIntegrator(this);
                         integrator.setOrientationLocked(false);
                         integrator.initiateScan();

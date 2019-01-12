@@ -22,4 +22,6 @@
     <string name="application">Application</string>
     <string name="download_file">Get File</string>
     <string name="upload_file">Add File</string>
+    <string name="multihash">Multihash</string>
+    <string name="multihash_add">The QR code (Multihash) contains all necessary information to get the content of the file.</string>
 </resources>
