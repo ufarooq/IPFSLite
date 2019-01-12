@@ -18,5 +18,8 @@
     <string name="licences">Licences</string>
     <string name="webui">WebUI</string>
     <string name="help">Help</string>
-    <string name="connect">Connect</string>
+    <string name="connect_peer">Connect Peer</string>
+    <string name="application">Application</string>
+    <string name="download_file">Get File</string>
+    <string name="upload_file">Add File</string>
 </resources>

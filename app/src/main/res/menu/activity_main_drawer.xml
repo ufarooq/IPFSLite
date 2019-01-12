@@ -8,22 +8,36 @@
             android:id="@+id/nav_connect"
             android:icon="@drawable/lan_connect"
             android:iconTint="@color/midGrey"
-            android:title="@string/connect" />
+            android:title="@string/connect_peer" />
         <item
-            android:id="@+id/nav_webui"
-            android:icon="@drawable/compass"
+            android:id="@+id/nav_add"
+            android:icon="@drawable/cloud_upload"
             android:iconTint="@color/midGrey"
-            android:title="@string/webui" />
+            android:title="@string/upload_file" />
         <item
-            android:id="@+id/nav_help"
-            android:icon="@android:drawable/ic_menu_help"
+            android:id="@+id/nav_get"
+            android:icon="@drawable/cloud_download"
             android:iconTint="@color/midGrey"
-            android:title="@string/help" />
-        <item
-            android:id="@+id/nav_licences"
-            android:icon="@drawable/information_variant"
-            android:iconTint="@color/midGrey"
-            android:title="@string/licences" />
+            android:title="@string/download_file" />
     </group>
+    <item android:title="@string/application">
+        <menu>
+            <item
+                android:id="@+id/nav_webui"
+                android:icon="@drawable/compass"
+                android:iconTint="@color/midGrey"
+                android:title="@string/webui" />
+            <item
+                android:id="@+id/nav_help"
+                android:icon="@android:drawable/ic_menu_help"
+                android:iconTint="@color/midGrey"
+                android:title="@string/help" />
+            <item
+                android:id="@+id/nav_licences"
+                android:icon="@drawable/information_variant"
+                android:iconTint="@color/midGrey"
+                android:title="@string/licences" />
 
+        </menu>
+    </item>
 </menu>
