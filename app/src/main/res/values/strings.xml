@@ -26,4 +26,5 @@
     <string name="multihash_add">The QR code (CID \"%1$s\") contains all necessary information to get the content of the hash.</string>
     <string name="feature_camera_required">Camera Feature required</string>
     <string name="share">Share</string>
+    <string name="content_downloaded">Content with CID \"%1$s\" downloaded in the Downloads directory.</string>
 </resources>

@@ -24,16 +24,16 @@ import java.util.Hashtable;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class InfoDialog extends DialogFragment implements DialogInterface.OnClickListener {
-    private static final int QR_CODE_SIZE = 800;
+    private static final int QR_CODE_SIZE = 600;
     private static final String TAG = InfoDialog.class.getSimpleName();
     @SuppressWarnings("SpellCheckingInspection")
     private static final String QRCODE = "QRCODE";
     private static final String MESSAGE = "MESSAGE";
     private static final String TITLE = "TITLE";
-    private String code;
-    private String message;
     @NonNull
     private final static Hashtable<String, Bitmap> bitmaps = new Hashtable<>();
+    private String code;
+    private String message;
 
 
     public InfoDialog() {

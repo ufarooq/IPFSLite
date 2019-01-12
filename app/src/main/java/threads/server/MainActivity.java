@@ -1,5 +1,6 @@
 package threads.server;
 
+import android.Manifest;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -13,12 +14,15 @@ import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.SystemClock;
 import android.provider.OpenableColumns;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -41,6 +45,7 @@ import android.widget.Toast;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
+import java.io.File;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
@@ -58,6 +63,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private static final int SELECT_MEDIA_FILE = 1;
+    private static final int WRITE_EXTERNAL_STORAGE = 2;
     private static final String TAG = MainActivity.class.getSimpleName();
     private final AtomicBoolean networkAvailable = new AtomicBoolean(true);
     private final AtomicBoolean idScan = new AtomicBoolean(false);
@@ -108,6 +114,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private MessageViewAdapter messageViewAdapter;
     private long mLastClickTime = 0;
     private EditText console_box;
+
+    public static File getStorageFile(@NonNull String name) {
+        checkNotNull(name);
+        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        File file = new File(dir, name);
+        if (!file.exists()) {
+            try {
+                if (!file.createNewFile()) {
+                    throw new RuntimeException("File couldn't be created.");
+                }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                throw new RuntimeException(e);
+            }
+        }
+        return file;
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -318,6 +342,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    @Override
+    public void onRequestPermissionsResult
+            (int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case WRITE_EXTERNAL_STORAGE: {
+                for (int i = 0, len = permissions.length; i < len; i++) {
+
+                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                        nav_get();
+                    }
+                }
+
+                break;
+            }
+        }
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -336,11 +376,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             try {
                                 if (idScan.get()) {
                                     PID pid = PID.create(content);
-
                                     ipfs.id(pid);
-
                                 } else {
-                                    ipfs.cmd("cat", content);
+                                    File file = getStorageFile(content);
+                                    checkNotNull(file);
+                                    ipfs.cmd("get", "--output=" + file.getAbsolutePath(), content);
+
+                                    new java.lang.Thread(() -> {
+                                        Application.getEventsDatabase().insertMessage(
+                                                MessageKind.INFO, getString(
+                                                        R.string.content_downloaded, content));
+
+                                    }).start();
                                 }
                             } catch (Throwable e) {
                                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -475,7 +522,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 String pid = Application.getPid(getApplicationContext());
                 if (pid.isEmpty()) {
-                    Toast.makeText(getApplicationContext(), getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(),
+                            getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
                 } else {
                     InfoDialog.show(this, pid,
                             getString(R.string.peer_id),
@@ -515,7 +563,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Intent intent = new Intent();
                     intent.setType("*/*");
 
-                    String[] mimetypes = {"audio/*", "image/*", "video/*", "application/pdf"};
+                    String[] mimetypes = {"*/*"};
                     intent.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes);
                     intent.setAction(Intent.ACTION_GET_CONTENT);
                     startActivityForResult(Intent.createChooser(intent, "Select Media File"), SELECT_MEDIA_FILE);
@@ -527,23 +575,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             case R.id.nav_get: {
                 try {
-                    if (!DaemonService.isIpfsRunning()) {
-                        Toast.makeText(getApplicationContext(),
-                                getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
+                    if (ContextCompat.checkSelfPermission(getApplicationContext(),
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                            != PackageManager.PERMISSION_GRANTED) {
+                        // Permission is not granted
+                        // Request for permission
+                        ActivityCompat.requestPermissions(this,
+                                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                WRITE_EXTERNAL_STORAGE);
+
                     } else {
-                        idScan.set(false);
-                        // Check that the device will let you use the camera
-                        PackageManager pm = getPackageManager();
-
-                        if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-                            IntentIntegrator integrator = new IntentIntegrator(this);
-                            integrator.setOrientationLocked(false);
-                            integrator.initiateScan();
-                        } else {
-                            Toast.makeText(getApplicationContext(),
-                                    getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
-                        }
-
+                        nav_get();
                     }
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage());
@@ -619,6 +661,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         drawer_layout.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void nav_get() {
+        if (!DaemonService.isIpfsRunning()) {
+            Toast.makeText(getApplicationContext(),
+                    getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
+        } else {
+            idScan.set(false);
+            // Check that the device will let you use the camera
+            PackageManager pm = getPackageManager();
+
+            if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+                IntentIntegrator integrator = new IntentIntegrator(this);
+                integrator.setOrientationLocked(false);
+                integrator.initiateScan();
+            } else {
+                Toast.makeText(getApplicationContext(),
+                        getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
+            }
+        }
     }
 
 }
