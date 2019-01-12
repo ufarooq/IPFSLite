@@ -5,6 +5,11 @@
 
     <group android:checkableBehavior="single">
         <item
+            android:id="@+id/nav_connect"
+            android:icon="@drawable/lan_connect"
+            android:iconTint="@color/midGrey"
+            android:title="@string/connect" />
+        <item
             android:id="@+id/nav_webui"
             android:icon="@drawable/compass"
             android:iconTint="@color/midGrey"

@@ -9,6 +9,7 @@
 
     <application
         android:allowBackup="false"
+        android:hardwareAccelerated="true"
         android:name="threads.server.Application"
         tools:ignore="GoogleAppIndexingWarning"
         android:icon="@mipmap/ic_launcher"
@@ -27,6 +28,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="fullSensor"
+            tools:replace="screenOrientation" />
+
         <service
             android:name="threads.server.DaemonService"
             android:enabled="true"

@@ -35,6 +35,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -43,6 +46,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import de.psdev.licensesdialog.LicensesDialog;
 import threads.ipfs.IPFS;
+import threads.ipfs.api.PID;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -305,6 +309,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if (result != null) {
+            if (result.getContents() != null) {
+                String content = result.getContents();
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(() -> {
+                    try {
+                        IPFS ipfs = Application.getIpfs();
+                        PID pid = PID.create(content);
+                        if (ipfs != null) {
+                            ipfs.id(pid);
+                        }
+                    } catch (Throwable e) {
+                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    }
+                });
+
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data);
+        }
+    }
+
     private void removeKeyboards() {
         InputMethodManager imm = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm != null) {
@@ -423,6 +452,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
 
         switch (menuItem.getItemId()) {
+            case R.id.nav_connect: {
+                try {
+                    if (!DaemonService.isIpfsRunning()) {
+                        Toast.makeText(getApplicationContext(),
+                                getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
+                    } else {
+                        IntentIntegrator integrator = new IntentIntegrator(this);
+                        integrator.setOrientationLocked(false);
+                        integrator.initiateScan();
+                    }
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage());
+                }
+                break;
+            }
             case R.id.nav_licences: {
                 try {
                     new LicensesDialog.Builder(this)
@@ -433,8 +477,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             .build()
                             .showAppCompat();
 
-                } catch (Exception e) {
-                    Log.e(TAG, e.getLocalizedMessage());
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage());
                 }
                 break;
             }

@@ -30,7 +30,7 @@ public class Application extends android.app.Application {
     private static final String TAG = Application.class.getSimpleName();
 
     private static EventsDatabase eventsDatabase;
-    private static CmdListener cmdListener;
+
     private static IPFS ipfs;
 
     @Nullable
@@ -56,14 +56,6 @@ public class Application extends android.app.Application {
         return capabilities != null
                 && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
 
-    }
-
-    public static CmdListener getCmdListener() {
-        return cmdListener;
-    }
-
-    public static String getDonationsAddress() {
-        return BuildConfig.DONATION_ADDRESS;
     }
 
     public static void setPid(@NonNull Context context, @NonNull String pid) {
@@ -117,21 +109,6 @@ public class Application extends android.app.Application {
     }
 
 
-    public static String getHtmlAddressLink(@NonNull String name, @NonNull String address, boolean bundle) {
-        if (bundle) {
-            return "<a 'https://thetangle.org/bundle/" + address + "'><u>" + name + "</u></a>";
-        }
-        return "<a 'https://thetangle.org/address/" + address + "'><u>" + name + "</u></a>";
-    }
-
-    public static String getAddressLink(@NonNull String address, boolean bundle) {
-        if (bundle) {
-            return "https://thetangle.org/bundle/" + address;
-        }
-        return "https://thetangle.org/address/" + address;
-    }
-
-
     @Override
     public void onTerminate() {
         super.onTerminate();
@@ -142,7 +119,7 @@ public class Application extends android.app.Application {
     public void onCreate() {
         super.onCreate();
 
-        cmdListener = new ConsoleListener();
+        CmdListener cmdListener = new ConsoleListener();
 
         try {
             ipfs = new IPFS.Builder().context(getApplicationContext()).listener(cmdListener).build();

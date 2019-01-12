@@ -44,6 +44,13 @@
 
 
     <notice>
+        <name>journeyapps/zxing-android-embedded</name>
+        <url>https://github.com/journeyapps/zxing-android-embedded</url>
+        <copyright />
+        <license>Apache Software License 2.0</license>
+    </notice>
+
+    <notice>
         <name>go-ipfs</name>
         <url>https://github.com/ipfs/go-ipfs</url>
         <copyright />

@@ -86,7 +86,7 @@ public class ServerInfoDialog extends DialogFragment implements DialogInterface.
         imageView.setImageBitmap(bitmap);
 
         return new AlertDialog.Builder(getActivity())
-                .setTitle(R.string.daemon_server)
+                .setTitle(R.string.peer_id)
                 .setMessage(R.string.daemon_server_access)
                 .setView(view)
                 .setCancelable(false)

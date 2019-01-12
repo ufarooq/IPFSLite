@@ -29,7 +29,7 @@ public class DaemonService extends Service {
         return ipfsRunning;
     }
 
-    public static void setIpfsRunning(boolean running) {
+    private static void setIpfsRunning(boolean running) {
         ipfsRunning = running;
     }
 
