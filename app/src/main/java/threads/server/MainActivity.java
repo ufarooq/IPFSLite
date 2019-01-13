@@ -630,6 +630,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 break;
             }
+            case R.id.nav_settings: {
+                try {
+                    android.app.FragmentManager fm = getFragmentManager();
+                    SettingsDialog messageActionDialogFragment = new SettingsDialog();
+                    messageActionDialogFragment.show(fm, "SettingsDialog");
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage());
+                }
+                break;
+            }
             case R.id.nav_webui: {
                 // mis-clicking prevention, using threshold of 1000 ms
                 if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {

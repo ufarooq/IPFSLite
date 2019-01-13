@@ -14,6 +14,7 @@ import android.util.Log;
 
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CmdListener;
+import threads.ipfs.api.Profile;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -26,6 +27,7 @@ public class Application extends android.app.Application {
     public static final String SERVER_ONLINE_EVENT = "SERVER_ONLINE_EVENT";
     public static final String SERVER_OFFLINE_EVENT = "SERVER_OFFLINE_EVENT";
     private static final String PID_KEY = "pidKey";
+    private static final String PROFILE_KEY = "profileKey";
     private static final String PREF_KEY = "prefKey";
     private static final String TAG = Application.class.getSimpleName();
 
@@ -56,6 +58,22 @@ public class Application extends android.app.Application {
         return capabilities != null
                 && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
 
+    }
+
+    public static void setProfile(@NonNull Context context, @NonNull Profile profile) {
+        checkNotNull(context);
+        checkNotNull(profile);
+        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(PROFILE_KEY, profile.name());
+        editor.apply();
+    }
+
+    public static Profile getProfile(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+        String profile = sharedPref.getString(PROFILE_KEY, Profile.LOW_POWER.name());
+        return Profile.valueOf(profile);
     }
 
     public static void setPid(@NonNull Context context, @NonNull String pid) {

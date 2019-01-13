@@ -23,6 +23,11 @@
     <item android:title="@string/application">
         <menu>
             <item
+                android:id="@+id/nav_settings"
+                android:icon="@android:drawable/ic_menu_preferences"
+                android:iconTint="@color/midGrey"
+                android:title="@string/settings" />
+            <item
                 android:id="@+id/nav_webui"
                 android:icon="@drawable/compass"
                 android:iconTint="@color/midGrey"

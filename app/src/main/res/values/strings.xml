@@ -27,4 +27,8 @@
     <string name="feature_camera_required">Camera Feature required</string>
     <string name="share">Share</string>
     <string name="content_downloaded">Content with CID \"%1$s\" downloaded in the Downloads directory.</string>
+    <string name="settings">Settings</string>
+    <string name="profile">Profile</string>
+    <string name="settings_message">Settings for the IPFS initialization.</string>
+    <string name="daemon_restart_config_changed">Please restart IPFS due to configuration changes</string>
 </resources>

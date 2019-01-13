@@ -13,7 +13,6 @@ import android.widget.Toast;
 
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
-import threads.ipfs.api.Profile;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -23,6 +22,7 @@ public class DaemonService extends Service {
     public static final String ACTION_STOP_DAEMON_SERVICE = "ACTION_STOP_DAEMON_SERVICE";
     private static final int NOTIFICATION_ID = 999;
     private static final String TAG = DaemonService.class.getSimpleName();
+    public static boolean configHasChanged = false;
     private static boolean ipfsRunning = false;
 
     public static boolean isIpfsRunning() {
@@ -113,7 +113,8 @@ public class DaemonService extends Service {
                 try {
                     IPFS ipfs = Application.getIpfs();
                     if (ipfs != null) {
-                        ipfs.start(Profile.LOW_POWER, false, 30000L);
+                        ipfs.start(Application.getProfile(getApplicationContext()),
+                                configHasChanged, 30000L);
                         PID pid = ipfs.getPeerID();
                         Application.setPid(getApplicationContext(), pid.getPid());
                         setIpfsRunning(true);
