@@ -26,6 +26,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -38,6 +39,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -610,6 +614,42 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
                         }
                     }
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage());
+                }
+                break;
+            }
+            case R.id.nav_privacy_policy: {
+                try {
+                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+
+                    //alertDialogBuilder.setTitle(R.string.privacy_policy);
+
+                    String file = "file:///android_res/raw/private_policy.html";
+
+                    WebView wv = new WebView(this);
+                    wv.loadUrl(file);
+                    wv.setWebViewClient(new WebViewClient() {
+                        @Override
+                        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                            final Uri uri = request.getUrl();
+                            view.loadUrl(uri.getPath());
+                            return true;
+                        }
+
+                    });
+
+                    alertDialogBuilder.setView(wv);
+
+                    alertDialogBuilder
+                            .setCancelable(false)
+                            .setPositiveButton(android.R.string.ok, (dialog, id) -> dialog.cancel());
+
+
+                    AlertDialog alertDialog = alertDialogBuilder.create();
+
+
+                    alertDialog.show();
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage());
                 }

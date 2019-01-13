@@ -42,6 +42,11 @@
                 android:icon="@drawable/information_variant"
                 android:iconTint="@color/midGrey"
                 android:title="@string/licences" />
+            <item
+                android:id="@+id/nav_privacy_policy"
+                android:icon="@drawable/security"
+                android:iconTint="@color/midGrey"
+                android:title="@string/privacy_policy" />
 
         </menu>
     </item>
