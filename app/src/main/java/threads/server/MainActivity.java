@@ -598,22 +598,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             case R.id.nav_connect: {
                 try {
-                    if (!DaemonService.isIpfsRunning()) {
-                        Toast.makeText(getApplicationContext(),
-                                getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
-                    } else {
-                        idScan.set(true);
-                        PackageManager pm = getPackageManager();
 
-                        if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-                            IntentIntegrator integrator = new IntentIntegrator(this);
-                            integrator.setOrientationLocked(false);
-                            integrator.initiateScan();
-                        } else {
-                            Toast.makeText(getApplicationContext(),
-                                    getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
-                        }
+
+                    PackageManager pm = getPackageManager();
+
+                    if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+                        idScan.set(true);
+                        IntentIntegrator integrator = new IntentIntegrator(this);
+                        integrator.setOrientationLocked(false);
+                        integrator.initiateScan();
+                    } else {
+                        Toast.makeText(getApplicationContext(),
+                                getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
                     }
+
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage());
                 }
@@ -714,23 +712,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void nav_get() {
-        if (!DaemonService.isIpfsRunning()) {
-            Toast.makeText(getApplicationContext(),
-                    getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
-        } else {
-            idScan.set(false);
-            // Check that the device will let you use the camera
-            PackageManager pm = getPackageManager();
+        // Check that the device will let you use the camera
+        PackageManager pm = getPackageManager();
 
-            if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-                IntentIntegrator integrator = new IntentIntegrator(this);
-                integrator.setOrientationLocked(false);
-                integrator.initiateScan();
-            } else {
-                Toast.makeText(getApplicationContext(),
-                        getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
-            }
+        if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+            idScan.set(false);
+            IntentIntegrator integrator = new IntentIntegrator(this);
+            integrator.setOrientationLocked(false);
+            integrator.initiateScan();
+        } else {
+            Toast.makeText(getApplicationContext(),
+                    getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
         }
+
     }
 
 }
