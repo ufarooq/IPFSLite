@@ -32,4 +32,5 @@
     <string name="settings_message">Settings for the IPFS initialization.</string>
     <string name="daemon_restart_config_changed">Please restart IPFS due to configuration changes</string>
     <string name="privacy_policy">Privacy Policy</string>
+    <string name="damon_service_shutdown">Daemon service is shutdown</string>
 </resources>

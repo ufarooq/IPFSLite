@@ -206,8 +206,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     startService(intent);
                 }
 
+                findViewById(R.id.server).setVisibility(View.INVISIBLE);
 
-                server.setImageDrawable(getDrawable(R.drawable.stop));
             } else {
                 Intent intent = new Intent(MainActivity.this, DaemonService.class);
                 intent.setAction(DaemonService.ACTION_STOP_DAEMON_SERVICE);
@@ -216,8 +216,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 } else {
                     startService(intent);
                 }
-
-                server.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
+                findViewById(R.id.server).setVisibility(View.INVISIBLE);
             }
 
         });
@@ -457,6 +456,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             } else {
                 server.setImageDrawable(getDrawable(R.drawable.stop));
             }
+            findViewById(R.id.server).setVisibility(View.VISIBLE);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }

@@ -60,7 +60,8 @@ public class DaemonService extends Service {
                     break;
                 case ACTION_STOP_DAEMON_SERVICE:
                     stopDaemonService();
-                    Toast.makeText(getApplicationContext(), "Daemon service is stopped.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(),
+                            R.string.damon_service_shutdown, Toast.LENGTH_LONG).show();
                     break;
             }
         }
@@ -100,45 +101,39 @@ public class DaemonService extends Service {
 
 
     private void startDaemonService() {
-        long start = System.currentTimeMillis();
-
-        try {
+        IPFS ipfs = Application.getIpfs();
+        if (ipfs != null) {
             new Thread(() -> {
-
                 try {
-                    IPFS ipfs = Application.getIpfs();
-                    if (ipfs != null) {
-                        ipfs.start(Application.getProfile(getApplicationContext()),
-                                configHasChanged, 30000L);
-                        PID pid = ipfs.getPeerID();
-                        Application.setPid(getApplicationContext(), pid.getPid());
-                        setIpfsRunning(true);
-                        Event event = Application.getEventsDatabase().createEvent(
-                                Application.SERVER_ONLINE_EVENT);
-                        Application.getEventsDatabase().insertEvent(event);
-                    }
-
+                    ipfs.start(Application.getProfile(getApplicationContext()),
+                            configHasChanged, true);
+                    PID pid = ipfs.getPeerID();
+                    Application.setPid(getApplicationContext(), pid.getPid());
+                    setIpfsRunning(true);
+                    Event event = Application.getEventsDatabase().createEvent(
+                            Application.SERVER_ONLINE_EVENT);
+                    Application.getEventsDatabase().insertEvent(event);
 
                 } catch (Throwable e) {
                     Log.e(TAG, e.getLocalizedMessage(), e);
+                    Event event = Application.getEventsDatabase().createEvent(
+                            Application.SERVER_OFFLINE_EVENT);
+                    Application.getEventsDatabase().insertEvent(event);
+                    stopForeground(true);
+                    stopSelf();
                 }
-
             }).start();
-
-        } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage(), e);
-        } finally {
-            Log.e(TAG, " finish running [" + (System.currentTimeMillis() - start) + "]...");
         }
+
     }
 
     private void stopDaemonService() {
         long start = System.currentTimeMillis();
 
         try {
-            new java.lang.Thread(() -> {
-                IPFS ipfs = Application.getIpfs();
-                if (ipfs != null) {
+            IPFS ipfs = Application.getIpfs();
+            if (ipfs != null) {
+                new Thread(() -> {
                     ipfs.shutdown();
                     setIpfsRunning(false);
                     Application.getEventsDatabase().insertMessage(
@@ -147,10 +142,8 @@ public class DaemonService extends Service {
                     Event event = Application.getEventsDatabase().createEvent(
                             Application.SERVER_OFFLINE_EVENT);
                     Application.getEventsDatabase().insertEvent(event);
-                }
-
-            }).start();
-
+                }).start();
+            }
         } catch (Throwable e) {
             Log.e(TAG, e.getLocalizedMessage(), e);
         } finally {
