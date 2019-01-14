@@ -39,11 +39,6 @@ public class DaemonService extends Service {
 
         Application.createChannel(getApplicationContext());
 
-        Notification notification = buildNotification();
-
-        // Start foreground service.
-        startForeground(NOTIFICATION_ID, notification);
-
     }
 
     @Nullable
@@ -60,6 +55,7 @@ public class DaemonService extends Service {
             checkNotNull(action);
             switch (action) {
                 case ACTION_START_DAEMON_SERVICE:
+                    startForeground(NOTIFICATION_ID, buildNotification());
                     startDaemonService();
                     break;
                 case ACTION_STOP_DAEMON_SERVICE:
