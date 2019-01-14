@@ -598,8 +598,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             case R.id.nav_connect: {
                 try {
-
-
                     PackageManager pm = getPackageManager();
 
                     if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {

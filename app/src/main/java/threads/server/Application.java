@@ -21,8 +21,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class Application extends android.app.Application {
 
 
-    public static final String CHANNEL_ID = "SERVER_CHANGE_ID";
-    public static final String GROUP_ID = "SERVER_GROUP_ID";
+    public static final String CHANNEL_ID = "CHANNEL_ID";
+    public static final String GROUP_ID = "GROUP_ID";
 
     public static final String SERVER_ONLINE_EVENT = "SERVER_ONLINE_EVENT";
     public static final String SERVER_OFFLINE_EVENT = "SERVER_OFFLINE_EVENT";
@@ -97,14 +97,12 @@ public class Application extends android.app.Application {
         checkNotNull(context);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             try {
-                // Create the NotificationChannel
                 CharSequence name = context.getString(R.string.channel_name);
                 String description = context.getString(R.string.channel_description);
                 int importance = NotificationManager.IMPORTANCE_HIGH;
                 NotificationChannel mChannel = new NotificationChannel(Application.CHANNEL_ID, name, importance);
                 mChannel.setDescription(description);
-                // Register the channel with the system; you can't change the importance
-                // or other notification behaviors after this
+
                 NotificationManager notificationManager = (NotificationManager) context.getSystemService(
                         Context.NOTIFICATION_SERVICE);
                 if (notificationManager != null) {

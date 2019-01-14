@@ -74,7 +74,6 @@ public class DaemonService extends Service {
 
     private Notification buildNotification() {
 
-        // Create notification builder.
         NotificationCompat.Builder builder = new NotificationCompat.Builder(
                 getApplicationContext(),
                 Application.CHANNEL_ID);
