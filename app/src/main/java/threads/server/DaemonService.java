@@ -106,7 +106,9 @@ public class DaemonService extends Service {
             new Thread(() -> {
                 try {
                     ipfs.start(Application.getProfile(getApplicationContext()),
-                            configHasChanged, true);
+                            configHasChanged, true,
+                            Application.isPubsubEnabled(getApplicationContext()),
+                            Application.isQUICEnabled(getApplicationContext()));
                     PID pid = ipfs.getPeerID();
                     Application.setPid(getApplicationContext(), pid.getPid());
                     setIpfsRunning(true);
