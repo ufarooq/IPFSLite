@@ -47,6 +47,7 @@ public class Message {
     public String toString() {
         return "Message{" +
                 "message='" + message + '\'' +
+                ", timestamp=" + timestamp +
                 ", messageKind=" + messageKind +
                 ", idx=" + idx +
                 '}';
