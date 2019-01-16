@@ -140,7 +140,7 @@ public class DaemonService extends Service {
                     setIpfsRunning(false);
                     Application.getEventsDatabase().insertMessage(
                             MessageKind.INFO,
-                            getApplicationContext().getString(R.string.server_shutdown));
+                            getApplicationContext().getString(R.string.server_shutdown), System.currentTimeMillis());
                     Event event = Application.getEventsDatabase().createEvent(
                             Application.SERVER_OFFLINE_EVENT);
                     Application.getEventsDatabase().insertEvent(event);

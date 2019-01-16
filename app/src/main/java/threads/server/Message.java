@@ -13,6 +13,17 @@ public class Message {
     @NonNull
     @ColumnInfo(name = "message")
     private final String message;
+
+    @NonNull
+    @ColumnInfo(name = "timestamp")
+    private final long timestamp;
+
+    Message(@NonNull MessageKind messageKind, @NonNull String message, long timestamp) {
+        checkNotNull(message);
+        this.message = message;
+        this.messageKind = messageKind;
+        this.timestamp = timestamp;
+    }
     @NonNull
     @TypeConverters(MessageKind.class)
     @ColumnInfo(name = "messageKind")
@@ -20,14 +31,12 @@ public class Message {
     @PrimaryKey(autoGenerate = true)
     private long idx;
 
-    Message(@NonNull MessageKind messageKind, @NonNull String message) {
-        checkNotNull(message);
-        this.message = message;
-        this.messageKind = messageKind;
+    static Message createMessage(@NonNull MessageKind messageKind, @NonNull String message, long timestamp) {
+        return new Message(messageKind, message, timestamp);
     }
 
-    static Message createMessage(@NonNull MessageKind messageKind, @NonNull String message) {
-        return new Message(messageKind, message);
+    public long getTimestamp() {
+        return timestamp;
     }
 
     public MessageKind getMessageKind() {

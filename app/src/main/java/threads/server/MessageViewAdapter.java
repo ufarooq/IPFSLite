@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class MessageViewAdapter extends RecyclerView.Adapter<MessageViewAdapter.ViewHolder> {
@@ -87,6 +88,8 @@ public class MessageViewAdapter extends RecyclerView.Adapter<MessageViewAdapter.
 
         final MessageDiffCallback diffCallback = new MessageDiffCallback(this.messages, messageThreads);
         final DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(diffCallback);
+
+        messageThreads.sort(Comparator.comparing(Message::getTimestamp));
 
         this.messages.clear();
         this.messages.addAll(messageThreads);

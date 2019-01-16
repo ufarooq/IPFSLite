@@ -13,10 +13,10 @@ public abstract class EventsDatabase extends RoomDatabase {
     public abstract MessageDao messageDao();
 
 
-    public void insertMessage(@NonNull MessageKind messageKind, @NonNull String message) {
+    public void insertMessage(@NonNull MessageKind messageKind, @NonNull String message, long timestamp) {
         checkNotNull(messageKind);
         checkNotNull(message);
-        messageDao().insertMessages(Message.createMessage(messageKind, message));
+        messageDao().insertMessages(Message.createMessage(messageKind, message, timestamp));
     }
 
     public void clear() {

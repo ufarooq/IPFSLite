@@ -120,8 +120,12 @@ public class Application extends android.app.Application {
 
     public static void init() {
         new java.lang.Thread(() -> {
-            Application.getEventsDatabase().insertMessage(MessageKind.INFO, "\nWelcome to IPFS");
-            Application.getEventsDatabase().insertMessage(MessageKind.INFO, "Please feel free to start an IPFS daemon ...\n\n");
+            Application.getEventsDatabase().insertMessage(MessageKind.INFO,
+                    "\nWelcome to IPFS",
+                    System.currentTimeMillis());
+            Application.getEventsDatabase().insertMessage(MessageKind.INFO,
+                    "Please feel free to start an IPFS daemon ...\n\n"
+                    , System.currentTimeMillis());
 
         }).start();
     }
@@ -173,7 +177,8 @@ public class Application extends android.app.Application {
         } catch (Throwable e) {
             new Thread(() -> {
                 getEventsDatabase().insertMessage(MessageKind.ERROR,
-                        "Installation problems : " + e.getLocalizedMessage());
+                        "Installation problems : " + e.getLocalizedMessage(),
+                        System.currentTimeMillis());
             }).start();
         }
         eventsDatabase = Room.inMemoryDatabaseBuilder(this, EventsDatabase.class).build();
@@ -190,22 +195,25 @@ public class Application extends android.app.Application {
 
         @Override
         public void info(@NonNull String message) {
+            long timestamp = System.currentTimeMillis();
             new Thread(() -> {
-                getEventsDatabase().insertMessage(MessageKind.INFO, message);
+                getEventsDatabase().insertMessage(MessageKind.INFO, message, timestamp);
             }).start();
         }
 
         @Override
         public void error(@NonNull String message) {
+            long timestamp = System.currentTimeMillis();
             new Thread(() -> {
-                getEventsDatabase().insertMessage(MessageKind.ERROR, message);
+                getEventsDatabase().insertMessage(MessageKind.ERROR, message, timestamp);
             }).start();
         }
 
         @Override
         public void cmd(@NonNull String message) {
+            long timestamp = System.currentTimeMillis();
             new Thread(() -> {
-                getEventsDatabase().insertMessage(MessageKind.CMD, message);
+                getEventsDatabase().insertMessage(MessageKind.CMD, message, timestamp);
             }).start();
         }
     }

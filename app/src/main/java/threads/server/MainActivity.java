@@ -305,6 +305,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             String text = console_box.getText().toString();
 
+            // Hack to mack sure that last index is line separator
+            if (text.contains("pubsub pub") && !text.endsWith(System.lineSeparator())) {
+                text = text.concat(System.lineSeparator());
+            }
+
             console_box.setText("");
 
             String[] parts = Commandline.translateCommandline(text);
@@ -388,12 +393,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     checkNotNull(file);
                                     ipfs.cmd("get", "--output=" + file.getAbsolutePath(), content);
 
-                                    new java.lang.Thread(() -> {
-                                        Application.getEventsDatabase().insertMessage(
-                                                MessageKind.INFO, getString(
-                                                        R.string.content_downloaded, content));
+                                    Application.getEventsDatabase().insertMessage(
+                                            MessageKind.INFO,
+                                            getString(R.string.content_downloaded, content),
+                                            System.currentTimeMillis());
 
-                                    }).start();
                                 }
                             } catch (Throwable e) {
                                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
