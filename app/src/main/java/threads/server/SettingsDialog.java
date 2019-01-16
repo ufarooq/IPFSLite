@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.common.collect.Lists;
@@ -72,6 +73,35 @@ public class SettingsDialog extends DialogFragment {
         });
         int pos = profiles.indexOf(Application.getProfile(getContext()));
         spinner_profile.setSelection(pos);
+
+
+        Switch quic_support = view.findViewById(R.id.quic_support);
+        quic_support.setChecked(Application.isQUICEnabled(getContext()));
+        quic_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Application.setQUICEnabled(getContext(), isChecked);
+            DaemonService.configHasChanged = true;
+            if (DaemonService.isIpfsRunning()) {
+                Toast.makeText(getContext(),
+                        R.string.daemon_restart_config_changed,
+                        Toast.LENGTH_LONG).show();
+            }
+
+        });
+
+
+        Switch pubsub_support = view.findViewById(R.id.pubsub_support);
+        pubsub_support.setChecked(Application.isPubsubEnabled(getContext()));
+        pubsub_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Application.setPubsubEnabled(getContext(), isChecked);
+            DaemonService.configHasChanged = true;
+            if (DaemonService.isIpfsRunning()) {
+                Toast.makeText(getContext(),
+                        R.string.daemon_restart_config_changed,
+                        Toast.LENGTH_LONG).show();
+            }
+
+        });
+
         builder.setView(view);
 
         return new android.support.v7.app.AlertDialog.Builder(getActivity())

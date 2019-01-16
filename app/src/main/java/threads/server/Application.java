@@ -27,6 +27,8 @@ public class Application extends android.app.Application {
     public static final String SERVER_ONLINE_EVENT = "SERVER_ONLINE_EVENT";
     public static final String SERVER_OFFLINE_EVENT = "SERVER_OFFLINE_EVENT";
     private static final String PID_KEY = "pidKey";
+    private static final String QUIC_KEY = "quicKey";
+    private static final String PUBSUB_KEY = "pubsubKey";
     private static final String PROFILE_KEY = "profileKey";
     private static final String PREF_KEY = "prefKey";
     private static final String TAG = Application.class.getSimpleName();
@@ -122,6 +124,35 @@ public class Application extends android.app.Application {
             Application.getEventsDatabase().insertMessage(MessageKind.INFO, "Please feel free to start an IPFS daemon ...\n\n");
 
         }).start();
+    }
+
+    public static boolean isQUICEnabled(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+        return sharedPref.getBoolean(QUIC_KEY, false);
+
+    }
+
+    public static void setQUICEnabled(@NonNull Context context, boolean enable) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean(QUIC_KEY, enable);
+        editor.apply();
+    }
+
+    public static boolean isPubsubEnabled(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+        return sharedPref.getBoolean(PUBSUB_KEY, false);
+    }
+
+    public static void setPubsubEnabled(@NonNull Context context, boolean enable) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean(PUBSUB_KEY, enable);
+        editor.apply();
     }
 
 
