@@ -31,7 +31,7 @@
             android:autofillHints="@string/ipfs_command"
             android:background="@drawable/round_corners"
             android:hint="@string/ipfs_command"
-            android:inputType="text"
+            android:inputType="textVisiblePassword|textMultiLine"
             android:maxLines="6"
             android:padding="6dp"
             android:scrollbars="vertical"

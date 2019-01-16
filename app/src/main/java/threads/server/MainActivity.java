@@ -49,6 +49,8 @@ import android.widget.Toast;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
+import org.apache.tools.ant.types.Commandline;
+
 import java.io.File;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -305,8 +307,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             console_box.setText("");
 
-            String[] parts = text.split("\\s+");
+            String[] parts = Commandline.translateCommandline(text);
             if (parts.length > 0) {
+
 
                 if (parts[0].equalsIgnoreCase("ipfs")) {
                     String[] commands = Arrays.copyOfRange(parts, 1, parts.length);
