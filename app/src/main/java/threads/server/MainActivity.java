@@ -67,8 +67,8 @@ import threads.ipfs.api.PID;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
-    private static final int SELECT_MEDIA_FILE = 1;
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, ActionListener {
+    public static final int SELECT_MEDIA_FILE = 1;
     private static final int WRITE_EXTERNAL_STORAGE = 2;
     private static final String TAG = MainActivity.class.getSimpleName();
     private final AtomicBoolean networkAvailable = new AtomicBoolean(true);
@@ -264,8 +264,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         ImageView console_send = findViewById(R.id.console_send);
-        console_send.setEnabled(false);
-
 
         console_box = findViewById(R.id.console_box);
         console_box.addTextChangedListener(new TextWatcher() {
@@ -283,11 +281,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             public void afterTextChanged(Editable s) {
 
                 if (s.length() > 0) {
-                    console_send.setEnabled(true);
+                    console_send.setImageResource(R.drawable.send);
                 } else {
-                    console_send.setEnabled(false);
+                    console_send.setImageResource(R.drawable.dots_vertical_circle);
                 }
-
 
             }
         });
@@ -305,49 +302,55 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             String text = console_box.getText().toString();
 
-            // Hack to mack sure that last index is line separator
-            if (text.contains("pubsub pub") && !text.endsWith(System.lineSeparator())) {
-                text = text.concat(System.lineSeparator());
-            }
-
-            console_box.setText("");
-
-            String[] parts = Commandline.translateCommandline(text);
-            if (parts.length > 0) {
-
-
-                if (parts[0].equalsIgnoreCase("ipfs")) {
-                    String[] commands = Arrays.copyOfRange(parts, 1, parts.length);
-                    ExecutorService executor = Executors.newSingleThreadExecutor();
-                    executor.submit(() -> {
-                        try {
-                            IPFS ipfs = Application.getIpfs();
-
-                            if (ipfs != null) {
-                                ipfs.cmd(commands);
-                            }
-
-                        } catch (Throwable e) {
-                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                        }
-                    });
-                } else {
-                    ExecutorService executor = Executors.newSingleThreadExecutor();
-                    executor.submit(() -> {
-                        try {
-                            IPFS ipfs = Application.getIpfs();
-
-                            if (ipfs != null) {
-                                ipfs.cmd(parts);
-                            }
-
-                        } catch (Throwable e) {
-                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                        }
-                    });
+            if (!text.isEmpty()) {
+                // Hack to mack sure that last index is line separator
+                if (text.contains("pubsub pub") && !text.endsWith(System.lineSeparator())) {
+                    text = text.concat(System.lineSeparator());
                 }
-            }
 
+                console_box.setText("");
+
+                String[] parts = Commandline.translateCommandline(text);
+                if (parts.length > 0) {
+
+
+                    if (parts[0].equalsIgnoreCase("ipfs")) {
+                        String[] commands = Arrays.copyOfRange(parts, 1, parts.length);
+                        ExecutorService executor = Executors.newSingleThreadExecutor();
+                        executor.submit(() -> {
+                            try {
+                                IPFS ipfs = Application.getIpfs();
+
+                                if (ipfs != null) {
+                                    ipfs.cmd(commands);
+                                }
+
+                            } catch (Throwable e) {
+                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                            }
+                        });
+                    } else {
+                        ExecutorService executor = Executors.newSingleThreadExecutor();
+                        executor.submit(() -> {
+                            try {
+                                IPFS ipfs = Application.getIpfs();
+
+                                if (ipfs != null) {
+                                    ipfs.cmd(parts);
+                                }
+
+                            } catch (Throwable e) {
+                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                            }
+                        });
+                    }
+                }
+            } else {
+                android.app.FragmentManager fm = getFragmentManager();
+
+                ActionDialogFragment messageActionDialogFragment = new ActionDialogFragment();
+                messageActionDialogFragment.show(fm, "ActionDialogFragment");
+            }
 
         });
 
@@ -569,59 +572,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
 
         switch (menuItem.getItemId()) {
-            case R.id.nav_add: {
-                try {
-                    Intent intent = new Intent();
-                    intent.setType("*/*");
-
-                    String[] mimetypes = {"*/*"};
-                    intent.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes);
-                    intent.setAction(Intent.ACTION_GET_CONTENT);
-                    startActivityForResult(Intent.createChooser(intent, "Select Media File"), SELECT_MEDIA_FILE);
-
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage());
-                }
-                break;
-            }
-            case R.id.nav_get: {
-                try {
-                    if (ContextCompat.checkSelfPermission(getApplicationContext(),
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                            != PackageManager.PERMISSION_GRANTED) {
-                        // Permission is not granted
-                        // Request for permission
-                        ActivityCompat.requestPermissions(this,
-                                new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                                WRITE_EXTERNAL_STORAGE);
-
-                    } else {
-                        nav_get();
-                    }
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage());
-                }
-                break;
-            }
-            case R.id.nav_connect: {
-                try {
-                    PackageManager pm = getPackageManager();
-
-                    if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-                        idScan.set(true);
-                        IntentIntegrator integrator = new IntentIntegrator(this);
-                        integrator.setOrientationLocked(false);
-                        integrator.initiateScan();
-                    } else {
-                        Toast.makeText(getApplicationContext(),
-                                getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
-                    }
-
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage());
-                }
-                break;
-            }
             case R.id.nav_privacy_policy: {
                 try {
                     AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
@@ -653,6 +603,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                     alertDialog.show();
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage());
+                }
+                break;
+            }
+            case R.id.nav_issues: {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse("https://gitlab.com/remmer.wilts/threads-server/issues"));
+                    startActivity(intent);
+
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage());
                 }
@@ -697,6 +658,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     intent.setData(Uri.parse("http://127.0.0.1:5001/webui"));
                     startActivity(intent);
                 }
+                break;
+            }
+            case R.id.nav_share: {
+                try {
+                    Intent i = new Intent(Intent.ACTION_SEND);
+                    i.setType("text/plain");
+                    i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name));
+                    String sAux = "\n" + getString(R.string.playstore_email) + "\n\n";
+                    sAux = sAux + getString(R.string.playstore_url) + "\n\n";
+                    i.putExtra(Intent.EXTRA_TEXT, sAux);
+                    startActivity(Intent.createChooser(i, getString(R.string.choose_one)));
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+                break;
             }
             case R.id.nav_cli: {
                 // mis-clicking prevention, using threshold of 1000 ms
@@ -708,7 +684,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Intent intent = new Intent(Intent.ACTION_VIEW);
                 intent.setData(Uri.parse("https://docs.ipfs.io/reference/api/cli"));
                 startActivity(intent);
-
+                break;
             }
         }
 
@@ -732,4 +708,59 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    @Override
+    public void clickConnectPeer() {
+        try {
+            PackageManager pm = getPackageManager();
+
+            if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+                idScan.set(true);
+                IntentIntegrator integrator = new IntentIntegrator(this);
+                integrator.setOrientationLocked(false);
+                integrator.initiateScan();
+            } else {
+                Toast.makeText(getApplicationContext(),
+                        getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
+            }
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage());
+        }
+    }
+
+    @Override
+    public void clickUploadFile() {
+        try {
+            Intent intent = new Intent();
+            intent.setType("*/*");
+
+            String[] mimetypes = {"*/*"};
+            intent.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes);
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(Intent.createChooser(intent, "Select Media File"), SELECT_MEDIA_FILE);
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage());
+        }
+    }
+
+    @Override
+    public void clickDownloadFile() {
+        try {
+            if (ContextCompat.checkSelfPermission(getApplicationContext(),
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                // Permission is not granted
+                // Request for permission
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        WRITE_EXTERNAL_STORAGE);
+
+            } else {
+                nav_get();
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage());
+        }
+
+    }
 }

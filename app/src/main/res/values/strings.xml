@@ -36,4 +36,9 @@
     <string name="quic_support">QUIC Support</string>
     <string name="pubsub_support">Pubsub Support</string>
     <string name="commands">Commands</string>
+    <string name="share_app">Share</string>
+    <string name="choose_one">Choose an application</string>
+    <string name="playstore_url">https://play.google.com/store/apps/details?id=threads.server</string>
+    <string name="playstore_email">Let me recomment you this application.</string>
+    <string name="issues">Issue Reports</string>
 </resources>
