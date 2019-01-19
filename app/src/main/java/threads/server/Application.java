@@ -175,11 +175,11 @@ public class Application extends android.app.Application {
         try {
             ipfs = new IPFS.Builder().context(getApplicationContext()).listener(cmdListener).build();
         } catch (Throwable e) {
-            new Thread(() -> {
+            new Thread(() ->
                 getEventsDatabase().insertMessage(MessageKind.ERROR,
                         "Installation problems : " + e.getLocalizedMessage(),
-                        System.currentTimeMillis());
-            }).start();
+                        System.currentTimeMillis())
+            ).start();
         }
         eventsDatabase = Room.inMemoryDatabaseBuilder(this, EventsDatabase.class).build();
 
@@ -196,25 +196,25 @@ public class Application extends android.app.Application {
         @Override
         public void info(@NonNull String message) {
             long timestamp = System.currentTimeMillis();
-            new Thread(() -> {
-                getEventsDatabase().insertMessage(MessageKind.INFO, message, timestamp);
-            }).start();
+            new Thread(() ->
+                    getEventsDatabase().insertMessage(MessageKind.INFO, message, timestamp)
+            ).start();
         }
 
         @Override
         public void error(@NonNull String message) {
             long timestamp = System.currentTimeMillis();
-            new Thread(() -> {
-                getEventsDatabase().insertMessage(MessageKind.ERROR, message, timestamp);
-            }).start();
+            new Thread(() ->
+                    getEventsDatabase().insertMessage(MessageKind.ERROR, message, timestamp)
+            ).start();
         }
 
         @Override
         public void cmd(@NonNull String message) {
             long timestamp = System.currentTimeMillis();
-            new Thread(() -> {
-                getEventsDatabase().insertMessage(MessageKind.CMD, message, timestamp);
-            }).start();
+            new Thread(() ->
+                    getEventsDatabase().insertMessage(MessageKind.CMD, message, timestamp)
+            ).start();
         }
     }
 }

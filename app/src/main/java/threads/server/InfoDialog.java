@@ -114,7 +114,7 @@ public class InfoDialog extends DialogFragment implements DialogInterface.OnClic
         checkNotNull(message);
         try {
             Bitmap bitmap = bitmaps.get(code);
-
+            checkNotNull(bitmap);
             File file = getStorageFile(context, code + ".png");
 
             FileOutputStream fileOutputStream = new FileOutputStream(file);

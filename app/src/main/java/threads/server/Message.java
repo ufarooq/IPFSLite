@@ -14,7 +14,6 @@ public class Message {
     @ColumnInfo(name = "message")
     private final String message;
 
-    @NonNull
     @ColumnInfo(name = "timestamp")
     private final long timestamp;
 
