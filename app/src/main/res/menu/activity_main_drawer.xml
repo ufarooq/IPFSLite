@@ -7,17 +7,14 @@
         <item
             android:id="@+id/nav_settings"
             android:icon="@android:drawable/ic_menu_preferences"
-            android:iconTint="@color/colorPrimary"
             android:title="@string/settings" />
         <item
             android:id="@+id/nav_webui"
             android:icon="@drawable/compass"
-            android:iconTint="@color/colorPrimary"
             android:title="@string/webui" />
         <item
             android:id="@+id/nav_cli"
             android:icon="@android:drawable/ic_menu_help"
-            android:iconTint="@color/colorPrimary"
             android:title="@string/commands" />
     </group>
     <item android:title="@string/application">
@@ -25,24 +22,20 @@
             <item
                 android:id="@+id/nav_share"
                 android:icon="@android:drawable/ic_menu_share"
-                android:iconTint="@color/midGrey"
                 android:title="@string/share_app" />
 
             <item
                 android:id="@+id/nav_licences"
                 android:icon="@drawable/information_variant"
-                android:iconTint="@color/colorPrimary"
                 android:title="@string/licences" />
             <item
                 android:id="@+id/nav_privacy_policy"
                 android:icon="@drawable/security"
-                android:iconTint="@color/colorPrimary"
                 android:title="@string/privacy_policy" />
 
             <item
                 android:id="@+id/nav_issues"
                 android:icon="@drawable/bug_outline"
-                android:iconTint="@color/colorPrimary"
                 android:title="@string/issues" />
 
         </menu>

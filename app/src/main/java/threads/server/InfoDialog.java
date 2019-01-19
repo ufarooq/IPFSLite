@@ -144,6 +144,7 @@ public class InfoDialog extends DialogFragment implements DialogInterface.OnClic
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
         LayoutInflater inflater = LayoutInflater.from(getActivity());
+        @SuppressWarnings("all")
         View view = inflater.inflate(R.layout.dialog_server_info, null, false);
         ImageView imageView = view.findViewById(R.id.dialog_server_info);
         Bundle bundle = getArguments();

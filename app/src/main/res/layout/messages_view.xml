@@ -29,7 +29,6 @@
             android:layout_gravity="center"
             android:layout_margin="6dp"
             android:layout_weight="1"
-            android:autofillHints="@string/ipfs_command"
             android:background="@drawable/round_corners"
             android:hint="@string/ipfs_command"
             android:inputType="textVisiblePassword|textMultiLine"
