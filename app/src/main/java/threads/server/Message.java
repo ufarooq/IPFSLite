@@ -38,11 +38,13 @@ public class Message {
         return timestamp;
     }
 
+    @NonNull
     public MessageKind getMessageKind() {
         return messageKind;
     }
 
     @Override
+    @NonNull
     public String toString() {
         return "Message{" +
                 "message='" + message + '\'' +
