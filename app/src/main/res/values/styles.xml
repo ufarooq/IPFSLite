@@ -30,8 +30,4 @@
         <item name="android:windowExitAnimation">@anim/slide_out_bottom</item>
     </style>
 
-
-    <style name="TravelTangleTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
-
-    <style name="TravelTangleTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 </resources>
