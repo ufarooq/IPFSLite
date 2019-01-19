@@ -35,4 +35,5 @@
     <string name="damon_service_shutdown">Daemon service is shutdown</string>
     <string name="quic_support">QUIC Support</string>
     <string name="pubsub_support">Pubsub Support</string>
+    <string name="commands">Commands</string>
 </resources>

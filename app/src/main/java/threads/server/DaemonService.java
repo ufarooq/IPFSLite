@@ -76,7 +76,7 @@ public class DaemonService extends Service {
                 Application.CHANNEL_ID);
 
         builder.setContentTitle(getString(R.string.daemon_title));
-        builder.setSmallIcon(R.drawable.graphql);
+        builder.setSmallIcon(R.drawable.server_network);
         builder.setGroup(Application.GROUP_ID);
         builder.setGroupSummary(true);
         builder.setPriority(NotificationManager.IMPORTANCE_MAX);
