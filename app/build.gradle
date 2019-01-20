@@ -8,10 +8,10 @@ ext {
     bintrayName = 'threads-server'
 
     publishedGroupId = 'threads.server'
-    libraryName = 'IPFS Server'
+    libraryName = 'IPFS'
     artifact = 'app'
 
-    libraryDescription = 'Android IPFS node.'
+    libraryDescription = 'Android IPFS Node.'
 
     siteUrl = 'https://gitlab.com/remmer.wilts/threads-server'
     gitUrl = 'git@gitlab.com:remmer.wilts/threads-server.git'
@@ -85,7 +85,7 @@ dependencies {
     // ANDROID Architecture (LICENSE done)
     implementation 'android.arch.persistence.room:runtime:1.1.1'
     // API (LICENSE done)
-    implementation 'threads.ipfs:threads:0.5.1'
+    implementation 'threads.ipfs:threads:0.5.2'
     // QR Scanner (LICENSE done)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'
     // UI (for showing licences file) (LICENSE done)
