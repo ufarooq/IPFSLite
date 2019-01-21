@@ -60,6 +60,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import de.psdev.licensesdialog.LicensesDialog;
+import io.ipfs.multiaddr.MultiAddress;
 import io.ipfs.multihash.Multihash;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
@@ -391,6 +392,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 if (idScan.get()) {
                                     PID pid = PID.create(content);
                                     ipfs.id(pid);
+                                    ipfs.swarm_connect(new MultiAddress("/ipfs/" + pid.getPid()));
                                 } else {
                                     File file = getStorageFile(content);
                                     checkNotNull(file);
@@ -576,12 +578,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 try {
                     AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 
-                    //alertDialogBuilder.setTitle(R.string.privacy_policy);
+                    /*
+                    IPFS ipfs = Application.getIpfs();
+                    InputStream inputStream = getResources().openRawResource(R.raw.private_policy);
+                    Multihash multihash = ipfs.add(inputStream);
+                    String url = Application.getGateway(this) + multihash.toBase58();
+                    */
 
-                    String file = "file:///android_res/raw/private_policy.html";
+                    String url = "file:///android_res/raw/private_policy.html";
 
                     WebView wv = new WebView(this);
-                    wv.loadUrl(file);
+                    wv.loadUrl(url);
                     wv.setWebViewClient(new WebViewClient() {
                         @Override
                         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
@@ -603,6 +610,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                     alertDialog.show();
+
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage());
                 }

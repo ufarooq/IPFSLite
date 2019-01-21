@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import io.ipfs.multiaddr.MultiAddress;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CmdListener;
 import threads.ipfs.api.Profile;
@@ -31,6 +32,7 @@ public class Application extends android.app.Application {
     private static final String PUBSUB_KEY = "pubsubKey";
     private static final String PROFILE_KEY = "profileKey";
     private static final String PREF_KEY = "prefKey";
+    private static final String GATE_KEY = "gateKey";
     private static final String TAG = Application.class.getSimpleName();
 
     private static EventsDatabase eventsDatabase;
@@ -46,6 +48,23 @@ public class Application extends android.app.Application {
         return eventsDatabase;
     }
 
+    private static void setGateway(@NonNull Context context, @NonNull MultiAddress multiAddress) {
+        checkNotNull(context);
+        checkNotNull(multiAddress);
+
+        int port = multiAddress.getTCPPort();
+        String gateway = "http://localhost:" + String.valueOf(port) + "/ipfs/";
+        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(GATE_KEY, gateway);
+        editor.apply();
+    }
+
+    public static String getGateway(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+        return sharedPref.getString(GATE_KEY, "http://localhost:8080/ipfs/");
+    }
 
     public static boolean isConnected(@NonNull Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager)
