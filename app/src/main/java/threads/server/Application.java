@@ -189,6 +189,8 @@ public class Application extends android.app.Application {
     public void onCreate() {
         super.onCreate();
 
+        eventsDatabase = Room.inMemoryDatabaseBuilder(this, EventsDatabase.class).build();
+
         CmdListener cmdListener = new ConsoleListener();
 
         try {
@@ -200,7 +202,6 @@ public class Application extends android.app.Application {
                         System.currentTimeMillis())
             ).start();
         }
-        eventsDatabase = Room.inMemoryDatabaseBuilder(this, EventsDatabase.class).build();
 
         init();
 

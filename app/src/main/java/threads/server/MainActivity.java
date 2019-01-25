@@ -59,7 +59,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import de.psdev.licensesdialog.LicensesDialog;
+import de.psdev.licensesdialog.LicensesDialogFragment;
 import io.ipfs.multiaddr.MultiAddress;
 import io.ipfs.multihash.Multihash;
 import threads.ipfs.IPFS;
@@ -629,13 +629,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             case R.id.nav_licences: {
                 try {
-                    new LicensesDialog.Builder(this)
+
+                    final LicensesDialogFragment fragment = new LicensesDialogFragment.Builder(this)
                             .setNotices(R.raw.licenses)
-                            .setTitle(R.string.licences)
+                            .setShowFullLicenseText(false)
                             .setIncludeOwnLicense(true)
-                            .setCloseText(android.R.string.ok)
-                            .build()
-                            .showAppCompat();
+                            .build();
+
+                    fragment.show(getSupportFragmentManager(), null);
 
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage());

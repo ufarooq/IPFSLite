@@ -40,13 +40,10 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
-        debug {
-            buildConfigField 'String', "DONATION_ADDRESS", DONATION_ADDRESS
-        }
+
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            buildConfigField 'String', "DONATION_ADDRESS", DONATION_ADDRESS
         }
     }
     configurations.all {
@@ -85,11 +82,11 @@ dependencies {
     // ANDROID Architecture (LICENSE done)
     implementation 'android.arch.persistence.room:runtime:1.1.1'
     // API (LICENSE done)
-    implementation 'threads.ipfs:threads:0.5.2'
+    implementation 'threads.ipfs:threads:0.5.3'
     // QR Scanner (LICENSE done)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'
     // UI (for showing licences file) (LICENSE done)
-    implementation 'de.psdev.licensesdialog:licensesdialog:1.8.3'
+    implementation 'de.psdev.licensesdialog:licensesdialog:1.9.0'
     // API (LICENSE done)
     implementation 'com.google.api-client:google-api-client:1.23.0'
     // ANDROID Architecture (LICENSE done)
