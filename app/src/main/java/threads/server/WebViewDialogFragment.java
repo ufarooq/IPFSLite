@@ -19,10 +19,10 @@ public class WebViewDialogFragment extends DialogFragment {
     private static final String ARG_URL = "ARG_URL";
 
 
-    public static WebViewDialogFragment newInstance(@NonNull String msg) {
-        checkNotNull(msg);
+    public static WebViewDialogFragment newInstance(@NonNull String url) {
+        checkNotNull(url);
         Bundle bundle = new Bundle();
-        bundle.putString(ARG_URL, msg);
+        bundle.putString(ARG_URL, url);
 
         WebViewDialogFragment fragment = new WebViewDialogFragment();
         fragment.setArguments(bundle);
