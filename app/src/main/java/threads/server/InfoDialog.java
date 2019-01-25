@@ -10,8 +10,6 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.support.annotation.NonNull;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +18,9 @@ import android.widget.ImageView;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Hashtable;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

@@ -1,11 +1,11 @@
 package threads.server;
 
-import android.arch.persistence.room.RoomDatabase;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
+import androidx.room.RoomDatabase;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-@android.arch.persistence.room.Database(entities = {Event.class, Message.class}, version = 4, exportSchema = false)
+@androidx.room.Database(entities = {Event.class, Message.class}, version = 4, exportSchema = false)
 public abstract class EventsDatabase extends RoomDatabase {
 
     public abstract EventDao eventDao();

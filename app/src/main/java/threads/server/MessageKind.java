@@ -1,7 +1,7 @@
 package threads.server;
 
-import android.arch.persistence.room.TypeConverter;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
+import androidx.room.TypeConverter;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

@@ -1,8 +1,8 @@
 package threads.server;
 
-import android.support.v7.util.DiffUtil;
-
 import java.util.List;
+
+import androidx.recyclerview.widget.DiffUtil;
 
 public class MessageDiffCallback extends DiffUtil.Callback {
     private final List<Message> mOldList;

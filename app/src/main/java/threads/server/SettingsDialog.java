@@ -104,7 +104,7 @@ public class SettingsDialog extends DialogFragment {
 
         builder.setView(view);
 
-        return new android.support.v7.app.AlertDialog.Builder(getActivity())
+        return new androidx.appcompat.app.AlertDialog.Builder(getActivity())
                 .setTitle(R.string.settings)
                 .setMessage(R.string.settings_message)
                 .setView(view)

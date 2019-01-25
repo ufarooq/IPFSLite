@@ -37,7 +37,7 @@ android {
         targetSdkVersion 28
         versionCode 28
         versionName "0.2.8"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
 
@@ -47,6 +47,7 @@ android {
         }
     }
     configurations.all {
+        exclude group: 'com.google.guava', module: 'listenablefuture'
         resolutionStrategy.force 'com.google.code.findbugs:jsr305:1.3.9'
     }
     compileOptions {
@@ -63,14 +64,15 @@ android {
 }
 
 dependencies {
+
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
     // ANDROID SUPPORT (LICENSE done)
-    implementation 'com.android.support:support-compat:28.0.0'
-    implementation 'com.android.support:appcompat-v7:28.0.0'
-    implementation 'com.android.support:support-v4:28.0.0'
-    implementation 'com.android.support:design:28.0.0'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation 'androidx.core:core:1.1.0-alpha03'
+    implementation 'androidx.appcompat:appcompat:1.1.0-alpha01'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'com.google.android.material:material:1.1.0-alpha02'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
 
     // API (LICENSE done)
     implementation 'org.apache.ant:ant:1.8.2'
@@ -78,25 +80,25 @@ dependencies {
     // API (LICENSE done)
     implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
     // API (LICENSE done)
-    implementation 'android.arch.lifecycle:extensions:1.1.1'
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0-alpha01'
     // ANDROID Architecture (LICENSE done)
-    implementation 'android.arch.persistence.room:runtime:1.1.1'
+    implementation 'androidx.room:room-runtime:2.1.0-alpha03'
     // API (LICENSE done)
     implementation 'threads.ipfs:threads:0.5.3'
     // QR Scanner (LICENSE done)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'
     // UI (for showing licences file) (LICENSE done)
-    implementation 'de.psdev.licensesdialog:licensesdialog:1.9.0'
+    implementation 'de.psdev.licensesdialog:licensesdialog:2.0.0'
     // API (LICENSE done)
     implementation 'com.google.api-client:google-api-client:1.23.0'
     // ANDROID Architecture (LICENSE done)
-    implementation 'android.arch.persistence.room:runtime:1.1.1'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    implementation 'androidx.room:room-runtime:2.1.0-alpha03'
+    androidTestImplementation 'androidx.test:runner:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
     testImplementation 'junit:junit:4.12'
-    testImplementation 'android.arch.persistence.room:testing:1.1.1'
-    annotationProcessor "android.arch.persistence.room:compiler:1.1.1"
-    annotationProcessor "android.arch.lifecycle:compiler:1.1.1"
+    testImplementation 'androidx.room:room-testing:2.1.0-alpha03'
+    annotationProcessor 'androidx.room:room-compiler:2.1.0-alpha03'
+    annotationProcessor 'androidx.lifecycle:lifecycle-compiler:2.1.0-alpha01'
 }
 
 // Place it at the end of the file

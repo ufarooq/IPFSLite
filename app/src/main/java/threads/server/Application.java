@@ -2,16 +2,16 @@ package threads.server;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.arch.persistence.room.Room;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.room.Room;
 import io.ipfs.multiaddr.MultiAddress;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CmdListener;

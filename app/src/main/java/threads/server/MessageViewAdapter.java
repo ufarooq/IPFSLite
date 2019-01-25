@@ -1,9 +1,6 @@
 package threads.server;
 
 import android.graphics.Color;
-import android.support.annotation.NonNull;
-import android.support.v7.util.DiffUtil;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +10,10 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.RecyclerView;
 
 public class MessageViewAdapter extends RecyclerView.Adapter<MessageViewAdapter.ViewHolder> {
     private static final String TAG = MessageViewAdapter.class.getSimpleName();
