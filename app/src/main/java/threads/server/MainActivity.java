@@ -24,9 +24,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -49,7 +46,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
@@ -440,7 +436,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     checkNotNull(multihash);
                     ipfs.files_cp(multihash, "/" + filename);
 
-                    InfoDialog.show(this, multihash.toBase58(),
+                    InfoDialogFragment.show(this, multihash.toBase58(),
                             getString(R.string.multihash),
                             getString(R.string.multihash_add, multihash.toBase58()));
 
@@ -541,7 +537,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Toast.makeText(getApplicationContext(),
                             getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
                 } else {
-                    InfoDialog.show(this, pid,
+                    InfoDialogFragment.show(this, pid,
                             getString(R.string.peer_id),
                             getString(R.string.daemon_server_access, pid));
                 }
@@ -576,40 +572,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         switch (menuItem.getItemId()) {
             case R.id.nav_privacy_policy: {
                 try {
-                    AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-
                     /*
                     IPFS ipfs = Application.getIpfs();
                     InputStream inputStream = getResources().openRawResource(R.raw.private_policy);
                     Multihash multihash = ipfs.add(inputStream);
                     String url = Application.getGateway(this) + multihash.toBase58();
                     */
-
-                    String url = "file:///android_res/raw/private_policy.html";
-
-                    WebView wv = new WebView(this);
-                    wv.loadUrl(url);
-                    wv.setWebViewClient(new WebViewClient() {
-                        @Override
-                        public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                            final Uri uri = request.getUrl();
-                            view.loadUrl(uri.getPath());
-                            return true;
-                        }
-
-                    });
-
-                    alertDialogBuilder.setView(wv);
-
-                    alertDialogBuilder
-                            .setCancelable(false)
-                            .setPositiveButton(android.R.string.ok, (dialog, id) -> dialog.cancel());
-
-
-                    AlertDialog alertDialog = alertDialogBuilder.create();
-
-
-                    alertDialog.show();
+                    WebViewDialogFragment.newInstance(
+                            "file:///android_res/raw/private_policy.html")
+                            .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
 
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage());

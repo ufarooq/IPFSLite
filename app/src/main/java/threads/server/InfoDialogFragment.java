@@ -24,9 +24,9 @@ import androidx.appcompat.app.AlertDialog;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class InfoDialog extends DialogFragment implements DialogInterface.OnClickListener {
+public class InfoDialogFragment extends DialogFragment implements DialogInterface.OnClickListener {
     private static final int QR_CODE_SIZE = 600;
-    private static final String TAG = InfoDialog.class.getSimpleName();
+    private static final String TAG = InfoDialogFragment.class.getSimpleName();
     @SuppressWarnings("SpellCheckingInspection")
     private static final String QRCODE = "QRCODE";
     private static final String MESSAGE = "MESSAGE";
@@ -37,7 +37,7 @@ public class InfoDialog extends DialogFragment implements DialogInterface.OnClic
     private String message;
 
 
-    public InfoDialog() {
+    public InfoDialogFragment() {
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
         StrictMode.setVmPolicy(builder.build());
     }
@@ -52,13 +52,13 @@ public class InfoDialog extends DialogFragment implements DialogInterface.OnClic
         checkNotNull(title);
         checkNotNull(message);
         try {
-            String qrCode = InfoDialog.getBitmap(code);
+            String qrCode = InfoDialogFragment.getBitmap(code);
 
             Bundle bundle = new Bundle();
             bundle.putString(QRCODE, qrCode);
             bundle.putString(MESSAGE, message);
             bundle.putString(TITLE, title);
-            InfoDialog fragment = new InfoDialog();
+            InfoDialogFragment fragment = new InfoDialogFragment();
             fragment.setArguments(bundle);
             fragment.show(activity.getFragmentManager(), null);
         } catch (Throwable e) {
@@ -78,7 +78,7 @@ public class InfoDialog extends DialogFragment implements DialogInterface.OnClic
             }
 
             Bitmap bitmap = net.glxn.qrgen.android.QRCode.from(qrCode).
-                    withSize(InfoDialog.QR_CODE_SIZE, InfoDialog.QR_CODE_SIZE).bitmap();
+                    withSize(InfoDialogFragment.QR_CODE_SIZE, InfoDialogFragment.QR_CODE_SIZE).bitmap();
 
 
             bitmaps.put(qrCode, bitmap);

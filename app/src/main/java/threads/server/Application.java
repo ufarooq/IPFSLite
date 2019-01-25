@@ -197,9 +197,9 @@ public class Application extends android.app.Application {
             ipfs = new IPFS.Builder().context(getApplicationContext()).listener(cmdListener).build();
         } catch (Throwable e) {
             new Thread(() ->
-                getEventsDatabase().insertMessage(MessageKind.ERROR,
-                        "Installation problems : " + e.getLocalizedMessage(),
-                        System.currentTimeMillis())
+                    getEventsDatabase().insertMessage(MessageKind.ERROR,
+                            "Installation problems : " + e.getLocalizedMessage(),
+                            System.currentTimeMillis())
             ).start();
         }
 
