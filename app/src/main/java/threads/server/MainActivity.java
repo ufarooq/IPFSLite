@@ -56,7 +56,6 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import de.psdev.licensesdialog.LicensesDialogFragment;
-import io.ipfs.multiaddr.MultiAddress;
 import io.ipfs.multihash.Multihash;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
@@ -388,7 +387,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 if (idScan.get()) {
                                     PID pid = PID.create(content);
                                     ipfs.id(pid);
-                                    ipfs.swarm_connect(new MultiAddress("/ipfs/" + pid.getPid()));
+                                    ipfs.swarm_connect(pid);
                                 } else {
                                     File file = getStorageFile(content);
                                     checkNotNull(file);
