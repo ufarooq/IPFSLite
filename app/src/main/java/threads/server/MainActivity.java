@@ -572,14 +572,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         switch (menuItem.getItemId()) {
             case R.id.nav_privacy_policy: {
                 try {
-                    /*
+                    String url = "file:///android_res/raw/private_policy.html";
                     IPFS ipfs = Application.getIpfs();
-                    InputStream inputStream = getResources().openRawResource(R.raw.private_policy);
-                    Multihash multihash = ipfs.add(inputStream);
-                    String url = Application.getGateway(this) + multihash.toBase58();
-                    */
-                    WebViewDialogFragment.newInstance(
-                            "file:///android_res/raw/private_policy.html")
+                    if (ipfs != null && DaemonService.isIpfsRunning()) {
+                        InputStream inputStream = getResources().openRawResource(R.raw.private_policy);
+                        Multihash multihash = ipfs.add(inputStream);
+                        url = Application.getGateway(this) + multihash.toBase58();
+                    }
+                    WebViewDialogFragment.newInstance(url)
                             .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
 
                 } catch (Throwable e) {
