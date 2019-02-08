@@ -81,7 +81,7 @@ public class DownloadJobService extends JobService {
                             DownloadManager.Request.NETWORK_MOBILE);
                     request.setAllowedOverRoaming(false);
                     request.setTitle(path);
-                    request.setDescription(getString(R.string.content_downloaded, cid));
+                    request.setDescription(getString(R.string.content_downloaded, path));
                     request.setVisibleInDownloadsUi(true);
                     request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
                     request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, path);

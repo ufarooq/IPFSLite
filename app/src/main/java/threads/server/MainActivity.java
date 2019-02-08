@@ -429,7 +429,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     CID cid = ipfs.add(inputStream, filename, true);
                     checkNotNull(cid);
-                    ipfs.files_cp(cid, "/" + filename);
 
                     InfoDialogFragment.show(this, cid.getCid(),
                             getString(R.string.multihash),

@@ -43,7 +43,6 @@
             android:layout_height="54dp"
             android:layout_gravity="bottom"
             android:layout_weight="0"
-            android:padding="6dp"
             app:srcCompat="@drawable/dots_vertical_circle"
             tools:ignore="ContentDescription" />
 
