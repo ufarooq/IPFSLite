@@ -91,5 +91,12 @@ public class ActionDialogFragment extends DialogFragment {
         return dialog;
     }
 
+    public interface ActionListener {
 
+        void clickConnectPeer();
+
+        void clickUploadFile();
+
+        void clickDownloadFile();
+    }
 }

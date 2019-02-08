@@ -78,7 +78,7 @@ dependencies {
     // ANDROID Architecture (LICENSE done)
     implementation 'androidx.room:room-runtime:2.1.0-alpha03'
     // API (LICENSE done)
-    implementation 'threads.ipfs:threads:0.5.6'
+    implementation 'threads.ipfs:threads:0.7.1'
     // QR Scanner (LICENSE done)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'
     // UI (for showing licences file) (LICENSE done)

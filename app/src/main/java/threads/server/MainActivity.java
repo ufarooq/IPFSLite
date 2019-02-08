@@ -56,20 +56,22 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import de.psdev.licensesdialog.LicensesDialogFragment;
-import io.ipfs.multihash.Multihash;
 import threads.ipfs.IPFS;
+import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, ActionListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
+        ActionDialogFragment.ActionListener {
     public static final int SELECT_MEDIA_FILE = 1;
     private static final int WRITE_EXTERNAL_STORAGE = 2;
     private static final String TAG = MainActivity.class.getSimpleName();
     private final AtomicBoolean networkAvailable = new AtomicBoolean(true);
     private final AtomicBoolean idScan = new AtomicBoolean(false);
     private DrawerLayout drawer_layout;
+    //private DownloadManager downloadManager;
     private final BroadcastReceiver networkChangeReceiver = new BroadcastReceiver() {
         private final AtomicBoolean wasOffline = new AtomicBoolean(false);
         private Snackbar snackbar;
@@ -83,7 +85,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         snackbar.dismiss();
                         snackbar = null;
                     }
-
 
                     networkAvailable.set(true);
 
@@ -141,6 +142,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.activity_main);
 
         mRecyclerView = findViewById(R.id.view_message_list);
+        //downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
         LinearLayoutManager linearLayout = new LinearLayoutManager(this);
         mRecyclerView.addOnLayoutChangeListener((View v,
                                                  int left, int top, int right, int bottom,
@@ -379,30 +381,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (result != null) {
                 if (result.getContents() != null) {
                     String content = result.getContents();
-                    final IPFS ipfs = Application.getIpfs();
-                    if (ipfs != null) {
-                        ExecutorService executor = Executors.newSingleThreadExecutor();
-                        executor.submit(() -> {
-                            try {
-                                if (idScan.get()) {
+
+                    if (!idScan.get()) {
+                        DownloadJobService.download(getApplicationContext(), content);
+                    } else {
+                        final IPFS ipfs = Application.getIpfs();
+                        if (ipfs != null) {
+                            ExecutorService executor = Executors.newSingleThreadExecutor();
+                            executor.submit(() -> {
+                                try {
+
                                     PID pid = PID.create(content);
                                     ipfs.id(pid);
                                     ipfs.swarm_connect(pid);
-                                } else {
-                                    File file = getStorageFile(content);
-                                    checkNotNull(file);
-                                    ipfs.cmd("get", "--output=" + file.getAbsolutePath(), content);
 
-                                    Application.getEventsDatabase().insertMessage(
-                                            MessageKind.INFO,
-                                            getString(R.string.content_downloaded, content),
-                                            System.currentTimeMillis());
-
+                                } catch (Throwable e) {
+                                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                                 }
-                            } catch (Throwable e) {
-                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                            }
-                        });
+                            });
+                        }
                     }
                 }
             } else {
@@ -430,14 +427,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         getApplicationContext().getContentResolver().openInputStream(uri);
                 checkNotNull(inputStream);
 
-                if (ipfs != null) {
-                    Multihash multihash = ipfs.add(inputStream);
-                    checkNotNull(multihash);
-                    ipfs.files_cp(multihash, "/" + filename);
 
-                    InfoDialogFragment.show(this, multihash.toBase58(),
+                if (ipfs != null) {
+                    CID cid = ipfs.add(inputStream, filename, true);
+                    checkNotNull(cid);
+                    ipfs.files_cp(cid, "/" + filename);
+
+                    InfoDialogFragment.show(this, cid.getCid(),
                             getString(R.string.multihash),
-                            getString(R.string.multihash_add, multihash.toBase58()));
+                            getString(R.string.multihash_add, cid.getCid()));
 
                 }
 
@@ -575,8 +573,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     IPFS ipfs = Application.getIpfs();
                     if (ipfs != null && DaemonService.isIpfsRunning()) {
                         InputStream inputStream = getResources().openRawResource(R.raw.private_policy);
-                        Multihash multihash = ipfs.add(inputStream);
-                        url = Application.getGateway(this) + multihash.toBase58();
+                        CID cid = ipfs.add(inputStream);
+                        url = Application.getGateway(this) + cid.getCid();
                     }
                     WebViewDialogFragment.newInstance(url)
                             .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
@@ -725,11 +723,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickDownloadFile() {
         try {
+
             if (ContextCompat.checkSelfPermission(getApplicationContext(),
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
-                // Permission is not granted
-                // Request for permission
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         WRITE_EXTERNAL_STORAGE);
