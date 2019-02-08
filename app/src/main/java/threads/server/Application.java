@@ -54,6 +54,7 @@ public class Application extends android.app.Application {
                 PREF_KEY, Context.MODE_PRIVATE);
         return sharedPref.getInt(GATEWAY_PORT_KEY, 8080);
     }
+
     public static String getGateway(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);

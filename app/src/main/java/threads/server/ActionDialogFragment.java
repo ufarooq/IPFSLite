@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -49,7 +50,12 @@ public class ActionDialogFragment extends DialogFragment {
         menu_galary.setOnClickListener((v) -> {
 
             try {
-                actionListener.clickConnectPeer();
+                if (!DaemonService.isIpfsRunning()) {
+                    Toast.makeText(getContext(),
+                            R.string.daemon_server_not_running, Toast.LENGTH_LONG).show();
+                } else {
+                    actionListener.clickConnectPeer();
+                }
             } finally {
                 dismiss();
             }
@@ -60,7 +66,12 @@ public class ActionDialogFragment extends DialogFragment {
         ImageView menu_camera = view.findViewById(R.id.menu_upload_file);
         menu_camera.setOnClickListener((v) -> {
             try {
-                actionListener.clickUploadFile();
+                if (!DaemonService.isIpfsRunning()) {
+                    Toast.makeText(getContext(),
+                            R.string.daemon_server_not_running, Toast.LENGTH_LONG).show();
+                } else {
+                    actionListener.clickUploadFile();
+                }
             } finally {
                 dismiss();
             }
@@ -71,7 +82,12 @@ public class ActionDialogFragment extends DialogFragment {
         menu_video.setOnClickListener((v) -> {
 
             try {
-                actionListener.clickDownloadFile();
+                if (!DaemonService.isIpfsRunning()) {
+                    Toast.makeText(getContext(),
+                            R.string.daemon_server_not_running, Toast.LENGTH_LONG).show();
+                } else {
+                    actionListener.clickDownloadFile();
+                }
             } finally {
                 dismiss();
             }

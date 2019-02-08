@@ -39,8 +39,8 @@
 
         <ImageView
             android:id="@+id/console_send"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="54dp"
+            android:layout_height="54dp"
             android:layout_gravity="bottom"
             android:layout_weight="0"
             android:padding="6dp"

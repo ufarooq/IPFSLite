@@ -390,11 +390,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             ExecutorService executor = Executors.newSingleThreadExecutor();
                             executor.submit(() -> {
                                 try {
-
                                     PID pid = PID.create(content);
                                     ipfs.id(pid);
                                     ipfs.swarm_connect(pid);
-
                                 } catch (Throwable e) {
                                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                                 }
@@ -419,16 +417,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         final String filename = returnCursor.getString(nameIndex);
         returnCursor.close();
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                IPFS ipfs = Application.getIpfs();
-                InputStream inputStream =
-                        getApplicationContext().getContentResolver().openInputStream(uri);
-                checkNotNull(inputStream);
+        final IPFS ipfs = Application.getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    InputStream inputStream =
+                            getApplicationContext().getContentResolver().openInputStream(uri);
+                    checkNotNull(inputStream);
 
 
-                if (ipfs != null) {
                     CID cid = ipfs.add(inputStream, filename, true);
                     checkNotNull(cid);
                     ipfs.files_cp(cid, "/" + filename);
@@ -437,12 +435,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             getString(R.string.multihash),
                             getString(R.string.multihash_add, cid.getCid()));
 
-                }
 
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        });
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            });
+        }
     }
 
     private void removeKeyboards() {
