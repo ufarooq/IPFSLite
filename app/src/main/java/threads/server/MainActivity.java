@@ -566,10 +566,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         switch (menuItem.getItemId()) {
             case R.id.nav_privacy_policy: {
                 try {
-                    String url = "file:///android_res/raw/private_policy.html";
+                    String url = "file:///android_res/raw/privacy_policy.html";
                     IPFS ipfs = Application.getIpfs();
                     if (ipfs != null && DaemonService.isIpfsRunning()) {
-                        InputStream inputStream = getResources().openRawResource(R.raw.private_policy);
+                        InputStream inputStream = getResources().openRawResource(R.raw.privacy_policy);
                         CID cid = ipfs.add(inputStream);
                         url = Application.getGateway(this) + cid.getCid();
                     }
