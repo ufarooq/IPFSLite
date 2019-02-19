@@ -74,22 +74,18 @@ dependencies {
     // API (LICENSE done)
     implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
     // API (LICENSE done)
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0-alpha01'
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0-alpha02'
     // ANDROID Architecture (LICENSE done)
-    implementation 'androidx.room:room-runtime:2.1.0-alpha03'
+    implementation 'androidx.room:room-runtime:2.1.0-alpha04'
     // API (LICENSE done)
-    implementation 'threads.ipfs:threads:0.7.1'
+    implementation 'threads.ipfs:threads:0.7.6'
     // QR Scanner (LICENSE done)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'
     // UI (for showing licences file) (LICENSE done)
     implementation 'de.psdev.licensesdialog:licensesdialog:2.0.0'
-    // API (LICENSE done)
-    implementation 'com.google.api-client:google-api-client:1.23.0'
-    // ANDROID Architecture (LICENSE done)
-    implementation 'androidx.room:room-runtime:2.1.0-alpha03'
 
-    annotationProcessor 'androidx.room:room-compiler:2.1.0-alpha03'
-    annotationProcessor 'androidx.lifecycle:lifecycle-compiler:2.1.0-alpha01'
+    annotationProcessor 'androidx.room:room-compiler:2.1.0-alpha04'
+
 }
 
 // Place it at the end of the file
