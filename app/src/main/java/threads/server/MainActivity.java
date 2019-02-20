@@ -285,7 +285,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         final String filename = returnCursor.getString(nameIndex);
         returnCursor.close();
-        final IPFS ipfs = Application.getIpfs();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
@@ -418,11 +418,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_privacy_policy: {
                 try {
                     String url = "file:///android_res/raw/privacy_policy.html";
-                    IPFS ipfs = Application.getIpfs();
+                    IPFS ipfs = Singleton.getInstance().getIpfs();
                     if (ipfs != null && DaemonService.isIpfsRunning()) {
                         InputStream inputStream = getResources().openRawResource(R.raw.privacy_policy);
                         CID cid = ipfs.add(inputStream);
-                        url = Application.getGateway(this) + cid.getCid();
+                        url = Preferences.getGateway(this) + cid.getCid();
                     }
                     WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.URL, url)
                             .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
@@ -621,7 +621,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickConnect(String content) {
         checkNotNull(content);
 
-        final IPFS ipfs = Application.getIpfs();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {

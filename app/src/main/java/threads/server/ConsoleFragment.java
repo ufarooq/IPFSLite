@@ -23,6 +23,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import threads.core.Singleton;
 import threads.core.api.Message;
 import threads.core.mdl.MessagesViewModel;
 import threads.ipfs.IPFS;
@@ -106,7 +107,7 @@ public class ConsoleFragment extends Fragment {
                         ExecutorService executor = Executors.newSingleThreadExecutor();
                         executor.submit(() -> {
                             try {
-                                IPFS ipfs = Application.getIpfs();
+                                IPFS ipfs = Singleton.getInstance().getIpfs();
 
                                 if (ipfs != null) {
                                     ipfs.cmd(commands);
@@ -120,7 +121,7 @@ public class ConsoleFragment extends Fragment {
                         ExecutorService executor = Executors.newSingleThreadExecutor();
                         executor.submit(() -> {
                             try {
-                                IPFS ipfs = Application.getIpfs();
+                                IPFS ipfs = Singleton.getInstance().getIpfs();
 
                                 if (ipfs != null) {
                                     ipfs.cmd(parts);

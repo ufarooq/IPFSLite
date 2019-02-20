@@ -19,6 +19,7 @@ import java.util.List;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
+import threads.core.Preferences;
 import threads.ipfs.api.Profile;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -53,8 +54,8 @@ public class SettingsDialog extends DialogFragment {
 
                 try {
                     Profile profile = (Profile) parent.getItemAtPosition(position);
-                    if (profile != Application.getProfile(getContext())) {
-                        Application.setProfile(getContext(), profile);
+                    if (profile != Preferences.getProfile(getContext())) {
+                        Preferences.setProfile(getContext(), profile);
                         DaemonService.configHasChanged = true;
                         if (DaemonService.isIpfsRunning()) {
                             Toast.makeText(getContext(),
@@ -73,7 +74,7 @@ public class SettingsDialog extends DialogFragment {
 
             }
         });
-        int pos = profiles.indexOf(Application.getProfile(getContext()));
+        int pos = profiles.indexOf(Preferences.getProfile(getContext()));
         spinner_profile.setSelection(pos);
 
 

@@ -10,14 +10,10 @@ import android.net.NetworkCapabilities;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import threads.core.IThreadsAPI;
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.api.EventsDatabase;
 import threads.core.api.MessageKind;
-import threads.ipfs.IPFS;
-import threads.ipfs.api.Profile;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -27,41 +23,11 @@ public class Application extends android.app.Application {
     public static final String CHANNEL_ID = "CHANNEL_ID";
     public static final String GROUP_ID = "GROUP_ID";
 
-
-    private static final String PID_KEY = "pidKey";
     private static final String QUIC_KEY = "quicKey";
     private static final String PUBSUB_KEY = "pubsubKey";
-    private static final String PROFILE_KEY = "profileKey";
     private static final String PREF_KEY = "prefKey";
-    private static final String GATEWAY_PORT_KEY = "gatewayPortKey";
     private static final String TAG = Application.class.getSimpleName();
 
-    private static EventsDatabase eventsDatabase;
-
-    private static IPFS ipfs;
-
-    @Nullable
-    public static IPFS getIpfs() {
-        return ipfs;
-    }
-
-    public static EventsDatabase getEventsDatabase() {
-        return eventsDatabase;
-    }
-
-
-    public static int getGatewayPort(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getInt(GATEWAY_PORT_KEY, 8080);
-    }
-
-    public static String getGateway(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        return "http://localhost:" + getGatewayPort(context) + "/ipfs/";
-    }
 
     public static boolean isConnected(@NonNull Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager)
@@ -76,22 +42,6 @@ public class Application extends android.app.Application {
         return capabilities != null
                 && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
 
-    }
-
-    public static void setProfile(@NonNull Context context, @NonNull Profile profile) {
-        checkNotNull(context);
-        checkNotNull(profile);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(PROFILE_KEY, profile.name());
-        editor.apply();
-    }
-
-    public static Profile getProfile(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        String profile = sharedPref.getString(PROFILE_KEY, Profile.LOW_POWER.name());
-        return Profile.valueOf(profile);
     }
 
 

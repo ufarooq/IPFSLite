@@ -104,11 +104,11 @@ public class DaemonService extends Service {
 
 
     private void startDaemonService() {
-        IPFS ipfs = Application.getIpfs();
+        IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             new Thread(() -> {
                 try {
-                    ipfs.init(Application.getProfile(getApplicationContext()), configHasChanged,
+                    ipfs.init(Preferences.getProfile(getApplicationContext()), configHasChanged,
                             Application.isQUICEnabled(getApplicationContext()));
                     ipfs.daemon(Application.isPubsubEnabled(getApplicationContext()));
 
@@ -136,7 +136,7 @@ public class DaemonService extends Service {
         long start = System.currentTimeMillis();
 
         try {
-            IPFS ipfs = Application.getIpfs();
+            IPFS ipfs = Singleton.getInstance().getIpfs();
             if (ipfs != null) {
                 new Thread(() -> {
                     ipfs.shutdown();

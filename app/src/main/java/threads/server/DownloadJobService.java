@@ -18,6 +18,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import androidx.annotation.NonNull;
+import threads.core.Preferences;
+import threads.core.Singleton;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.Link;
 
@@ -61,7 +63,7 @@ public class DownloadJobService extends JobService {
         checkNotNull(downloadManager);
         final String cid = bundle.getString(DownloadJobService.CID);
         checkNotNull(cid);
-        final IPFS ipfs = Application.getIpfs();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
@@ -73,7 +75,7 @@ public class DownloadJobService extends JobService {
                     String path = link.getPath();
 
                     Uri uri = Uri.parse(
-                            Application.getGateway(this) +
+                            Preferences.getGateway(this) +
                                     cid + "/" + path);
 
                     DownloadManager.Request request = new DownloadManager.Request(uri);
