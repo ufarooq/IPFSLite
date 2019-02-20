@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private final AtomicBoolean idScan = new AtomicBoolean(false);
     private DrawerLayout drawer_layout;
 
+
     private final BroadcastReceiver networkChangeReceiver = new BroadcastReceiver() {
         private final AtomicBoolean wasOffline = new AtomicBoolean(false);
         private Snackbar snackbar;
@@ -208,6 +209,41 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
+
+
+        eventViewModel.getException().observe(this, (event) -> {
+            try {
+                if (event != null) {
+                    Snackbar snackbar = Snackbar.make(drawer_layout, event.getContent(),
+                            Snackbar.LENGTH_INDEFINITE);
+                    snackbar.setAction(android.R.string.ok, (view) -> {
+                        eventViewModel.removeEvent(event);
+                        snackbar.dismiss();
+
+                    });
+                    snackbar.show();
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+
+        });
+
+        eventViewModel.getWarning().observe(this, (event) -> {
+            try {
+                if (event != null) {
+                    Toast.makeText(
+                            getApplicationContext(), event.getContent(), Toast.LENGTH_LONG).show();
+                    eventViewModel.removeEvent(event);
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+
+        });
+
+
+
         eventViewModel.getIPFSServerOfflineEvent().observe(this, (event) -> {
 
             try {
@@ -231,8 +267,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         });
 
-
     }
+
 
     @Override
     public void onRequestPermissionsResult
@@ -261,6 +297,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (result != null) {
                 if (result.getContents() != null) {
                     String content = result.getContents();
+
+                    if (SystemClock.elapsedRealtime() - mLastClickTime < 2000) {
+                        return;
+                    }
+                    mLastClickTime = SystemClock.elapsedRealtime();
+
 
                     if (!idScan.get()) {
                         DownloadJobService.download(getApplicationContext(), content);
@@ -360,7 +402,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
         switch (id) {
             case R.id.action_clear: {
-                // mis-clicking prevention, using threshold of 1000 ms
+
                 if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
                     break;
                 }
@@ -419,7 +461,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 try {
                     String url = "file:///android_res/raw/privacy_policy.html";
                     IPFS ipfs = Singleton.getInstance().getIpfs();
-                    if (ipfs != null && DaemonService.DAEMON_RUNNING.get()) {
+                    if (ipfs != null) {
                         InputStream inputStream = getResources().openRawResource(R.raw.privacy_policy);
                         CID cid = ipfs.add(inputStream);
                         url = Preferences.getGateway(this) + cid.getCid();

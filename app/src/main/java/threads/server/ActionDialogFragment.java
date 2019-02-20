@@ -53,12 +53,7 @@ public class ActionDialogFragment extends DialogFragment {
         menu_connect_peer.setOnClickListener((v) -> {
 
             try {
-                if (!DaemonService.DAEMON_RUNNING.get()) {
-                    Toast.makeText(getContext(),
-                            R.string.daemon_server_not_running, Toast.LENGTH_LONG).show();
-                } else {
-                    actionListener.clickConnectPeer();
-                }
+                actionListener.clickConnectPeer();
             } finally {
                 dismiss();
             }
@@ -69,12 +64,7 @@ public class ActionDialogFragment extends DialogFragment {
         ImageView menu_camera = view.findViewById(R.id.menu_upload_file);
         menu_camera.setOnClickListener((v) -> {
             try {
-                if (!DaemonService.DAEMON_RUNNING.get()) {
-                    Toast.makeText(getContext(),
-                            R.string.daemon_server_not_running, Toast.LENGTH_LONG).show();
-                } else {
-                    actionListener.clickUploadFile();
-                }
+                actionListener.clickUploadFile();
             } finally {
                 dismiss();
             }

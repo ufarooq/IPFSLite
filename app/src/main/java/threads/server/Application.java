@@ -1,7 +1,5 @@
 package threads.server;
 
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
@@ -19,9 +17,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Application extends android.app.Application {
 
-
-    public static final String CHANNEL_ID = "CHANNEL_ID";
-    public static final String GROUP_ID = "GROUP_ID";
 
     private static final String QUIC_KEY = "quicKey";
     private static final String PUBSUB_KEY = "pubsubKey";
@@ -42,29 +37,6 @@ public class Application extends android.app.Application {
         return capabilities != null
                 && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
 
-    }
-
-
-    public static void createChannel(@NonNull Context context) {
-        checkNotNull(context);
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            try {
-                CharSequence name = context.getString(R.string.channel_name);
-                String description = context.getString(R.string.channel_description);
-                int importance = NotificationManager.IMPORTANCE_HIGH;
-                NotificationChannel mChannel = new NotificationChannel(Application.CHANNEL_ID, name, importance);
-                mChannel.setDescription(description);
-
-                NotificationManager notificationManager = (NotificationManager) context.getSystemService(
-                        Context.NOTIFICATION_SERVICE);
-                if (notificationManager != null) {
-                    notificationManager.createNotificationChannel(mChannel);
-                }
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        }
     }
 
 
@@ -129,6 +101,7 @@ public class Application extends android.app.Application {
 
 
         Log.e(TAG, "...... start application");
+        NotificationSender.createChannel(getApplicationContext());
 
         try {
             Singleton.getInstance().init(getApplicationContext(), () -> "",

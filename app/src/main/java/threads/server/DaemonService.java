@@ -1,9 +1,11 @@
 package threads.server;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
@@ -30,20 +32,55 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class DaemonService extends Service {
     public static final String ACTION_START_DAEMON_SERVICE = "ACTION_START_DAEMON_SERVICE";
     public static final String ACTION_STOP_DAEMON_SERVICE = "ACTION_STOP_DAEMON_SERVICE";
-    private static final int NOTIFICATION_ID = 999;
-    private static final String TAG = DaemonService.class.getSimpleName();
     public static final AtomicBoolean DAEMON_RUNNING = new AtomicBoolean(false);
+
+    private static final String HIGH_CHANNEL_ID = "HIGH_CHANNEL_ID";
+    private static final int NOTIFICATION_ID = DaemonService.class.hashCode();
+    private static final String TAG = DaemonService.class.getSimpleName();
     public static boolean configHasChanged = false;
 
+    public static void evalUserStatus(@NonNull IThreadsAPI threadsApi) {
+        checkNotNull(threadsApi);
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
 
+        if (ipfs != null) {
+            List<User> users = threadsApi.getUsers();
+            for (User user : users) {
 
+                try {
+                    if (ipfs.swarm_is_connected(PID.create(user.getPid()))) {
+                        threadsApi.setStatus(user, UserStatus.ONLINE);
+                    } else {
+                        threadsApi.setStatus(user, UserStatus.OFFLINE);
+                    }
+                } catch (Throwable e) {
+                    threadsApi.setStatus(user, UserStatus.OFFLINE);
+                }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
+            }
+        }
+    }
 
-        Application.createChannel(getApplicationContext());
+    public static void createChannel(@NonNull Context context) {
+        checkNotNull(context);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            try {
+                CharSequence name = context.getString(R.string.daemon_channel_name);
+                String description = context.getString(R.string.daemon_channel_description);
+                int importance = NotificationManager.IMPORTANCE_HIGH;
+                NotificationChannel mChannel = new NotificationChannel(HIGH_CHANNEL_ID, name, importance);
+                mChannel.setDescription(description);
 
+                NotificationManager notificationManager = (NotificationManager) context.getSystemService(
+                        Context.NOTIFICATION_SERVICE);
+                if (notificationManager != null) {
+                    notificationManager.createNotificationChannel(mChannel);
+                }
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        }
     }
 
     @Nullable
@@ -74,16 +111,19 @@ public class DaemonService extends Service {
         return START_NOT_STICKY;
     }
 
+    @Override
+    public void onCreate() {
+        createChannel(getApplicationContext());
+        super.onCreate();
+    }
+
     private Notification buildNotification() {
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(
-                getApplicationContext(),
-                Application.CHANNEL_ID);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(),
+                HIGH_CHANNEL_ID);
 
         builder.setContentTitle(getString(R.string.daemon_title));
         builder.setSmallIcon(R.drawable.server_network);
-        builder.setGroup(Application.GROUP_ID);
-        builder.setGroupSummary(true);
         builder.setPriority(NotificationManager.IMPORTANCE_MAX);
 
         // Create an explicit intent for an Activity in your app
@@ -104,29 +144,6 @@ public class DaemonService extends Service {
         return notification;
     }
 
-
-    public static void evalUserStatus(@NonNull IThreadsAPI threadsApi) {
-        checkNotNull(threadsApi);
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-
-        if (ipfs != null) {
-            List<User> users = threadsApi.getUsers();
-            for (User user : users) {
-
-                try {
-                    if (ipfs.swarm_is_connected(PID.create(user.getPid()))) {
-                        threadsApi.setStatus(user, UserStatus.ONLINE);
-                    } else {
-                        threadsApi.setStatus(user, UserStatus.OFFLINE);
-                    }
-                } catch (Throwable e) {
-                    threadsApi.setStatus(user, UserStatus.OFFLINE);
-                }
-
-            }
-        }
-    }
-
     private void startDaemonService() {
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         final IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
@@ -142,8 +159,6 @@ public class DaemonService extends Service {
 
                     threadsApi.storeEvent(
                             threadsApi.createEvent(Preferences.IPFS_SERVER_ONLINE_EVENT, ""));
-
-
 
                 } catch (Throwable e) {
                     Log.e(TAG, e.getLocalizedMessage(), e);
@@ -165,6 +180,7 @@ public class DaemonService extends Service {
         }
 
     }
+
     private void stopDaemonService() {
         long start = System.currentTimeMillis();
 

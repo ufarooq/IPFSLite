@@ -1,7 +1,9 @@
 <resources>
     <string name="app_name">IPFS</string>
-    <string name="channel_name">Incoming messages notification</string>
-    <string name="channel_description">Make sound and pop on screen</string>
+    <string name="channel_name">Download Notifications</string>
+    <string name="channel_description">For normal notifications like download</string>
+    <string name="daemon_channel_name">Daemon Notifications</string>
+    <string name="daemon_channel_description">Notification that the daemon has started</string>
     <string name="daemon_title">IPFS daemon is running &#8230;</string>
     <string name="navigation_drawer_open">Navigation open</string>
     <string name="navigation_drawer_close">Navigation close</string>
