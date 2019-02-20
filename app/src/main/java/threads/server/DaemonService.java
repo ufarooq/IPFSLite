@@ -9,13 +9,19 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import threads.core.IThreadsAPI;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.api.MessageKind;
+import threads.core.api.User;
+import threads.core.api.UserStatus;
 import threads.ipfs.IPFS;
+import threads.ipfs.api.PID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -25,16 +31,11 @@ public class DaemonService extends Service {
     public static final String ACTION_STOP_DAEMON_SERVICE = "ACTION_STOP_DAEMON_SERVICE";
     private static final int NOTIFICATION_ID = 999;
     private static final String TAG = DaemonService.class.getSimpleName();
+    public static final AtomicBoolean DAEMON_RUNNING = new AtomicBoolean(false);
     public static boolean configHasChanged = false;
-    private static boolean ipfsRunning = false;
 
-    public static boolean isIpfsRunning() {
-        return ipfsRunning;
-    }
 
-    private static void setIpfsRunning(boolean running) {
-        ipfsRunning = running;
-    }
+
 
     @Override
     public void onCreate() {
@@ -104,7 +105,8 @@ public class DaemonService extends Service {
 
 
     private void startDaemonService() {
-        IPFS ipfs = Singleton.getInstance().getIpfs();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        final IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
         if (ipfs != null) {
             new Thread(() -> {
                 try {
@@ -112,20 +114,38 @@ public class DaemonService extends Service {
                             Application.isQUICEnabled(getApplicationContext()));
                     ipfs.daemon(Application.isPubsubEnabled(getApplicationContext()));
 
-                    setIpfsRunning(true);
+                    DAEMON_RUNNING.set(true);
 
-                    IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
+
                     threadsApi.storeEvent(
                             threadsApi.createEvent(Preferences.IPFS_SERVER_ONLINE_EVENT, ""));
 
 
+
                 } catch (Throwable e) {
                     Log.e(TAG, e.getLocalizedMessage(), e);
-                    IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
                     threadsApi.storeEvent(
                             threadsApi.createEvent(Preferences.IPFS_SERVER_OFFLINE_EVENT, ""));
                     stopForeground(true);
                     stopSelf();
+                }
+
+                try {
+                    while (DAEMON_RUNNING.get()) {
+                        List<User> users = threadsApi.getUsers();
+                        for (User user : users) {
+
+                            if (ipfs.swarm_is_connected(PID.create(user.getPid()))) {
+                                threadsApi.setStatus(user, UserStatus.ONLINE);
+                            } else {
+                                threadsApi.setStatus(user, UserStatus.OFFLINE);
+                            }
+
+                        }
+                        Thread.sleep(10000);
+                    }
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
             }).start();
         }
@@ -140,7 +160,7 @@ public class DaemonService extends Service {
             if (ipfs != null) {
                 new Thread(() -> {
                     ipfs.shutdown();
-                    setIpfsRunning(false);
+                    DAEMON_RUNNING.set(false);
 
                     IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
                     threadsApi.storeEvent(

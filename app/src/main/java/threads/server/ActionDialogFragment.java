@@ -53,7 +53,7 @@ public class ActionDialogFragment extends DialogFragment {
         menu_galary.setOnClickListener((v) -> {
 
             try {
-                if (!DaemonService.isIpfsRunning()) {
+                if (!DaemonService.DAEMON_RUNNING.get()) {
                     Toast.makeText(getContext(),
                             R.string.daemon_server_not_running, Toast.LENGTH_LONG).show();
                 } else {
@@ -69,7 +69,7 @@ public class ActionDialogFragment extends DialogFragment {
         ImageView menu_camera = view.findViewById(R.id.menu_upload_file);
         menu_camera.setOnClickListener((v) -> {
             try {
-                if (!DaemonService.isIpfsRunning()) {
+                if (!DaemonService.DAEMON_RUNNING.get()) {
                     Toast.makeText(getContext(),
                             R.string.daemon_server_not_running, Toast.LENGTH_LONG).show();
                 } else {
@@ -85,7 +85,7 @@ public class ActionDialogFragment extends DialogFragment {
         menu_video.setOnClickListener((v) -> {
 
             try {
-                if (!DaemonService.isIpfsRunning()) {
+                if (!DaemonService.DAEMON_RUNNING.get()) {
                     Toast.makeText(getContext(),
                             R.string.daemon_server_not_running, Toast.LENGTH_LONG).show();
                 } else {

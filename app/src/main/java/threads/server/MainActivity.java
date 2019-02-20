@@ -132,7 +132,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         TabLayout tabLayout = findViewById(R.id.tabLayout);
-        tabLayout.addTab(tabLayout.newTab().setText("Peers"));
+        tabLayout.addTab(tabLayout.newTab().setText("Friends"));
         tabLayout.addTab(tabLayout.newTab().setText("Console"));
 
 
@@ -180,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            if (!DaemonService.isIpfsRunning()) {
+            if (!DaemonService.DAEMON_RUNNING.get()) {
 
                 Intent intent = new Intent(MainActivity.this, DaemonService.class);
                 intent.setAction(DaemonService.ACTION_START_DAEMON_SERVICE);
@@ -314,7 +314,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void serverStatus() {
 
         try {
-            if (!DaemonService.isIpfsRunning()) {
+            if (!DaemonService.DAEMON_RUNNING.get()) {
                 server.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
             } else {
                 server.setImageDrawable(getDrawable(R.drawable.stop));
@@ -419,7 +419,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 try {
                     String url = "file:///android_res/raw/privacy_policy.html";
                     IPFS ipfs = Singleton.getInstance().getIpfs();
-                    if (ipfs != null && DaemonService.isIpfsRunning()) {
+                    if (ipfs != null && DaemonService.DAEMON_RUNNING.get()) {
                         InputStream inputStream = getResources().openRawResource(R.raw.privacy_policy);
                         CID cid = ipfs.add(inputStream);
                         url = Preferences.getGateway(this) + cid.getCid();
@@ -475,7 +475,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     break;
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
-                if (!DaemonService.isIpfsRunning()) {
+                if (!DaemonService.DAEMON_RUNNING.get()) {
                     Toast.makeText(getApplicationContext(),
                             getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
                 } else {
