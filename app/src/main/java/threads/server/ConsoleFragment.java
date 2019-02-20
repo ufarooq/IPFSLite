@@ -3,8 +3,6 @@ package threads.server;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,7 +20,6 @@ import java.util.concurrent.Executors;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -38,7 +35,7 @@ public class ConsoleFragment extends Fragment {
 
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.messages_view, container, false);
 
 
@@ -76,28 +73,6 @@ public class ConsoleFragment extends Fragment {
         ImageView console_send = view.findViewById(R.id.console_send);
 
         console_box = view.findViewById(R.id.console_box);
-        console_box.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-                if (s.length() > 0) {
-                    console_send.setImageResource(R.drawable.send);
-                } else {
-                    console_send.setImageResource(R.drawable.dots_vertical_circle);
-                }
-
-            }
-        });
 
         console_send.setOnClickListener((v) -> {
 
@@ -154,11 +129,6 @@ public class ConsoleFragment extends Fragment {
                         });
                     }
                 }
-            } else {
-                FragmentManager fm = getActivity().getSupportFragmentManager();
-
-                ActionDialogFragment messageActionDialogFragment = new ActionDialogFragment();
-                messageActionDialogFragment.show(fm, ActionDialogFragment.TAG);
             }
 
         });

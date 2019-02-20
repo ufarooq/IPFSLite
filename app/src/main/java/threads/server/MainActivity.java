@@ -51,6 +51,7 @@ import de.psdev.licensesdialog.LicensesDialogFragment;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
+import threads.share.WebViewDialogFragment;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -123,7 +124,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         TabLayout tabLayout = findViewById(R.id.tabLayout);
+        tabLayout.addTab(tabLayout.newTab().setText("Peers"));
         tabLayout.addTab(tabLayout.newTab().setText("Console"));
+
 
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
@@ -435,7 +438,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         CID cid = ipfs.add(inputStream);
                         url = Application.getGateway(this) + cid.getCid();
                     }
-                    WebViewDialogFragment.newInstance(url)
+                    WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.URL, url)
                             .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
 
                 } catch (Throwable e) {
@@ -609,14 +612,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         @Override
+        @NonNull
         public Fragment getItem(int position) {
 
             switch (position) {
                 case 0:
-                    ConsoleFragment console = new ConsoleFragment();
-                    return console;
+                    return new PeersFragment();
+                case 1:
+                    return new ConsoleFragment();
                 default:
-                    return null;
+                    throw new RuntimeException("Not Supported position");
             }
         }
 
