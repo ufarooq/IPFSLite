@@ -12,6 +12,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import threads.core.IThreadsAPI;
+import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.api.MessageKind;
 import threads.ipfs.IPFS;
@@ -115,14 +116,14 @@ public class DaemonService extends Service {
 
                     IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
                     threadsApi.storeEvent(
-                            threadsApi.createEvent(Application.SERVER_ONLINE_EVENT, ""));
+                            threadsApi.createEvent(Preferences.IPFS_SERVER_ONLINE_EVENT, ""));
 
 
                 } catch (Throwable e) {
                     Log.e(TAG, e.getLocalizedMessage(), e);
                     IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
                     threadsApi.storeEvent(
-                            threadsApi.createEvent(Application.SERVER_OFFLINE_EVENT, ""));
+                            threadsApi.createEvent(Preferences.IPFS_SERVER_OFFLINE_EVENT, ""));
                     stopForeground(true);
                     stopSelf();
                 }
@@ -143,7 +144,7 @@ public class DaemonService extends Service {
 
                     IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
                     threadsApi.storeEvent(
-                            threadsApi.createEvent(Application.SERVER_OFFLINE_EVENT, ""));
+                            threadsApi.createEvent(Preferences.IPFS_SERVER_OFFLINE_EVENT, ""));
 
 
                     threadsApi.storeMessage(threadsApi.createMessage(MessageKind.INFO,

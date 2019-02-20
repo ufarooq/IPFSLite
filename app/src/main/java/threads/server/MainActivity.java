@@ -12,6 +12,7 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.provider.OpenableColumns;
@@ -186,7 +187,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 Intent intent = new Intent(MainActivity.this, DaemonService.class);
                 intent.setAction(DaemonService.ACTION_START_DAEMON_SERVICE);
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     startForegroundService(intent);
                 } else {
                     startService(intent);
@@ -197,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             } else {
                 Intent intent = new Intent(MainActivity.this, DaemonService.class);
                 intent.setAction(DaemonService.ACTION_STOP_DAEMON_SERVICE);
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     startForegroundService(intent);
                 } else {
                     startService(intent);
@@ -211,7 +212,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
-        eventViewModel.getDaemonServerOfflineEvent().observe(this, (event) -> {
+        eventViewModel.getIPFSServerOfflineEvent().observe(this, (event) -> {
 
             try {
                 if (event != null) {
@@ -222,7 +223,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
         });
-        eventViewModel.getDaemonServerOnlineEvent().observe(this, (event) -> {
+        eventViewModel.getIPFSServerOnlineEvent().observe(this, (event) -> {
 
             try {
                 if (event != null) {

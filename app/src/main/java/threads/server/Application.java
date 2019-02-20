@@ -27,8 +27,7 @@ public class Application extends android.app.Application {
     public static final String CHANNEL_ID = "CHANNEL_ID";
     public static final String GROUP_ID = "GROUP_ID";
 
-    public static final String SERVER_ONLINE_EVENT = "SERVER_ONLINE_EVENT";
-    public static final String SERVER_OFFLINE_EVENT = "SERVER_OFFLINE_EVENT";
+
     private static final String PID_KEY = "pidKey";
     private static final String QUIC_KEY = "quicKey";
     private static final String PUBSUB_KEY = "pubsubKey";
