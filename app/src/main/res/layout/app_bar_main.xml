@@ -41,15 +41,16 @@
 
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/server"
+        android:id="@+id/fab_daemon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="64dp"
         android:layout_marginEnd="@dimen/fab_margin"
         android:visibility="visible"
+        app:backgroundTint="@color/lightGray"
         app:layout_anchor="@id/tabLayout"
         app:layout_anchorGravity="bottom|end"
-        app:srcCompat="@android:drawable/ic_media_play" />
+        app:srcCompat="@drawable/play" />
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

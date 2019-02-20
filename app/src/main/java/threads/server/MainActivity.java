@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public void onReceive(Context context, Intent intent) {
             try {
                 if (Application.isConnected(context)) {
-                    findViewById(R.id.server).setVisibility(View.VISIBLE);
+                    findViewById(R.id.fab_daemon).setVisibility(View.VISIBLE);
                     if (snackbar != null) {
                         snackbar.dismiss();
                         snackbar = null;
@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     networkAvailable.set(true);
 
                 } else {
-                    findViewById(R.id.server).setVisibility(View.GONE);
+                    findViewById(R.id.fab_daemon).setVisibility(View.GONE);
                     networkAvailable.set(false);
                     wasOffline.set(true);
                     if (snackbar == null) {
@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         }
     };
-    private FloatingActionButton server;
+    private FloatingActionButton fab_daemon;
 
 
     private long mLastClickTime = 0;
@@ -171,8 +171,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         drawer_layout.addDrawerListener(toggle);
         toggle.syncState();
 
-        server = findViewById(R.id.server);
-        server.setOnClickListener((view) -> {
+        fab_daemon = findViewById(R.id.fab_daemon);
+        fab_daemon.setOnClickListener((view) -> {
 
 
             // mis-clicking prevention, using threshold of 1000 ms
@@ -191,7 +191,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     startService(intent);
                 }
 
-                findViewById(R.id.server).setVisibility(View.INVISIBLE);
+                findViewById(R.id.fab_daemon).setVisibility(View.INVISIBLE);
 
             } else {
                 Intent intent = new Intent(MainActivity.this, DaemonService.class);
@@ -201,7 +201,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 } else {
                     startService(intent);
                 }
-                findViewById(R.id.server).setVisibility(View.INVISIBLE);
+                findViewById(R.id.fab_daemon).setVisibility(View.INVISIBLE);
             }
 
         });
@@ -357,11 +357,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         try {
             if (!DaemonService.DAEMON_RUNNING.get()) {
-                server.setImageDrawable(getDrawable(android.R.drawable.ic_media_play));
+                fab_daemon.setImageDrawable(getDrawable(R.drawable.play));
             } else {
-                server.setImageDrawable(getDrawable(R.drawable.stop));
+                fab_daemon.setImageDrawable(getDrawable(R.drawable.stop));
             }
-            findViewById(R.id.server).setVisibility(View.VISIBLE);
+            findViewById(R.id.fab_daemon).setVisibility(View.VISIBLE);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -477,7 +477,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_issues: {
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse("https://gitlab.com/remmer.wilts/threads-server/issues"));
+                    intent.setData(Uri.parse("https://gitlab.com/remmer.wilts/threads-fab_daemon/issues"));
                     startActivity(intent);
 
                 } catch (Throwable e) {
