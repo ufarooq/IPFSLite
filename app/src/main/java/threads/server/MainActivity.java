@@ -49,18 +49,25 @@ import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
 import de.psdev.licensesdialog.LicensesDialogFragment;
+import threads.core.IThreadsAPI;
 import threads.core.Preferences;
+import threads.core.Singleton;
+import threads.core.api.User;
+import threads.core.api.UserStatus;
+import threads.core.api.UserType;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
+import threads.share.UserActionDialogFragment;
 import threads.share.WebViewDialogFragment;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
-        ActionDialogFragment.ActionListener {
+        ActionDialogFragment.ActionListener,
+        UserActionDialogFragment.ActionListener {
     public static final int SELECT_MEDIA_FILE = 1;
     private static final int WRITE_EXTERNAL_STORAGE = 2;
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -114,8 +121,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private long mLastClickTime = 0;
 
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -154,14 +159,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             }
         });
-
-
-
-
-
-
-
-
 
 
         drawer_layout = findViewById(R.id.drawer_layout);
@@ -208,7 +205,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         });
         serverStatus();
-
 
 
         EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
@@ -269,19 +265,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (!idScan.get()) {
                         DownloadJobService.download(getApplicationContext(), content);
                     } else {
-                        final IPFS ipfs = Application.getIpfs();
-                        if (ipfs != null) {
-                            ExecutorService executor = Executors.newSingleThreadExecutor();
-                            executor.submit(() -> {
-                                try {
-                                    PID pid = PID.create(content);
-                                    ipfs.id(pid);
-                                    ipfs.swarm_connect(pid);
-                                } catch (Throwable e) {
-                                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                                }
-                            });
-                        }
+                        clickConnect(content);
                     }
                 }
             } else {
@@ -341,7 +325,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
     }
-
 
 
     @Override
@@ -603,6 +586,74 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Log.e(TAG, "" + e.getLocalizedMessage());
         }
 
+    }
+
+    @Override
+    public void clickBlock(@NonNull String pid) {
+        checkNotNull(pid);
+    }
+
+    @Override
+    public void clickInfo(String pid) {
+        checkNotNull(pid);
+
+        InfoDialogFragment.show(this, pid,
+                getString(R.string.peer_id),
+                getString(R.string.daemon_server_access, pid));
+    }
+
+    @Override
+    public void clickDelete(@NonNull final String pid) {
+        checkNotNull(pid);
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+                threadsAPI.removeUserByPid(PID.create(pid));
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        });
+    }
+
+    @Override
+    public void clickConnect(String content) {
+        checkNotNull(content);
+
+        final IPFS ipfs = Application.getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    PID pid = PID.create(content);
+
+
+                    IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+                    User user = threadsAPI.getUserByPid(pid);
+                    if (user == null) {
+                        user = threadsAPI.createUser(pid,
+                                pid.getPid(),
+                                pid.getPid(),
+                                pid.getPid(), UserType.VERIFIED, null);
+                        user.setStatus(UserStatus.OFFLINE);
+                        threadsAPI.storeUser(user);
+
+                    }
+                    checkNotNull(user);
+                    ipfs.id(pid);
+                    ipfs.swarm_connect(pid);
+
+                    boolean value = ipfs.swarm_is_connected(pid);
+                    if (value) {
+                        threadsAPI.setStatus(user, UserStatus.ONLINE);
+                    }
+
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            });
+        }
     }
 
 

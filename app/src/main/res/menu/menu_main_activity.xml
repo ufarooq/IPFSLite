@@ -19,7 +19,4 @@
         android:visible="true"
         app:showAsAction="ifRoom" />
 
-
-
-
 </menu>
