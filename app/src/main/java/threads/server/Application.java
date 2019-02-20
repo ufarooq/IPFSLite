@@ -73,6 +73,7 @@ public class Application extends android.app.Application {
 
             IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
 
+
             threadsApi.storeMessage(threadsApi.createMessage(MessageKind.INFO,
                     "\nWelcome to IPFS",
                     System.currentTimeMillis()));
@@ -80,6 +81,8 @@ public class Application extends android.app.Application {
             threadsApi.storeMessage(threadsApi.createMessage(MessageKind.INFO,
                     "Please feel free to start an IPFS daemon ...\n\n"
                     , System.currentTimeMillis()));
+
+            DaemonService.evalUserStatus(threadsApi);
 
         }).start();
     }

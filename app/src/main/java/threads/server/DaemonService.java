@@ -12,6 +12,7 @@ import android.widget.Toast;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import threads.core.IThreadsAPI;
@@ -104,6 +105,28 @@ public class DaemonService extends Service {
     }
 
 
+    public static void evalUserStatus(@NonNull IThreadsAPI threadsApi) {
+        checkNotNull(threadsApi);
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+
+        if (ipfs != null) {
+            List<User> users = threadsApi.getUsers();
+            for (User user : users) {
+
+                try {
+                    if (ipfs.swarm_is_connected(PID.create(user.getPid()))) {
+                        threadsApi.setStatus(user, UserStatus.ONLINE);
+                    } else {
+                        threadsApi.setStatus(user, UserStatus.OFFLINE);
+                    }
+                } catch (Throwable e) {
+                    threadsApi.setStatus(user, UserStatus.OFFLINE);
+                }
+
+            }
+        }
+    }
+
     private void startDaemonService() {
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         final IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
@@ -132,16 +155,7 @@ public class DaemonService extends Service {
 
                 try {
                     while (DAEMON_RUNNING.get()) {
-                        List<User> users = threadsApi.getUsers();
-                        for (User user : users) {
-
-                            if (ipfs.swarm_is_connected(PID.create(user.getPid()))) {
-                                threadsApi.setStatus(user, UserStatus.ONLINE);
-                            } else {
-                                threadsApi.setStatus(user, UserStatus.OFFLINE);
-                            }
-
-                        }
+                        evalUserStatus(threadsApi);
                         Thread.sleep(10000);
                     }
                 } catch (Throwable e) {
@@ -151,7 +165,6 @@ public class DaemonService extends Service {
         }
 
     }
-
     private void stopDaemonService() {
         long start = System.currentTimeMillis();
 
