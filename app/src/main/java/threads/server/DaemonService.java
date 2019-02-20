@@ -193,8 +193,11 @@ public class DaemonService extends Service {
             // Stop foreground service and remove the notification.
             stopForeground(true);
 
+            new Thread(() -> evalUserStatus(Singleton.getInstance().getThreadsAPI())).start();
+
             // Stop the foreground service.
             stopSelf();
+
 
             Log.e(TAG, " finish running [" + (System.currentTimeMillis() - start) + "]...");
         }
