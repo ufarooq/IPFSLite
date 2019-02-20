@@ -14,9 +14,8 @@ public class ClearConsoleService extends AsyncTask<Void, Void, Void> {
         try {
             IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
             threadsAPI.clearMessages();
-            Application.init();
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage());
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
         return null;
     }

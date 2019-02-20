@@ -49,8 +49,8 @@ public class ActionDialogFragment extends DialogFragment {
         @SuppressWarnings("all")
         View view = inflater.inflate(R.layout.action_view, null);
 
-        ImageView menu_galary = view.findViewById(R.id.menu_connect_peer);
-        menu_galary.setOnClickListener((v) -> {
+        ImageView menu_connect_peer = view.findViewById(R.id.menu_connect_peer);
+        menu_connect_peer.setOnClickListener((v) -> {
 
             try {
                 if (!DaemonService.DAEMON_RUNNING.get()) {
