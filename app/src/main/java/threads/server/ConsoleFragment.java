@@ -23,7 +23,10 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import threads.core.api.Message;
+import threads.core.mdl.MessagesViewModel;
 import threads.ipfs.IPFS;
+import threads.share.MessageViewAdapter;
 
 public class ConsoleFragment extends Fragment {
     private static final String TAG = ConsoleFragment.class.getSimpleName();

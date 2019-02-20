@@ -11,8 +11,10 @@ import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import threads.core.IThreadsAPI;
+import threads.core.Singleton;
+import threads.core.api.MessageKind;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.PID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -108,18 +110,19 @@ public class DaemonService extends Service {
                     ipfs.init(Application.getProfile(getApplicationContext()), configHasChanged,
                             Application.isQUICEnabled(getApplicationContext()));
                     ipfs.daemon(Application.isPubsubEnabled(getApplicationContext()));
-                    PID pid = ipfs.getPeerID();
-                    Application.setPid(getApplicationContext(), pid.getPid());
+
                     setIpfsRunning(true);
-                    Event event = Application.getEventsDatabase().createEvent(
-                            Application.SERVER_ONLINE_EVENT);
-                    Application.getEventsDatabase().insertEvent(event);
+
+                    IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
+                    threadsApi.storeEvent(
+                            threadsApi.createEvent(Application.SERVER_ONLINE_EVENT, ""));
+
 
                 } catch (Throwable e) {
                     Log.e(TAG, e.getLocalizedMessage(), e);
-                    Event event = Application.getEventsDatabase().createEvent(
-                            Application.SERVER_OFFLINE_EVENT);
-                    Application.getEventsDatabase().insertEvent(event);
+                    IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
+                    threadsApi.storeEvent(
+                            threadsApi.createEvent(Application.SERVER_OFFLINE_EVENT, ""));
                     stopForeground(true);
                     stopSelf();
                 }
@@ -137,12 +140,17 @@ public class DaemonService extends Service {
                 new Thread(() -> {
                     ipfs.shutdown();
                     setIpfsRunning(false);
-                    Application.getEventsDatabase().insertMessage(
-                            MessageKind.INFO,
-                            getApplicationContext().getString(R.string.server_shutdown), System.currentTimeMillis());
-                    Event event = Application.getEventsDatabase().createEvent(
-                            Application.SERVER_OFFLINE_EVENT);
-                    Application.getEventsDatabase().insertEvent(event);
+
+                    IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
+                    threadsApi.storeEvent(
+                            threadsApi.createEvent(Application.SERVER_OFFLINE_EVENT, ""));
+
+
+                    threadsApi.storeMessage(threadsApi.createMessage(MessageKind.INFO,
+                            getApplicationContext().getString(R.string.server_shutdown),
+                            System.currentTimeMillis()));
+
+
                 }).start();
             }
         } catch (Throwable e) {

@@ -11,9 +11,12 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.room.Room;
+import threads.core.IThreadsAPI;
+import threads.core.Preferences;
+import threads.core.Singleton;
+import threads.core.api.EventsDatabase;
+import threads.core.api.MessageKind;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.CmdListener;
 import threads.ipfs.api.Profile;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -92,22 +95,6 @@ public class Application extends android.app.Application {
         return Profile.valueOf(profile);
     }
 
-    public static void setPid(@NonNull Context context, @NonNull String pid) {
-        checkNotNull(context);
-        checkNotNull(pid);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(PID_KEY, pid);
-        editor.apply();
-    }
-
-    public static String getPid(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        String pid = sharedPref.getString(PID_KEY, "");
-        Log.e(TAG, "PID : " + pid);
-        return pid;
-    }
 
     public static void createChannel(@NonNull Context context) {
         checkNotNull(context);
@@ -133,13 +120,17 @@ public class Application extends android.app.Application {
 
 
     public static void init() {
-        new java.lang.Thread(() -> {
-            Application.getEventsDatabase().insertMessage(MessageKind.INFO,
+        new Thread(() -> {
+
+            IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
+
+            threadsApi.storeMessage(threadsApi.createMessage(MessageKind.INFO,
                     "\nWelcome to IPFS",
-                    System.currentTimeMillis());
-            Application.getEventsDatabase().insertMessage(MessageKind.INFO,
+                    System.currentTimeMillis()));
+
+            threadsApi.storeMessage(threadsApi.createMessage(MessageKind.INFO,
                     "Please feel free to start an IPFS daemon ...\n\n"
-                    , System.currentTimeMillis());
+                    , System.currentTimeMillis()));
 
         }).start();
     }
@@ -184,52 +175,20 @@ public class Application extends android.app.Application {
     public void onCreate() {
         super.onCreate();
 
-        eventsDatabase = Room.inMemoryDatabaseBuilder(this, EventsDatabase.class).build();
 
-        CmdListener cmdListener = new ConsoleListener();
+        Log.e(TAG, "...... start application");
 
         try {
-            ipfs = new IPFS.Builder().context(getApplicationContext()).listener(cmdListener).build();
+            Singleton.getInstance().init(getApplicationContext(), () -> "",
+                    null, false, true);
         } catch (Throwable e) {
-            new Thread(() ->
-                    getEventsDatabase().insertMessage(MessageKind.ERROR,
-                            "Installation problems : " + e.getLocalizedMessage(),
-                            System.currentTimeMillis())
-            ).start();
+            Preferences.evaluateException(Preferences.IPFS_INSTALL_FAILURE, e);
         }
+
 
         init();
 
 
-        Log.e(TAG, "...... start application");
-
     }
 
-
-    private class ConsoleListener implements CmdListener {
-
-        @Override
-        public void info(@NonNull String message) {
-            long timestamp = System.currentTimeMillis();
-            new Thread(() ->
-                    getEventsDatabase().insertMessage(MessageKind.INFO, message, timestamp)
-            ).start();
-        }
-
-        @Override
-        public void error(@NonNull String message) {
-            long timestamp = System.currentTimeMillis();
-            new Thread(() ->
-                    getEventsDatabase().insertMessage(MessageKind.ERROR, message, timestamp)
-            ).start();
-        }
-
-        @Override
-        public void cmd(@NonNull String message) {
-            long timestamp = System.currentTimeMillis();
-            new Thread(() ->
-                    getEventsDatabase().insertMessage(MessageKind.CMD, message, timestamp)
-            ).start();
-        }
-    }
 }

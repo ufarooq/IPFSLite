@@ -48,6 +48,8 @@ import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
 import de.psdev.licensesdialog.LicensesDialogFragment;
+import threads.core.Preferences;
+import threads.core.mdl.EventViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
@@ -391,12 +393,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                String pid = Application.getPid(getApplicationContext());
-                if (pid.isEmpty()) {
+                PID pid = Preferences.getPID(getApplicationContext());
+                if (pid == null) {
                     Toast.makeText(getApplicationContext(),
                             getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
                 } else {
-                    InfoDialogFragment.show(this, pid,
+                    InfoDialogFragment.show(this, pid.getPid(),
                             getString(R.string.peer_id),
                             getString(R.string.daemon_server_access, pid));
                 }
