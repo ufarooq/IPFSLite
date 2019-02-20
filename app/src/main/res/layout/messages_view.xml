@@ -39,11 +39,11 @@
 
         <ImageView
             android:id="@+id/console_send"
-            android:layout_width="54dp"
-            android:layout_height="54dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:layout_gravity="bottom"
             android:layout_weight="0"
-            app:srcCompat="@drawable/dots_vertical_circle"
+            app:srcCompat="@drawable/send"
             tools:ignore="ContentDescription" />
 
     </LinearLayout>

@@ -1,9 +1,7 @@
 package threads.server;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,6 +16,9 @@ import com.google.common.collect.Lists;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
 import threads.ipfs.api.Profile;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -26,6 +27,7 @@ public class SettingsDialog extends DialogFragment {
     private static final String TAG = SettingsDialog.class.getSimpleName();
 
     @Override
+    @NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
         Activity activity = getActivity();

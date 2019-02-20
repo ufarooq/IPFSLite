@@ -13,33 +13,23 @@ import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.SystemClock;
 import android.provider.OpenableColumns;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.tabs.TabLayout;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
-import org.apache.tools.ant.types.Commandline;
-
-import java.io.File;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -52,9 +42,11 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.lifecycle.ViewModelProviders;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager.widget.ViewPager;
 import de.psdev.licensesdialog.LicensesDialogFragment;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
@@ -71,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private final AtomicBoolean networkAvailable = new AtomicBoolean(true);
     private final AtomicBoolean idScan = new AtomicBoolean(false);
     private DrawerLayout drawer_layout;
-    //private DownloadManager downloadManager;
+
     private final BroadcastReceiver networkChangeReceiver = new BroadcastReceiver() {
         private final AtomicBoolean wasOffline = new AtomicBoolean(false);
         private Snackbar snackbar;
@@ -113,27 +105,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     };
     private FloatingActionButton server;
-    private RecyclerView mRecyclerView;
-    private MessageViewAdapter messageViewAdapter;
-    private long mLastClickTime = 0;
-    private EditText console_box;
 
-    public static File getStorageFile(@NonNull String name) {
-        checkNotNull(name);
-        File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-        File file = new File(dir, name);
-        if (!file.exists()) {
-            try {
-                if (!file.createNewFile()) {
-                    throw new RuntimeException("File couldn't be created.");
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                throw new RuntimeException(e);
-            }
-        }
-        return file;
-    }
+
+    private long mLastClickTime = 0;
+
+
 
 
     @Override
@@ -141,40 +117,45 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mRecyclerView = findViewById(R.id.view_message_list);
-        //downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        LinearLayoutManager linearLayout = new LinearLayoutManager(this);
-        mRecyclerView.addOnLayoutChangeListener((View v,
-                                                 int left, int top, int right, int bottom,
-                                                 int oldLeft, int oldTop,
-                                                 int oldRight, int oldBottom) -> {
-
-            if (bottom < oldBottom) {
-                mRecyclerView.postDelayed(() -> {
-
-                    try {
-                        RecyclerView.Adapter adapter = mRecyclerView.getAdapter();
-                        if (adapter != null) {
-                            mRecyclerView.smoothScrollToPosition(
-                                    adapter.getItemCount());
-                        }
-                    } catch (Throwable e) {
-                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    }
-
-                }, 50);
-            }
-
-        });
-
-
-        mRecyclerView.setLayoutManager(linearLayout);
-        messageViewAdapter = new MessageViewAdapter();
-        mRecyclerView.setAdapter(messageViewAdapter);
-
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+
+        TabLayout tabLayout = findViewById(R.id.tabLayout);
+        tabLayout.addTab(tabLayout.newTab().setText("Console"));
+
+        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+
+        final ViewPager viewPager = findViewById(R.id.viewPager);
+        final PagerAdapter adapter = new PagerAdapter
+                (getSupportFragmentManager(), tabLayout.getTabCount());
+        viewPager.setAdapter(adapter);
+        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                viewPager.setCurrentItem(tab.getPosition());
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
+
+
+
+
+
+
+
+
 
 
         drawer_layout = findViewById(R.id.drawer_layout);
@@ -223,18 +204,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         serverStatus();
 
 
-        MessagesViewModel messagesViewModel = ViewModelProviders.of(this).get(MessagesViewModel.class);
-        messagesViewModel.getMessages().observe(this, (messages) -> {
-
-            try {
-                if (messages != null) {
-                    updateMessages(messages);
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage());
-            }
-
-        });
 
         EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
         eventViewModel.getDaemonServerOfflineEvent().observe(this, (event) -> {
@@ -260,97 +229,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         });
 
-
-        ImageView console_send = findViewById(R.id.console_send);
-
-        console_box = findViewById(R.id.console_box);
-        console_box.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-                if (s.length() > 0) {
-                    console_send.setImageResource(R.drawable.send);
-                } else {
-                    console_send.setImageResource(R.drawable.dots_vertical_circle);
-                }
-
-            }
-        });
-
-
-        console_send.setOnClickListener((view) -> {
-
-            // mis-clicking prevention, using threshold of 1500 ms
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 1500) {
-                return;
-            }
-            mLastClickTime = SystemClock.elapsedRealtime();
-
-            removeKeyboards();
-
-            String text = console_box.getText().toString();
-
-            if (!text.isEmpty()) {
-                // Hack to mack sure that last index is line separator
-                if (text.contains("pubsub pub") && !text.endsWith(System.lineSeparator())) {
-                    text = text.concat(System.lineSeparator());
-                }
-
-                console_box.setText("");
-
-                String[] parts = Commandline.translateCommandline(text);
-                if (parts.length > 0) {
-
-
-                    if (parts[0].equalsIgnoreCase("ipfs")) {
-                        String[] commands = Arrays.copyOfRange(parts, 1, parts.length);
-                        ExecutorService executor = Executors.newSingleThreadExecutor();
-                        executor.submit(() -> {
-                            try {
-                                IPFS ipfs = Application.getIpfs();
-
-                                if (ipfs != null) {
-                                    ipfs.cmd(commands);
-                                }
-
-                            } catch (Throwable e) {
-                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                            }
-                        });
-                    } else {
-                        ExecutorService executor = Executors.newSingleThreadExecutor();
-                        executor.submit(() -> {
-                            try {
-                                IPFS ipfs = Application.getIpfs();
-
-                                if (ipfs != null) {
-                                    ipfs.cmd(parts);
-                                }
-
-                            } catch (Throwable e) {
-                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                            }
-                        });
-                    }
-                }
-            } else {
-                android.app.FragmentManager fm = getFragmentManager();
-
-                ActionDialogFragment messageActionDialogFragment = new ActionDialogFragment();
-                messageActionDialogFragment.show(fm, "ActionDialogFragment");
-            }
-
-        });
 
     }
 
@@ -442,13 +320,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    private void removeKeyboards() {
-        InputMethodManager imm = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (imm != null) {
-            imm.hideSoftInputFromWindow(console_box.getWindowToken(), 0);
-        }
-    }
-
 
     private void serverStatus() {
 
@@ -465,16 +336,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    private void updateMessages(@NonNull List<Message> messages) {
-        try {
-            messageViewAdapter.updateData(messages);
 
-            mRecyclerView.scrollToPosition(messageViewAdapter.getItemCount() - 1);
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -610,7 +472,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             case R.id.nav_settings: {
                 try {
-                    android.app.FragmentManager fm = getFragmentManager();
+                    FragmentManager fm = getSupportFragmentManager();
                     SettingsDialog messageActionDialogFragment = new SettingsDialog();
                     messageActionDialogFragment.show(fm, "SettingsDialog");
                 } catch (Throwable e) {
@@ -736,4 +598,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
     }
+
+
+    public class PagerAdapter extends FragmentStatePagerAdapter {
+        int mNumOfTabs;
+
+        public PagerAdapter(FragmentManager fm, int NumOfTabs) {
+            super(fm);
+            this.mNumOfTabs = NumOfTabs;
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+
+            switch (position) {
+                case 0:
+                    ConsoleFragment console = new ConsoleFragment();
+                    return console;
+                default:
+                    return null;
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return mNumOfTabs;
+        }
+    }
+
 }

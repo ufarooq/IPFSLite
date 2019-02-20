@@ -1,8 +1,6 @@
 package threads.server;
 
-import android.app.Activity;
 import android.app.Dialog;
-import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -21,6 +19,8 @@ import java.util.Hashtable;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.DialogFragment;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -43,7 +43,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
     }
 
 
-    public static void show(@NonNull Activity activity,
+    public static void show(@NonNull AppCompatActivity activity,
                             @NonNull String code,
                             @NonNull String title,
                             @NonNull String message) {
@@ -60,7 +60,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
             bundle.putString(TITLE, title);
             InfoDialogFragment fragment = new InfoDialogFragment();
             fragment.setArguments(bundle);
-            fragment.show(activity.getFragmentManager(), null);
+            fragment.show(activity.getSupportFragmentManager(), null);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }

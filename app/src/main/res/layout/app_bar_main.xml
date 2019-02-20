@@ -6,9 +6,11 @@
     android:layout_height="match_parent"
     tools:context="threads.server.MainActivity">
 
+
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:id="@+id/app_toolbar"
         android:background="@drawable/side_nav_bar"
         android:fitsSystemWindows="false"
         android:theme="@style/ThreadsServerAppBarOverlay">
@@ -20,10 +22,23 @@
             android:elevation="4dp"
             app:popupTheme="@style/ThreadsServerPopupOverlay" />
 
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/side_nav_bar"
+            app:tabGravity="fill"
+            app:tabMode="fixed" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <include layout="@layout/messages_view" />
+
+    <androidx.viewpager.widget.ViewPager
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/server"
@@ -31,9 +46,10 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="64dp"
         android:layout_marginEnd="@dimen/fab_margin"
-        app:layout_anchor="@id/toolbar"
-        app:layout_anchorGravity="bottom|end"
         android:visibility="visible"
+        app:layout_anchor="@id/tabLayout"
+        app:layout_anchorGravity="bottom|end"
         app:srcCompat="@android:drawable/ic_media_play" />
+
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
