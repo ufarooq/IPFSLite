@@ -144,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 (getSupportFragmentManager(), tabLayout.getTabCount());
         viewPager.setAdapter(adapter);
         viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
-        tabLayout.setOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 viewPager.setCurrentItem(tab.getPosition());
@@ -601,8 +601,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Intent intent = new Intent();
             intent.setType("*/*");
 
-            String[] mimetypes = {"*/*"};
-            intent.putExtra(Intent.EXTRA_MIME_TYPES, mimetypes);
+            String[] mimeTypes = {"*/*"};
+            intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
             intent.setAction(Intent.ACTION_GET_CONTENT);
             startActivityForResult(Intent.createChooser(intent, "Select Media File"), SELECT_MEDIA_FILE);
         } catch (Throwable e) {
@@ -700,9 +700,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     public class PagerAdapter extends FragmentStatePagerAdapter {
-        int mNumOfTabs;
+        final int mNumOfTabs;
 
-        public PagerAdapter(FragmentManager fm, int NumOfTabs) {
+        PagerAdapter(FragmentManager fm, int NumOfTabs) {
             super(fm);
             this.mNumOfTabs = NumOfTabs;
         }

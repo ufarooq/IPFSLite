@@ -28,7 +28,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class PeersFragment extends Fragment implements UsersViewAdapter.UsersViewAdapterListener {
     private static final String TAG = PeersFragment.class.getSimpleName();
     private long mLastClickTime = 0;
-    private FloatingActionButton fab_action;
 
     private RecyclerView mRecyclerView;
     private UsersViewAdapter usersViewAdapter;
@@ -38,7 +37,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         View view = inflater.inflate(R.layout.peers_view, container, false);
 
 
-        fab_action = view.findViewById(R.id.fab_action);
+        FloatingActionButton fab_action = view.findViewById(R.id.fab_action);
         fab_action.setOnClickListener((v) -> {
 
 

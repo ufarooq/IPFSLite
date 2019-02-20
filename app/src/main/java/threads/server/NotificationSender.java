@@ -18,20 +18,21 @@ import threads.ipfs.api.Link;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 class NotificationSender {
-    static final AtomicInteger NOTIFICATIONS_COUNTER = new AtomicInteger(1000);
     private static final String CHANNEL_ID = "CHANNEL_ID";
     private static final String GROUP_ID = "GROUP_ID";
+
+    static final AtomicInteger NOTIFICATIONS_COUNTER = new AtomicInteger(1000);
     private static final String TAG = NotificationSender.class.getSimpleName();
 
 
-    public static void createChannel(@NonNull Context context) {
+    static void createChannel(@NonNull Context context) {
         checkNotNull(context);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             try {
                 CharSequence name = context.getString(R.string.channel_name);
                 String description = context.getString(R.string.channel_description);
-                int importance = NotificationManager.IMPORTANCE_DEFAULT;
-                NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name, importance);
+                NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name,
+                        NotificationManager.IMPORTANCE_LOW);
                 mChannel.setDescription(description);
 
                 NotificationManager notificationManager = (NotificationManager) context.getSystemService(
@@ -65,13 +66,12 @@ class NotificationSender {
     private static void buildGroupNotification(@NonNull Context context) {
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(
-                context,
-                NotificationSender.CHANNEL_ID);
+                context, CHANNEL_ID);
 
         builder.setContentTitle(context.getString(R.string.app_name));
         builder.setSmallIcon(R.drawable.server_network);
         builder.setBadgeIconType(NotificationCompat.BADGE_ICON_LARGE);
-        builder.setGroup(NotificationSender.GROUP_ID);
+        builder.setGroup(GROUP_ID);
         builder.setAutoCancel(true);
         builder.setGroupSummary(true);
         builder.setPriority(NotificationManager.IMPORTANCE_DEFAULT);
@@ -113,7 +113,7 @@ class NotificationSender {
         builder.setProgress(0, 0, true);
         builder.setAutoCancel(false);
         builder.setContentText(content);
-        builder.setPriority(NotificationCompat.PRIORITY_HIGH);
+        builder.setPriority(NotificationManager.IMPORTANCE_DEFAULT);
         builder.setSmallIcon(R.drawable.server_network);
         return builder;
     }
@@ -124,13 +124,12 @@ class NotificationSender {
         checkNotNull(context);
         checkNotNull(link);
 
-        return createNotification(context, link.getPath(), NotificationCompat.PRIORITY_MAX);
+        return createNotification(context, link.getPath());
     }
 
 
     private static Notification createNotification(@NonNull Context context,
-                                                   @NonNull String message,
-                                                   int priority) {
+                                                   @NonNull String message) {
         checkNotNull(context);
         checkNotNull(message);
 
@@ -149,8 +148,8 @@ class NotificationSender {
                         .setContentIntent(pendingIntent)
                         .setGroup(GROUP_ID)
                         .setAutoCancel(true)
-                        .setPriority(priority)
                         .setContentText(message)
+                        .setPriority(NotificationManager.IMPORTANCE_MAX)
                         .setSmallIcon(R.drawable.server_network);
         return notificationBuilder.build();
     }

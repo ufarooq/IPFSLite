@@ -4,6 +4,5 @@
     <color name="colorDrawable">#534bae</color>
     <color name="colorPrimaryLight">#534bae</color>
     <color name="colorPrimaryDark">#000051</color>
-    <color name="primaryTextColor">#1a1a1a</color>
     <color name="lightGray">#f1f8f8</color>
 </resources>

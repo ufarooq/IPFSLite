@@ -26,7 +26,6 @@
     <string name="multihash_add">The QR code (CID \"%1$s\") contains all necessary information to get the content of the hash.</string>
     <string name="feature_camera_required">Camera Feature required</string>
     <string name="share">Share</string>
-    <string name="content_downloaded">Content \"%1$s\" will be downloaded in the Downloads directory.</string>
     <string name="settings">Settings</string>
     <string name="profile">Profile</string>
     <string name="settings_message">Settings for the IPFS initialization.</string>

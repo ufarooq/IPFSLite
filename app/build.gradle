@@ -16,7 +16,7 @@ ext {
     siteUrl = 'https://gitlab.com/remmer.wilts/threads-server'
     gitUrl = 'git@gitlab.com:remmer.wilts/threads-server.git'
 
-    libraryVersion = '0.3.0'
+    libraryVersion = '0.3.1'
 
     developerId = 'remmerw'
     developerName = 'Remmer Wilts'
@@ -35,8 +35,8 @@ android {
         applicationId "threads.server"
         minSdkVersion 24
         targetSdkVersion 28
-        versionCode 30
-        versionName "0.3.0"
+        versionCode 31
+        versionName "0.3.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -79,7 +79,7 @@ dependencies {
     // ANDROID Architecture (LICENSE done)
     implementation 'androidx.room:room-runtime:2.1.0-alpha04'
     // UI+API (LICENSE done)
-    implementation 'threads.share:share:0.7.7'
+    implementation 'threads.share:share:0.7.8'
     // QR Scanner (LICENSE done)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'
     // UI (for showing licences file) (LICENSE done)

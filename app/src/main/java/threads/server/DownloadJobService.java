@@ -123,7 +123,7 @@ public class DownloadJobService extends JobService {
                     startActivity(intent);
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
             });
         }
