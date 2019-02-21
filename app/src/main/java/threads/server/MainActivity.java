@@ -299,7 +299,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
             if (result != null) {
                 if (result.getContents() != null) {
-                    String content = result.getContents();
+                    String multihash = result.getContents();
 
                     if (SystemClock.elapsedRealtime() - mLastClickTime < 2000) {
                         return;
@@ -308,9 +308,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                     if (!idScan.get()) {
-                        DownloadJobService.download(getApplicationContext(), content);
+                        DownloadJobService.download(getApplicationContext(), multihash);
                     } else {
-                        clickConnect(content);
+                        clickConnect(multihash);
                     }
                 }
             } else {
@@ -679,7 +679,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             executor.submit(() -> {
                 try {
 
-                    // just a simple check if multihash is valid
+                    // check if multihash is valid
                     try {
                         Multihash.fromBase58(multihash);
                     } catch (Throwable e) {
