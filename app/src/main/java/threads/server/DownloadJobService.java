@@ -136,6 +136,8 @@ public class DownloadJobService extends JobService {
 
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                } finally {
+                    jobFinished(jobParameters, false);
                 }
             });
         }

@@ -18,10 +18,9 @@ import threads.ipfs.api.Link;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 class NotificationSender {
+    static final AtomicInteger NOTIFICATIONS_COUNTER = new AtomicInteger(1000);
     private static final String CHANNEL_ID = "CHANNEL_ID";
     private static final String GROUP_ID = "GROUP_ID";
-
-    static final AtomicInteger NOTIFICATIONS_COUNTER = new AtomicInteger(1000);
     private static final String TAG = NotificationSender.class.getSimpleName();
 
 

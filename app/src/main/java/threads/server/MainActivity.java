@@ -246,7 +246,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-
         eventViewModel.getIPFSServerOfflineEvent().observe(this, (event) -> {
 
             try {

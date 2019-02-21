@@ -193,6 +193,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
                 .create();
     }
 
+
     @Override
     public void onClick(DialogInterface dialogInterface, int which) {
         switch (which) {
