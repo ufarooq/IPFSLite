@@ -21,7 +21,6 @@ import threads.core.Preferences;
 import threads.core.api.User;
 import threads.core.mdl.UsersViewModel;
 import threads.ipfs.api.PID;
-import threads.share.NoteActionDialogFragment;
 import threads.share.UserActionDialogFragment;
 import threads.share.UsersViewAdapter;
 
@@ -124,7 +123,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
             UserActionDialogFragment.newInstance(
                     user.getPid(), true, true, true, false)
-                    .show(fm, NoteActionDialogFragment.TAG);
+                    .show(fm, UserActionDialogFragment.TAG);
         }
 
     }

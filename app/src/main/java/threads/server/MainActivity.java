@@ -70,6 +70,7 @@ import threads.core.mdl.EventViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
+import threads.share.ThreadActionDialogFragment;
 import threads.share.UserActionDialogFragment;
 import threads.share.WebViewDialogFragment;
 
@@ -79,6 +80,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
         ActionDialogFragment.ActionListener,
         UserActionDialogFragment.ActionListener,
+        ThreadActionDialogFragment.ActionListener,
         EditMultihashDialogFragment.ActionListener {
     public static final int SELECT_MEDIA_FILE = 1;
     private static final int WRITE_EXTERNAL_STORAGE = 2;
@@ -178,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (!idScan.get()) {
                         DownloadJobService.download(getApplicationContext(), multihash);
                     } else {
-                        clickConnect(multihash);
+                        clickUserConnect(multihash);
                     }
                 }
             } else {
@@ -767,12 +769,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickBlock(@NonNull String pid) {
+    public void clickUserBlock(@NonNull String pid) {
         checkNotNull(pid);
     }
 
     @Override
-    public void clickInfo(String pid) {
+    public void clickUserInfo(String pid) {
         checkNotNull(pid);
 
         InfoDialogFragment.show(this, pid,
@@ -781,7 +783,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickDelete(@NonNull final String pid) {
+    public void clickUserDelete(@NonNull final String pid) {
         checkNotNull(pid);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -796,7 +798,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickConnect(@NonNull String multihash) {
+    public void clickUserConnect(@NonNull String multihash) {
         checkNotNull(multihash);
 
         final IPFS ipfs = Singleton.getInstance().getIpfs();
@@ -846,7 +848,37 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickConnectPeer(@NonNull String multihash) {
-        clickConnect(multihash);
+        clickUserConnect(multihash);
+    }
+
+    @Override
+    public void clickThreadPin(@NonNull String thread) {
+        checkNotNull(thread);
+        // TODO
+    }
+
+    @Override
+    public void clickThreadInfo(@NonNull String thread) {
+        checkNotNull(thread);
+        // TODO
+    }
+
+    @Override
+    public void clickThreadPlay(@NonNull String thread) {
+        checkNotNull(thread);
+        // TODO
+    }
+
+    @Override
+    public void clickThreadDelete(@NonNull String thread) {
+        checkNotNull(thread);
+        // TODO
+    }
+
+    @Override
+    public void clickThreadView(@NonNull String thread) {
+        checkNotNull(thread);
+        // TODO
     }
 
 

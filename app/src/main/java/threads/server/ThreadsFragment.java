@@ -24,6 +24,7 @@ import threads.core.Preferences;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.mdl.ThreadsViewModel;
+import threads.share.ThreadActionDialogFragment;
 import threads.share.ThreadsViewAdapter;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -209,7 +210,14 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     @Override
     public void invokeGeneralAction(@NonNull Thread thread) {
-        // TODO
+        if (getActivity() != null) {
+            FragmentManager fm = getActivity().getSupportFragmentManager();
+
+            ThreadActionDialogFragment.newInstance(
+                    thread.getAddress(), true, true, true,
+                    true, false)
+                    .show(fm, ThreadActionDialogFragment.TAG);
+        }
     }
 
     @Override
