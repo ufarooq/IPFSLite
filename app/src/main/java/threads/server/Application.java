@@ -12,6 +12,11 @@ import threads.core.IThreadsAPI;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.api.MessageKind;
+import threads.core.api.User;
+import threads.core.api.UserStatus;
+import threads.core.api.UserType;
+import threads.ipfs.IPFS;
+import threads.ipfs.api.PID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -40,23 +45,42 @@ public class Application extends android.app.Application {
     }
 
 
-    public static void init() {
-        new Thread(() -> {
+    private static void init(@NonNull Context context) {
+        checkNotNull(context);
 
-            IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
+        final IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            new Thread(() -> {
 
 
-            threadsApi.storeMessage(threadsApi.createMessage(MessageKind.INFO,
-                    "\nWelcome to IPFS",
-                    System.currentTimeMillis()));
+                PID pid = Preferences.getPID(context);
+                checkNotNull(pid);
+                User user = threadsApi.getUserByPid(pid);
+                if (user == null) {
 
-            threadsApi.storeMessage(threadsApi.createMessage(MessageKind.INFO,
-                    "Please feel free to start an IPFS daemon ...\n\n"
-                    , System.currentTimeMillis()));
+                    String inbox = Preferences.getInbox(context);
+                    checkNotNull(inbox);
+                    String publicKey = ipfs.getPublicKey();
 
-            DaemonService.evalUserStatus(threadsApi);
+                    user = threadsApi.createUser(pid, inbox, publicKey,
+                            pid.getPid(), UserType.VERIFIED, null);
+                    user.setStatus(UserStatus.ONLINE);
+                    threadsApi.storeUser(user);
+                }
 
-        }).start();
+                threadsApi.storeMessage(threadsApi.createMessage(MessageKind.INFO,
+                        "\nWelcome to IPFS",
+                        System.currentTimeMillis()));
+
+                threadsApi.storeMessage(threadsApi.createMessage(MessageKind.INFO,
+                        "Please feel free to start an IPFS daemon ...\n\n"
+                        , System.currentTimeMillis()));
+
+                DaemonService.evalUserStatus(threadsApi);
+
+            }).start();
+        }
     }
 
     public static boolean isQUICEnabled(@NonNull Context context) {
@@ -110,8 +134,7 @@ public class Application extends android.app.Application {
             Preferences.evaluateException(Preferences.IPFS_INSTALL_FAILURE, e);
         }
 
-
-        init();
+        init(getApplicationContext());
 
 
     }

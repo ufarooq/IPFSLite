@@ -46,15 +46,21 @@ public class DaemonService extends Service {
         if (ipfs != null) {
             List<User> users = threadsApi.getUsers();
             for (User user : users) {
-
+                UserStatus oldStatus = user.getStatus();
                 try {
                     if (ipfs.swarm_is_connected(PID.create(user.getPid()))) {
-                        threadsApi.setStatus(user, UserStatus.ONLINE);
+                        if (UserStatus.ONLINE != oldStatus) {
+                            threadsApi.setStatus(user, UserStatus.ONLINE);
+                        }
                     } else {
-                        threadsApi.setStatus(user, UserStatus.OFFLINE);
+                        if (UserStatus.OFFLINE != oldStatus) {
+                            threadsApi.setStatus(user, UserStatus.OFFLINE);
+                        }
                     }
                 } catch (Throwable e) {
-                    threadsApi.setStatus(user, UserStatus.OFFLINE);
+                    if (UserStatus.OFFLINE != oldStatus) {
+                        threadsApi.setStatus(user, UserStatus.OFFLINE);
+                    }
                 }
 
             }

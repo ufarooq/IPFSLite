@@ -7,13 +7,18 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.graphics.pdf.PdfRenderer;
+import android.media.MediaMetadataRetriever;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.provider.OpenableColumns;
 import android.util.Log;
@@ -30,12 +35,15 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -53,6 +61,8 @@ import io.ipfs.multihash.Multihash;
 import threads.core.IThreadsAPI;
 import threads.core.Preferences;
 import threads.core.Singleton;
+import threads.core.api.Thread;
+import threads.core.api.ThreadStatus;
 import threads.core.api.User;
 import threads.core.api.UserStatus;
 import threads.core.api.UserType;
@@ -124,6 +134,59 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private long mLastClickTime = 0;
 
 
+    private static int getPowerOfTwoForSampleRatio(double ratio) {
+        int k = Integer.highestOneBit((int) Math.floor(ratio));
+        if (k == 0) return 1;
+        else return k;
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult
+            (int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case WRITE_EXTERNAL_STORAGE: {
+                for (int i = 0, len = permissions.length; i < len; i++) {
+
+                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                        nav_get();
+                    }
+                }
+
+                break;
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == SELECT_MEDIA_FILE && resultCode == RESULT_OK && data != null && data.getData() != null) {
+            Uri uri = data.getData();
+            storeData(uri);
+        } else {
+            IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+            if (result != null) {
+                if (result.getContents() != null) {
+                    String multihash = result.getContents();
+
+                    if (SystemClock.elapsedRealtime() - mLastClickTime < 2000) {
+                        return;
+                    }
+                    mLastClickTime = SystemClock.elapsedRealtime();
+
+
+                    if (!idScan.get()) {
+                        DownloadJobService.download(getApplicationContext(), multihash);
+                    } else {
+                        clickConnect(multihash);
+                    }
+                }
+            } else {
+                super.onActivityResult(requestCode, resultCode, data);
+            }
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -136,6 +199,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         TabLayout tabLayout = findViewById(R.id.tabLayout);
         tabLayout.addTab(tabLayout.newTab().setText("Friends"));
+        tabLayout.addTab(tabLayout.newTab().setText("Files"));
         tabLayout.addTab(tabLayout.newTab().setText("Console"));
         tabLayout.addTab(tabLayout.newTab().setText("Info"));
 
@@ -271,65 +335,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-
-    @Override
-    public void onRequestPermissionsResult
-            (int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case WRITE_EXTERNAL_STORAGE: {
-                for (int i = 0, len = permissions.length; i < len; i++) {
-
-                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                        nav_get();
-                    }
-                }
-
-                break;
-            }
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == SELECT_MEDIA_FILE && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            Uri uri = data.getData();
-            storeData(uri);
-        } else {
-            IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
-            if (result != null) {
-                if (result.getContents() != null) {
-                    String multihash = result.getContents();
-
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 2000) {
-                        return;
-                    }
-                    mLastClickTime = SystemClock.elapsedRealtime();
-
-
-                    if (!idScan.get()) {
-                        DownloadJobService.download(getApplicationContext(), multihash);
-                    } else {
-                        clickConnect(multihash);
-                    }
-                }
-            } else {
-                super.onActivityResult(requestCode, resultCode, data);
-            }
-        }
-    }
-
     private void storeData(@NonNull final Uri uri) {
         Cursor returnCursor = getApplicationContext().getContentResolver().query(
                 uri, null, null, null, null);
 
         checkNotNull(returnCursor);
         int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-        //int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
+        int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
         returnCursor.moveToFirst();
 
         final String filename = returnCursor.getString(nameIndex);
         returnCursor.close();
+        String mimeType = getApplicationContext().getContentResolver().getType(uri);
+        checkNotNull(mimeType);
+
         final IPFS ipfs = Singleton.getInstance().getIpfs();
+        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
@@ -338,9 +359,72 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             getApplicationContext().getContentResolver().openInputStream(uri);
                     checkNotNull(inputStream);
 
+                    PID pid = Preferences.getPID(getApplicationContext());
+                    checkNotNull(pid);
+                    User user = threadsAPI.getUserByPid(pid);
+                    checkNotNull(user);
+
+
+                    byte[] bytes = null;
+                    if (!mimeType.isEmpty()) {
+                        if (mimeType.startsWith("video")) {
+
+                            MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+                            mediaMetadataRetriever.setDataSource(getApplicationContext(), uri);
+                            if (sizeIndex > 100000) {
+                                Bitmap bitmap = mediaMetadataRetriever.getFrameAtTime(1000000);
+                                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                                bytes = stream.toByteArray();
+                                bitmap.recycle();
+                            } else {
+                                Bitmap bitmap = mediaMetadataRetriever.getFrameAtTime();
+                                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                                bytes = stream.toByteArray();
+                                bitmap.recycle();
+                            }
+                        } else if (mimeType.startsWith("application/pdf")) {
+
+                            Bitmap bitmap = getPDFBitmap(uri);
+                            if (bitmap != null) {
+                                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                                bytes = stream.toByteArray();
+                                bitmap.recycle();
+                            }
+                        } else if (mimeType.startsWith("image")) {
+                            try {
+                                Bitmap bitmap = getThumbnail(uri);
+                                if (bitmap != null) {
+                                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                                    bytes = stream.toByteArray();
+                                    bitmap.recycle();
+                                }
+                            } catch (Throwable e) {
+                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                            }
+                        }
+                    }
+
 
                     CID cid = ipfs.add(inputStream, filename, true);
                     checkNotNull(cid);
+
+                    if (bytes == null) {
+                        bytes = user.getImage();
+                    }
+                    // TODO create before adding
+                    Thread thread = threadsAPI.createThread(user, filename,
+                            filename, bytes, false, false);
+                    thread.setMimeType(mimeType);
+                    thread.setStatus(ThreadStatus.ONLINE);
+                    thread.setCid(cid.getCid());
+                    threadsAPI.storeThread(thread);
+
+                    //threadsAPI.setStatus(note, NoteStatus.SEEDING);
+
 
                     InfoDialogFragment.show(this, cid.getCid(),
                             getString(R.string.multihash),
@@ -352,6 +436,68 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             });
         }
+    }
+
+    public Bitmap getThumbnail(Uri uri) throws IOException {
+        int THUMBNAIL_SIZE = 400;
+        InputStream input = this.getContentResolver().openInputStream(uri);
+
+        BitmapFactory.Options onlyBoundsOptions = new BitmapFactory.Options();
+        onlyBoundsOptions.inJustDecodeBounds = true;
+        onlyBoundsOptions.inDither = true;//optional
+        onlyBoundsOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;//optional
+        BitmapFactory.decodeStream(input, null, onlyBoundsOptions);
+        input.close();
+        if ((onlyBoundsOptions.outWidth == -1) || (onlyBoundsOptions.outHeight == -1))
+            return null;
+
+        int originalSize = (onlyBoundsOptions.outHeight > onlyBoundsOptions.outWidth) ? onlyBoundsOptions.outHeight : onlyBoundsOptions.outWidth;
+
+        double ratio = (originalSize > THUMBNAIL_SIZE) ? (originalSize / THUMBNAIL_SIZE) : 1.0;
+
+        BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
+        bitmapOptions.inSampleSize = getPowerOfTwoForSampleRatio(ratio);
+        bitmapOptions.inDither = true;//optional
+        bitmapOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;//optional
+        input = this.getContentResolver().openInputStream(uri);
+        Bitmap bitmap = BitmapFactory.decodeStream(input, null, bitmapOptions);
+        input.close();
+        return bitmap;
+    }
+
+    @Nullable
+    private Bitmap getPDFBitmap(@NonNull Uri uri) {
+        try {
+
+            ParcelFileDescriptor fileDescriptor = getApplicationContext().getContentResolver().openFileDescriptor(
+                    uri, "r");
+
+            if (fileDescriptor != null) {
+                PdfRenderer pdfRenderer = new PdfRenderer(fileDescriptor);
+
+                PdfRenderer.Page rendererPage = pdfRenderer.openPage(0);
+                int rendererPageWidth = rendererPage.getWidth();
+                int rendererPageHeight = rendererPage.getHeight();
+                Bitmap bitmap = Bitmap.createBitmap(
+                        rendererPageWidth,
+                        rendererPageHeight,
+                        Bitmap.Config.ARGB_8888);
+                rendererPage.render(bitmap, null, null,
+                        PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+
+
+                rendererPage.close();
+
+                pdfRenderer.close();
+                fileDescriptor.close();
+                return bitmap;
+            }
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 
 
@@ -720,8 +866,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 case 0:
                     return new PeersFragment();
                 case 1:
-                    return new ConsoleFragment();
+                    return new ThreadsFragment();
                 case 2:
+                    return new ConsoleFragment();
+                case 3:
                     return new InfoFragment();
                 default:
                     throw new RuntimeException("Not Supported position");

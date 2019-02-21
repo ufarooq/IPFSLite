@@ -17,8 +17,10 @@ import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import threads.core.Preferences;
 import threads.core.api.User;
 import threads.core.mdl.UsersViewModel;
+import threads.ipfs.api.PID;
 import threads.share.NoteActionDialogFragment;
 import threads.share.UserActionDialogFragment;
 import threads.share.UsersViewAdapter;
@@ -85,7 +87,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         mRecyclerView.setLayoutManager(linearLayout);
         usersViewAdapter = new UsersViewAdapter(this);
         mRecyclerView.setAdapter(usersViewAdapter);
-
+        PID pid = Preferences.getPID(getContext());
         UsersViewModel messagesViewModel = ViewModelProviders.of(this).get(UsersViewModel.class);
         messagesViewModel.getUsers().observe(this, (users) -> {
 
