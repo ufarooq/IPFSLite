@@ -683,7 +683,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     try {
                         Multihash.fromBase58(multihash);
                     } catch (Throwable e) {
-                        Preferences.error(getString(R.string.multihash_is_not_valid, multihash));
+                        Preferences.error(getString(R.string.multihash_not_valid));
+                        return;
                     }
 
 

@@ -47,5 +47,4 @@
     <string name="action_edit_peer">Edit Peer</string>
     <string name="mulihash">Multihash</string>
     <string name="multihash_not_valid">Multihash is not valid</string>
-    <string name="multihash_is_not_valid">Multihash "%1$s\" is not valid</string>
 </resources>
