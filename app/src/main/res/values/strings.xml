@@ -8,7 +8,7 @@
     <string name="navigation_drawer_open">Navigation open</string>
     <string name="navigation_drawer_close">Navigation close</string>
     <string name="action_info">Info</string>
-    <string name="daemon_server_not_running">IPFS daemon is not running yet</string>
+    <string name="daemon_server_not_running">IPFS daemon is not running</string>
     <string name="offline">Network is offline</string>
     <string name="network">Network</string>
     <string name="peer_id">Peer ID</string>
@@ -40,4 +40,6 @@
     <string name="playstore_url">https://play.google.com/store/apps/details?id=threads.server</string>
     <string name="playstore_email">Let me recommend you this application.</string>
     <string name="issues">Issue Report</string>
+    <string name="copy_to_clipboard">Copy to clipboard</string>
+    <string name="qrcode">QR Code</string>
 </resources>

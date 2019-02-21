@@ -44,13 +44,13 @@
         android:id="@+id/fab_daemon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="64dp"
-        android:layout_marginEnd="@dimen/fab_margin"
         android:visibility="visible"
-        app:backgroundTint="@color/lightGray"
-        app:layout_anchor="@id/tabLayout"
-        app:layout_anchorGravity="bottom|end"
-        app:srcCompat="@drawable/play" />
+        android:scaleType="center"
+        app:backgroundTint="@android:color/transparent"
+        app:fabSize="normal"
+        app:layout_anchor="@id/toolbar"
+        app:layout_anchorGravity="center"
+        app:srcCompat="@drawable/play_circle_outline" />
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

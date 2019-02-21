@@ -135,6 +135,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         TabLayout tabLayout = findViewById(R.id.tabLayout);
         tabLayout.addTab(tabLayout.newTab().setText("Friends"));
         tabLayout.addTab(tabLayout.newTab().setText("Console"));
+        tabLayout.addTab(tabLayout.newTab().setText("Info"));
 
 
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
@@ -357,9 +358,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         try {
             if (!DaemonService.DAEMON_RUNNING.get()) {
-                fab_daemon.setImageDrawable(getDrawable(R.drawable.play));
+                fab_daemon.setImageDrawable(getDrawable(R.drawable.play_circle_outline));
             } else {
-                fab_daemon.setImageDrawable(getDrawable(R.drawable.stop));
+                fab_daemon.setImageDrawable(getDrawable(R.drawable.stop_circle_outline));
             }
             findViewById(R.id.fab_daemon).setVisibility(View.VISIBLE);
         } catch (Throwable e) {
@@ -716,6 +717,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     return new PeersFragment();
                 case 1:
                     return new ConsoleFragment();
+                case 2:
+                    return new InfoFragment();
                 default:
                     throw new RuntimeException("Not Supported position");
             }

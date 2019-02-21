@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -12,6 +13,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -147,11 +150,36 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
         LayoutInflater inflater = LayoutInflater.from(getActivity());
         @SuppressWarnings("all")
         View view = inflater.inflate(R.layout.dialog_server_info, null, false);
+
         ImageView imageView = view.findViewById(R.id.dialog_server_info);
         Bundle bundle = getArguments();
+        checkNotNull(bundle);
         String title = bundle.getString(TITLE);
         message = bundle.getString(MESSAGE);
         code = bundle.getString(QRCODE);
+
+        TextView copy_to_clipboard = view.findViewById(R.id.copy_to_clipboard);
+        copy_to_clipboard.setPaintFlags(copy_to_clipboard.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
+
+
+        copy_to_clipboard.setOnClickListener((v) -> {
+
+            if (getActivity() != null) {
+                android.content.ClipboardManager clipboard = (android.content.ClipboardManager)
+                        getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
+                android.content.ClipData clip = android.content.ClipData.newPlainText(
+                        getString(R.string.qrcode),
+                        code);
+                if (clipboard != null) {
+                    clipboard.setPrimaryClip(clip);
+                    Toast.makeText(getActivity(),
+                            "Copied " + code + " to clipboard",
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
+
         Bitmap bitmap = bitmaps.get(code);
         imageView.setImageBitmap(bitmap);
 
