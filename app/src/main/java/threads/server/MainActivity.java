@@ -49,6 +49,7 @@ import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
 import de.psdev.licensesdialog.LicensesDialogFragment;
+import io.ipfs.multihash.Multihash;
 import threads.core.IThreadsAPI;
 import threads.core.Preferences;
 import threads.core.Singleton;
@@ -669,15 +670,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickConnect(@NonNull String content) {
-        checkNotNull(content);
+    public void clickConnect(@NonNull String multihash) {
+        checkNotNull(multihash);
 
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    PID pid = PID.create(content);
+
+                    // just a simple check if multihash is valid
+                    try {
+                        Multihash.fromBase58(multihash);
+                    } catch (Throwable e) {
+                        Preferences.error(getString(R.string.multihash_is_not_valid, multihash));
+                    }
+
+
+                    PID pid = PID.create(multihash);
 
 
                     IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
