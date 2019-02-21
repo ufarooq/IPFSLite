@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -21,6 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ActionDialogFragment extends DialogFragment {
     public static final String TAG = ActionDialogFragment.class.getSimpleName();
     private ActionListener actionListener;
+    private long mLastClickTime = 0;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -53,6 +55,11 @@ public class ActionDialogFragment extends DialogFragment {
         menu_scan_peer.setOnClickListener((v) -> {
 
             try {
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    return;
+                }
+
+                mLastClickTime = SystemClock.elapsedRealtime();
                 actionListener.clickConnectPeer();
             } finally {
                 dismiss();
@@ -64,6 +71,11 @@ public class ActionDialogFragment extends DialogFragment {
         TextView menu_upload = view.findViewById(R.id.menu_upload);
         menu_upload.setOnClickListener((v) -> {
             try {
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    return;
+                }
+
+                mLastClickTime = SystemClock.elapsedRealtime();
                 actionListener.clickUploadFile();
             } finally {
                 dismiss();
@@ -75,6 +87,11 @@ public class ActionDialogFragment extends DialogFragment {
         menu_download.setOnClickListener((v) -> {
 
             try {
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    return;
+                }
+
+                mLastClickTime = SystemClock.elapsedRealtime();
                 if (!DaemonService.DAEMON_RUNNING.get()) {
                     Toast.makeText(getContext(),
                             R.string.daemon_server_not_running, Toast.LENGTH_LONG).show();
@@ -91,12 +108,14 @@ public class ActionDialogFragment extends DialogFragment {
         menu_edit_peer.setOnClickListener((v) -> {
 
             try {
-                if (!DaemonService.DAEMON_RUNNING.get()) {
-                    Toast.makeText(getContext(),
-                            R.string.daemon_server_not_running, Toast.LENGTH_LONG).show();
-                } else {
-                    actionListener.clickEditPeer();
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    return;
                 }
+
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+                actionListener.clickEditPeer();
+
             } finally {
                 dismiss();
             }

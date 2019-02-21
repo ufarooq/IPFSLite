@@ -67,7 +67,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
         ActionDialogFragment.ActionListener,
-        UserActionDialogFragment.ActionListener {
+        UserActionDialogFragment.ActionListener,
+        EditMultihashDialogFragment.ActionListener {
     public static final int SELECT_MEDIA_FILE = 1;
     private static final int WRITE_EXTERNAL_STORAGE = 2;
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -633,7 +634,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickEditPeer() {
-        // TODO
+        FragmentManager fm = getSupportFragmentManager();
+        EditMultihashDialogFragment editMultihashDialogFragment = new EditMultihashDialogFragment();
+        editMultihashDialogFragment.show(fm, EditMultihashDialogFragment.TAG);
     }
 
     @Override
@@ -666,7 +669,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickConnect(String content) {
+    public void clickConnect(@NonNull String content) {
         checkNotNull(content);
 
         final IPFS ipfs = Singleton.getInstance().getIpfs();
@@ -702,6 +705,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             });
         }
+    }
+
+    @Override
+    public void clickConnectPeer(@NonNull String multihash) {
+        clickConnect(multihash);
     }
 
 

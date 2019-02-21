@@ -18,6 +18,7 @@
             android:drawableTop="@drawable/action_scan_peer"
             android:singleLine="true"
             android:text="@string/action_scan_peer"
+            android:drawablePadding="8dp"
             android:textAlignment="center" />
 
         <TextView
@@ -29,6 +30,7 @@
             android:drawableTop="@drawable/action_edit_peer"
             android:singleLine="true"
             android:text="@string/action_edit_peer"
+            android:drawablePadding="8dp"
             android:textAlignment="center" />
 
     </TableRow>
@@ -47,6 +49,7 @@
             android:drawableTop="@drawable/action_upload"
             android:singleLine="true"
             android:text="@string/upload"
+            android:drawablePadding="8dp"
             android:textAlignment="center" />
 
         <TextView
@@ -58,6 +61,7 @@
             android:drawableTop="@drawable/action_download"
             android:singleLine="true"
             android:text="@string/download"
+            android:drawablePadding="8dp"
             android:textAlignment="center" />
 
     </TableRow>

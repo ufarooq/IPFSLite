@@ -40,8 +40,6 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         FloatingActionButton fab_action = view.findViewById(R.id.fab_action);
         fab_action.setOnClickListener((v) -> {
 
-
-            // mis-clicking prevention, using threshold of 1000 ms
             if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
                 return;
             }

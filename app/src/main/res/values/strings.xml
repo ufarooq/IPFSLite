@@ -45,4 +45,6 @@
     <string name="action_scan_peer">Scan Peer</string>
     <string name="download">Download</string>
     <string name="action_edit_peer">Edit Peer</string>
+    <string name="mulihash">Multihash</string>
+    <string name="multihash_not_valid">Multihash not valid</string>
 </resources>
