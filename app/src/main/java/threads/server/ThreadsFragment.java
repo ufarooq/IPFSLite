@@ -22,12 +22,13 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import threads.core.Preferences;
 import threads.core.api.Thread;
+import threads.core.api.ThreadStatus;
 import threads.core.mdl.ThreadsViewModel;
 import threads.share.ThreadsViewAdapter;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.ClickListener {
+public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.ThreadsViewAdapterListener {
     private static final String TAG = ThreadsFragment.class.getSimpleName();
     private static final String SELECTION = "SELECTION";
     @NonNull
@@ -198,6 +199,17 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Clic
             alertDialog.show();
             */ // TODO activate again
         }
+    }
+
+    @Override
+    public boolean generalActionSupport(@NonNull ThreadStatus threadStatus) {
+        checkNotNull(threadStatus);
+        return threadStatus == ThreadStatus.ONLINE;
+    }
+
+    @Override
+    public void invokeGeneralAction(@NonNull Thread thread) {
+        // TODO
     }
 
     @Override
