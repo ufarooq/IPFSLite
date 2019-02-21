@@ -11,6 +11,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 import org.apache.tools.ant.types.Commandline;
 
 import java.util.Arrays;
@@ -42,6 +44,17 @@ public class ConsoleFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.messages_view, container, false);
 
+
+        FloatingActionButton fab_delete = view.findViewById(R.id.fab_delete);
+        fab_delete.setOnClickListener((v) -> {
+
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
+            new Thread(() -> Singleton.getInstance().getThreadsAPI().clearMessages()).start();
+
+        });
 
         mRecyclerView = view.findViewById(R.id.view_message_list);
 

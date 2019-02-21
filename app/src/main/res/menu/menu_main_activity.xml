@@ -4,14 +4,6 @@
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
     <item
-        android:id="@+id/action_clear"
-        android:icon="@drawable/delete"
-        android:orderInCategory="40"
-        android:title="@string/action_delete"
-        app:showAsAction="always" />
-
-
-    <item
         android:id="@+id/action_info"
         android:icon="@drawable/server_network"
         android:orderInCategory="50"

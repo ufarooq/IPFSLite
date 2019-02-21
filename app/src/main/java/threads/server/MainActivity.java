@@ -385,14 +385,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-        MenuItem action_clear = menu.findItem(R.id.action_clear);
-        drawable = action_clear.getIcon();
-        if (drawable != null) {
-            drawable.mutate();
-            drawable.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
-        }
-
-
         return true;
     }
 
@@ -403,17 +395,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         switch (id) {
-            case R.id.action_clear: {
-
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                new ClearConsoleService().execute();
-
-                return true;
-            }
             case R.id.action_info: {
                 // mis-clicking prevention, using threshold of 1000 ms
                 if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
