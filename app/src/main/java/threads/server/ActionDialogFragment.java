@@ -49,8 +49,8 @@ public class ActionDialogFragment extends DialogFragment {
         @SuppressWarnings("all")
         View view = inflater.inflate(R.layout.action_view, null);
 
-        ImageView menu_connect_peer = view.findViewById(R.id.menu_connect_peer);
-        menu_connect_peer.setOnClickListener((v) -> {
+        ImageView menu_scan_peer = view.findViewById(R.id.menu_scan_peer);
+        menu_scan_peer.setOnClickListener((v) -> {
 
             try {
                 actionListener.clickConnectPeer();
@@ -61,8 +61,8 @@ public class ActionDialogFragment extends DialogFragment {
 
         });
 
-        ImageView menu_camera = view.findViewById(R.id.menu_upload_file);
-        menu_camera.setOnClickListener((v) -> {
+        ImageView menu_upload = view.findViewById(R.id.menu_upload);
+        menu_upload.setOnClickListener((v) -> {
             try {
                 actionListener.clickUploadFile();
             } finally {
@@ -71,8 +71,8 @@ public class ActionDialogFragment extends DialogFragment {
 
         });
 
-        ImageView menu_video = view.findViewById(R.id.menu_download_file);
-        menu_video.setOnClickListener((v) -> {
+        ImageView menu_download = view.findViewById(R.id.menu_download);
+        menu_download.setOnClickListener((v) -> {
 
             try {
                 if (!DaemonService.DAEMON_RUNNING.get()) {
@@ -80,6 +80,22 @@ public class ActionDialogFragment extends DialogFragment {
                             R.string.daemon_server_not_running, Toast.LENGTH_LONG).show();
                 } else {
                     actionListener.clickDownloadFile();
+                }
+            } finally {
+                dismiss();
+            }
+
+        });
+
+        ImageView menu_edit_peer = view.findViewById(R.id.menu_edit_peer);
+        menu_edit_peer.setOnClickListener((v) -> {
+
+            try {
+                if (!DaemonService.DAEMON_RUNNING.get()) {
+                    Toast.makeText(getContext(),
+                            R.string.daemon_server_not_running, Toast.LENGTH_LONG).show();
+                } else {
+                    actionListener.clickEditPeer();
                 }
             } finally {
                 dismiss();
@@ -107,5 +123,7 @@ public class ActionDialogFragment extends DialogFragment {
         void clickUploadFile();
 
         void clickDownloadFile();
+
+        void clickEditPeer();
     }
 }

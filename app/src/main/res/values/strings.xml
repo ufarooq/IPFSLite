@@ -42,4 +42,7 @@
     <string name="issues">Issue Report</string>
     <string name="copy_to_clipboard">Copy to clipboard</string>
     <string name="qrcode">QR Code</string>
+    <string name="action_scan_peer">Scan Peer</string>
+    <string name="download">Download</string>
+    <string name="action_edit_peer">Edit Peer</string>
 </resources>

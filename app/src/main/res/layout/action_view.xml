@@ -1,87 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <TableRow
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        tools:ignore="UselessParent">
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/menu_scan_peer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/fab_margin"
+            android:layout_margin="16dp"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:drawableTop="@drawable/action_scan_peer"
+            android:singleLine="true"
+            android:text="@string/action_scan_peer"
+            android:textAlignment="center" />
 
-            <ImageView
-                android:id="@+id/menu_connect_peer"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center"
-                app:srcCompat="@drawable/lan_connect"
-                tools:ignore="ContentDescription" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="@string/connect_peer"
-                android:textAlignment="center"
-                android:textColor="@color/colorPrimaryDark" />
-        </LinearLayout>
-
-        <LinearLayout
+        <TextView
+            android:id="@+id/menu_upload"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/fab_margin"
+            android:layout_margin="16dp"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:drawableTop="@drawable/action_upload"
+            android:singleLine="true"
+            android:text="@string/upload"
+            android:textAlignment="center" />
 
-            <ImageView
-                android:id="@+id/menu_upload_file"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center"
-                app:srcCompat="@drawable/cloud_upload"
-                tools:ignore="ContentDescription" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="@string/upload_file"
-                android:textAlignment="center"
-                android:textColor="@color/colorPrimaryDark" />
-        </LinearLayout>
-
-        <LinearLayout
+        <TextView
+            android:id="@+id/menu_download"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="@dimen/fab_margin"
+            android:layout_margin="16dp"
             android:layout_weight="1"
-            android:orientation="vertical">
+            android:drawableTop="@drawable/action_download"
+            android:singleLine="true"
+            android:text="@string/download"
+            android:textAlignment="center" />
 
-            <ImageView
-                android:id="@+id/menu_download_file"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center"
-                app:srcCompat="@drawable/cloud_download"
-                tools:ignore="ContentDescription" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="@string/download_file"
-                android:textAlignment="center"
-                android:textColor="@color/colorPrimaryDark" />
-        </LinearLayout>
-
+        <TextView
+            android:id="@+id/menu_edit_peer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:layout_weight="1"
+            android:drawableTop="@drawable/action_edit_peer"
+            android:singleLine="true"
+            android:text="@string/action_edit_peer"
+            android:textAlignment="center" />
 
     </TableRow>
 </TableLayout>

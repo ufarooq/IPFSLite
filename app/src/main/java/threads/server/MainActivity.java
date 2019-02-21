@@ -632,6 +632,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
+    public void clickEditPeer() {
+        // TODO
+    }
+
+    @Override
     public void clickBlock(@NonNull String pid) {
         checkNotNull(pid);
     }
