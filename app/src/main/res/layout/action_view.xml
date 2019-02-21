@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <TableRow
+        android:id="@+id/row_first"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:ignore="UselessParent">
+        android:layout_height="match_parent">
 
         <TextView
             android:id="@+id/menu_scan_peer"
@@ -21,6 +20,23 @@
             android:text="@string/action_scan_peer"
             android:textAlignment="center" />
 
+        <TextView
+            android:id="@+id/menu_edit_peer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:layout_weight="1"
+            android:drawableTop="@drawable/action_edit_peer"
+            android:singleLine="true"
+            android:text="@string/action_edit_peer"
+            android:textAlignment="center" />
+
+    </TableRow>
+
+    <TableRow
+        android:id="@+id/row_second"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
         <TextView
             android:id="@+id/menu_upload"
@@ -42,17 +58,6 @@
             android:drawableTop="@drawable/action_download"
             android:singleLine="true"
             android:text="@string/download"
-            android:textAlignment="center" />
-
-        <TextView
-            android:id="@+id/menu_edit_peer"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:layout_weight="1"
-            android:drawableTop="@drawable/action_edit_peer"
-            android:singleLine="true"
-            android:text="@string/action_edit_peer"
             android:textAlignment="center" />
 
     </TableRow>

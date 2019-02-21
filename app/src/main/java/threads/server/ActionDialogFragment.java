@@ -9,7 +9,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
-import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -49,7 +49,7 @@ public class ActionDialogFragment extends DialogFragment {
         @SuppressWarnings("all")
         View view = inflater.inflate(R.layout.action_view, null);
 
-        ImageView menu_scan_peer = view.findViewById(R.id.menu_scan_peer);
+        TextView menu_scan_peer = view.findViewById(R.id.menu_scan_peer);
         menu_scan_peer.setOnClickListener((v) -> {
 
             try {
@@ -61,7 +61,7 @@ public class ActionDialogFragment extends DialogFragment {
 
         });
 
-        ImageView menu_upload = view.findViewById(R.id.menu_upload);
+        TextView menu_upload = view.findViewById(R.id.menu_upload);
         menu_upload.setOnClickListener((v) -> {
             try {
                 actionListener.clickUploadFile();
@@ -71,7 +71,7 @@ public class ActionDialogFragment extends DialogFragment {
 
         });
 
-        ImageView menu_download = view.findViewById(R.id.menu_download);
+        TextView menu_download = view.findViewById(R.id.menu_download);
         menu_download.setOnClickListener((v) -> {
 
             try {
@@ -87,7 +87,7 @@ public class ActionDialogFragment extends DialogFragment {
 
         });
 
-        ImageView menu_edit_peer = view.findViewById(R.id.menu_edit_peer);
+        TextView menu_edit_peer = view.findViewById(R.id.menu_edit_peer);
         menu_edit_peer.setOnClickListener((v) -> {
 
             try {
