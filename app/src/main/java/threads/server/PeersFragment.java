@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -84,13 +85,28 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         mRecyclerView.setLayoutManager(linearLayout);
         usersViewAdapter = new UsersViewAdapter(this);
         mRecyclerView.setAdapter(usersViewAdapter);
-        PID pid = Preferences.getPID(getContext());
+
+        String pid = "";
+        if (getActivity() != null) {
+            PID host = Preferences.getPID(getActivity());
+            if (host != null) {
+                pid = host.getPid();
+            }
+        }
+        String hostPid = pid;
         UsersViewModel messagesViewModel = ViewModelProviders.of(this).get(UsersViewModel.class);
         messagesViewModel.getUsers().observe(this, (users) -> {
 
             try {
                 if (users != null) {
-                    updatePeers(users);
+                    List<User> peers = new ArrayList<>();
+                    for (User user : users) {
+                        if (!user.getPid().equals(hostPid)) {
+                            peers.add(user);
+                        }
+
+                    }
+                    updatePeers(peers);
                 }
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);

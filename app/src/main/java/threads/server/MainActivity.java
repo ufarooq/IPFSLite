@@ -1,6 +1,9 @@
 package threads.server;
 
 import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -37,6 +40,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -120,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                     if (!idScan.get()) {
-                        DownloadJobService.download(getApplicationContext(), multihash);
+                        downloadMultihash(multihash);
                     } else {
                         clickUserConnect(multihash);
                     }
@@ -131,6 +135,96 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    public void downloadMultihash(@NonNull String multihash) {
+        checkNotNull(multihash);
+
+        // CHECKED
+        if (!DaemonService.DAEMON_RUNNING.get()) {
+            Preferences.error(getString(R.string.daemon_not_running));
+            return;
+        }
+        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    // check if multihash is valid
+                    try {
+                        Multihash.fromBase58(multihash);
+                    } catch (Throwable e) {
+                        Preferences.error(getString(R.string.multihash_not_valid));
+                        return;
+                    }
+
+                    PID pid = Preferences.getPID(getApplicationContext());
+                    checkNotNull(pid);
+                    User user = threadsAPI.getUserByPid(pid);
+                    checkNotNull(user);
+
+
+                    CID cid = CID.create(multihash);
+                    List<Link> links = ipfs.ls(cid);
+                    if (links.isEmpty() || links.size() > 1) {
+                        Preferences.error("Not expected CID object TODO"); // TODO
+                        return;
+                    }
+                    Link link = links.get(0);
+
+                    String filename = link.getPath();
+
+
+                    byte[] image = IThreadsAPI.getImage(getApplicationContext(),
+                            R.drawable.file_document);
+
+                    Thread thread = threadsAPI.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
+                            filename, multihash, image, false, false);
+                    threadsAPI.storeThread(thread);
+
+                    NotificationCompat.Builder builder =
+                            NotificationSender.createDownloadProgressNotification(
+                                    getApplicationContext(), link.getPath());
+
+                    final NotificationManager notificationManager = (NotificationManager)
+                            getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                    int notifyID = NotificationSender.NOTIFICATIONS_COUNTER.incrementAndGet();
+                    Notification notification = builder.build();
+                    if (notificationManager != null) {
+                        notificationManager.notify(notifyID, notification);
+                    }
+
+
+                    try {
+                        threadsAPI.preload(ipfs, link.getCid().getCid(), link.getSize(), (percent) -> {
+
+
+                            builder.setProgress(100, percent, false);
+                            if (notificationManager != null) {
+                                notificationManager.notify(notifyID, builder.build());
+                            }
+
+                        });
+                        threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
+
+                    } catch (Throwable e) {
+                        threadsAPI.setStatus(thread, ThreadStatus.ERROR);
+                        throw e;
+                    } finally {
+
+                        if (notificationManager != null) {
+                            notificationManager.cancel(notifyID);
+                        }
+                    }
+
+                    NotificationSender.showLinkNotification(getApplicationContext(), link);
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        }
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -274,6 +368,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         });
 
+        checkOnlineStatus();
+    }
+
+    private void checkOnlineStatus() {
         if (Application.isConnected(getApplicationContext())) {
             Preferences.warning(getString(R.string.offline_mode));
         } else {
@@ -482,8 +580,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
+                // CHECKED
                 if (!DaemonService.DAEMON_RUNNING.get()) {
-                    Preferences.error(getString(R.string.daemon_server_not_running));
+                    Preferences.error(getString(R.string.daemon_not_running));
                     break;
                 }
 
@@ -578,12 +677,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickDownloadMultihash() {
 
-        if (!DaemonService.DAEMON_RUNNING.get()) {
-            Preferences.error(getString(R.string.daemon_server_not_running));
-            return;
-        }
-
-
         try {
 
             if (ContextCompat.checkSelfPermission(getApplicationContext(),
@@ -658,8 +751,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         return;
                     }
 
-
+                    PID host = Preferences.getPID(getApplicationContext());
                     PID pid = PID.create(multihash);
+
+                    if (pid.equals(host)) {
+                        Preferences.warning(getString(R.string.same_pid_like_host));
+                        return;
+                    }
 
 
                     IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
@@ -672,14 +770,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         user.setStatus(UserStatus.OFFLINE);
                         threadsAPI.storeUser(user);
 
+                    } else {
+                        Preferences.warning(getString(R.string.peer_exists_with_pid));
                     }
                     checkNotNull(user);
                     ipfs.id(pid);
                     ipfs.swarm_connect(pid);
 
-                    boolean value = ipfs.swarm_is_connected(pid);
-                    if (value) {
-                        threadsAPI.setStatus(user, UserStatus.ONLINE);
+                    try {
+                        boolean value = ipfs.swarm_is_connected(pid);
+                        if (value) {
+                            threadsAPI.setStatus(user, UserStatus.ONLINE);
+                        }
+                    } catch (Throwable e) {
+                        checkOnlineStatus();
+                        // ignore exception when not connected
                     }
 
                 } catch (Throwable e) {
@@ -749,9 +854,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickThreadPlay(@NonNull String thread) {
         checkNotNull(thread);
 
-
+        // CHECKED
         if (!DaemonService.DAEMON_RUNNING.get()) {
-            Preferences.error(getString(R.string.daemon_server_not_running));
+            Preferences.error(getString(R.string.daemon_not_running));
             return;
         }
 
@@ -814,12 +919,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickThreadView(@NonNull String thread) {
         checkNotNull(thread);
 
-
-        if (!DaemonService.DAEMON_RUNNING.get()) {
-            Preferences.error(getString(R.string.daemon_server_not_running));
-            return;
-        }
-
         final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
@@ -832,12 +931,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     String multihash = threadObject.getCid();
 
-                    CID cid = CID.create(multihash);
-                    List<Link> links = ipfs.ls(cid);
-                    Link link = links.get(0);
-                    String path = link.getPath();
-
-                    Uri uri = Uri.parse("https://gateway.ipfs.io/ipfs/" + multihash); // TODO
+                    Uri uri = Uri.parse("https://gateway.ipfs.io/ipfs/" + multihash);
 
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

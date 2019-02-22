@@ -8,7 +8,7 @@
     <string name="navigation_drawer_open">Navigation open</string>
     <string name="navigation_drawer_close">Navigation close</string>
     <string name="action_info">Info</string>
-    <string name="daemon_server_not_running">IPFS daemon is required to run</string>
+    <string name="daemon_not_running">IPFS daemon is not running</string>
     <string name="offline">Network is offline</string>
     <string name="network">Network</string>
     <string name="peer_id">Peer ID</string>
@@ -52,4 +52,6 @@
     <string name="console">Console</string>
     <string name="files">Files</string>
     <string name="offline_mode">Offline Mode</string>
+    <string name="peer_exists_with_pid">Peer with the provided PID exists.</string>
+    <string name="same_pid_like_host">Same peer ID like the hosts peer ID</string>
 </resources>
