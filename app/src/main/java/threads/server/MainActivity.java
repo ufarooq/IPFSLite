@@ -519,12 +519,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_privacy_policy: {
                 try {
                     String url = "file:///android_res/raw/privacy_policy.html";
-                    IPFS ipfs = Singleton.getInstance().getIpfs();
-                    if (ipfs != null) {
-                        InputStream inputStream = getResources().openRawResource(R.raw.privacy_policy);
-                        CID cid = ipfs.add(inputStream);
-                        url = Preferences.getGateway(this) + cid.getCid();
-                    }
                     WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.URL, url)
                             .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
 
@@ -536,7 +530,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_issues: {
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse("https://gitlab.com/remmer.wilts/threads-fab_daemon/issues"));
+                    intent.setData(Uri.parse("https://gitlab.com/remmer.wilts/threads-server/issues"));
                     startActivity(intent);
 
                 } catch (Throwable e) {

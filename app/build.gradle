@@ -16,7 +16,7 @@ ext {
     siteUrl = 'https://gitlab.com/remmer.wilts/threads-server'
     gitUrl = 'git@gitlab.com:remmer.wilts/threads-server.git'
 
-    libraryVersion = '0.3.4'
+    libraryVersion = '0.3.5'
 
     developerId = 'remmerw'
     developerName = 'Remmer Wilts'
@@ -35,8 +35,8 @@ android {
         applicationId "threads.server"
         minSdkVersion 24
         targetSdkVersion 28
-        versionCode 34
-        versionName "0.3.4"
+        versionCode 35
+        versionName "0.3.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

@@ -109,7 +109,7 @@ public class DaemonService extends Service {
                 case ACTION_STOP_DAEMON_SERVICE:
                     stopDaemonService();
                     Toast.makeText(getApplicationContext(),
-                            R.string.damon_service_shutdown, Toast.LENGTH_LONG).show();
+                            R.string.daemon_shutdown, Toast.LENGTH_LONG).show();
                     break;
             }
         }
@@ -202,7 +202,7 @@ public class DaemonService extends Service {
 
 
                     threadsApi.storeMessage(threadsApi.createMessage(MessageKind.INFO,
-                            getApplicationContext().getString(R.string.server_shutdown),
+                            getApplicationContext().getString(R.string.daemon_shutdown),
                             System.currentTimeMillis()));
 
 
