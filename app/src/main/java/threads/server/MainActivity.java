@@ -167,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     CID cid = CID.create(multihash);
                     List<Link> links = ipfs.ls(cid);
                     if (links.isEmpty() || links.size() > 1) {
-                        Preferences.error("Not expected CID object TODO"); // TODO
+                        Preferences.error(getString(R.string.sorry_not_yet_implemented));
                         return;
                     }
                     Link link = links.get(0);
@@ -225,6 +225,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             });
         }
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -435,10 +436,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
                         threadsAPI.setCID(thread, cid);
 
-
-                        InfoDialogFragment.show(this, cid.getCid(),
-                                getString(R.string.multihash),
-                                getString(R.string.multihash_access, cid.getCid()));
                     } catch (Throwable e) {
                         threadsAPI.setStatus(thread, ThreadStatus.ERROR);
                         throw e;
@@ -772,6 +769,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     } else {
                         Preferences.warning(getString(R.string.peer_exists_with_pid));
+                        return;
                     }
                     checkNotNull(user);
                     ipfs.id(pid);

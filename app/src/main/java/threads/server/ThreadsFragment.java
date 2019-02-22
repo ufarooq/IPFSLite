@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProviders;
@@ -169,7 +170,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
         Context context = getContext();
         if (context != null) {
-            /*
+
             AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
 
             alertDialogBuilder.setTitle(R.string.delete_threads);
@@ -180,7 +181,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                     .setMessage(R.string.delete_threads_message)
                     .setPositiveButton(android.R.string.yes, (dialog, id) -> {
 
-                        DeleteThreadJobService.deleteThread(context, Iterables.toArray(threads, String.class));
+                        Service.deleteThreads(context, threads);
                         dialog.dismiss();
                         try {
                             if (threads.contains(threadAddress)) {
@@ -188,7 +189,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                             }
                             threads.clear();
                         } finally {
-                            view.
+                            evaluateFabDeleteVisibility();
                         }
                     })
                     .setNegativeButton(android.R.string.no, (dialog, id) -> dialog.cancel());
@@ -197,7 +198,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             AlertDialog alertDialog = alertDialogBuilder.create();
 
             alertDialog.show();
-            */ // TODO activate again
+
         }
     }
 
@@ -273,6 +274,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void invokeActionError(@NonNull Thread thread) {
         checkNotNull(thread);
-        Preferences.error("TODO has to be implemented"); // TODO
+        Preferences.error(getString(R.string.sorry_not_yet_implemented));
     }
 }

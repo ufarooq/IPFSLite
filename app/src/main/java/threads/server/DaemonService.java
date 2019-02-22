@@ -188,7 +188,6 @@ public class DaemonService extends Service {
     }
 
     private void stopDaemonService() {
-        long start = System.currentTimeMillis();
 
         try {
             IPFS ipfs = Singleton.getInstance().getIpfs();
@@ -220,8 +219,6 @@ public class DaemonService extends Service {
             // Stop the foreground service.
             stopSelf();
 
-
-            Log.e(TAG, " finish running [" + (System.currentTimeMillis() - start) + "]...");
         }
     }
 

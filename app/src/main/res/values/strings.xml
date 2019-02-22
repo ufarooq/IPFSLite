@@ -52,6 +52,9 @@
     <string name="console">Console</string>
     <string name="files">Files</string>
     <string name="offline_mode">Offline Mode</string>
-    <string name="peer_exists_with_pid">Peer with the provided PID exists.</string>
+    <string name="peer_exists_with_pid">Peer with the PID exists already</string>
     <string name="same_pid_like_host">Same peer ID like the hosts peer ID</string>
+    <string name="sorry_not_yet_implemented">Sorry not yet implemented</string>
+    <string name="delete_threads">Delete Files</string>
+    <string name="delete_threads_message">The deleting of the file entries has no yet the effect, that also the data on IPFS will be deleted (TODO). Do you want to proceed?</string>
 </resources>
