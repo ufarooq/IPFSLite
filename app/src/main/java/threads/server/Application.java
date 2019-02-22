@@ -1,7 +1,6 @@
 package threads.server;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -23,9 +22,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class Application extends android.app.Application {
 
 
-    private static final String QUIC_KEY = "quicKey";
-    private static final String PUBSUB_KEY = "pubsubKey";
-    private static final String PREF_KEY = "prefKey";
     private static final String TAG = Application.class.getSimpleName();
 
 
@@ -83,34 +79,6 @@ public class Application extends android.app.Application {
         }
     }
 
-    public static boolean isQUICEnabled(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(QUIC_KEY, false);
-
-    }
-
-    public static void setQUICEnabled(@NonNull Context context, boolean enable) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(QUIC_KEY, enable);
-        editor.apply();
-    }
-
-    public static boolean isPubsubEnabled(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(PUBSUB_KEY, false);
-    }
-
-    public static void setPubsubEnabled(@NonNull Context context, boolean enable) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(PUBSUB_KEY, enable);
-        editor.apply();
-    }
 
 
     @Override

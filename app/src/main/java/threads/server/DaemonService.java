@@ -46,23 +46,24 @@ public class DaemonService extends Service {
         if (ipfs != null) {
             List<User> users = threadsApi.getUsers();
             for (User user : users) {
-                UserStatus oldStatus = user.getStatus();
-                try {
-                    if (ipfs.swarm_is_connected(PID.create(user.getPid()))) {
-                        if (UserStatus.ONLINE != oldStatus) {
-                            threadsApi.setStatus(user, UserStatus.ONLINE);
+                if (user.getStatus() != UserStatus.BLOCKED) {
+                    UserStatus oldStatus = user.getStatus();
+                    try {
+                        if (ipfs.swarm_is_connected(PID.create(user.getPid()))) {
+                            if (UserStatus.ONLINE != oldStatus) {
+                                threadsApi.setStatus(user, UserStatus.ONLINE);
+                            }
+                        } else {
+                            if (UserStatus.OFFLINE != oldStatus) {
+                                threadsApi.setStatus(user, UserStatus.OFFLINE);
+                            }
                         }
-                    } else {
+                    } catch (Throwable e) {
                         if (UserStatus.OFFLINE != oldStatus) {
                             threadsApi.setStatus(user, UserStatus.OFFLINE);
                         }
                     }
-                } catch (Throwable e) {
-                    if (UserStatus.OFFLINE != oldStatus) {
-                        threadsApi.setStatus(user, UserStatus.OFFLINE);
-                    }
                 }
-
             }
         }
     }
@@ -157,8 +158,8 @@ public class DaemonService extends Service {
             new Thread(() -> {
                 try {
                     ipfs.init(Preferences.getProfile(getApplicationContext()), configHasChanged,
-                            Application.isQUICEnabled(getApplicationContext()));
-                    ipfs.daemon(Application.isPubsubEnabled(getApplicationContext()));
+                            Preferences.isQUICEnabled(getApplicationContext()));
+                    ipfs.daemon(Preferences.isPubsubEnabled(getApplicationContext()));
 
                     DAEMON_RUNNING.set(true);
 

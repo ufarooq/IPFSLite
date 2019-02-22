@@ -65,6 +65,7 @@ import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
 import threads.ipfs.api.PID;
+import threads.share.NameDialogFragment;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.UserActionDialogFragment;
 import threads.share.WebViewDialogFragment;
@@ -76,7 +77,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ActionDialogFragment.ActionListener,
         UserActionDialogFragment.ActionListener,
         ThreadActionDialogFragment.ActionListener,
-        EditMultihashDialogFragment.ActionListener {
+        EditMultihashDialogFragment.ActionListener,
+        NameDialogFragment.ActionListener {
     public static final int SELECT_MEDIA_FILE = 1;
     private static final int WRITE_EXTERNAL_STORAGE = 2;
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -697,7 +699,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickUserBlock(@NonNull String pid) {
         checkNotNull(pid);
 
-        // not yet activated
+
+        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                User user = threadsAPI.getUserByPid(PID.create(pid));
+                checkNotNull(user);
+
+                if (user.getStatus() == UserStatus.BLOCKED) {
+                    threadsAPI.setStatus(user, UserStatus.OFFLINE);
+                } else {
+                    threadsAPI.setStatus(user, UserStatus.BLOCKED);
+                }
+
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+        });
+
     }
 
     @Override
@@ -740,25 +762,37 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     User user = threadsAPI.getUserByPid(pid);
                     checkNotNull(user);
 
-                    ipfs.id(pid);
-                    ipfs.swarm_connect(pid);
+                    if (user.getStatus() != UserStatus.BLOCKED) {
+                        ipfs.id(pid);
+                        ipfs.swarm_connect(pid);
 
-                    try {
-                        boolean value = ipfs.swarm_is_connected(pid);
-                        if (value) {
-                            threadsAPI.setStatus(user, UserStatus.ONLINE);
+                        try {
+                            boolean value = ipfs.swarm_is_connected(pid);
+                            if (value) {
+                                threadsAPI.setStatus(user, UserStatus.ONLINE);
+                            }
+                        } catch (Throwable e) {
+                            threadsAPI.setStatus(user, UserStatus.OFFLINE);
+                            checkOnlineStatus();
+                            // ignore exception when not connected
                         }
-                    } catch (Throwable e) {
-                        threadsAPI.setStatus(user, UserStatus.OFFLINE);
-                        checkOnlineStatus();
-                        // ignore exception when not connected
+                    } else {
+                        Preferences.warning(getString(R.string.peer_is_blocked));
                     }
-
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
             });
         }
+    }
+
+    @Override
+    public void clickUserEdit(@NonNull String pid) {
+
+        FragmentManager fm = getSupportFragmentManager();
+
+        NameDialogFragment.newInstance(pid, getString(R.string.peer_name))
+                .show(fm, NameDialogFragment.TAG);
     }
 
 
@@ -932,7 +966,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 try {
                     Thread threadObject = threadsAPI.getThreadByAddress(thread);
                     checkNotNull(threadObject);
+
+                    //threadsAPI.pin_rm(ipfs, threadObject.getCid(), true);
+
                     threadsAPI.removeThread(threadObject);
+
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -969,6 +1007,35 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             });
         }
+    }
+
+    @Override
+    public void name(@NonNull String pid, @NonNull String name) {
+        checkNotNull(pid);
+        checkNotNull(name);
+
+        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                User user = threadsAPI.getUserByPid(PID.create(pid));
+                checkNotNull(user);
+
+                user.setAlias(name);
+                byte[] image = IThreadsAPI.getImage(name);
+                if (image != null) {
+                    user.setImage(image);
+                }
+                threadsAPI.storeUser(user);
+
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+        });
+
+
     }
 
 

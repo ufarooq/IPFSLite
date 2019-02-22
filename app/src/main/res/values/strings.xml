@@ -50,4 +50,6 @@
     <string name="sorry_not_yet_implemented">Sorry not yet implemented</string>
     <string name="delete_threads">Delete Files</string>
     <string name="delete_threads_message">The deleting of the file entries has no yet the effect, that also the data on IPFS will be deleted (TODO). Do you want to proceed?</string>
+    <string name="peer_name">New Peer Name</string>
+    <string name="peer_is_blocked">Peer is blocked. Unblock first.</string>
 </resources>

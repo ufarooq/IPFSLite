@@ -136,7 +136,8 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
             FragmentManager fm = getActivity().getSupportFragmentManager();
 
             UserActionDialogFragment.newInstance(
-                    user.getPid(), true, true, true, false)
+                    user.getPid(), true, true,
+                    true, true, true)
                     .show(fm, UserActionDialogFragment.TAG);
         }
 

@@ -78,9 +78,9 @@ public class SettingsDialogFragment extends DialogFragment {
 
 
         Switch quic_support = view.findViewById(R.id.quic_support);
-        quic_support.setChecked(Application.isQUICEnabled(getContext()));
+        quic_support.setChecked(Preferences.isQUICEnabled(getContext()));
         quic_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Application.setQUICEnabled(getContext(), isChecked);
+            Preferences.setQUICEnabled(getContext(), isChecked);
             DaemonService.configHasChanged = true;
             if (DaemonService.DAEMON_RUNNING.get()) {
                 Toast.makeText(getContext(),
@@ -92,9 +92,9 @@ public class SettingsDialogFragment extends DialogFragment {
 
 
         Switch pubsub_support = view.findViewById(R.id.pubsub_support);
-        pubsub_support.setChecked(Application.isPubsubEnabled(getContext()));
+        pubsub_support.setChecked(Preferences.isPubsubEnabled(getContext()));
         pubsub_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Application.setPubsubEnabled(getContext(), isChecked);
+            Preferences.setPubsubEnabled(getContext(), isChecked);
             DaemonService.configHasChanged = true;
             if (DaemonService.DAEMON_RUNNING.get()) {
                 Toast.makeText(getContext(),

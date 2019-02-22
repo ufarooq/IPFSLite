@@ -39,9 +39,13 @@ public class Service {
                         thread.setStatus(ThreadStatus.DELETING);
                         threadsAPI.updateThread(thread);
                         threads.add(thread);
+
+                        //threadsAPI.pin_rm(ipfs, thread.getCid(), false);
                     }
 
                     threadsAPI.removeThreads(threads);
+
+                    //threadsAPI.repo_gc(ipfs);
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
