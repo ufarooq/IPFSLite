@@ -10,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.common.collect.Iterables;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -151,7 +152,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     private void evaluateFabDeleteVisibility() {
         try {
-            if (!hasThreadsToDelete()) {
+            if (threads.isEmpty()) {
                 view.findViewById(R.id.fab_delete).setVisibility(View.INVISIBLE);
             } else {
                 view.findViewById(R.id.fab_delete).setVisibility(View.VISIBLE);
@@ -161,10 +162,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         }
     }
 
-
-    private boolean hasThreadsToDelete() {
-        return !threads.isEmpty();
-    }
 
     private void deleteAction() {
 
@@ -181,7 +178,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                     .setMessage(R.string.delete_threads_message)
                     .setPositiveButton(android.R.string.yes, (dialog, id) -> {
 
-                        Service.deleteThreads(context, threads);
+                        Service.deleteThreads(context, Iterables.toArray(threads, String.class));
                         dialog.dismiss();
                         try {
                             if (threads.contains(threadAddress)) {
@@ -239,7 +236,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void onClick(@NonNull Thread thread) {
         checkNotNull(thread);
-        if (!hasThreadsToDelete()) {
+        if (threads.isEmpty()) {
             threadAddress = thread.getAddress();
         }
 

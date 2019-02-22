@@ -25,7 +25,7 @@ public class InfoFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.webui_view, container, false);
 
-        WebView wv = view.findViewById(R.id.webview);
+        WebView wv = view.findViewById(R.id.web_view);
         wv.getSettings().setJavaScriptEnabled(true);
         wv.getSettings().setBuiltInZoomControls(true);
         wv.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);

@@ -168,7 +168,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
                 android.content.ClipboardManager clipboard = (android.content.ClipboardManager)
                         getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
                 android.content.ClipData clip = android.content.ClipData.newPlainText(
-                        getString(R.string.qrcode),
+                        getString(R.string.qr_code),
                         code);
                 if (clipboard != null) {
                     clipboard.setPrimaryClip(clip);

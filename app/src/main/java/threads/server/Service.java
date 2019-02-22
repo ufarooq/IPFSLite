@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class Service {
 
 
-    public static void deleteThreads(@NonNull Context context, @NonNull List<String> addresses) {
+    public static void deleteThreads(@NonNull Context context, @NonNull String... addresses) {
         checkNotNull(context);
         checkNotNull(addresses);
 
