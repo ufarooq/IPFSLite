@@ -124,10 +124,9 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             mLastClickTime = SystemClock.elapsedRealtime();
 
             if (getActivity() != null) {
-                FragmentManager fm = getActivity().getSupportFragmentManager();
-
-                ActionDialogFragment actionDialogFragment = new ActionDialogFragment();
-                actionDialogFragment.show(fm, ActionDialogFragment.TAG);
+                ActionDialogFragment.newInstance(false, false,
+                        true, true)
+                        .show(getActivity().getSupportFragmentManager(), ActionDialogFragment.TAG);
             }
 
         });
@@ -269,5 +268,11 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         Activity activity = getActivity();
         // not relevant here
 
+    }
+
+    @Override
+    public void invokeActionError(@NonNull Thread thread) {
+        checkNotNull(thread);
+        Preferences.error("TODO has to be implemented"); // TODO
     }
 }

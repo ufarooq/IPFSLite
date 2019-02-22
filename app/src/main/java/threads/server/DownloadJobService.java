@@ -140,7 +140,7 @@ public class DownloadJobService extends JobService {
                         threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
 
                     } catch (Throwable e) {
-                        threadsAPI.setStatus(thread, ThreadStatus.DELETING); // TODO error state
+                        threadsAPI.setStatus(thread, ThreadStatus.ERROR);
                         throw e;
                     } finally {
 

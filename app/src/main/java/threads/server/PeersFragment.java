@@ -46,10 +46,9 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
             mLastClickTime = SystemClock.elapsedRealtime();
 
             if (getActivity() != null) {
-                FragmentManager fm = getActivity().getSupportFragmentManager();
-
-                ActionDialogFragment actionDialogFragment = new ActionDialogFragment();
-                actionDialogFragment.show(fm, ActionDialogFragment.TAG);
+                ActionDialogFragment.newInstance(true, true,
+                        false, false)
+                        .show(getActivity().getSupportFragmentManager(), ActionDialogFragment.TAG);
             }
 
         });

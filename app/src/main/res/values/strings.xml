@@ -8,7 +8,7 @@
     <string name="navigation_drawer_open">Navigation open</string>
     <string name="navigation_drawer_close">Navigation close</string>
     <string name="action_info">Info</string>
-    <string name="daemon_server_not_running">IPFS daemon is not running</string>
+    <string name="daemon_server_not_running">IPFS daemon is required to run</string>
     <string name="offline">Network is offline</string>
     <string name="network">Network</string>
     <string name="peer_id">Peer ID</string>
@@ -51,4 +51,5 @@
     <string name="info">Info</string>
     <string name="console">Console</string>
     <string name="files">Files</string>
+    <string name="offline_mode">Offline Mode</string>
 </resources>

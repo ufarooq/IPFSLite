@@ -1,16 +1,12 @@
 package threads.server;
 
 import android.Manifest;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -84,49 +80,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private final AtomicBoolean idScan = new AtomicBoolean(false);
     private DrawerLayout drawer_layout;
 
-
-    private final BroadcastReceiver networkChangeReceiver = new BroadcastReceiver() {
-        private final AtomicBoolean wasOffline = new AtomicBoolean(false);
-        private Snackbar snackbar;
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            try {
-                if (Application.isConnected(context)) {
-                    findViewById(R.id.fab_daemon).setVisibility(View.VISIBLE);
-                    if (snackbar != null) {
-                        snackbar.dismiss();
-                        snackbar = null;
-                    }
-
-                    networkAvailable.set(true);
-
-                } else {
-                    findViewById(R.id.fab_daemon).setVisibility(View.GONE);
-                    networkAvailable.set(false);
-                    wasOffline.set(true);
-                    if (snackbar == null) {
-                        snackbar = Snackbar.make(drawer_layout,
-                                getString(R.string.offline), Snackbar.LENGTH_INDEFINITE);
-                        snackbar.setAction(R.string.network, (v) -> {
-
-                            Intent nIntent = new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS);
-                            nIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            nIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            context.startActivity(nIntent);
-
-                        });
-                    }
-                    snackbar.show();
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-
-        }
-    };
     private FloatingActionButton fab_daemon;
-
 
     private long mLastClickTime = 0;
 
@@ -320,10 +274,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         });
 
-        if (!DaemonService.DAEMON_RUNNING.get()) {
-            Preferences.error(getString(R.string.daemon_server_not_running));
+        if (Application.isConnected(getApplicationContext())) {
+            Preferences.warning(getString(R.string.offline_mode));
+        } else {
+            if (!DaemonService.DAEMON_RUNNING.get()) {
+                Preferences.warning(getString(R.string.offline_mode));
+            }
         }
-
     }
 
     private void storeData(@NonNull final Uri uri) {
@@ -385,7 +342,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 getString(R.string.multihash),
                                 getString(R.string.multihash_access, cid.getCid()));
                     } catch (Throwable e) {
-                        threadsAPI.setStatus(thread, ThreadStatus.DELETING); // TODO introduce error state
+                        threadsAPI.setStatus(thread, ThreadStatus.ERROR);
                         throw e;
                     }
 
@@ -457,21 +414,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-        registerReceiver(networkChangeReceiver, intentFilter);
-
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        unregisterReceiver(networkChangeReceiver);
     }
 
 
@@ -924,9 +866,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             switch (position) {
                 case 0:
-                    return new PeersFragment();
-                case 1:
                     return new ThreadsFragment();
+                case 1:
+                    return new PeersFragment();
                 case 2:
                     return new ConsoleFragment();
                 case 3:
