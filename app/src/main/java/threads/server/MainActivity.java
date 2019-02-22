@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (!idScan.get()) {
                         downloadMultihash(multihash);
                     } else {
-                        clickUserConnect(multihash);
+                        clickConnectPeer(multihash);
                     }
                 }
             } else {
@@ -740,6 +740,44 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             executor.submit(() -> {
                 try {
 
+                    PID pid = PID.create(multihash);
+
+                    IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+                    User user = threadsAPI.getUserByPid(pid);
+                    checkNotNull(user);
+
+                    ipfs.id(pid);
+                    ipfs.swarm_connect(pid);
+
+                    try {
+                        boolean value = ipfs.swarm_is_connected(pid);
+                        if (value) {
+                            threadsAPI.setStatus(user, UserStatus.ONLINE);
+                        }
+                    } catch (Throwable e) {
+                        threadsAPI.setStatus(user, UserStatus.OFFLINE);
+                        checkOnlineStatus();
+                        // ignore exception when not connected
+                    }
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        }
+    }
+
+
+    @Override
+    public void clickConnectPeer(@NonNull String multihash) {
+        checkNotNull(multihash);
+
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+
                     // check if multihash is valid
                     try {
                         Multihash.fromBase58(multihash);
@@ -781,6 +819,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             threadsAPI.setStatus(user, UserStatus.ONLINE);
                         }
                     } catch (Throwable e) {
+                        threadsAPI.setStatus(user, UserStatus.OFFLINE);
                         checkOnlineStatus();
                         // ignore exception when not connected
                     }
@@ -790,11 +829,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             });
         }
-    }
-
-    @Override
-    public void clickConnectPeer(@NonNull String multihash) {
-        clickUserConnect(multihash);
     }
 
     @Override
