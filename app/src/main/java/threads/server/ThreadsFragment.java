@@ -126,8 +126,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             if (getActivity() != null) {
                 FragmentManager fm = getActivity().getSupportFragmentManager();
 
-                ActionDialogFragment messageActionDialogFragment = new ActionDialogFragment();
-                messageActionDialogFragment.show(fm, ActionDialogFragment.TAG);
+                ActionDialogFragment actionDialogFragment = new ActionDialogFragment();
+                actionDialogFragment.show(fm, ActionDialogFragment.TAG);
             }
 
         });

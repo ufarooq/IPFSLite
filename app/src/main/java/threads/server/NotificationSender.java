@@ -6,13 +6,13 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import threads.core.Preferences;
 import threads.ipfs.api.Link;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -21,7 +21,6 @@ class NotificationSender {
     static final AtomicInteger NOTIFICATIONS_COUNTER = new AtomicInteger(1000);
     private static final String CHANNEL_ID = "CHANNEL_ID";
     private static final String GROUP_ID = "GROUP_ID";
-    private static final String TAG = NotificationSender.class.getSimpleName();
 
 
     static void createChannel(@NonNull Context context) {
@@ -41,7 +40,7 @@ class NotificationSender {
                 }
 
             } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
         }
     }
@@ -56,7 +55,7 @@ class NotificationSender {
             Notification notification = createLinkNotification(context, link);
             notificationManager.notify(NOTIFICATIONS_COUNTER.incrementAndGet(), notification);
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
     }

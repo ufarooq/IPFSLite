@@ -1,6 +1,5 @@
 package threads.server;
 
-import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.job.JobInfo;
@@ -25,9 +24,14 @@ import io.ipfs.multihash.Multihash;
 import threads.core.IThreadsAPI;
 import threads.core.Preferences;
 import threads.core.Singleton;
+import threads.core.api.Kind;
+import threads.core.api.Thread;
+import threads.core.api.ThreadStatus;
+import threads.core.api.User;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
+import threads.ipfs.api.PID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -62,12 +66,12 @@ public class DownloadJobService extends JobService {
         }
     }
 
+
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
         PersistableBundle bundle = jobParameters.getExtras();
-        DownloadManager downloadManager = (DownloadManager) getSystemService(Context.DOWNLOAD_SERVICE);
-        checkNotNull(downloadManager);
+
         final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
         final String multihash = bundle.getString(DownloadJobService.MULTIHASH);
         checkNotNull(multihash);
@@ -86,11 +90,29 @@ public class DownloadJobService extends JobService {
                         return;
                     }
 
+                    PID pid = Preferences.getPID(getApplicationContext());
+                    checkNotNull(pid);
+                    User user = threadsAPI.getUserByPid(pid);
+                    checkNotNull(user);
+
 
                     CID cid = CID.create(multihash);
                     List<Link> links = ipfs.ls(cid);
+                    if (links.isEmpty() || links.size() > 1) {
+                        Preferences.error("Not expected CID object TODO"); // TODO
+                        return;
+                    }
                     Link link = links.get(0);
 
+                    String filename = link.getPath();
+
+
+                    byte[] image = IThreadsAPI.getImage(getApplicationContext(),
+                            R.drawable.file_document);
+
+                    Thread thread = threadsAPI.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
+                            filename, multihash, image, false, false);
+                    threadsAPI.storeThread(thread);
 
                     NotificationCompat.Builder builder =
                             NotificationSender.createDownloadProgressNotification(
@@ -115,7 +137,11 @@ public class DownloadJobService extends JobService {
                             }
 
                         });
+                        threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
 
+                    } catch (Throwable e) {
+                        threadsAPI.setStatus(thread, ThreadStatus.DELETING); // TODO error state
+                        throw e;
                     } finally {
 
                         if (notificationManager != null) {
@@ -123,9 +149,7 @@ public class DownloadJobService extends JobService {
                         }
                     }
 
-
                     NotificationSender.showLinkNotification(getApplicationContext(), link);
-
 
                     Uri uri = Uri.parse(Preferences.getGateway(getApplicationContext()) + multihash);
 
@@ -135,7 +159,7 @@ public class DownloadJobService extends JobService {
                     startActivity(intent);
 
                 } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
                 } finally {
                     jobFinished(jobParameters, false);
                 }

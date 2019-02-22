@@ -2,7 +2,6 @@ package threads.server;
 
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,8 +48,8 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
             if (getActivity() != null) {
                 FragmentManager fm = getActivity().getSupportFragmentManager();
 
-                ActionDialogFragment messageActionDialogFragment = new ActionDialogFragment();
-                messageActionDialogFragment.show(fm, ActionDialogFragment.TAG);
+                ActionDialogFragment actionDialogFragment = new ActionDialogFragment();
+                actionDialogFragment.show(fm, ActionDialogFragment.TAG);
             }
 
         });
@@ -74,7 +73,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                                     adapter.getItemCount());
                         }
                     } catch (Throwable e) {
-                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                        Preferences.evaluateException(Preferences.EXCEPTION, e);
                     }
 
                 }, 50);
@@ -95,7 +94,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                     updatePeers(users);
                 }
             } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage());
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
 
         });
@@ -109,7 +108,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
             mRecyclerView.scrollToPosition(usersViewAdapter.getItemCount() - 1);
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
     }

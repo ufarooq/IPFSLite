@@ -3,7 +3,6 @@ package threads.server;
 import android.app.Activity;
 import android.app.Dialog;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
@@ -24,8 +23,8 @@ import threads.ipfs.api.Profile;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class SettingsDialog extends DialogFragment {
-    private static final String TAG = SettingsDialog.class.getSimpleName();
+public class SettingsDialogFragment extends DialogFragment {
+    public static final String TAG = SettingsDialogFragment.class.getSimpleName();
 
     @Override
     @NonNull
@@ -63,8 +62,8 @@ public class SettingsDialog extends DialogFragment {
                                     Toast.LENGTH_LONG).show();
                         }
                     }
-                } catch (Exception e) {
-                    Log.e(TAG, e.getLocalizedMessage());
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
 
             }

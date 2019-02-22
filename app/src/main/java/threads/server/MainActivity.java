@@ -7,18 +7,13 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import android.graphics.pdf.PdfRenderer;
-import android.media.MediaMetadataRetriever;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.ParcelFileDescriptor;
 import android.os.SystemClock;
 import android.provider.OpenableColumns;
 import android.util.Log;
@@ -35,15 +30,13 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -61,6 +54,7 @@ import io.ipfs.multihash.Multihash;
 import threads.core.IThreadsAPI;
 import threads.core.Preferences;
 import threads.core.Singleton;
+import threads.core.api.Kind;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.api.User;
@@ -69,6 +63,7 @@ import threads.core.api.UserType;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
+import threads.ipfs.api.Link;
 import threads.ipfs.api.PID;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.UserActionDialogFragment;
@@ -136,13 +131,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private long mLastClickTime = 0;
 
 
-    private static int getPowerOfTwoForSampleRatio(double ratio) {
-        int k = Integer.highestOneBit((int) Math.floor(ratio));
-        if (k == 0) return 1;
-        else return k;
-    }
-
-
     @Override
     public void onRequestPermissionsResult
             (int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
@@ -200,13 +188,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         TabLayout tabLayout = findViewById(R.id.tabLayout);
-        tabLayout.addTab(tabLayout.newTab().setText("Friends"));
-        tabLayout.addTab(tabLayout.newTab().setText("Files"));
-        tabLayout.addTab(tabLayout.newTab().setText("Console"));
-        tabLayout.addTab(tabLayout.newTab().setText("Info"));
 
 
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+
 
         final ViewPager viewPager = findViewById(R.id.viewPager);
         final PagerAdapter adapter = new PagerAdapter
@@ -319,7 +304,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     serverStatus();
                 }
             } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
 
         });
@@ -330,10 +315,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     serverStatus();
                 }
             } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
 
         });
+
+        if (!DaemonService.DAEMON_RUNNING.get()) {
+            Preferences.error(getString(R.string.daemon_server_not_running));
+        }
 
     }
 
@@ -343,7 +332,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         checkNotNull(returnCursor);
         int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-        int sizeIndex = returnCursor.getColumnIndex(OpenableColumns.SIZE);
         returnCursor.moveToFirst();
 
         final String filename = returnCursor.getString(nameIndex);
@@ -367,139 +355,45 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     checkNotNull(user);
 
 
-                    byte[] bytes = null;
-                    if (!mimeType.isEmpty()) {
-                        if (mimeType.startsWith("video")) {
-
-                            MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-                            mediaMetadataRetriever.setDataSource(getApplicationContext(), uri);
-                            if (sizeIndex > 100000) {
-                                Bitmap bitmap = mediaMetadataRetriever.getFrameAtTime(1000000);
-                                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                                bytes = stream.toByteArray();
-                                bitmap.recycle();
-                            } else {
-                                Bitmap bitmap = mediaMetadataRetriever.getFrameAtTime();
-                                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                                bytes = stream.toByteArray();
-                                bitmap.recycle();
-                            }
-                        } else if (mimeType.startsWith("application/pdf")) {
-
-                            Bitmap bitmap = getPDFBitmap(uri);
-                            if (bitmap != null) {
-                                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                                bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                                bytes = stream.toByteArray();
-                                bitmap.recycle();
-                            }
-                        } else if (mimeType.startsWith("image")) {
-                            try {
-                                Bitmap bitmap = getThumbnail(uri);
-                                if (bitmap != null) {
-                                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                                    bytes = stream.toByteArray();
-                                    bitmap.recycle();
-                                }
-                            } catch (Throwable e) {
-                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                            }
+                    byte[] bytes;
+                    try {
+                        bytes = IThreadsAPI.getPreviewImage(getApplicationContext(), uri);
+                        if (bytes == null) {
+                            bytes = user.getImage();
                         }
-                    }
-
-
-                    CID cid = ipfs.add(inputStream, filename, true);
-                    checkNotNull(cid);
-
-                    if (bytes == null) {
+                    } catch (Throwable e) {
+                        // ignore exception
                         bytes = user.getImage();
                     }
-                    // TODO create before adding
-                    Thread thread = threadsAPI.createThread(user, filename,
-                            filename, bytes, false, false);
+
+
+                    Thread thread = threadsAPI.createThread(user, ThreadStatus.OFFLINE, Kind.IN,
+                            filename, filename, bytes, false, false);
                     thread.setMimeType(mimeType);
-                    thread.setStatus(ThreadStatus.ONLINE);
-                    thread.setCid(cid.getCid());
                     threadsAPI.storeThread(thread);
 
-                    //threadsAPI.setStatus(note, NoteStatus.SEEDING);
+
+                    try {
+                        CID cid = ipfs.add(inputStream, filename, true);
+                        checkNotNull(cid);
+
+                        threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
+                        threadsAPI.setCID(thread, cid);
 
 
-                    InfoDialogFragment.show(this, cid.getCid(),
-                            getString(R.string.multihash),
-                            getString(R.string.multihash_add, cid.getCid()));
-
+                        InfoDialogFragment.show(this, cid.getCid(),
+                                getString(R.string.multihash),
+                                getString(R.string.multihash_access, cid.getCid()));
+                    } catch (Throwable e) {
+                        threadsAPI.setStatus(thread, ThreadStatus.DELETING); // TODO introduce error state
+                        throw e;
+                    }
 
                 } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
             });
         }
-    }
-
-    public Bitmap getThumbnail(Uri uri) throws IOException {
-        int THUMBNAIL_SIZE = 400;
-        InputStream input = this.getContentResolver().openInputStream(uri);
-
-        BitmapFactory.Options onlyBoundsOptions = new BitmapFactory.Options();
-        onlyBoundsOptions.inJustDecodeBounds = true;
-        onlyBoundsOptions.inDither = true;//optional
-        onlyBoundsOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;//optional
-        BitmapFactory.decodeStream(input, null, onlyBoundsOptions);
-        input.close();
-        if ((onlyBoundsOptions.outWidth == -1) || (onlyBoundsOptions.outHeight == -1))
-            return null;
-
-        int originalSize = (onlyBoundsOptions.outHeight > onlyBoundsOptions.outWidth) ? onlyBoundsOptions.outHeight : onlyBoundsOptions.outWidth;
-
-        double ratio = (originalSize > THUMBNAIL_SIZE) ? (originalSize / THUMBNAIL_SIZE) : 1.0;
-
-        BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
-        bitmapOptions.inSampleSize = getPowerOfTwoForSampleRatio(ratio);
-        bitmapOptions.inDither = true;//optional
-        bitmapOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;//optional
-        input = this.getContentResolver().openInputStream(uri);
-        Bitmap bitmap = BitmapFactory.decodeStream(input, null, bitmapOptions);
-        input.close();
-        return bitmap;
-    }
-
-    @Nullable
-    private Bitmap getPDFBitmap(@NonNull Uri uri) {
-        try {
-
-            ParcelFileDescriptor fileDescriptor = getApplicationContext().getContentResolver().openFileDescriptor(
-                    uri, "r");
-
-            if (fileDescriptor != null) {
-                PdfRenderer pdfRenderer = new PdfRenderer(fileDescriptor);
-
-                PdfRenderer.Page rendererPage = pdfRenderer.openPage(0);
-                int rendererPageWidth = rendererPage.getWidth();
-                int rendererPageHeight = rendererPage.getHeight();
-                Bitmap bitmap = Bitmap.createBitmap(
-                        rendererPageWidth,
-                        rendererPageHeight,
-                        Bitmap.Config.ARGB_8888);
-                rendererPage.render(bitmap, null, null,
-                        PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
-
-
-                rendererPage.close();
-
-                pdfRenderer.close();
-                fileDescriptor.close();
-                return bitmap;
-            }
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            throw new RuntimeException(e);
-        }
-        return null;
     }
 
 
@@ -551,14 +445,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 mLastClickTime = SystemClock.elapsedRealtime();
 
                 PID pid = Preferences.getPID(getApplicationContext());
-                if (pid == null) {
-                    Toast.makeText(getApplicationContext(),
-                            getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
-                } else {
-                    InfoDialogFragment.show(this, pid.getPid(),
-                            getString(R.string.peer_id),
-                            getString(R.string.daemon_server_access, pid));
-                }
+                checkNotNull(pid);
+                InfoDialogFragment.show(this, pid.getPid(),
+                        getString(R.string.peer_id),
+                        getString(R.string.peer_access, pid));
+
                 return true;
             }
 
@@ -601,7 +492,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
 
                 } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage());
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
                 break;
             }
@@ -612,7 +503,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     startActivity(intent);
 
                 } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage());
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
                 break;
             }
@@ -628,17 +519,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     fragment.show(getSupportFragmentManager(), null);
 
                 } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage());
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
                 break;
             }
             case R.id.nav_settings: {
                 try {
                     FragmentManager fm = getSupportFragmentManager();
-                    SettingsDialog messageActionDialogFragment = new SettingsDialog();
-                    messageActionDialogFragment.show(fm, "SettingsDialog");
+                    SettingsDialogFragment settingsDialogFragment = new SettingsDialogFragment();
+                    settingsDialogFragment.show(fm, SettingsDialogFragment.TAG);
                 } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage());
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
                 break;
             }
@@ -648,14 +539,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     break;
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
+
                 if (!DaemonService.DAEMON_RUNNING.get()) {
-                    Toast.makeText(getApplicationContext(),
-                            getString(R.string.daemon_server_not_running), Toast.LENGTH_LONG).show();
-                } else {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse("http://127.0.0.1:5001/webui"));
-                    startActivity(intent);
+                    Preferences.error(getString(R.string.daemon_server_not_running));
+                    break;
                 }
+
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(Preferences.getWebUI(getApplicationContext())));
+                startActivity(intent);
                 break;
             }
             case R.id.nav_share: {
@@ -722,12 +614,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage());
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
     @Override
-    public void clickUploadFile() {
+    public void clickUploadMultihash() {
         try {
             Intent intent = new Intent();
             intent.setType("*/*");
@@ -737,12 +629,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             intent.setAction(Intent.ACTION_GET_CONTENT);
             startActivityForResult(Intent.createChooser(intent, "Select Media File"), SELECT_MEDIA_FILE);
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage());
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
     @Override
-    public void clickDownloadFile() {
+    public void clickDownloadMultihash() {
+
+        if (!DaemonService.DAEMON_RUNNING.get()) {
+            Preferences.error(getString(R.string.daemon_server_not_running));
+            return;
+        }
+
+
         try {
 
             if (ContextCompat.checkSelfPermission(getApplicationContext(),
@@ -756,7 +655,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 nav_get();
             }
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage());
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
     }
@@ -771,19 +670,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickUserBlock(@NonNull String pid) {
         checkNotNull(pid);
+
+        // not yet activated
     }
 
     @Override
-    public void clickUserInfo(String pid) {
+    public void clickUserInfo(@NonNull String pid) {
         checkNotNull(pid);
 
         InfoDialogFragment.show(this, pid,
                 getString(R.string.peer_id),
-                getString(R.string.daemon_server_access, pid));
+                getString(R.string.peer_access, pid));
     }
 
     @Override
-    public void clickUserDelete(@NonNull final String pid) {
+    public void clickUserDelete(@NonNull String pid) {
         checkNotNull(pid);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -840,7 +741,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
 
                 } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
             });
         }
@@ -854,31 +755,158 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadPin(@NonNull String thread) {
         checkNotNull(thread);
-        // TODO
+        checkNotNull(thread);
+        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+
+                    Thread threadObject = threadsAPI.getThreadByAddress(thread);
+                    checkNotNull(threadObject);
+
+                    // not yet activated
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        }
     }
 
     @Override
     public void clickThreadInfo(@NonNull String thread) {
         checkNotNull(thread);
-        // TODO
+        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    Thread threadObject = threadsAPI.getThreadByAddress(thread);
+                    checkNotNull(threadObject);
+
+                    String multihash = threadObject.getCid();
+
+                    InfoDialogFragment.show(this, multihash,
+                            getString(R.string.multihash),
+                            getString(R.string.multihash_access, multihash));
+
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        }
+
+
     }
 
     @Override
     public void clickThreadPlay(@NonNull String thread) {
         checkNotNull(thread);
-        // TODO
+
+
+        if (!DaemonService.DAEMON_RUNNING.get()) {
+            Preferences.error(getString(R.string.daemon_server_not_running));
+            return;
+        }
+
+
+        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    Thread threadObject = threadsAPI.getThreadByAddress(thread);
+                    checkNotNull(threadObject);
+
+                    String multihash = threadObject.getCid();
+
+                    CID cid = CID.create(multihash);
+                    List<Link> links = ipfs.ls(cid);
+                    Link link = links.get(0);
+                    String path = link.getPath();
+
+                    Uri uri = Uri.parse(Preferences.getGateway(getApplicationContext()) + multihash + "/" + path);
+
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setDataAndType(uri, threadObject.getMimeType());
+                    intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+                            Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    startActivity(intent);
+
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        }
     }
 
     @Override
     public void clickThreadDelete(@NonNull String thread) {
         checkNotNull(thread);
-        // TODO
+
+        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    Thread threadObject = threadsAPI.getThreadByAddress(thread);
+                    checkNotNull(threadObject);
+                    threadsAPI.removeThread(threadObject);
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        }
     }
 
     @Override
     public void clickThreadView(@NonNull String thread) {
         checkNotNull(thread);
-        // TODO
+
+
+        if (!DaemonService.DAEMON_RUNNING.get()) {
+            Preferences.error(getString(R.string.daemon_server_not_running));
+            return;
+        }
+
+        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    Thread threadObject = threadsAPI.getThreadByAddress(thread);
+                    checkNotNull(threadObject);
+
+
+                    String multihash = threadObject.getCid();
+
+                    CID cid = CID.create(multihash);
+                    List<Link> links = ipfs.ls(cid);
+                    Link link = links.get(0);
+                    String path = link.getPath();
+
+                    Uri uri = Uri.parse("https://gateway.ipfs.io/ipfs/" + multihash); // TODO
+
+                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        }
     }
 
 

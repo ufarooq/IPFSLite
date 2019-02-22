@@ -10,7 +10,6 @@ import android.os.SystemClock;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,6 +25,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 import io.ipfs.multihash.Multihash;
+import threads.core.Preferences;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -46,7 +46,7 @@ public class EditMultihashDialogFragment extends DialogFragment {
         try {
             actionListener = (EditMultihashDialogFragment.ActionListener) getActivity();
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage());
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
@@ -126,7 +126,7 @@ public class EditMultihashDialogFragment extends DialogFragment {
                     dismiss();
 
                 })
-                .setTitle(getString(R.string.multihash));
+                .setTitle(getString(R.string.peer_id));
 
 
         Dialog dialog = builder.create();

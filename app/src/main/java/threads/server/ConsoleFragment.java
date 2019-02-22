@@ -25,6 +25,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.api.Message;
 import threads.core.mdl.MessagesViewModel;
@@ -183,7 +184,7 @@ public class ConsoleFragment extends Fragment {
 
             mRecyclerView.scrollToPosition(messageViewAdapter.getItemCount() - 1);
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
     }

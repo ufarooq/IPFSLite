@@ -9,7 +9,6 @@ import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -24,6 +23,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
+import threads.core.Preferences;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -63,9 +63,9 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
             bundle.putString(TITLE, title);
             InfoDialogFragment fragment = new InfoDialogFragment();
             fragment.setArguments(bundle);
-            fragment.show(activity.getSupportFragmentManager(), null);
+            fragment.show(activity.getSupportFragmentManager(), InfoDialogFragment.TAG);
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
 
@@ -87,7 +87,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
             bitmaps.put(qrCode, bitmap);
             return qrCode;
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
         return qrCode;
     }
@@ -138,7 +138,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
             }
 
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 

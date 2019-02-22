@@ -5,17 +5,16 @@ import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
+import threads.core.Preferences;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -31,7 +30,7 @@ public class ActionDialogFragment extends DialogFragment {
         try {
             actionListener = (ActionListener) getActivity();
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage());
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
@@ -76,7 +75,7 @@ public class ActionDialogFragment extends DialogFragment {
                 }
 
                 mLastClickTime = SystemClock.elapsedRealtime();
-                actionListener.clickUploadFile();
+                actionListener.clickUploadMultihash();
             } finally {
                 dismiss();
             }
@@ -92,12 +91,8 @@ public class ActionDialogFragment extends DialogFragment {
                 }
 
                 mLastClickTime = SystemClock.elapsedRealtime();
-                if (!DaemonService.DAEMON_RUNNING.get()) {
-                    Toast.makeText(getContext(),
-                            R.string.daemon_server_not_running, Toast.LENGTH_LONG).show();
-                } else {
-                    actionListener.clickDownloadFile();
-                }
+                actionListener.clickDownloadMultihash();
+
             } finally {
                 dismiss();
             }
@@ -139,9 +134,9 @@ public class ActionDialogFragment extends DialogFragment {
 
         void clickConnectPeer();
 
-        void clickUploadFile();
+        void clickUploadMultihash();
 
-        void clickDownloadFile();
+        void clickDownloadMultihash();
 
         void clickEditPeer();
     }
