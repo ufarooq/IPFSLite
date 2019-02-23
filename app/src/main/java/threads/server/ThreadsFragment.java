@@ -208,11 +208,12 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void invokeGeneralAction(@NonNull Thread thread) {
         if (getActivity() != null) {
+            boolean shareActive = Preferences.isPubsubEnabled(getActivity());
             FragmentManager fm = getActivity().getSupportFragmentManager();
 
             ThreadActionDialogFragment.newInstance(
                     thread.getAddress(), true, true, true,
-                    true, true, true)
+                    true, true, shareActive)
                     .show(fm, ThreadActionDialogFragment.TAG);
         }
     }

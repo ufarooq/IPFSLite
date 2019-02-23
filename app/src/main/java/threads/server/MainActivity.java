@@ -751,6 +751,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         return;
                     }
                     checkNotNull(user);
+
+
                     ipfs.id(pid);
                     ipfs.swarm_connect(pid);
 
@@ -758,12 +760,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         boolean value = ipfs.swarm_is_connected(pid);
                         if (value) {
                             threadsAPI.setStatus(user, UserStatus.ONLINE);
+
+
+                            // make a connection to peer
+                            if (Preferences.isPubsubEnabled(getApplicationContext())) {
+                                ipfs.pubsub_pub(user.getPid(),
+                                        multihash.concat(System.lineSeparator()));
+                            }
                         }
                     } catch (Throwable e) {
                         threadsAPI.setStatus(user, UserStatus.OFFLINE);
                         checkOnlineStatus();
                         // ignore exception when not connected
                     }
+
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);

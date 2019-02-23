@@ -92,6 +92,7 @@ public class Application extends android.app.Application {
 
 
         Log.e(TAG, "...... start application");
+        Preferences.setPubsubEnabled(getApplicationContext(), true); // TODO remove again
         NotificationSender.createChannel(getApplicationContext());
 
         try {

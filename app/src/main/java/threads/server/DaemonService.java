@@ -23,6 +23,7 @@ import threads.core.Singleton;
 import threads.core.api.MessageKind;
 import threads.core.api.User;
 import threads.core.api.UserStatus;
+import threads.core.api.UserType;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
 
@@ -176,7 +177,9 @@ public class DaemonService extends Service {
                     stopSelf();
                 }
                 if (DAEMON_RUNNING.get()) {
-                    new java.lang.Thread(() -> startPubsub(getApplicationContext(), ipfs)).start();
+                    if (Preferences.isPubsubEnabled(getApplicationContext())) {
+                        new java.lang.Thread(() -> startPubsub(getApplicationContext(), ipfs)).start();
+                    }
                 }
                 try {
                     while (DAEMON_RUNNING.get()) {
@@ -217,13 +220,27 @@ public class DaemonService extends Service {
 
             try {
                 PID senderPid = PID.create(message.getSenderPid());
-                if (!threadsAPI.isAccountBlocked(senderPid)) {
 
-                    String multihash = message.getMessage();
-                    threads.server.Service.downloadMultihash(
-                            getApplicationContext(), pid, multihash);
+                User sender = threadsAPI.getUserByPID(senderPid);
+                if (sender == null) {
+
+                    // create a new user which is blocked
+                    sender = threadsAPI.createUser(senderPid,
+                            senderPid.getPid(),
+                            senderPid.getPid(),
+                            senderPid.getPid(), UserType.UNKNOWN, null);
+                    sender.setStatus(UserStatus.BLOCKED);
+                    threadsAPI.storeUser(sender);
+                    Preferences.warning(getString(R.string.user_connect_try));
+
+                } else {
+                    if (!threadsAPI.isAccountBlocked(senderPid)) {
+
+                        String multihash = message.getMessage();
+                        threads.server.Service.downloadMultihash(
+                                getApplicationContext(), senderPid, multihash);
+                    }
                 }
-
             } catch (Throwable e) {
                 if (Preferences.DEBUG_MODE) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);

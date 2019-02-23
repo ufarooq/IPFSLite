@@ -65,11 +65,11 @@ class Service {
 
 
     static void downloadMultihash(@NonNull Context context,
-                                  @NonNull PID pid,
+                                  @NonNull PID creator,
                                   @NonNull String multihash) {
 
         checkNotNull(context);
-        checkNotNull(pid);
+        checkNotNull(creator);
         checkNotNull(multihash);
 
         // CHECKED
@@ -92,7 +92,7 @@ class Service {
                         return;
                     }
 
-                    User user = threadsAPI.getUserByPID(pid);
+                    User user = threadsAPI.getUserByPID(creator);
                     checkNotNull(user);
 
 
@@ -110,7 +110,7 @@ class Service {
                     byte[] image = IThreadsAPI.getImage(context.getApplicationContext(),
                             R.drawable.file_document);
 
-                    Thread thread = threadsAPI.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
+                    Thread thread = threadsAPI.createThread(user, ThreadStatus.ONLINE, Kind.IN,
                             filename, multihash, image, false, false);
                     threadsAPI.storeThread(thread);
 
