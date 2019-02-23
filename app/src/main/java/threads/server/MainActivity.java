@@ -938,7 +938,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Preferences.error(getString(R.string.daemon_not_running));
             return;
         }
-
+        final PID host = Preferences.getPID(getApplicationContext());
         final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
 
@@ -955,15 +955,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     List<User> users = threadsAPI.getUsers();
                     for (User user : users) {
                         if (user.getStatus() != UserStatus.BLOCKED) {
-
-                            if (threadsAPI.connect(ipfs, PID.create(user.getPid()), null)) {
-                                ipfs.pubsub_pub(user.getPid(),
-                                        multihash.concat(System.lineSeparator()));
+                            PID userPID = PID.create(user.getPid());
+                            if (!userPID.equals(host)) {
+                                if (threadsAPI.connect(ipfs, userPID, null)) {
+                                    ipfs.pubsub_pub(user.getPid(),
+                                            multihash.concat(System.lineSeparator()));
+                                }
                             }
                         }
                     }
-
-                    Preferences.warning(getString(R.string.sorry_not_yet_implemented));
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);

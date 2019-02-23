@@ -224,7 +224,7 @@ public class DaemonService extends Service {
                 User sender = threadsAPI.getUserByPID(senderPid);
                 if (sender == null) {
 
-                    // create a new user which is blocked
+                    // create a new user which is blocked (User has to unblock and verified the user)
                     sender = threadsAPI.createUser(senderPid,
                             senderPid.getPid(),
                             senderPid.getPid(),
@@ -236,7 +236,7 @@ public class DaemonService extends Service {
                 } else {
                     if (!threadsAPI.isAccountBlocked(senderPid)) {
 
-                        String multihash = message.getMessage();
+                        String multihash = message.getMessage().trim();
                         threads.server.Service.downloadMultihash(
                                 getApplicationContext(), senderPid, multihash);
                     }
