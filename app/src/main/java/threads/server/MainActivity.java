@@ -840,6 +840,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickThreadPlay(@NonNull String thread) {
         checkNotNull(thread);
 
+        // CHECKED
+        if (!DaemonService.DAEMON_RUNNING.get()) {
+            Preferences.error(getString(R.string.daemon_not_running));
+            return;
+        }
 
         final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
@@ -878,6 +883,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickThreadDelete(@NonNull String thread) {
         checkNotNull(thread);
 
+
         final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
@@ -902,6 +908,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadView(@NonNull String thread) {
         checkNotNull(thread);
+
 
         final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
         final IPFS ipfs = Singleton.getInstance().getIpfs();

@@ -201,7 +201,7 @@ public class DaemonService extends Service {
         try {
             pubsubDaemon(ipfs, pid);
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            // IGNORE exception occurs when daemon is shutdown
         }
     }
 
