@@ -52,7 +52,7 @@ public class Application extends android.app.Application {
 
                 PID pid = Preferences.getPID(context);
                 checkNotNull(pid);
-                User user = threadsApi.getUserByPid(pid);
+                User user = threadsApi.getUserByPID(pid);
                 if (user == null) {
 
                     String inbox = Preferences.getInbox(context);
@@ -78,7 +78,6 @@ public class Application extends android.app.Application {
             }).start();
         }
     }
-
 
 
     @Override

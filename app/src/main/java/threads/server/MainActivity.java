@@ -1,9 +1,6 @@
 package threads.server;
 
 import android.Manifest;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -40,7 +37,6 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -82,7 +78,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public static final int SELECT_MEDIA_FILE = 1;
     private static final int WRITE_EXTERNAL_STORAGE = 2;
     private static final String TAG = MainActivity.class.getSimpleName();
-    private final AtomicBoolean networkAvailable = new AtomicBoolean(true);
+
+
     private final AtomicBoolean idScan = new AtomicBoolean(false);
     private DrawerLayout drawer_layout;
 
@@ -139,93 +136,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void downloadMultihash(@NonNull String multihash) {
         checkNotNull(multihash);
-
-        // CHECKED
-        if (!DaemonService.DAEMON_RUNNING.get()) {
-            Preferences.error(getString(R.string.daemon_not_running));
-            return;
-        }
-        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
-
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-        if (ipfs != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    // check if multihash is valid
-                    try {
-                        Multihash.fromBase58(multihash);
-                    } catch (Throwable e) {
-                        Preferences.error(getString(R.string.multihash_not_valid));
-                        return;
-                    }
-
-                    PID pid = Preferences.getPID(getApplicationContext());
-                    checkNotNull(pid);
-                    User user = threadsAPI.getUserByPid(pid);
-                    checkNotNull(user);
-
-
-                    CID cid = CID.create(multihash);
-                    List<Link> links = ipfs.ls(cid);
-                    if (links.isEmpty() || links.size() > 1) {
-                        Preferences.error(getString(R.string.sorry_not_yet_implemented));
-                        return;
-                    }
-                    Link link = links.get(0);
-
-                    String filename = link.getPath();
-
-
-                    byte[] image = IThreadsAPI.getImage(getApplicationContext(),
-                            R.drawable.file_document);
-
-                    Thread thread = threadsAPI.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
-                            filename, multihash, image, false, false);
-                    threadsAPI.storeThread(thread);
-
-                    NotificationCompat.Builder builder =
-                            NotificationSender.createDownloadProgressNotification(
-                                    getApplicationContext(), link.getPath());
-
-                    final NotificationManager notificationManager = (NotificationManager)
-                            getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-                    int notifyID = NotificationSender.NOTIFICATIONS_COUNTER.incrementAndGet();
-                    Notification notification = builder.build();
-                    if (notificationManager != null) {
-                        notificationManager.notify(notifyID, notification);
-                    }
-
-
-                    try {
-                        threadsAPI.preload(ipfs, link.getCid().getCid(), link.getSize(), (percent) -> {
-
-
-                            builder.setProgress(100, percent, false);
-                            if (notificationManager != null) {
-                                notificationManager.notify(notifyID, builder.build());
-                            }
-
-                        });
-                        threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
-
-                    } catch (Throwable e) {
-                        threadsAPI.setStatus(thread, ThreadStatus.ERROR);
-                        throw e;
-                    } finally {
-
-                        if (notificationManager != null) {
-                            notificationManager.cancel(notifyID);
-                        }
-                    }
-
-                    NotificationSender.showLinkNotification(getApplicationContext(), link);
-
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
-            });
-        }
+        PID pid = Preferences.getPID(getApplicationContext());
+        checkNotNull(pid);
+        Service.downloadMultihash(getApplicationContext(), pid, multihash);
     }
 
     @Override
@@ -409,7 +322,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     PID pid = Preferences.getPID(getApplicationContext());
                     checkNotNull(pid);
-                    User user = threadsAPI.getUserByPid(pid);
+                    User user = threadsAPI.getUserByPID(pid);
                     checkNotNull(user);
 
 
@@ -706,13 +619,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                User user = threadsAPI.getUserByPid(PID.create(pid));
+                User user = threadsAPI.getUserByPID(PID.create(pid));
                 checkNotNull(user);
 
                 if (user.getStatus() == UserStatus.BLOCKED) {
-                    threadsAPI.setStatus(user, UserStatus.OFFLINE);
+                    threadsAPI.unblockUser(user, UserStatus.OFFLINE);
                 } else {
-                    threadsAPI.setStatus(user, UserStatus.BLOCKED);
+                    threadsAPI.blockUser(user);
                 }
 
             } catch (Throwable e) {
@@ -739,7 +652,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         executor.submit(() -> {
             try {
                 IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
-                threadsAPI.removeUserByPid(PID.create(pid));
+                threadsAPI.removeUserByPID(PID.create(pid));
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
@@ -759,7 +672,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     PID pid = PID.create(multihash);
 
                     IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
-                    User user = threadsAPI.getUserByPid(pid);
+                    User user = threadsAPI.getUserByPID(pid);
                     checkNotNull(user);
 
                     if (user.getStatus() != UserStatus.BLOCKED) {
@@ -824,7 +737,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                     IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
-                    User user = threadsAPI.getUserByPid(pid);
+                    User user = threadsAPI.getUserByPID(pid);
                     if (user == null) {
                         user = threadsAPI.createUser(pid,
                                 pid.getPid(),
@@ -863,6 +776,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickThreadPin(@NonNull String thread) {
         checkNotNull(thread);
         checkNotNull(thread);
+
         final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
@@ -874,6 +788,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     checkNotNull(threadObject);
 
                     // not yet activated
+
+                    Preferences.warning(getString(R.string.sorry_not_yet_implemented));
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -913,12 +829,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadPlay(@NonNull String thread) {
         checkNotNull(thread);
-
-        // CHECKED
-        if (!DaemonService.DAEMON_RUNNING.get()) {
-            Preferences.error(getString(R.string.daemon_not_running));
-            return;
-        }
 
 
         final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
@@ -967,7 +877,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Thread threadObject = threadsAPI.getThreadByAddress(thread);
                     checkNotNull(threadObject);
 
-                    //threadsAPI.pin_rm(ipfs, threadObject.getCid(), true);
+                    threadsAPI.pin_rm(ipfs, threadObject.getCid(), true);
 
                     threadsAPI.removeThread(threadObject);
 
@@ -1010,6 +920,52 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
+    public void clickThreadShare(@NonNull String thread) {
+        checkNotNull(thread);
+
+        // CHECKED
+        if (!DaemonService.DAEMON_RUNNING.get()) {
+            Preferences.error(getString(R.string.daemon_not_running));
+            return;
+        }
+
+        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+
+        if (ipfs != null) {
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    Thread threadObject = threadsAPI.getThreadByAddress(thread);
+                    checkNotNull(threadObject);
+
+
+                    String multihash = threadObject.getCid();
+                    List<User> users = threadsAPI.getUsers();
+                    for (User user : users) {
+                        if (user.getStatus() != UserStatus.BLOCKED) {
+
+                            if (threadsAPI.connect(ipfs, PID.create(user.getPid()), null)) {
+                                ipfs.pubsub_pub(user.getPid(),
+                                        multihash.concat(System.lineSeparator()));
+                            }
+                        }
+                    }
+
+                    Preferences.warning(getString(R.string.sorry_not_yet_implemented));
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+
+
+        }
+
+    }
+
+    @Override
     public void name(@NonNull String pid, @NonNull String name) {
         checkNotNull(pid);
         checkNotNull(name);
@@ -1020,7 +976,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                User user = threadsAPI.getUserByPid(PID.create(pid));
+                User user = threadsAPI.getUserByPID(PID.create(pid));
                 checkNotNull(user);
 
                 user.setAlias(name);

@@ -26,6 +26,7 @@ import threads.core.api.UserStatus;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
@@ -168,13 +169,15 @@ public class DaemonService extends Service {
                             threadsApi.createEvent(Preferences.IPFS_SERVER_ONLINE_EVENT, ""));
 
                 } catch (Throwable e) {
-                    Log.e(TAG, e.getLocalizedMessage(), e);
                     threadsApi.storeEvent(
                             threadsApi.createEvent(Preferences.IPFS_SERVER_OFFLINE_EVENT, ""));
+                    Preferences.evaluateException(Preferences.IPFS_START_FAILURE, e);
                     stopForeground(true);
                     stopSelf();
                 }
-
+                if (DAEMON_RUNNING.get()) {
+                    new java.lang.Thread(() -> startPubsub(getApplicationContext(), ipfs)).start();
+                }
                 try {
                     while (DAEMON_RUNNING.get()) {
                         evalUserStatus(threadsApi);
@@ -185,6 +188,54 @@ public class DaemonService extends Service {
                 }
             }).start();
         }
+
+    }
+
+    private void startPubsub(@NonNull Context context, @NonNull IPFS ipfs) {
+        final PID pid = Preferences.getPID(context);
+        checkNotNull(pid);
+        checkArgument(!pid.getPid().isEmpty());
+        try {
+            pubsubDaemon(ipfs, pid);
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+    }
+
+    private void pubsubDaemon(@NonNull IPFS ipfs,
+                              @NonNull PID pid) throws Exception {
+        checkNotNull(ipfs);
+        checkNotNull(pid);
+
+        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+
+
+        if (Preferences.DEBUG_MODE) {
+            Log.e(TAG, "Pubsub Daemon :" + pid.getPid());
+        }
+        ipfs.pubsub_sub(pid.getPid(), false, (message) -> {
+
+            try {
+                PID senderPid = PID.create(message.getSenderPid());
+                if (!threadsAPI.isAccountBlocked(senderPid)) {
+
+                    String multihash = message.getMessage();
+                    threads.server.Service.downloadMultihash(
+                            getApplicationContext(), pid, multihash);
+                }
+
+            } catch (Throwable e) {
+                if (Preferences.DEBUG_MODE) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            } finally {
+                if (Preferences.DEBUG_MODE) {
+                    Log.e(TAG, "Received : " + message.toString());
+                }
+            }
+
+
+        });
 
     }
 

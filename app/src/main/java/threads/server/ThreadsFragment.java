@@ -212,7 +212,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
             ThreadActionDialogFragment.newInstance(
                     thread.getAddress(), true, true, true,
-                    true, false)
+                    true, true, true)
                     .show(fm, ThreadActionDialogFragment.TAG);
         }
     }
@@ -271,6 +271,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void invokeActionError(@NonNull Thread thread) {
         checkNotNull(thread);
-        Preferences.error(getString(R.string.sorry_not_yet_implemented));
+        Preferences.warning(getString(R.string.sorry_not_yet_implemented));
     }
 }
