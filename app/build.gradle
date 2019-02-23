@@ -73,8 +73,10 @@ dependencies {
 
     // UI+API (LICENSE done)
     implementation 'threads.share:share:0.9.3'
+
     // QR Scanner (LICENSE done)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'
+
     // UI (for showing licences file) (LICENSE done)
     implementation 'de.psdev.licensesdialog:licensesdialog:2.0.0'
 
