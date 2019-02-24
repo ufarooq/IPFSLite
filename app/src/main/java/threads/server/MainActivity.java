@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         UserActionDialogFragment.ActionListener,
         ThreadActionDialogFragment.ActionListener,
         EditMultihashDialogFragment.ActionListener,
+        ThreadsFragment.ActionListener,
         NameDialogFragment.ActionListener {
     public static final int SELECT_MEDIA_FILE = 1;
     private static final int WRITE_EXTERNAL_STORAGE = 2;
@@ -96,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 for (int i = 0, len = permissions.length; i < len; i++) {
 
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                        nav_get();
+                        scanMultihash();
                     }
                 }
 
@@ -136,6 +137,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void downloadMultihash(@NonNull String multihash) {
         checkNotNull(multihash);
+
+        // CHECKED
+        if (!Application.isConnected(getApplicationContext())) {
+            Preferences.error(getString(R.string.offline_mode));
+            return;
+        }
+
+        // CHECKED
+        if (!DaemonService.DAEMON_RUNNING.get()) {
+            Preferences.error(getString(R.string.daemon_not_running));
+            return;
+        }
+
         PID pid = Preferences.getPID(getApplicationContext());
         checkNotNull(pid);
         Service.downloadMultihash(getApplicationContext(), pid, multihash);
@@ -288,7 +302,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void checkOnlineStatus() {
-        if (Application.isConnected(getApplicationContext())) {
+        if (!Application.isConnected(getApplicationContext())) {
             Preferences.warning(getString(R.string.offline_mode));
         } else {
             if (!DaemonService.DAEMON_RUNNING.get()) {
@@ -404,6 +418,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         switch (id) {
+            case R.id.action_download: {
+                // mis-clicking prevention, using threshold of 1000 ms
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    break;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+                scanMultihash();
+
+                return true;
+            }
             case R.id.action_info: {
                 // mis-clicking prevention, using threshold of 1000 ms
                 if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
@@ -529,7 +554,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    private void nav_get() {
+    private void scanMultihash() {
         // Check that the device will let you use the camera
         PackageManager pm = getPackageManager();
 
@@ -580,8 +605,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    @Override
-    public void clickDownloadMultihash() {
+
+    /**
+     * TODO
+     */
+    private void clickDownload() {
 
         try {
 
@@ -593,7 +621,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         WRITE_EXTERNAL_STORAGE);
 
             } else {
-                nav_get();
+                // TODO
             }
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -739,10 +767,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
                     User user = threadsAPI.getUserByPID(pid);
                     if (user == null) {
+                        byte[] image = IThreadsAPI.getImage(getApplicationContext(),
+                                pid.getPid(), R.drawable.server_network);
                         user = threadsAPI.createUser(pid,
                                 pid.getPid(),
                                 pid.getPid(),
-                                pid.getPid(), UserType.VERIFIED, null);
+                                pid.getPid(), UserType.VERIFIED, image, null);
+
                         user.setStatus(UserStatus.OFFLINE);
                         threadsAPI.storeUser(user);
 
@@ -893,7 +924,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Thread threadObject = threadsAPI.getThreadByAddress(thread);
                     checkNotNull(threadObject);
 
-                    threadsAPI.pin_rm(ipfs, threadObject.getCid(), true);
+                    // TODO threadsAPI.pin_rm(ipfs, threadObject.getCid(), true);
 
                     threadsAPI.removeThread(threadObject);
 
@@ -940,6 +971,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickThreadShare(@NonNull String thread) {
         checkNotNull(thread);
 
+        // CHECKED
+        if (!Application.isConnected(getApplicationContext())) {
+            Preferences.error(getString(R.string.offline_mode));
+            return;
+        }
         // CHECKED
         if (!DaemonService.DAEMON_RUNNING.get()) {
             Preferences.error(getString(R.string.daemon_not_running));
@@ -997,10 +1033,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 checkNotNull(user);
 
                 user.setAlias(name);
-                byte[] image = IThreadsAPI.getImage(name);
-                if (image != null) {
-                    user.setImage(image);
-                }
+                byte[] image = IThreadsAPI.getImage(getApplicationContext(),
+                        name, R.drawable.server_network);
+                user.setImage(image);
+
                 threadsAPI.storeUser(user);
 
             } catch (Throwable e) {

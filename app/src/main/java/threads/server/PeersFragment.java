@@ -27,7 +27,7 @@ import threads.share.UsersViewAdapter;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class PeersFragment extends Fragment implements UsersViewAdapter.UsersViewAdapterListener {
-    private static final String TAG = PeersFragment.class.getSimpleName();
+
     private long mLastClickTime = 0;
 
     private RecyclerView mRecyclerView;
@@ -47,8 +47,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
             mLastClickTime = SystemClock.elapsedRealtime();
 
             if (getActivity() != null) {
-                ActionDialogFragment.newInstance(true, true,
-                        false, false)
+                ActionDialogFragment.newInstance(true, true)
                         .show(getActivity().getSupportFragmentManager(), ActionDialogFragment.TAG);
             }
 

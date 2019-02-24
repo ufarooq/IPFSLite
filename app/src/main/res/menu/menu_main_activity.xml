@@ -11,4 +11,13 @@
         android:visible="true"
         app:showAsAction="ifRoom" />
 
+
+    <item
+        android:id="@+id/action_download"
+        android:icon="@drawable/cloud_download"
+        android:orderInCategory="55"
+        android:title="@string/action_download"
+        android:visible="true"
+        app:showAsAction="ifRoom" />
+
 </menu>

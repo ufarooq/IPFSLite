@@ -58,9 +58,10 @@ public class Application extends android.app.Application {
                     String inbox = Preferences.getInbox(context);
                     checkNotNull(inbox);
                     String publicKey = ipfs.getPublicKey();
-
+                    byte[] image = IThreadsAPI.getImage(context,
+                            pid.getPid(), R.drawable.server_network);
                     user = threadsApi.createUser(pid, inbox, publicKey,
-                            pid.getPid(), UserType.VERIFIED, null);
+                            pid.getPid(), UserType.VERIFIED, image, null);
                     user.setStatus(UserStatus.ONLINE);
                     threadsApi.storeUser(user);
                 }

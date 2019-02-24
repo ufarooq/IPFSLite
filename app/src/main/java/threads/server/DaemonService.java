@@ -225,10 +225,12 @@ public class DaemonService extends Service {
                 if (sender == null) {
 
                     // create a new user which is blocked (User has to unblock and verified the user)
+                    byte[] image = IThreadsAPI.getImage(getApplicationContext(),
+                            pid.getPid(), R.drawable.server_network);
                     sender = threadsAPI.createUser(senderPid,
                             senderPid.getPid(),
                             senderPid.getPid(),
-                            senderPid.getPid(), UserType.UNKNOWN, null);
+                            senderPid.getPid(), UserType.UNKNOWN, image, null);
                     sender.setStatus(UserStatus.BLOCKED);
                     threadsAPI.storeUser(sender);
                     Preferences.warning(getString(R.string.user_connect_try));

@@ -35,34 +35,5 @@
 
     </TableRow>
 
-    <TableRow
-        android:id="@+id/row_second"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/menu_upload"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:layout_weight="1"
-            android:drawableTop="@drawable/action_upload"
-            android:singleLine="true"
-            android:text="@string/upload"
-            android:drawablePadding="8dp"
-            android:textAlignment="center" />
-
-        <TextView
-            android:id="@+id/menu_download"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:layout_weight="1"
-            android:drawableTop="@drawable/action_download"
-            android:singleLine="true"
-            android:text="@string/download"
-            android:drawablePadding="8dp"
-            android:textAlignment="center" />
-
-    </TableRow>
 </TableLayout>

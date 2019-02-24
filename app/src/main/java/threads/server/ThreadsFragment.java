@@ -39,12 +39,23 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @NonNull
     private String threadAddress = "";
 
-
+    private ActionListener actionListener;
     private RecyclerView mRecyclerView;
     private View view;
     private ThreadsViewAdapter threadsViewAdapter;
     private long mLastClickTime = 0;
 
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+
+        try {
+            actionListener = (ThreadsFragment.ActionListener) getActivity();
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+    }
 
     @Override
     @SuppressWarnings("all")
@@ -125,11 +136,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             }
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            if (getActivity() != null) {
-                ActionDialogFragment.newInstance(false, false,
-                        true, true)
-                        .show(getActivity().getSupportFragmentManager(), ActionDialogFragment.TAG);
-            }
+            actionListener.clickUploadMultihash();
 
         });
 
@@ -264,7 +271,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void onAcceptClick(@NonNull Thread thread) {
         checkNotNull(thread);
-        Activity activity = getActivity();
         // not relevant here
 
     }
@@ -272,6 +278,31 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void invokeActionError(@NonNull Thread thread) {
         checkNotNull(thread);
-        Preferences.warning(getString(R.string.sorry_not_yet_implemented));
+
+        Activity activity = getActivity();
+        if (activity != null) {
+
+            // CHECKED
+            if (!Application.isConnected(activity)) {
+                Preferences.error(getString(R.string.offline_mode));
+                return;
+            }
+
+            // CHECKED
+            if (!DaemonService.DAEMON_RUNNING.get()) {
+                Preferences.error(getString(R.string.daemon_not_running));
+                return;
+            }
+
+            Service.downloadThread(activity, thread);
+        }
+
+    }
+
+
+    public interface ActionListener {
+
+        void clickUploadMultihash();
+
     }
 }

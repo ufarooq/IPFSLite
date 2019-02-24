@@ -49,12 +49,12 @@ class Service {
                         threadsAPI.updateThread(thread);
                         threads.add(thread);
 
-                        //threadsAPI.pin_rm(ipfs, thread.getCid(), false);
+                        //TODO threadsAPI.pin_rm(ipfs, thread.getCid(), false);
                     }
 
                     threadsAPI.removeThreads(threads);
 
-                    //threadsAPI.repo_gc(ipfs);
+                    //TODO threadsAPI.repo_gc(ipfs);
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -72,11 +72,6 @@ class Service {
         checkNotNull(creator);
         checkNotNull(multihash);
 
-        // CHECKED
-        if (!DaemonService.DAEMON_RUNNING.get()) {
-            Preferences.error(context.getString(R.string.daemon_not_running));
-            return;
-        }
         final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
 
         final IPFS ipfs = Singleton.getInstance().getIpfs();
@@ -110,7 +105,7 @@ class Service {
                     byte[] image = IThreadsAPI.getImage(context.getApplicationContext(),
                             R.drawable.file_document);
 
-                    Thread thread = threadsAPI.createThread(user, ThreadStatus.ONLINE, Kind.IN,
+                    Thread thread = threadsAPI.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
                             filename, multihash, image, false, false);
                     threadsAPI.storeThread(thread);
 
@@ -128,16 +123,23 @@ class Service {
 
 
                     try {
-                        threadsAPI.preload(ipfs, link.getCid().getCid(), link.getSize(), (percent) -> {
+                        boolean success = threadsAPI.preload(ipfs,
+                                link.getCid().getCid(), link.getSize(), (percent) -> {
 
 
-                            builder.setProgress(100, percent, false);
-                            if (notificationManager != null) {
-                                notificationManager.notify(notifyID, builder.build());
-                            }
+                                    builder.setProgress(100, percent, false);
+                                    if (notificationManager != null) {
+                                        notificationManager.notify(notifyID, builder.build());
+                                    }
 
-                        });
-                        threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
+                                });
+
+
+                        if (success) {
+                            threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
+                        } else {
+                            threadsAPI.setStatus(thread, ThreadStatus.ERROR);
+                        }
 
                     } catch (Throwable e) {
                         threadsAPI.setStatus(thread, ThreadStatus.ERROR);
@@ -158,4 +160,78 @@ class Service {
         }
     }
 
+
+    static void downloadThread(@NonNull Context context, @NonNull Thread thread) {
+
+        checkNotNull(context);
+
+        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    String multihash = thread.getCid();
+                    CID cid = CID.create(multihash);
+                    List<Link> links = ipfs.ls(cid);
+                    if (links.isEmpty() || links.size() > 1) {
+                        Preferences.warning(context.getString(R.string.sorry_not_yet_implemented));
+                        return;
+                    }
+                    Link link = links.get(0);
+
+                    threadsAPI.setStatus(thread, ThreadStatus.OFFLINE);
+
+
+                    NotificationCompat.Builder builder =
+                            NotificationSender.createDownloadProgressNotification(
+                                    context.getApplicationContext(), link.getPath());
+
+                    final NotificationManager notificationManager = (NotificationManager)
+                            context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                    int notifyID = NotificationSender.NOTIFICATIONS_COUNTER.incrementAndGet();
+                    Notification notification = builder.build();
+                    if (notificationManager != null) {
+                        notificationManager.notify(notifyID, notification);
+                    }
+
+
+                    try {
+                        boolean success = threadsAPI.preload(ipfs,
+                                link.getCid().getCid(), link.getSize(), (percent) -> {
+
+
+                                    builder.setProgress(100, percent, false);
+                                    if (notificationManager != null) {
+                                        notificationManager.notify(notifyID, builder.build());
+                                    }
+
+                                });
+
+
+                        if (success) {
+                            threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
+                        } else {
+                            threadsAPI.setStatus(thread, ThreadStatus.ERROR);
+                        }
+
+                    } catch (Throwable e) {
+                        threadsAPI.setStatus(thread, ThreadStatus.ERROR);
+                        throw e;
+                    } finally {
+
+                        if (notificationManager != null) {
+                            notificationManager.cancel(notifyID);
+                        }
+                    }
+
+                    NotificationSender.showLinkNotification(context.getApplicationContext(), link);
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        }
+    }
 }
