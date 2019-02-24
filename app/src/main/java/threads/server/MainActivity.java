@@ -344,11 +344,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     try {
                         bytes = IThreadsAPI.getPreviewImage(getApplicationContext(), uri);
                         if (bytes == null) {
-                            bytes = user.getImage();
+                            bytes = IThreadsAPI.getImage(getApplicationContext(), user.getAlias(),
+                                    R.drawable.file_document);
                         }
                     } catch (Throwable e) {
                         // ignore exception
-                        bytes = user.getImage();
+                        bytes = IThreadsAPI.getImage(getApplicationContext(), user.getAlias(),
+                                R.drawable.file_document);
                     }
 
 

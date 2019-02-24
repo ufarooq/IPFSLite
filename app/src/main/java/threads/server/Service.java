@@ -103,7 +103,7 @@ class Service {
 
 
                     byte[] image = IThreadsAPI.getImage(context.getApplicationContext(),
-                            R.drawable.file_document);
+                            user.getAlias(), R.drawable.file_document);
 
                     Thread thread = threadsAPI.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
                             filename, multihash, image, false, false);
