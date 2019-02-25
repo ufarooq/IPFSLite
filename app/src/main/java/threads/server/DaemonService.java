@@ -17,9 +17,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
-import threads.core.IThreadsAPI;
 import threads.core.Preferences;
 import threads.core.Singleton;
+import threads.core.THREADS;
 import threads.core.api.MessageKind;
 import threads.core.api.User;
 import threads.core.api.UserStatus;
@@ -41,7 +41,7 @@ public class DaemonService extends Service {
     private static final String TAG = DaemonService.class.getSimpleName();
     public static boolean configHasChanged = false;
 
-    public static void evalUserStatus(@NonNull IThreadsAPI threadsApi) {
+    public static void evalUserStatus(@NonNull THREADS threadsApi) {
         checkNotNull(threadsApi);
         final IPFS ipfs = Singleton.getInstance().getIpfs();
 
@@ -155,7 +155,7 @@ public class DaemonService extends Service {
 
     private void startDaemonService() {
         final IPFS ipfs = Singleton.getInstance().getIpfs();
-        final IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
+        final THREADS threadsApi = Singleton.getInstance().getThreads();
         if (ipfs != null) {
             new Thread(() -> {
                 try {
@@ -210,7 +210,7 @@ public class DaemonService extends Service {
         checkNotNull(ipfs);
         checkNotNull(pid);
 
-        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
 
 
         if (Preferences.DEBUG_MODE) {
@@ -225,7 +225,7 @@ public class DaemonService extends Service {
                 if (sender == null) {
 
                     // create a new user which is blocked (User has to unblock and verified the user)
-                    byte[] image = IThreadsAPI.getImage(getApplicationContext(),
+                    byte[] image = THREADS.getImage(getApplicationContext(),
                             pid.getPid(), R.drawable.server_network);
                     sender = threadsAPI.createUser(senderPid,
                             senderPid.getPid(),
@@ -267,7 +267,7 @@ public class DaemonService extends Service {
                     ipfs.shutdown();
                     DAEMON_RUNNING.set(false);
 
-                    IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
+                    THREADS threadsApi = Singleton.getInstance().getThreads();
                     threadsApi.storeEvent(
                             threadsApi.createEvent(Preferences.IPFS_SERVER_OFFLINE_EVENT, ""));
 
@@ -285,7 +285,7 @@ public class DaemonService extends Service {
             // Stop foreground service and remove the notification.
             stopForeground(true);
 
-            new Thread(() -> evalUserStatus(Singleton.getInstance().getThreadsAPI())).start();
+            new Thread(() -> evalUserStatus(Singleton.getInstance().getThreads())).start();
 
             // Stop the foreground service.
             stopSelf();

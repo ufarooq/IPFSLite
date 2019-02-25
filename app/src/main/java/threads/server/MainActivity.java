@@ -47,9 +47,9 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
 import de.psdev.licensesdialog.LicensesDialogFragment;
 import io.ipfs.multihash.Multihash;
-import threads.core.IThreadsAPI;
 import threads.core.Preferences;
 import threads.core.Singleton;
+import threads.core.THREADS;
 import threads.core.api.Kind;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
@@ -324,7 +324,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(mimeType);
 
         final IPFS ipfs = Singleton.getInstance().getIpfs();
-        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
@@ -341,14 +341,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     byte[] bytes;
                     try {
-                        bytes = IThreadsAPI.getPreviewImage(getApplicationContext(), uri);
+                        bytes = THREADS.getPreviewImage(getApplicationContext(), uri);
                         if (bytes == null) {
-                            bytes = IThreadsAPI.getImage(getApplicationContext(), user.getAlias(),
+                            bytes = THREADS.getImage(getApplicationContext(), user.getAlias(),
                                     R.drawable.file_document);
                         }
                     } catch (Throwable e) {
                         // ignore exception
-                        bytes = IThreadsAPI.getImage(getApplicationContext(), user.getAlias(),
+                        bytes = THREADS.getImage(getApplicationContext(), user.getAlias(),
                                 R.drawable.file_document);
                     }
 
@@ -620,7 +620,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(pid);
 
 
-        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
 
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -658,7 +658,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+                THREADS threadsAPI = Singleton.getInstance().getThreads();
                 threadsAPI.removeUserByPID(PID.create(pid));
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -689,7 +689,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     PID pid = PID.create(multihash);
 
-                    IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+                    THREADS threadsAPI = Singleton.getInstance().getThreads();
                     User user = threadsAPI.getUserByPID(pid);
                     checkNotNull(user);
 
@@ -755,10 +755,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
 
 
-                    IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+                    THREADS threadsAPI = Singleton.getInstance().getThreads();
                     User user = threadsAPI.getUserByPID(pid);
                     if (user == null) {
-                        byte[] image = IThreadsAPI.getImage(getApplicationContext(),
+                        byte[] image = THREADS.getImage(getApplicationContext(),
                                 pid.getPid(), R.drawable.server_network);
                         user = threadsAPI.createUser(pid,
                                 pid.getPid(),
@@ -808,7 +808,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(thread);
         checkNotNull(thread);
 
-        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -832,7 +832,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadInfo(@NonNull String thread) {
         checkNotNull(thread);
-        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -867,7 +867,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -905,7 +905,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(thread);
 
 
-        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -931,7 +931,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(thread);
 
 
-        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -972,7 +972,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
         final PID host = Preferences.getPID(getApplicationContext());
-        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
 
         if (ipfs != null) {
@@ -1041,7 +1041,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(pid);
         checkNotNull(name);
 
-        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
 
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -1051,7 +1051,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 checkNotNull(user);
 
                 user.setAlias(name);
-                byte[] image = IThreadsAPI.getImage(getApplicationContext(),
+                byte[] image = THREADS.getImage(getApplicationContext(),
                         name, R.drawable.server_network);
                 user.setImage(image);
 

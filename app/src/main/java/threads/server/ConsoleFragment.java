@@ -53,7 +53,7 @@ public class ConsoleFragment extends Fragment {
                 return;
             }
             mLastClickTime = SystemClock.elapsedRealtime();
-            new Thread(() -> Singleton.getInstance().getThreadsAPI().clearMessages()).start();
+            new Thread(() -> Singleton.getInstance().getThreads().clearMessages()).start();
 
         });
 

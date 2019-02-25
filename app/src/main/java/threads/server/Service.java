@@ -15,9 +15,9 @@ import java.util.concurrent.Executors;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import io.ipfs.multihash.Multihash;
-import threads.core.IThreadsAPI;
 import threads.core.Preferences;
 import threads.core.Singleton;
+import threads.core.THREADS;
 import threads.core.api.Kind;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
@@ -36,7 +36,7 @@ class Service {
         checkNotNull(context);
         checkNotNull(addresses);
 
-        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
 
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
@@ -75,7 +75,7 @@ class Service {
         checkNotNull(creator);
         checkNotNull(multihash);
 
-        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
 
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
@@ -105,7 +105,7 @@ class Service {
                     String filename = link.getPath();
 
 
-                    byte[] image = IThreadsAPI.getImage(context.getApplicationContext(),
+                    byte[] image = THREADS.getImage(context.getApplicationContext(),
                             user.getAlias(), R.drawable.file_document);
 
                     Thread thread = threadsAPI.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
@@ -166,7 +166,7 @@ class Service {
     static void localDownloadThread(@NonNull Context context, @NonNull String thread) {
         checkNotNull(context);
         checkNotNull(thread);
-        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
         final DownloadManager downloadManager = (DownloadManager)
                 context.getSystemService(Context.DOWNLOAD_SERVICE);
         checkNotNull(downloadManager);
@@ -209,7 +209,7 @@ class Service {
 
         checkNotNull(context);
 
-        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
 
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {

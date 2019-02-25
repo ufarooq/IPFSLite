@@ -7,9 +7,9 @@ import android.net.NetworkCapabilities;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import threads.core.IThreadsAPI;
 import threads.core.Preferences;
 import threads.core.Singleton;
+import threads.core.THREADS;
 import threads.core.api.MessageKind;
 import threads.core.api.User;
 import threads.core.api.UserStatus;
@@ -44,7 +44,7 @@ public class Application extends android.app.Application {
     private static void init(@NonNull Context context) {
         checkNotNull(context);
 
-        final IThreadsAPI threadsApi = Singleton.getInstance().getThreadsAPI();
+        final THREADS threadsApi = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             new Thread(() -> {
@@ -58,7 +58,7 @@ public class Application extends android.app.Application {
                     String inbox = Preferences.getInbox(context);
                     checkNotNull(inbox);
                     String publicKey = ipfs.getPublicKey();
-                    byte[] image = IThreadsAPI.getImage(context,
+                    byte[] image = THREADS.getImage(context,
                             pid.getPid(), R.drawable.server_network);
                     user = threadsApi.createUser(pid, inbox, publicKey,
                             pid.getPid(), UserType.VERIFIED, image, null);
