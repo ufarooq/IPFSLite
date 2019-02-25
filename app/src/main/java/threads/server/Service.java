@@ -1,8 +1,11 @@
 package threads.server;
 
+import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.net.Uri;
+import android.os.Environment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -160,6 +163,47 @@ class Service {
         }
     }
 
+    static void localDownloadThread(@NonNull Context context, @NonNull String thread) {
+        checkNotNull(context);
+        checkNotNull(thread);
+        final IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
+        final DownloadManager downloadManager = (DownloadManager)
+                context.getSystemService(Context.DOWNLOAD_SERVICE);
+        checkNotNull(downloadManager);
+
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    Thread threadObject = threadsAPI.getThreadByAddress(thread);
+                    checkNotNull(threadObject);
+
+                    String cid = threadObject.getCid();
+                    CID cidLink = CID.create(cid);
+                    List<Link> links = ipfs.ls(cidLink);
+                    Link link = links.get(0);
+                    String path = link.getPath();
+
+                    Uri uri = Uri.parse(Preferences.getGateway(context) + cid + "/" + path);
+
+                    DownloadManager.Request request = new DownloadManager.Request(uri);
+                    request.setTitle(path);
+
+                    request.setNotificationVisibility(
+                            DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                    request.setDestinationInExternalPublicDir(
+                            Environment.DIRECTORY_DOWNLOADS, path);
+
+                    downloadManager.enqueue(request);
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        }
+    }
 
     static void downloadThread(@NonNull Context context, @NonNull Thread thread) {
 

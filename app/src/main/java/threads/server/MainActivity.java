@@ -12,7 +12,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.provider.OpenableColumns;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -31,6 +30,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
@@ -77,10 +77,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ThreadsFragment.ActionListener,
         NameDialogFragment.ActionListener {
     public static final int SELECT_MEDIA_FILE = 1;
-    private static final int WRITE_EXTERNAL_STORAGE = 2;
-    private static final String TAG = MainActivity.class.getSimpleName();
+    private static final int DOWNLOAD_EXTERNAL_STORAGE = 2;
 
-
+    private final AtomicReference<String> storedThread = new AtomicReference<>(null);
     private final AtomicBoolean idScan = new AtomicBoolean(false);
     private DrawerLayout drawer_layout;
 
@@ -93,11 +92,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onRequestPermissionsResult
             (int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
-            case WRITE_EXTERNAL_STORAGE: {
+            case DOWNLOAD_EXTERNAL_STORAGE: {
                 for (int i = 0, len = permissions.length; i < len; i++) {
 
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                        scanMultihash();
+                        Service.localDownloadThread(getApplicationContext(), storedThread.get());
                     }
                 }
 
@@ -306,7 +305,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Preferences.warning(getString(R.string.offline_mode));
         } else {
             if (!DaemonService.DAEMON_RUNNING.get()) {
-                Preferences.warning(getString(R.string.offline_mode));
+                Preferences.warning(getString(R.string.daemon_not_running));
             }
         }
     }
@@ -390,7 +389,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             findViewById(R.id.fab_daemon).setVisibility(View.VISIBLE);
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
     }
@@ -534,7 +533,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     i.putExtra(Intent.EXTRA_TEXT, sAux);
                     startActivity(Intent.createChooser(i, getString(R.string.choose_one)));
                 } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
                 break;
             }
@@ -608,28 +607,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-    /**
-     * TODO
-     */
-    private void clickDownload() {
-
-        try {
-
-            if (ContextCompat.checkSelfPermission(getApplicationContext(),
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        WRITE_EXTERNAL_STORAGE);
-
-            } else {
-                // TODO
-            }
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
-
-    }
 
     @Override
     public void clickEditPeer() {
@@ -684,7 +661,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 IThreadsAPI threadsAPI = Singleton.getInstance().getThreadsAPI();
                 threadsAPI.removeUserByPID(PID.create(pid));
             } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
         });
     }
@@ -692,6 +669,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickUserConnect(@NonNull String multihash) {
         checkNotNull(multihash);
+
+        // CHECKED
+        if (!Application.isConnected(getApplicationContext())) {
+            Preferences.error(getString(R.string.offline_mode));
+            return;
+        }
+        // CHECKED
+        if (!DaemonService.DAEMON_RUNNING.get()) {
+            Preferences.error(getString(R.string.daemon_not_running));
+            return;
+        }
 
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
@@ -705,22 +693,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     User user = threadsAPI.getUserByPID(pid);
                     checkNotNull(user);
 
-                    if (user.getStatus() != UserStatus.BLOCKED) {
-                        ipfs.id(pid);
-                        ipfs.swarm_connect(pid);
+                    if (user.getStatus() == UserStatus.BLOCKED) {
+                        Preferences.warning(getString(R.string.peer_is_blocked));
+                    } else {
 
                         try {
-                            boolean value = ipfs.swarm_is_connected(pid);
+                            threadsAPI.setStatus(user, UserStatus.DIALING);
+
+
+                            boolean value = threadsAPI.connect(ipfs, pid, null);
                             if (value) {
                                 threadsAPI.setStatus(user, UserStatus.ONLINE);
+                            } else {
+                                threadsAPI.setStatus(user, UserStatus.OFFLINE);
                             }
                         } catch (Throwable e) {
                             threadsAPI.setStatus(user, UserStatus.OFFLINE);
-                            checkOnlineStatus();
-                            // ignore exception when not connected
                         }
-                    } else {
-                        Preferences.warning(getString(R.string.peer_is_blocked));
                     }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -785,21 +774,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
                     checkNotNull(user);
 
-
-                    ipfs.id(pid);
-                    ipfs.swarm_connect(pid);
-
                     try {
-                        boolean value = ipfs.swarm_is_connected(pid);
+                        threadsAPI.setStatus(user, UserStatus.DIALING);
+
+                        boolean value = threadsAPI.connect(ipfs, pid, null);
                         if (value) {
                             threadsAPI.setStatus(user, UserStatus.ONLINE);
-
 
                             // make a connection to peer
                             if (Preferences.isPubsubEnabled(getApplicationContext())) {
                                 ipfs.pubsub_pub(user.getPid(),
                                         multihash.concat(System.lineSeparator()));
                             }
+                        } else {
+                            threadsAPI.setStatus(user, UserStatus.OFFLINE);
                         }
                     } catch (Throwable e) {
                         threadsAPI.setStatus(user, UserStatus.OFFLINE);
@@ -1017,6 +1005,34 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         }
+
+    }
+
+    @Override
+    public void clickThreadDownload(@NonNull String thread) {
+
+        // CHECKED
+        if (!DaemonService.DAEMON_RUNNING.get()) {
+            Preferences.error(getString(R.string.daemon_not_running));
+            return;
+        }
+
+        storedThread.set(thread);
+        try {
+            if (ContextCompat.checkSelfPermission(getApplicationContext(),
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        DOWNLOAD_EXTERNAL_STORAGE);
+
+            } else {
+                Service.localDownloadThread(getApplicationContext(), thread);
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+
 
     }
 
