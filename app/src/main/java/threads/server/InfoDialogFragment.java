@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentActivity;
 import threads.core.Preferences;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -197,13 +198,24 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
     @Override
     public void onClick(DialogInterface dialogInterface, int which) {
         switch (which) {
-            case AlertDialog.BUTTON_POSITIVE:
-                shareQRCode(getActivity(), code, message);
-                getDialog().dismiss();
+            case AlertDialog.BUTTON_POSITIVE: {
+                FragmentActivity activity = getActivity();
+                if (activity != null) {
+                    shareQRCode(activity, code, message);
+                }
+                Dialog dialog = getDialog();
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
                 break;
-            case AlertDialog.BUTTON_NEUTRAL:
-                getDialog().dismiss();
+            }
+            case AlertDialog.BUTTON_NEUTRAL: {
+                Dialog dialog = getDialog();
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
                 break;
+            }
         }
     }
 }
