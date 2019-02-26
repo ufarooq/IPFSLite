@@ -55,7 +55,8 @@ public class SettingsDialogFragment extends DialogFragment {
                     Profile profile = (Profile) parent.getItemAtPosition(position);
                     if (profile != Preferences.getProfile(getContext())) {
                         Preferences.setProfile(getContext(), profile);
-                        DaemonService.configHasChanged = true;
+                        Application.setConfigChanged(getContext(), true);
+
                         if (DaemonService.DAEMON_RUNNING.get()) {
                             Toast.makeText(getContext(),
                                     R.string.daemon_restart_config_changed,
@@ -81,7 +82,7 @@ public class SettingsDialogFragment extends DialogFragment {
         quic_support.setChecked(Preferences.isQUICEnabled(getContext()));
         quic_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Preferences.setQUICEnabled(getContext(), isChecked);
-            DaemonService.configHasChanged = true;
+            Application.setConfigChanged(getContext(), true);
             if (DaemonService.DAEMON_RUNNING.get()) {
                 Toast.makeText(getContext(),
                         R.string.daemon_restart_config_changed,
@@ -95,7 +96,7 @@ public class SettingsDialogFragment extends DialogFragment {
         pubsub_support.setChecked(Preferences.isPubsubEnabled(getContext()));
         pubsub_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Preferences.setPubsubEnabled(getContext(), isChecked);
-            DaemonService.configHasChanged = true;
+            Application.setConfigChanged(getContext(), true);
             if (DaemonService.DAEMON_RUNNING.get()) {
                 Toast.makeText(getContext(),
                         R.string.daemon_restart_config_changed,

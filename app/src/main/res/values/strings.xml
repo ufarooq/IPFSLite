@@ -40,7 +40,6 @@
     <string name="action_edit_peer">Edit Peer</string>
     <string name="multihash_not_valid">Multihash is not valid</string>
     <string name="peers">Peers</string>
-    <string name="info">Info</string>
     <string name="console">Console</string>
     <string name="files">Files</string>
     <string name="offline_mode">Offline Mode</string>
@@ -54,4 +53,6 @@
     <string name="user_connect_try">Peer connection request</string>
     <string name="action_share">Share Peers</string>
     <string name="action_download">Download</string>
+    <string name="no_peers_connected">Currently no peers are defined to share the data with.</string>
+    <string name="data_shared_with_peers">\"%1$s\" peers were notify to download the shared data.</string>
 </resources>

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.annotation.NonNull;
@@ -363,6 +364,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         CID cid = ipfs.add(inputStream, filename, true);
                         checkNotNull(cid);
 
+                        // cleanup of entries with same CID
+                        List<Thread> sameEntries = threadsAPI.getThreadsByCid(cid);
+                        for (Thread entry : sameEntries) {
+                            threadsAPI.removeThread(entry);
+                        }
+
+
                         threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
                         threadsAPI.setCID(thread, cid);
 
@@ -607,7 +615,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-
     @Override
     public void clickEditPeer() {
         FragmentManager fm = getSupportFragmentManager();
@@ -807,26 +814,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickThreadPin(@NonNull String thread) {
         checkNotNull(thread);
         checkNotNull(thread);
-
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-        if (ipfs != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-
-                    Thread threadObject = threadsAPI.getThreadByAddress(thread);
-                    checkNotNull(threadObject);
-
-                    // not yet activated
-
-                    Preferences.warning(getString(R.string.sorry_not_yet_implemented));
-
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
-            });
-        }
+        // NOT implemented
     }
 
     @Override
@@ -905,22 +893,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(thread);
 
 
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+        final THREADS threads = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    Thread threadObject = threadsAPI.getThreadByAddress(thread);
+                    Thread threadObject = threads.getThreadByAddress(thread);
                     checkNotNull(threadObject);
-
-                    // TODO threadsAPI.pin_rm(ipfs, threadObject.getCid(), true);
-
-                    threadsAPI.removeThread(threadObject);
-
+                    threads.removeThread(threadObject);
+                    threads.pin_rm(ipfs, threadObject.getCid(), true);
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    // ignore exception for now
                 }
             });
         }
@@ -986,16 +971,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     String multihash = threadObject.getCid();
                     List<User> users = threadsAPI.getUsers();
+                    AtomicInteger counter = new AtomicInteger(0);
                     for (User user : users) {
                         if (user.getStatus() != UserStatus.BLOCKED) {
                             PID userPID = PID.create(user.getPid());
                             if (!userPID.equals(host)) {
                                 if (threadsAPI.connect(ipfs, userPID, null)) {
+                                    counter.incrementAndGet();
                                     ipfs.pubsub_pub(user.getPid(),
                                             multihash.concat(System.lineSeparator()));
                                 }
                             }
                         }
+                    }
+
+                    if (users.isEmpty()) {
+                        Preferences.warning(getString(R.string.no_peers_connected));
+                    } else {
+                        Preferences.warning(getString(R.string.data_shared_with_peers,
+                                String.valueOf(counter.get())));
                     }
 
                 } catch (Throwable e) {
@@ -1074,6 +1068,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             this.mNumOfTabs = NumOfTabs;
         }
 
+
         @Override
         @NonNull
         public Fragment getItem(int position) {
@@ -1085,8 +1080,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     return new PeersFragment();
                 case 2:
                     return new ConsoleFragment();
-                case 3:
-                    return new InfoFragment();
                 default:
                     throw new RuntimeException("Not Supported position");
             }

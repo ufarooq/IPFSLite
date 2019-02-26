@@ -25,6 +25,7 @@ import threads.core.api.User;
 import threads.core.api.UserStatus;
 import threads.core.api.UserType;
 import threads.ipfs.IPFS;
+import threads.ipfs.api.ExperimentalConfig;
 import threads.ipfs.api.PID;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -39,12 +40,10 @@ public class DaemonService extends Service {
     private static final String HIGH_CHANNEL_ID = "HIGH_CHANNEL_ID";
     private static final int NOTIFICATION_ID = DaemonService.class.hashCode();
     private static final String TAG = DaemonService.class.getSimpleName();
-    public static boolean configHasChanged = false;
 
     public static void evalUserStatus(@NonNull THREADS threadsApi) {
         checkNotNull(threadsApi);
         final IPFS ipfs = Singleton.getInstance().getIpfs();
-
         if (ipfs != null) {
             List<User> users = threadsApi.getUsers();
             for (User user : users) {
@@ -159,8 +158,18 @@ public class DaemonService extends Service {
         if (ipfs != null) {
             new Thread(() -> {
                 try {
-                    ipfs.init(Preferences.getProfile(getApplicationContext()), configHasChanged,
-                            Preferences.isQUICEnabled(getApplicationContext()));
+
+
+                    ExperimentalConfig experimentalConfig = ipfs.getExperimental();
+                    experimentalConfig.setQUIC(Preferences.isQUICEnabled(getApplicationContext()));
+                    boolean hasConfigChanged = Application.hasConfigChanged(getApplicationContext());
+
+
+                    ipfs.init(Preferences.getProfile(getApplicationContext()), false,
+                            hasConfigChanged, null, experimentalConfig);
+
+                    Application.setConfigChanged(getApplicationContext(), false);
+
                     ipfs.daemon(Preferences.isPubsubEnabled(getApplicationContext()));
 
                     DAEMON_RUNNING.set(true);
@@ -178,13 +187,13 @@ public class DaemonService extends Service {
                 }
                 if (DAEMON_RUNNING.get()) {
                     if (Preferences.isPubsubEnabled(getApplicationContext())) {
-                        new java.lang.Thread(() -> startPubsub(getApplicationContext(), ipfs)).start();
+                        new Thread(() -> startPubsub(getApplicationContext(), ipfs)).start();
                     }
                 }
                 try {
                     while (DAEMON_RUNNING.get()) {
                         evalUserStatus(threadsApi);
-                        Thread.sleep(10000);
+                        Thread.sleep(15000);
                     }
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);

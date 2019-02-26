@@ -6,8 +6,11 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Environment;
+import android.webkit.MimeTypeMap;
 
-import java.util.ArrayList;
+import com.google.common.io.Files;
+
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -44,20 +47,21 @@ class Service {
             executor.submit(() -> {
 
                 try {
-                    List<Thread> threads = new ArrayList<>();
+
                     for (String address : addresses) {
                         Thread thread = threadsAPI.getThreadByAddress(address);
                         checkNotNull(thread);
-                        thread.setStatus(ThreadStatus.DELETING);
-                        threadsAPI.updateThread(thread);
-                        threads.add(thread);
+                        String cid = thread.getCid();
 
-                        //TODO threadsAPI.pin_rm(ipfs, thread.getCid(), false);
+                        threadsAPI.removeThread(thread);
+
+                        try {
+                            threadsAPI.pin_rm(ipfs, cid, false);
+                        } catch (Throwable e) {
+                            // for now ignore exception
+                        }
                     }
-
-                    threadsAPI.removeThreads(threads);
-
-                    //TODO threadsAPI.repo_gc(ipfs);
+                    threadsAPI.repo_gc(ipfs);
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -75,7 +79,7 @@ class Service {
         checkNotNull(creator);
         checkNotNull(multihash);
 
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+        final THREADS threads = Singleton.getInstance().getThreads();
 
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
@@ -90,71 +94,33 @@ class Service {
                         return;
                     }
 
-                    User user = threadsAPI.getUserByPID(creator);
-                    checkNotNull(user);
+                    // check if thread exists with multihash
 
-
-                    CID cid = CID.create(multihash);
-                    List<Link> links = ipfs.ls(cid);
-                    if (links.isEmpty() || links.size() > 1) {
-                        Preferences.warning(context.getString(R.string.sorry_not_yet_implemented));
-                        return;
-                    }
-                    Link link = links.get(0);
-
-                    String filename = link.getPath();
-
-
-                    byte[] image = THREADS.getImage(context.getApplicationContext(),
-                            user.getAlias(), R.drawable.file_document);
-
-                    Thread thread = threadsAPI.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
-                            filename, multihash, image, false, false);
-                    threadsAPI.storeThread(thread);
-
-                    NotificationCompat.Builder builder =
-                            NotificationSender.createDownloadProgressNotification(
-                                    context.getApplicationContext(), link.getPath());
-
-                    final NotificationManager notificationManager = (NotificationManager)
-                            context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-                    int notifyID = NotificationSender.NOTIFICATIONS_COUNTER.incrementAndGet();
-                    Notification notification = builder.build();
-                    if (notificationManager != null) {
-                        notificationManager.notify(notifyID, notification);
-                    }
-
-
-                    try {
-                        boolean success = threadsAPI.preload(ipfs,
-                                link.getCid().getCid(), link.getSize(), (percent) -> {
-
-
-                                    builder.setProgress(100, percent, false);
-                                    if (notificationManager != null) {
-                                        notificationManager.notify(notifyID, builder.build());
-                                    }
-
-                                });
-
-
-                        if (success) {
-                            threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
-                        } else {
-                            threadsAPI.setStatus(thread, ThreadStatus.ERROR);
+                    List<Thread> entries = threads.getThreadsByCid(CID.create(multihash));
+                    if (!entries.isEmpty()) {
+                        for (Thread entry : entries) {
+                            if (entry.getStatus() != ThreadStatus.ONLINE) {
+                                downloadMultihash(context, threads, ipfs, entry);
+                            } else {
+                                threads.setDate(entry, new Date());
+                            }
                         }
+                    } else {
+                        User user = threads.getUserByPID(creator);
+                        checkNotNull(user);
 
-                    } catch (Throwable e) {
-                        threadsAPI.setStatus(thread, ThreadStatus.ERROR);
-                        throw e;
-                    } finally {
 
-                        if (notificationManager != null) {
-                            notificationManager.cancel(notifyID);
-                        }
+                        byte[] image = THREADS.getImage(context.getApplicationContext(),
+                                user.getAlias(), R.drawable.file_document);
+
+                        Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
+                                "", multihash, image, false, false);
+                        thread.setMimeType("");
+                        threads.storeThread(thread);
+
+                        downloadMultihash(context, threads, ipfs, thread);
                     }
 
-                    NotificationSender.showLinkNotification(context.getApplicationContext(), link);
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -216,66 +182,92 @@ class Service {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    String multihash = thread.getCid();
-                    CID cid = CID.create(multihash);
-                    List<Link> links = ipfs.ls(cid);
-                    if (links.isEmpty() || links.size() > 1) {
-                        Preferences.warning(context.getString(R.string.sorry_not_yet_implemented));
-                        return;
-                    }
-                    Link link = links.get(0);
 
-                    threadsAPI.setStatus(thread, ThreadStatus.OFFLINE);
-
-
-                    NotificationCompat.Builder builder =
-                            NotificationSender.createDownloadProgressNotification(
-                                    context.getApplicationContext(), link.getPath());
-
-                    final NotificationManager notificationManager = (NotificationManager)
-                            context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-                    int notifyID = NotificationSender.NOTIFICATIONS_COUNTER.incrementAndGet();
-                    Notification notification = builder.build();
-                    if (notificationManager != null) {
-                        notificationManager.notify(notifyID, notification);
-                    }
-
-
-                    try {
-                        boolean success = threadsAPI.preload(ipfs,
-                                link.getCid().getCid(), link.getSize(), (percent) -> {
-
-
-                                    builder.setProgress(100, percent, false);
-                                    if (notificationManager != null) {
-                                        notificationManager.notify(notifyID, builder.build());
-                                    }
-
-                                });
-
-
-                        if (success) {
-                            threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
-                        } else {
-                            threadsAPI.setStatus(thread, ThreadStatus.ERROR);
-                        }
-
-                    } catch (Throwable e) {
-                        threadsAPI.setStatus(thread, ThreadStatus.ERROR);
-                        throw e;
-                    } finally {
-
-                        if (notificationManager != null) {
-                            notificationManager.cancel(notifyID);
-                        }
-                    }
-
-                    NotificationSender.showLinkNotification(context.getApplicationContext(), link);
+                    downloadMultihash(context, threadsAPI, ipfs, thread);
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
             });
         }
+    }
+
+    private static void downloadMultihash(@NonNull Context context,
+                                          @NonNull THREADS threads,
+                                          @NonNull IPFS ipfs,
+                                          @NonNull Thread thread) throws Exception {
+        checkNotNull(context);
+        checkNotNull(threads);
+        checkNotNull(ipfs);
+        checkNotNull(thread);
+
+        String multihash = thread.getCid();
+        CID cid = CID.create(multihash);
+        List<Link> links = ipfs.ls(cid, 20);
+        if (links.isEmpty() || links.size() > 1) {
+            Preferences.warning(context.getString(R.string.sorry_not_yet_implemented));
+            return;
+        }
+        Link link = links.get(0);
+
+        String filename = link.getPath();
+        if (thread.getTitle().isEmpty()) {
+            threads.setTitle(thread, filename);
+        }
+
+        if (thread.getMimeType().isEmpty()) {
+            String extension = Files.getFileExtension(filename);
+            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+            if (mimeType != null) {
+                threads.setMimeType(thread, mimeType);
+            }
+        }
+
+        NotificationCompat.Builder builder =
+                NotificationSender.createDownloadProgressNotification(
+                        context.getApplicationContext(), link.getPath());
+
+        final NotificationManager notificationManager = (NotificationManager)
+                context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        int notifyID = NotificationSender.NOTIFICATIONS_COUNTER.incrementAndGet();
+        Notification notification = builder.build();
+        if (notificationManager != null) {
+            notificationManager.notify(notifyID, notification);
+        }
+
+
+        try {
+            boolean success = threads.preload(ipfs,
+                    link.getCid().getCid(), link.getSize(), (percent) -> {
+
+
+                        builder.setProgress(100, percent, false);
+                        if (notificationManager != null) {
+                            notificationManager.notify(notifyID, builder.build());
+                        }
+
+                    });
+
+
+            if (success) {
+                threads.setStatus(thread, ThreadStatus.ONLINE);
+                threads.pin_add(ipfs, multihash);
+
+            } else {
+                threads.setStatus(thread, ThreadStatus.ERROR);
+            }
+
+        } catch (Throwable e) {
+            threads.setStatus(thread, ThreadStatus.ERROR);
+            throw e;
+        } finally {
+
+            if (notificationManager != null) {
+                notificationManager.cancel(notifyID);
+            }
+        }
+
+
+        NotificationSender.showLinkNotification(context.getApplicationContext(), link);
     }
 }

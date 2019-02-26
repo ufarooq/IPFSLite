@@ -220,7 +220,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
             ThreadActionDialogFragment.newInstance(
                     thread.getAddress(), true, true, true,
-                    true, true, shareActive, true)
+                    true, false, shareActive, true)
                     .show(fm, ThreadActionDialogFragment.TAG);
         }
     }

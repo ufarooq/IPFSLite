@@ -1,6 +1,7 @@
 package threads.server;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -23,7 +24,8 @@ public class Application extends android.app.Application {
 
 
     private static final String TAG = Application.class.getSimpleName();
-
+    private static final String PREF_KEY = "prefKey";
+    private static final String CONFIG_CHANGE_KEY = "configChangeKey";
 
     public static boolean isConnected(@NonNull Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager)
@@ -62,7 +64,7 @@ public class Application extends android.app.Application {
                             pid.getPid(), R.drawable.server_network);
                     user = threadsApi.createUser(pid, inbox, publicKey,
                             pid.getPid(), UserType.VERIFIED, image, null);
-                    user.setStatus(UserStatus.ONLINE);
+                    user.setStatus(UserStatus.BLOCKED);
                     threadsApi.storeUser(user);
                 }
 
@@ -80,6 +82,19 @@ public class Application extends android.app.Application {
         }
     }
 
+    public static boolean hasConfigChanged(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+        return sharedPref.getBoolean(CONFIG_CHANGE_KEY, false);
+    }
+
+    public static void setConfigChanged(@NonNull Context context, boolean enable) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean(CONFIG_CHANGE_KEY, enable);
+        editor.apply();
+    }
 
     @Override
     public void onTerminate() {
