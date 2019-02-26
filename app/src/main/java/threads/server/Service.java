@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -25,6 +26,7 @@ import threads.core.api.Kind;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.api.User;
+import threads.core.api.UserStatus;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
@@ -34,6 +36,65 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 class Service {
+
+    static void shareThreads(@NonNull Context context, @NonNull ShareThreads listener, @NonNull String... threadAddresses) {
+        checkNotNull(context);
+        checkNotNull(listener);
+
+        final PID host = Preferences.getPID(context.getApplicationContext());
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+
+        if (ipfs != null) {
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+
+                    List<User> users = threadsAPI.getUsers();
+                    AtomicInteger counter = new AtomicInteger(0);
+                    for (User user : users) {
+                        if (user.getStatus() != UserStatus.BLOCKED) {
+                            PID userPID = PID.create(user.getPid());
+                            if (!userPID.equals(host)) {
+                                if (threadsAPI.connect(ipfs, userPID, null)) {
+                                    counter.incrementAndGet();
+
+                                    for (String thread : threadAddresses) {
+
+
+                                        Thread threadObject = threadsAPI.getThreadByAddress(thread);
+                                        checkNotNull(threadObject);
+
+
+                                        String multihash = threadObject.getCid();
+
+
+                                        ipfs.pubsub_pub(user.getPid(),
+                                                multihash.concat(System.lineSeparator()));
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (users.isEmpty()) {
+                        Preferences.warning(context.getString(R.string.no_peers_connected));
+                    } else {
+                        Preferences.warning(context.getString(R.string.data_shared_with_peers,
+                                String.valueOf(counter.get())));
+                    }
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                } finally {
+                    listener.done();
+                }
+            });
+
+
+        }
+    }
 
     static void deleteThreads(@NonNull Context context, @NonNull String... addresses) {
         checkNotNull(context);
@@ -269,5 +330,9 @@ class Service {
 
 
         NotificationSender.showLinkNotification(context.getApplicationContext(), link);
+    }
+
+    public interface ShareThreads {
+        void done();
     }
 }

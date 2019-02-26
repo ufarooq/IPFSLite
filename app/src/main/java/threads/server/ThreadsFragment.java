@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -155,21 +154,71 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         });
 
 
+        FloatingActionButton fab_share = view.findViewById(R.id.fab_share);
+        fab_share.setOnClickListener((v) -> {
+
+            // mis-clicking prevention, using threshold of 1000 ms
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            shareAction();
+
+        });
+
     }
 
     private void evaluateFabDeleteVisibility() {
         try {
             if (threads.isEmpty()) {
                 view.findViewById(R.id.fab_delete).setVisibility(View.INVISIBLE);
+                view.findViewById(R.id.fab_share).setVisibility(View.INVISIBLE);
             } else {
                 view.findViewById(R.id.fab_delete).setVisibility(View.VISIBLE);
+                view.findViewById(R.id.fab_share).setVisibility(View.VISIBLE);
             }
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
+    private void shareAction() {
+        Context context = getContext();
+        if (context != null) {
+            // CHECKED
+            if (!Application.isConnected(context)) {
+                Preferences.error(getString(R.string.offline_mode));
+                return;
+            }
+            // CHECKED
+            if (!DaemonService.DAEMON_RUNNING.get()) {
+                Preferences.error(getString(R.string.daemon_not_running));
+                return;
+            }
 
+            Service.shareThreads(context, () -> unmarkThreads(),
+                    Iterables.toArray(threads, String.class));
+        }
+    }
+
+    private void unmarkThreads() {
+        try {
+            for (String thread : threads) {
+                threadsViewAdapter.setState(thread, ThreadsViewAdapter.State.NONE);
+            }
+            threads.clear();
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> threadsViewAdapter.notifyDataSetChanged());
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        } finally {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> evaluateFabDeleteVisibility());
+            }
+        }
+    }
     private void deleteAction() {
 
         Context context = getContext();

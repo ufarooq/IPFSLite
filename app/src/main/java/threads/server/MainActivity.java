@@ -1,6 +1,7 @@
 package threads.server;
 
 import android.Manifest;
+import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -30,7 +31,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.annotation.NonNull;
@@ -77,11 +77,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         EditMultihashDialogFragment.ActionListener,
         ThreadsFragment.ActionListener,
         NameDialogFragment.ActionListener {
-    public static final int SELECT_MEDIA_FILE = 1;
+    public static final int SELECT_FILES = 1;
     private static final int DOWNLOAD_EXTERNAL_STORAGE = 2;
-
     private final AtomicReference<String> storedThread = new AtomicReference<>(null);
     private final AtomicBoolean idScan = new AtomicBoolean(false);
+    private Object lock = new Object();
     private DrawerLayout drawer_layout;
 
     private FloatingActionButton fab_daemon;
@@ -108,9 +108,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == SELECT_MEDIA_FILE && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            Uri uri = data.getData();
-            storeData(uri);
+        if (requestCode == SELECT_FILES && resultCode == RESULT_OK && data != null) {
+
+            if (data.getData() != null) {
+                Uri uri = data.getData();
+                storeData(uri);
+            } else {
+                if (data.getClipData() != null) {
+                    ClipData mClipData = data.getClipData();
+                    for (int i = 0; i < mClipData.getItemCount(); i++) {
+                        ClipData.Item item = mClipData.getItemAt(i);
+                        Uri uri = item.getUri();
+                        storeData(uri);
+                    }
+                }
+            }
         } else {
             IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
             if (result != null) {
@@ -359,26 +371,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     thread.setMimeType(mimeType);
                     threadsAPI.storeThread(thread);
 
+                    synchronized (lock) {
+                        try {
+                            CID cid = ipfs.add(inputStream, filename, true);
+                            checkNotNull(cid);
 
-                    try {
-                        CID cid = ipfs.add(inputStream, filename, true);
-                        checkNotNull(cid);
+                            // cleanup of entries with same CID
+                            List<Thread> sameEntries = threadsAPI.getThreadsByCid(cid);
+                            for (Thread entry : sameEntries) {
+                                threadsAPI.removeThread(entry);
+                            }
 
-                        // cleanup of entries with same CID
-                        List<Thread> sameEntries = threadsAPI.getThreadsByCid(cid);
-                        for (Thread entry : sameEntries) {
-                            threadsAPI.removeThread(entry);
+
+                            threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
+                            threadsAPI.setCID(thread, cid);
+
+                        } catch (Throwable e) {
+                            threadsAPI.setStatus(thread, ThreadStatus.ERROR);
+                            throw e;
                         }
-
-
-                        threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
-                        threadsAPI.setCID(thread, cid);
-
-                    } catch (Throwable e) {
-                        threadsAPI.setStatus(thread, ThreadStatus.ERROR);
-                        throw e;
                     }
-
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
@@ -607,8 +619,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             String[] mimeTypes = {"*/*"};
             intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             intent.setAction(Intent.ACTION_GET_CONTENT);
-            startActivityForResult(Intent.createChooser(intent, "Select Media File"), SELECT_MEDIA_FILE);
+            startActivityForResult(Intent.createChooser(intent,
+                    getString(R.string.select_files)), SELECT_FILES);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
@@ -956,49 +970,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Preferences.error(getString(R.string.daemon_not_running));
             return;
         }
-        final PID host = Preferences.getPID(getApplicationContext());
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-
-        if (ipfs != null) {
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    Thread threadObject = threadsAPI.getThreadByAddress(thread);
-                    checkNotNull(threadObject);
-
-
-                    String multihash = threadObject.getCid();
-                    List<User> users = threadsAPI.getUsers();
-                    AtomicInteger counter = new AtomicInteger(0);
-                    for (User user : users) {
-                        if (user.getStatus() != UserStatus.BLOCKED) {
-                            PID userPID = PID.create(user.getPid());
-                            if (!userPID.equals(host)) {
-                                if (threadsAPI.connect(ipfs, userPID, null)) {
-                                    counter.incrementAndGet();
-                                    ipfs.pubsub_pub(user.getPid(),
-                                            multihash.concat(System.lineSeparator()));
-                                }
-                            }
-                        }
-                    }
-
-                    if (users.isEmpty()) {
-                        Preferences.warning(getString(R.string.no_peers_connected));
-                    } else {
-                        Preferences.warning(getString(R.string.data_shared_with_peers,
-                                String.valueOf(counter.get())));
-                    }
-
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
-            });
-
-
-        }
+        Service.shareThreads(getApplicationContext(), new Service.ShareThreads() {
+            @Override
+            public void done() {
+                // nothing to do here
+            }
+        }, thread);
 
     }
 
