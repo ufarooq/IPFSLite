@@ -6,10 +6,13 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Environment;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import com.google.common.io.Files;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -37,12 +40,16 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 class Service {
 
+    private static final String TAG = Service.class.getSimpleName();
+    private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
+
+
     static void shareThreads(@NonNull Context context, @NonNull ShareThreads listener, @NonNull String... threadAddresses) {
         checkNotNull(context);
         checkNotNull(listener);
 
         final PID host = Preferences.getPID(context.getApplicationContext());
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+        final THREADS threads = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
 
         if (ipfs != null) {
@@ -51,19 +58,19 @@ class Service {
             executor.submit(() -> {
                 try {
 
-                    List<User> users = threadsAPI.getUsers();
+                    List<User> users = threads.getUsers();
                     AtomicInteger counter = new AtomicInteger(0);
                     for (User user : users) {
                         if (user.getStatus() != UserStatus.BLOCKED) {
                             PID userPID = PID.create(user.getPid());
                             if (!userPID.equals(host)) {
-                                if (threadsAPI.connect(ipfs, userPID, null)) {
+                                if (threads.connect(ipfs, userPID, null)) {
                                     counter.incrementAndGet();
 
                                     for (String thread : threadAddresses) {
 
 
-                                        Thread threadObject = threadsAPI.getThreadByAddress(thread);
+                                        Thread threadObject = threads.getThreadByAddress(thread);
                                         checkNotNull(threadObject);
 
 
@@ -144,8 +151,8 @@ class Service {
 
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
+
+            EXECUTOR_SERVICE.submit(() -> {
                 try {
                     // check if multihash is valid
                     try {
@@ -240,8 +247,7 @@ class Service {
 
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
+            EXECUTOR_SERVICE.submit(() -> {
                 try {
 
                     downloadMultihash(context, threadsAPI, ipfs, thread);
@@ -264,8 +270,22 @@ class Service {
 
         String multihash = thread.getCid();
         CID cid = CID.create(multihash);
-        List<Link> links = ipfs.ls(cid, 20);
-        if (links.isEmpty() || links.size() > 1) {
+
+        List<Link> links = new ArrayList<>();
+
+        try {
+            links.addAll(ipfs.ls(cid, 20));
+        } catch (Throwable e) {
+            // ignore exception (occurs when merkledag is not available)
+        }
+
+        if (links.isEmpty()) {
+            threads.setStatus(thread, ThreadStatus.ERROR);
+            return;
+        }
+
+        if (links.size() > 1) {
+            threads.setStatus(thread, ThreadStatus.ERROR);
             Preferences.warning(context.getString(R.string.sorry_not_yet_implemented));
             return;
         }
@@ -296,12 +316,12 @@ class Service {
             notificationManager.notify(notifyID, notification);
         }
 
+        File file = getCacheFile(context, multihash + filename);
 
         try {
-            boolean success = threads.preload(ipfs,
+
+            boolean success = threads.store(ipfs, file,
                     link.getCid().getCid(), link.getSize(), (percent) -> {
-
-
                         builder.setProgress(100, percent, false);
                         if (notificationManager != null) {
                             notificationManager.notify(notifyID, builder.build());
@@ -315,14 +335,12 @@ class Service {
                 threads.pin_add(ipfs, multihash);
 
                 try {
-                    Uri uri = Uri.parse(Preferences.getGateway(context) + multihash + "/" + filename);
-
-                    byte[] image = THREADS.getPreviewImage(context, uri);
+                    byte[] image = THREADS.getPreviewImage(context, file);
                     if (image != null) {
                         threads.setImage(thread, image);
                     }
                 } catch (Throwable e) {
-                    // ignore for now the exception
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
 
 
@@ -334,7 +352,7 @@ class Service {
             threads.setStatus(thread, ThreadStatus.ERROR);
             throw e;
         } finally {
-
+            file.delete();
             if (notificationManager != null) {
                 notificationManager.cancel(notifyID);
             }
@@ -342,6 +360,23 @@ class Service {
 
 
         NotificationSender.showLinkNotification(context.getApplicationContext(), link);
+    }
+
+    @NonNull
+    private static File getCacheFile(@NonNull Context context, @NonNull String name) {
+        checkNotNull(name);
+        File dir = context.getCacheDir();
+        File file = new File(dir, name);
+        if (!file.exists()) {
+            try {
+                if (!file.createNewFile()) {
+                    throw new RuntimeException("File couldn't be created.");
+                }
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return file;
     }
 
     public interface ShareThreads {
