@@ -314,6 +314,18 @@ class Service {
                 threads.setStatus(thread, ThreadStatus.ONLINE);
                 threads.pin_add(ipfs, multihash);
 
+                try {
+                    Uri uri = Uri.parse(Preferences.getGateway(context) + multihash + "/" + filename);
+
+                    byte[] image = THREADS.getPreviewImage(context, uri);
+                    if (image != null) {
+                        threads.setImage(thread, image);
+                    }
+                } catch (Throwable e) {
+                    // ignore for now the exception
+                }
+
+
             } else {
                 threads.setStatus(thread, ThreadStatus.ERROR);
             }
