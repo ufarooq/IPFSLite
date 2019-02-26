@@ -5,6 +5,9 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -13,8 +16,10 @@ import com.google.common.collect.Iterables;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -22,6 +27,8 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import threads.core.Preferences;
+import threads.core.Singleton;
+import threads.core.THREADS;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.mdl.ThreadsViewModel;
@@ -54,6 +61,56 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_threads, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        switch (item.getItemId()) {
+            case R.id.action_download: {
+
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    break;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+                actionListener.scanMultihash();
+                return true;
+            }
+            case R.id.action_mark_all: {
+
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    break;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+                new java.lang.Thread(this::markThreads).start();
+                return true;
+            }
+            case R.id.action_unmark_all: {
+
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    break;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+                new java.lang.Thread(this::unmarkThreads).start();
+                return true;
+            }
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -197,10 +254,39 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 return;
             }
 
-            Service.shareThreads(context, () -> unmarkThreads(),
+            Service.shareThreads(context, this::unmarkThreads,
                     Iterables.toArray(threads, String.class));
         }
     }
+
+
+    private void markThreads() {
+        try {
+            THREADS threadsAPI = Singleton.getInstance().getThreads();
+            List<Thread> threadObjects = threadsAPI.getThreads();
+            for (Thread thread : threadObjects) {
+                if (!threads.contains(thread.getAddress())) {
+                    threads.add(thread.getAddress());
+                    threadAddress = thread.getAddress();
+                }
+            }
+
+            for (String thread : threads) {
+                threadsViewAdapter.setState(thread, ThreadsViewAdapter.State.MARKED);
+            }
+
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(() -> threadsViewAdapter.notifyDataSetChanged());
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        } finally {
+            if (getActivity() != null) {
+                getActivity().runOnUiThread(this::evaluateFabDeleteVisibility);
+            }
+        }
+    }
+
 
     private void unmarkThreads() {
         try {
@@ -215,10 +301,12 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         } finally {
             if (getActivity() != null) {
-                getActivity().runOnUiThread(() -> evaluateFabDeleteVisibility());
+                getActivity().runOnUiThread(this::evaluateFabDeleteVisibility);
             }
         }
     }
+
+
     private void deleteAction() {
 
         Context context = getContext();
@@ -353,5 +441,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
         void clickUploadMultihash();
 
+        void scanMultihash();
     }
 }

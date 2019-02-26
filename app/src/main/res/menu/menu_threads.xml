@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:theme="@style/ThemeOverlay.AppCompat.Dark">
+
+    <item
+        android:id="@+id/action_download"
+        android:icon="@drawable/cloud_download"
+        android:orderInCategory="55"
+        android:title="@string/action_download"
+        android:visible="true"
+        app:showAsAction="ifRoom" />
+
+
+    <item
+        android:id="@+id/action_mark_all"
+        android:icon="@drawable/expand_all_outline"
+        android:orderInCategory="55"
+        android:title="@string/action_select_all"
+        android:visible="true"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_unmark_all"
+        android:icon="@drawable/expand_all_outline"
+        android:orderInCategory="55"
+        android:title="@string/action_clear_selection"
+        android:visible="true"
+        app:showAsAction="never" />
+</menu>

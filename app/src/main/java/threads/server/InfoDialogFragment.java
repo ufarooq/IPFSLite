@@ -198,7 +198,6 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
     public void onClick(DialogInterface dialogInterface, int which) {
         switch (which) {
             case AlertDialog.BUTTON_POSITIVE:
-
                 shareQRCode(getActivity(), code, message);
                 getDialog().dismiss();
                 break;

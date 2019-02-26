@@ -5,9 +5,6 @@ import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -76,12 +73,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ThreadActionDialogFragment.ActionListener,
         EditMultihashDialogFragment.ActionListener,
         ThreadsFragment.ActionListener,
+        PeersFragment.ActionListener,
         NameDialogFragment.ActionListener {
     public static final int SELECT_FILES = 1;
     private static final int DOWNLOAD_EXTERNAL_STORAGE = 2;
     private final AtomicReference<String> storedThread = new AtomicReference<>(null);
     private final AtomicBoolean idScan = new AtomicBoolean(false);
-    private Object lock = new Object();
+    private final Object lock = new Object();
     private DrawerLayout drawer_layout;
 
     private FloatingActionButton fab_daemon;
@@ -420,15 +418,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main_activity, menu);
 
-
-        MenuItem action_info = menu.findItem(R.id.action_info);
-        Drawable drawable = action_info.getIcon();
-        if (drawable != null) {
-            drawable.mutate();
-            drawable.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
-        }
-
-
         return true;
     }
 
@@ -440,32 +429,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         int id = item.getItemId();
         switch (id) {
             case R.id.action_download: {
-                // mis-clicking prevention, using threshold of 1000 ms
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                scanMultihash();
-
-                return true;
+                return false;
             }
             case R.id.action_info: {
-                // mis-clicking prevention, using threshold of 1000 ms
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                PID pid = Preferences.getPID(getApplicationContext());
-                checkNotNull(pid);
-                InfoDialogFragment.show(this, pid.getPid(),
-                        getString(R.string.peer_id),
-                        getString(R.string.peer_access, pid));
-
-                return true;
+                return false;
             }
-
+            case R.id.action_mark_all: {
+                return false;
+            }
 
         }
 
@@ -575,7 +546,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    private void scanMultihash() {
+    @Override
+    public void scanMultihash() {
         // Check that the device will let you use the camera
         PackageManager pm = getPackageManager();
 
@@ -970,11 +942,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Preferences.error(getString(R.string.daemon_not_running));
             return;
         }
-        Service.shareThreads(getApplicationContext(), new Service.ShareThreads() {
-            @Override
-            public void done() {
-                // nothing to do here
-            }
+        Service.shareThreads(getApplicationContext(), () -> {
         }, thread);
 
     }
@@ -1033,6 +1001,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
+
+    }
+
+    @Override
+    public void clickUserInfo() {
+        PID pid = Preferences.getPID(getApplicationContext());
+        checkNotNull(pid);
+        clickUserInfo(pid.getPid());
 
     }
 

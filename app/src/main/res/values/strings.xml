@@ -19,7 +19,7 @@
     <string name="application">Application</string>
     <string name="multihash">Multihash</string>
     <string name="multihash_access">The QR code (CID \"%1$s\") contains all necessary information to get the content of the hash.</string>
-    <string name="feature_camera_required">Camera Feature required</string>
+    <string name="feature_camera_required">Feature camera required</string>
     <string name="share">Share</string>
     <string name="settings">Settings</string>
     <string name="profile">Profile</string>
@@ -56,4 +56,6 @@
     <string name="no_peers_connected">Currently no peers are defined to share the data.</string>
     <string name="data_shared_with_peers">\"%1$s\" peers were notify to download the data.</string>
     <string name="select_files">File Chooser</string>
+    <string name="action_select_all">Select All</string>
+    <string name="action_clear_selection">Clear Selection</string>
 </resources>
