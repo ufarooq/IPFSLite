@@ -38,30 +38,30 @@ public class DaemonService extends Service {
     public static final AtomicBoolean DAEMON_RUNNING = new AtomicBoolean(false);
 
     private static final String HIGH_CHANNEL_ID = "HIGH_CHANNEL_ID";
-    private static final int NOTIFICATION_ID = DaemonService.class.hashCode();
+    private static final int NOTIFICATION_ID = 998;
     private static final String TAG = DaemonService.class.getSimpleName();
 
-    public static void evalUserStatus(@NonNull THREADS threadsApi) {
-        checkNotNull(threadsApi);
+    public static void evalUserStatus(@NonNull THREADS threads) {
+        checkNotNull(threads);
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
-            List<User> users = threadsApi.getUsers();
+            List<User> users = threads.getUsers();
             for (User user : users) {
                 if (user.getStatus() != UserStatus.BLOCKED) {
                     UserStatus oldStatus = user.getStatus();
                     try {
                         if (ipfs.swarm_is_connected(PID.create(user.getPid()))) {
                             if (UserStatus.ONLINE != oldStatus) {
-                                threadsApi.setStatus(user, UserStatus.ONLINE);
+                                threads.setStatus(user, UserStatus.ONLINE);
                             }
                         } else {
                             if (UserStatus.OFFLINE != oldStatus) {
-                                threadsApi.setStatus(user, UserStatus.OFFLINE);
+                                threads.setStatus(user, UserStatus.OFFLINE);
                             }
                         }
                     } catch (Throwable e) {
                         if (UserStatus.OFFLINE != oldStatus) {
-                            threadsApi.setStatus(user, UserStatus.OFFLINE);
+                            threads.setStatus(user, UserStatus.OFFLINE);
                         }
                     }
                 }
@@ -158,8 +158,6 @@ public class DaemonService extends Service {
         if (ipfs != null) {
             new Thread(() -> {
                 try {
-
-
                     ExperimentalConfig experimentalConfig = ipfs.getExperimental();
                     experimentalConfig.setQUIC(Preferences.isQUICEnabled(getApplicationContext()));
                     boolean hasConfigChanged = Application.hasConfigChanged(getApplicationContext());

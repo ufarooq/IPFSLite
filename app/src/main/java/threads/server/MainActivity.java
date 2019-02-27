@@ -676,7 +676,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 pid.getPid(),
                                 pid.getPid(),
                                 pid.getPid(), UserType.VERIFIED, image, null);
-
                         user.setStatus(UserStatus.OFFLINE);
                         threadsAPI.storeUser(user);
 

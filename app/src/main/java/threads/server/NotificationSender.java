@@ -21,7 +21,7 @@ class NotificationSender {
     static final AtomicInteger NOTIFICATIONS_COUNTER = new AtomicInteger(1000);
     private static final String CHANNEL_ID = "CHANNEL_ID";
     private static final String GROUP_ID = "GROUP_ID";
-
+    private static final int GROUP_IDX = 999;
 
     static void createChannel(@NonNull Context context) {
         checkNotNull(context);
@@ -52,7 +52,7 @@ class NotificationSender {
         try {
             buildGroupNotification(context);
             NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-            Notification notification = createLinkNotification(context, link);
+            Notification notification = createNotification(context, link.getPath());
             notificationManager.notify(NOTIFICATIONS_COUNTER.incrementAndGet(), notification);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -85,7 +85,7 @@ class NotificationSender {
         Notification notification = builder.build();
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
-            notificationManager.notify(CHANNEL_ID.hashCode(), notification);
+            notificationManager.notify(GROUP_IDX, notification);
         }
 
     }
@@ -94,6 +94,8 @@ class NotificationSender {
                                                                          @NonNull String content) {
         checkNotNull(context);
         checkNotNull(content);
+
+        buildGroupNotification(context);
 
 
         Intent notifyIntent = new Intent(context, MainActivity.class);
@@ -109,21 +111,13 @@ class NotificationSender {
         builder.setContentIntent(pendingIntent);
         builder.setGroup(GROUP_ID);
         builder.setProgress(0, 0, true);
-        builder.setAutoCancel(false);
+        builder.setAutoCancel(true);
         builder.setContentText(content);
         builder.setPriority(NotificationManager.IMPORTANCE_DEFAULT);
         builder.setSmallIcon(R.drawable.server_network);
         return builder;
     }
 
-
-    private static Notification createLinkNotification(@NonNull Context context,
-                                                       @NonNull Link link) {
-        checkNotNull(context);
-        checkNotNull(link);
-
-        return createNotification(context, link.getPath());
-    }
 
 
     private static Notification createNotification(@NonNull Context context,

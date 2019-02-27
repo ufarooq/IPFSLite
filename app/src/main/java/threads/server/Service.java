@@ -403,8 +403,8 @@ class Service {
 
 
             if (success) {
-                threads.setStatus(thread, ThreadStatus.ONLINE);
-                threads.pin_add(ipfs, multihash);
+
+                threads.pin_add(ipfs, multihash); // pin the content so that it is not deleted
 
                 try {
                     byte[] image = THREADS.getPreviewImage(context, file);
@@ -413,8 +413,9 @@ class Service {
                     }
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                } finally {
+                    threads.setStatus(thread, ThreadStatus.ONLINE);
                 }
-
 
             } else {
                 threads.setStatus(thread, ThreadStatus.ERROR);
