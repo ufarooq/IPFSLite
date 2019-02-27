@@ -15,7 +15,6 @@ import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -296,8 +295,7 @@ class Service {
                     checkNotNull(threadObject);
 
                     String cid = threadObject.getCid();
-                    CID cidLink = CID.create(cid);
-                    List<Link> links = ipfs.ls(cidLink);
+                    List<Link> links = threadsAPI.getLinks(ipfs, threadObject, 20);
                     Link link = links.get(0);
                     String path = link.getPath();
 
@@ -350,15 +348,8 @@ class Service {
         checkNotNull(thread);
 
         String multihash = thread.getCid();
-        CID cid = CID.create(multihash);
 
-        List<Link> links = new ArrayList<>();
-
-        try {
-            links.addAll(ipfs.ls(cid, 20));
-        } catch (Throwable e) {
-            // ignore exception (occurs when merkledag is not available)
-        }
+        List<Link> links = threads.getLinks(ipfs, thread, 20);
 
         if (links.isEmpty()) {
             threads.setStatus(thread, ThreadStatus.ERROR);

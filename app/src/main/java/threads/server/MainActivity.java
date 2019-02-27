@@ -51,7 +51,6 @@ import threads.core.api.UserStatus;
 import threads.core.api.UserType;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
 import threads.ipfs.api.PID;
 import threads.share.NameDialogFragment;
@@ -772,8 +771,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     String multihash = threadObject.getCid();
 
-                    CID cid = CID.create(multihash);
-                    List<Link> links = ipfs.ls(cid);
+                    List<Link> links = threadsAPI.getLinks(ipfs, threadObject, 20);
                     Link link = links.get(0);
                     String path = link.getPath();
 
