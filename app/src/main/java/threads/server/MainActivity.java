@@ -4,12 +4,10 @@ import android.Manifest;
 import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.provider.OpenableColumns;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -23,7 +21,6 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
-import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,9 +45,7 @@ import io.ipfs.multihash.Multihash;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
-import threads.core.api.Kind;
 import threads.core.api.Thread;
-import threads.core.api.ThreadStatus;
 import threads.core.api.User;
 import threads.core.api.UserStatus;
 import threads.core.api.UserType;
@@ -79,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final int DOWNLOAD_EXTERNAL_STORAGE = 2;
     private final AtomicReference<String> storedThread = new AtomicReference<>(null);
     private final AtomicBoolean idScan = new AtomicBoolean(false);
-    private final Object lock = new Object();
+
     private DrawerLayout drawer_layout;
 
     private FloatingActionButton fab_daemon;
@@ -110,14 +105,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             if (data.getData() != null) {
                 Uri uri = data.getData();
-                storeData(uri);
+                Service.storeData(getApplicationContext(), uri);
             } else {
                 if (data.getClipData() != null) {
                     ClipData mClipData = data.getClipData();
                     for (int i = 0; i < mClipData.getItemCount(); i++) {
                         ClipData.Item item = mClipData.getItemAt(i);
                         Uri uri = item.getUri();
-                        storeData(uri);
+                        Service.storeData(getApplicationContext(), uri);
                     }
                 }
             }
@@ -318,81 +313,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (!DaemonService.DAEMON_RUNNING.get()) {
                 Preferences.warning(getString(R.string.daemon_not_running));
             }
-        }
-    }
-
-    private void storeData(@NonNull final Uri uri) {
-        Cursor returnCursor = getApplicationContext().getContentResolver().query(
-                uri, null, null, null, null);
-
-        checkNotNull(returnCursor);
-        int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-        returnCursor.moveToFirst();
-
-        final String filename = returnCursor.getString(nameIndex);
-        returnCursor.close();
-        String mimeType = getApplicationContext().getContentResolver().getType(uri);
-        checkNotNull(mimeType);
-
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
-        if (ipfs != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    InputStream inputStream =
-                            getApplicationContext().getContentResolver().openInputStream(uri);
-                    checkNotNull(inputStream);
-
-                    PID pid = Preferences.getPID(getApplicationContext());
-                    checkNotNull(pid);
-                    User user = threadsAPI.getUserByPID(pid);
-                    checkNotNull(user);
-
-
-                    byte[] bytes;
-                    try {
-                        bytes = THREADS.getPreviewImage(getApplicationContext(), uri);
-                        if (bytes == null) {
-                            bytes = THREADS.getImage(getApplicationContext(), user.getAlias(),
-                                    R.drawable.file_document);
-                        }
-                    } catch (Throwable e) {
-                        // ignore exception
-                        bytes = THREADS.getImage(getApplicationContext(), user.getAlias(),
-                                R.drawable.file_document);
-                    }
-
-
-                    Thread thread = threadsAPI.createThread(user, ThreadStatus.OFFLINE, Kind.IN,
-                            filename, filename, bytes, false, false);
-                    thread.setMimeType(mimeType);
-                    threadsAPI.storeThread(thread);
-
-                    synchronized (lock) {
-                        try {
-                            CID cid = ipfs.add(inputStream, filename, true);
-                            checkNotNull(cid);
-
-                            // cleanup of entries with same CID
-                            List<Thread> sameEntries = threadsAPI.getThreadsByCid(cid);
-                            for (Thread entry : sameEntries) {
-                                threadsAPI.removeThread(entry);
-                            }
-
-
-                            threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
-                            threadsAPI.setCID(thread, cid);
-
-                        } catch (Throwable e) {
-                            threadsAPI.setStatus(thread, ThreadStatus.ERROR);
-                            throw e;
-                        }
-                    }
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
-            });
         }
     }
 

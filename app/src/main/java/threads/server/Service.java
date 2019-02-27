@@ -4,14 +4,17 @@ import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
+import android.provider.OpenableColumns;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import com.google.common.io.Files;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -42,6 +45,84 @@ class Service {
 
     private static final String TAG = Service.class.getSimpleName();
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
+
+
+    public static void storeData(@NonNull Context context, @NonNull Uri uri) {
+        checkNotNull(context);
+        checkNotNull(uri);
+        Cursor returnCursor = context.getContentResolver().query(
+                uri, null, null, null, null);
+
+        checkNotNull(returnCursor);
+        int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+        returnCursor.moveToFirst();
+
+        final String filename = returnCursor.getString(nameIndex);
+        returnCursor.close();
+        String mimeType = context.getContentResolver().getType(uri);
+        checkNotNull(mimeType);
+
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+        if (ipfs != null) {
+
+            EXECUTOR_SERVICE.submit(() -> {
+                try {
+                    InputStream inputStream =
+                            context.getContentResolver().openInputStream(uri);
+                    checkNotNull(inputStream);
+
+                    PID pid = Preferences.getPID(context);
+                    checkNotNull(pid);
+                    User user = threadsAPI.getUserByPID(pid);
+                    checkNotNull(user);
+
+
+                    byte[] bytes;
+                    try {
+                        bytes = THREADS.getPreviewImage(context, uri);
+                        if (bytes == null) {
+                            bytes = THREADS.getImage(context, user.getAlias(),
+                                    R.drawable.file_document);
+                        }
+                    } catch (Throwable e) {
+                        // ignore exception
+                        bytes = THREADS.getImage(context, user.getAlias(),
+                                R.drawable.file_document);
+                    }
+
+
+                    Thread thread = threadsAPI.createThread(user, ThreadStatus.OFFLINE, Kind.IN,
+                            filename, filename, bytes, false, false);
+                    thread.setMimeType(mimeType);
+                    threadsAPI.storeThread(thread);
+
+
+                    try {
+                        CID cid = ipfs.add(inputStream, filename, true);
+                        checkNotNull(cid);
+
+                        // cleanup of entries with same CID
+                        List<Thread> sameEntries = threadsAPI.getThreadsByCid(cid);
+                        for (Thread entry : sameEntries) {
+                            threadsAPI.removeThread(entry);
+                        }
+
+
+                        threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
+                        threadsAPI.setCID(thread, cid);
+
+                    } catch (Throwable e) {
+                        threadsAPI.setStatus(thread, ThreadStatus.ERROR);
+                        throw e;
+                    }
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        }
+    }
 
 
     static void shareThreads(@NonNull Context context, @NonNull ShareThreads listener, @NonNull String... threadAddresses) {
