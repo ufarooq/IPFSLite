@@ -234,8 +234,8 @@ class Service {
                     }
 
                     // check if thread exists with multihash
-
-                    List<Thread> entries = threads.getThreadsByCID(CID.create(multihash));
+                    CID cid = CID.create(multihash);
+                    List<Thread> entries = threads.getThreadsByCID(cid);
                     if (!entries.isEmpty()) {
                         for (Thread entry : entries) {
                             if (entry.getStatus() != ThreadStatus.ONLINE) {
@@ -253,7 +253,7 @@ class Service {
                                 user.getAlias(), R.drawable.file_document);
 
                         Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
-                                "", null, image, false, false);
+                                "", cid, image, false, false);
                         thread.setMimeType("");
                         threads.storeThread(thread);
 
