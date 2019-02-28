@@ -344,9 +344,9 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     }
 
     @Override
-    public boolean generalActionSupport(@NonNull ThreadStatus threadStatus) {
-        checkNotNull(threadStatus);
-        return threadStatus == ThreadStatus.ONLINE;
+    public boolean generalActionSupport(@NonNull Thread thread) {
+        checkNotNull(thread);
+        return thread.getStatus() == ThreadStatus.ONLINE;
     }
 
     @Override
@@ -446,6 +446,11 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public boolean showDate(@NonNull Thread thread) {
         return false;
+    }
+
+    @Override
+    public int getStyle(@NonNull Thread thread) {
+        return 0;
     }
 
 
