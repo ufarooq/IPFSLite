@@ -119,7 +119,6 @@ class NotificationSender {
     }
 
 
-
     private static Notification createNotification(@NonNull Context context,
                                                    @NonNull String message) {
         checkNotNull(context);

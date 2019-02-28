@@ -51,6 +51,7 @@ import threads.core.api.UserStatus;
 import threads.core.api.UserType;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.IPFS;
+import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
 import threads.ipfs.api.PID;
 import threads.share.NameDialogFragment;
@@ -733,7 +734,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Thread threadObject = threadsAPI.getThreadByAddress(thread);
                     checkNotNull(threadObject);
 
-                    String multihash = threadObject.getCid();
+                    CID cid = threadObject.getCID();
+                    checkNotNull(cid);
+                    String multihash = cid.getCid();
 
                     InfoDialogFragment.show(this, multihash,
                             getString(R.string.multihash),
@@ -768,7 +771,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Thread threadObject = threadsAPI.getThreadByAddress(thread);
                     checkNotNull(threadObject);
 
-                    String multihash = threadObject.getCid();
+                    CID cid = threadObject.getCID();
+                    checkNotNull(cid);
+                    String multihash = cid.getCid();
 
                     List<Link> links = threadsAPI.getLinks(ipfs, threadObject, 20);
                     Link link = links.get(0);
@@ -827,8 +832,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Thread threadObject = threadsAPI.getThreadByAddress(thread);
                     checkNotNull(threadObject);
 
-
-                    String multihash = threadObject.getCid();
+                    CID cid = threadObject.getCID();
+                    checkNotNull(cid);
+                    String multihash = cid.getCid();
 
                     Uri uri = Uri.parse("https://gateway.ipfs.io/ipfs/" + multihash);
 

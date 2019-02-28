@@ -443,6 +443,11 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         return thread.getSenderAlias();
     }
 
+    @Override
+    public boolean showDate(@NonNull Thread thread) {
+        return false;
+    }
+
 
     public interface ActionListener {
 

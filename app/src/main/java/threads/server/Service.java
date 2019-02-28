@@ -92,7 +92,7 @@ class Service {
 
 
                     Thread thread = threadsAPI.createThread(user, ThreadStatus.OFFLINE, Kind.IN,
-                            filename, filename, bytes, false, false);
+                            filename, null, bytes, false, false);
                     thread.setMimeType(mimeType);
                     threadsAPI.storeThread(thread);
 
@@ -107,9 +107,9 @@ class Service {
                             threadsAPI.removeThread(entry);
                         }
 
-
-                        threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
                         threadsAPI.setCID(thread, cid);
+                        threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
+
 
                     } catch (Throwable e) {
                         threadsAPI.setStatus(thread, ThreadStatus.ERROR);
@@ -153,12 +153,11 @@ class Service {
                                         Thread threadObject = threads.getThreadByAddress(thread);
                                         checkNotNull(threadObject);
 
-
-                                        String multihash = threadObject.getCid();
-
+                                        CID cid = threadObject.getCID();
+                                        checkNotNull(cid);
 
                                         ipfs.pubsub_pub(user.getPid(),
-                                                multihash.concat(System.lineSeparator()));
+                                                cid.getCid().concat(System.lineSeparator()));
                                     }
                                 }
                             }
@@ -254,7 +253,7 @@ class Service {
                                 user.getAlias(), R.drawable.file_document);
 
                         Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
-                                "", multihash, image, false, false);
+                                "", null, image, false, false);
                         thread.setMimeType("");
                         threads.storeThread(thread);
 
@@ -286,12 +285,15 @@ class Service {
                     Thread threadObject = threadsAPI.getThreadByAddress(thread);
                     checkNotNull(threadObject);
 
-                    String cid = threadObject.getCid();
+                    CID cid = threadObject.getCID();
+                    checkNotNull(cid);
+
                     List<Link> links = threadsAPI.getLinks(ipfs, threadObject, 20);
                     Link link = links.get(0);
                     String path = link.getPath();
 
-                    Uri uri = Uri.parse(Preferences.getGateway(context) + cid + "/" + path);
+                    Uri uri = Uri.parse(Preferences.getGateway(context) +
+                            cid.getCid() + "/" + path);
 
                     DownloadManager.Request request = new DownloadManager.Request(uri);
                     request.setTitle(path);
