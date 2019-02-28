@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
+import android.os.Build;
+import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -63,7 +65,7 @@ public class Application extends android.app.Application {
                     byte[] image = THREADS.getImage(context,
                             pid.getPid(), R.drawable.server_network);
                     user = threadsApi.createUser(pid, inbox, publicKey,
-                            pid.getPid(), UserType.VERIFIED, image, null);
+                            getDeviceName(), UserType.VERIFIED, image, null);
                     user.setStatus(UserStatus.BLOCKED);
                     threadsApi.storeUser(user);
                 }
@@ -122,5 +124,38 @@ public class Application extends android.app.Application {
 
 
     }
+
+    /**
+     * Returns the consumer friendly device name
+     */
+    public static String getDeviceName() {
+        String manufacturer = Build.MANUFACTURER;
+        String model = Build.MODEL;
+        if (model.startsWith(manufacturer)) {
+            return capitalize(model);
+        }
+        return capitalize(manufacturer) + " " + model;
+    }
+
+    private static String capitalize(String str) {
+        if (TextUtils.isEmpty(str)) {
+            return str;
+        }
+        char[] arr = str.toCharArray();
+        boolean capitalizeNext = true;
+        String phrase = "";
+        for (char c : arr) {
+            if (capitalizeNext && Character.isLetter(c)) {
+                phrase += Character.toUpperCase(c);
+                capitalizeNext = false;
+                continue;
+            } else if (Character.isWhitespace(c)) {
+                capitalizeNext = true;
+            }
+            phrase += c;
+        }
+        return phrase;
+    }
+
 
 }
