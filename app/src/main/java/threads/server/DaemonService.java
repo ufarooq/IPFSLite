@@ -231,13 +231,25 @@ public class DaemonService extends Service {
                 User sender = threadsAPI.getUserByPID(senderPid);
                 if (sender == null) {
 
+                    // check content if might be a name
+                    String name = senderPid.getPid();
+
+                    try {
+                        String alias = message.getMessage().trim();
+                        if (alias.length() < name.length()) { // small shitty security
+                            name = alias;
+                        }
+                    } catch (Throwable e) {
+                        // ignore exception
+                    }
+
                     // create a new user which is blocked (User has to unblock and verified the user)
                     byte[] image = THREADS.getImage(getApplicationContext(),
                             pid.getPid(), R.drawable.server_network);
                     sender = threadsAPI.createUser(senderPid,
                             senderPid.getPid(),
                             senderPid.getPid(),
-                            senderPid.getPid(), UserType.UNKNOWN, image, null);
+                            name, UserType.UNKNOWN, image, null);
                     sender.setStatus(UserStatus.BLOCKED);
                     threadsAPI.storeUser(sender);
                     Preferences.warning(getString(R.string.user_connect_try));

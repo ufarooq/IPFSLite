@@ -703,8 +703,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             // make a connection to peer
                             if (Preferences.isPubsubEnabled(getApplicationContext())) {
+                                checkNotNull(host);
+                                User hostUser = threadsAPI.getUserByPID(host);
+                                checkNotNull(hostUser);
+
                                 ipfs.pubsub_pub(user.getPid(),
-                                        multihash.concat(System.lineSeparator()));
+                                        hostUser.getAlias().concat(System.lineSeparator()));
                             }
                         } else {
                             threadsAPI.setStatus(user, UserStatus.OFFLINE);

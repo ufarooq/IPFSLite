@@ -98,33 +98,6 @@ public class Application extends android.app.Application {
         editor.apply();
     }
 
-    @Override
-    public void onTerminate() {
-        super.onTerminate();
-        Log.e(TAG, "...... end application");
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-
-
-        Log.e(TAG, "...... start application");
-
-        NotificationSender.createChannel(getApplicationContext());
-
-        try {
-            Singleton.getInstance().init(getApplicationContext(), () -> "",
-                    null, false, true);
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.IPFS_INSTALL_FAILURE, e);
-        }
-
-        init(getApplicationContext());
-
-
-    }
-
     /**
      * Returns the consumer friendly device name
      */
@@ -155,6 +128,33 @@ public class Application extends android.app.Application {
             phrase += c;
         }
         return phrase;
+    }
+
+    @Override
+    public void onTerminate() {
+        super.onTerminate();
+        Log.e(TAG, "...... end application");
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
+
+        Log.e(TAG, "...... start application");
+
+        NotificationSender.createChannel(getApplicationContext());
+
+        try {
+            Singleton.getInstance().init(getApplicationContext(), () -> "",
+                    null, false, true);
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.IPFS_INSTALL_FAILURE, e);
+        }
+
+        init(getApplicationContext());
+
+
     }
 
 
