@@ -804,9 +804,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 try {
                     Thread threadObject = threads.getThreadByAddress(thread);
                     checkNotNull(threadObject);
-                    threads.removeThread(threadObject);
-                    threads.pin_rm(ipfs, threadObject.getCid(), true);
-
+                    threads.removeThread(ipfs, threadObject);
+                    threads.repo_gc(ipfs);
                 } catch (Throwable e) {
                     // ignore exception for now
                 }

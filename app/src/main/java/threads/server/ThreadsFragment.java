@@ -436,6 +436,13 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     }
 
+    @Override
+    public String getContent(@NonNull Thread thread) {
+        checkNotNull(thread);
+
+        return thread.getSenderAlias();
+    }
+
 
     public interface ActionListener {
 

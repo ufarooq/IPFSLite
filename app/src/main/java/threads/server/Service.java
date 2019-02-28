@@ -102,7 +102,7 @@ class Service {
                         checkNotNull(cid);
 
                         // cleanup of entries with same CID
-                        List<Thread> sameEntries = threadsAPI.getThreadsByCid(cid);
+                        List<Thread> sameEntries = threadsAPI.getThreadsByCID(cid);
                         for (Thread entry : sameEntries) {
                             threadsAPI.removeThread(entry);
                         }
@@ -199,15 +199,7 @@ class Service {
                     for (String address : addresses) {
                         Thread thread = threadsAPI.getThreadByAddress(address);
                         checkNotNull(thread);
-                        String cid = thread.getCid();
-
-                        threadsAPI.removeThread(thread);
-
-                        try {
-                            threadsAPI.pin_rm(ipfs, cid, false);
-                        } catch (Throwable e) {
-                            // for now ignore exception
-                        }
+                        threadsAPI.removeThread(ipfs, thread);
                     }
                     threadsAPI.repo_gc(ipfs);
 
@@ -244,7 +236,7 @@ class Service {
 
                     // check if thread exists with multihash
 
-                    List<Thread> entries = threads.getThreadsByCid(CID.create(multihash));
+                    List<Thread> entries = threads.getThreadsByCID(CID.create(multihash));
                     if (!entries.isEmpty()) {
                         for (Thread entry : entries) {
                             if (entry.getStatus() != ThreadStatus.ONLINE) {
@@ -347,7 +339,10 @@ class Service {
         checkNotNull(ipfs);
         checkNotNull(thread);
 
-        String multihash = thread.getCid();
+
+        CID cid = thread.getCID();
+        checkNotNull(cid);
+        String multihash = cid.getCid();
 
         List<Link> links = threads.getLinks(ipfs, thread, 20);
 
@@ -393,7 +388,7 @@ class Service {
         try {
 
             boolean success = threads.store(ipfs, file,
-                    link.getCid().getCid(), link.getSize(), (percent) -> {
+                    link.getCid(), link.getSize(), (percent) -> {
                         builder.setProgress(100, percent, false);
                         if (notificationManager != null) {
                             notificationManager.notify(notifyID, builder.build());
@@ -404,7 +399,7 @@ class Service {
 
             if (success) {
 
-                threads.pin_add(ipfs, multihash); // pin the content so that it is not deleted
+                threads.pin_add(ipfs, cid); // pin the content so that it is not deleted
 
                 try {
                     byte[] image = THREADS.getPreviewImage(context, file);
