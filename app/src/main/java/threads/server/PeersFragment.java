@@ -135,14 +135,11 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         usersViewAdapter = new UsersViewAdapter(this);
         mRecyclerView.setAdapter(usersViewAdapter);
 
-        String pid = "";
+        PID host = null;
         if (getActivity() != null) {
-            PID host = Preferences.getPID(getActivity());
-            if (host != null) {
-                pid = host.getPid();
-            }
+            host = Preferences.getPID(getActivity());
         }
-        String hostPid = pid;
+        PID hostPid = host;
         UsersViewModel messagesViewModel = ViewModelProviders.of(this).get(UsersViewModel.class);
         messagesViewModel.getUsers().observe(this, (users) -> {
 
@@ -150,7 +147,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                 if (users != null) {
                     List<User> peers = new ArrayList<>();
                     for (User user : users) {
-                        if (!user.getPid().equals(hostPid)) {
+                        if (!user.getPID().equals(hostPid)) {
                             peers.add(user);
                         }
 
@@ -185,7 +182,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
             FragmentManager fm = getActivity().getSupportFragmentManager();
 
             UserActionDialogFragment.newInstance(
-                    user.getPid(), true, true,
+                    user.getPID().getPid(), true, true,
                     true, true, true)
                     .show(fm, UserActionDialogFragment.TAG);
         }

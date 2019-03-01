@@ -50,7 +50,7 @@ public class DaemonService extends Service {
                 if (user.getStatus() != UserStatus.BLOCKED) {
                     UserStatus oldStatus = user.getStatus();
                     try {
-                        if (ipfs.swarm_is_connected(PID.create(user.getPid()))) {
+                        if (ipfs.swarm_is_connected(user.getPID())) {
                             if (UserStatus.ONLINE != oldStatus) {
                                 threads.setStatus(user, UserStatus.ONLINE);
                             }

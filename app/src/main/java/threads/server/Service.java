@@ -142,9 +142,9 @@ class Service {
                     AtomicInteger counter = new AtomicInteger(0);
                     for (User user : users) {
                         if (user.getStatus() != UserStatus.BLOCKED) {
-                            PID userPID = PID.create(user.getPid());
+                            PID userPID = user.getPID();
                             if (!userPID.equals(host)) {
-                                if (threads.connect(ipfs, userPID, null)) {
+                                if (threads.connect(ipfs, userPID, null, 30)) {
                                     counter.incrementAndGet();
 
                                     for (String thread : threadAddresses) {
@@ -156,7 +156,7 @@ class Service {
                                         CID cid = threadObject.getCID();
                                         checkNotNull(cid);
 
-                                        ipfs.pubsub_pub(user.getPid(),
+                                        ipfs.pubsub_pub(user.getPID().getPid(),
                                                 cid.getCid().concat(System.lineSeparator()));
                                     }
                                 }
@@ -390,7 +390,7 @@ class Service {
         try {
 
             boolean success = threads.store(ipfs, file,
-                    link.getCid(), link.getSize(), (percent) -> {
+                    link.getCid(), link.getSize(), true, (percent) -> {
                         builder.setProgress(100, percent, false);
                         if (notificationManager != null) {
                             notificationManager.notify(notifyID, builder.build());
@@ -400,9 +400,6 @@ class Service {
 
 
             if (success) {
-
-                threads.pin_add(ipfs, cid); // pin the content so that it is not deleted
-
                 try {
                     byte[] image = THREADS.getPreviewImage(context, file);
                     if (image != null) {

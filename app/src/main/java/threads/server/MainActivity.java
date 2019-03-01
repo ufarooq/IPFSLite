@@ -622,7 +622,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             threadsAPI.setStatus(user, UserStatus.DIALING);
 
 
-                            boolean value = threadsAPI.connect(ipfs, pid, null);
+                            boolean value = threadsAPI.connect(ipfs, pid, null, 30);
                             if (value) {
                                 threadsAPI.setStatus(user, UserStatus.ONLINE);
                             } else {
@@ -697,7 +697,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     try {
                         threadsAPI.setStatus(user, UserStatus.DIALING);
 
-                        boolean value = threadsAPI.connect(ipfs, pid, null);
+                        boolean value = threadsAPI.connect(ipfs, pid, null, 30);
                         if (value) {
                             threadsAPI.setStatus(user, UserStatus.ONLINE);
 
@@ -707,7 +707,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 User hostUser = threadsAPI.getUserByPID(host);
                                 checkNotNull(hostUser);
 
-                                ipfs.pubsub_pub(user.getPid(),
+                                ipfs.pubsub_pub(user.getPID().getPid(),
                                         hostUser.getAlias().concat(System.lineSeparator()));
                             }
                         } else {
