@@ -54,6 +54,7 @@ import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
 import threads.ipfs.api.PID;
+import threads.share.InfoDialogFragment;
 import threads.share.NameDialogFragment;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.UserActionDialogFragment;
@@ -811,7 +812,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadDelete(@NonNull String thread) {
         checkNotNull(thread);
-
 
         final THREADS threads = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
