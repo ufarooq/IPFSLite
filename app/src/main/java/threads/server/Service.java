@@ -153,7 +153,7 @@ class Service {
                                         Thread threadObject = threads.getThreadByAddress(thread);
                                         checkNotNull(threadObject);
 
-                                        CID cid = threadObject.getCID();
+                                        CID cid = threadObject.getCid();
                                         checkNotNull(cid);
 
                                         ipfs.pubsub_pub(user.getPID().getPid(),
@@ -285,7 +285,7 @@ class Service {
                     Thread threadObject = threadsAPI.getThreadByAddress(thread);
                     checkNotNull(threadObject);
 
-                    CID cid = threadObject.getCID();
+                    CID cid = threadObject.getCid();
                     checkNotNull(cid);
 
                     List<Link> links = threadsAPI.getLinks(ipfs, threadObject, 20, true);
@@ -342,7 +342,7 @@ class Service {
         checkNotNull(thread);
 
 
-        CID cid = thread.getCID();
+        CID cid = thread.getCid();
         checkNotNull(cid);
         String multihash = cid.getCid();
 

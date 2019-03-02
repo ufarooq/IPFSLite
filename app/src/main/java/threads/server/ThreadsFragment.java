@@ -444,6 +444,12 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     }
 
     @Override
+    public String getHeader(@NonNull Thread thread) {
+
+        throw new RuntimeException("Not expected here");
+    }
+
+    @Override
     public boolean showDate(@NonNull Thread thread) {
         return false;
     }

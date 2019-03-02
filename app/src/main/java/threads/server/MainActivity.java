@@ -747,7 +747,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Thread threadObject = threadsAPI.getThreadByAddress(thread);
                     checkNotNull(threadObject);
 
-                    CID cid = threadObject.getCID();
+                    CID cid = threadObject.getCid();
                     checkNotNull(cid);
                     String multihash = cid.getCid();
 
@@ -784,7 +784,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Thread threadObject = threadsAPI.getThreadByAddress(thread);
                     checkNotNull(threadObject);
 
-                    CID cid = threadObject.getCID();
+                    CID cid = threadObject.getCid();
                     checkNotNull(cid);
                     String multihash = cid.getCid();
 
@@ -844,7 +844,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Thread threadObject = threadsAPI.getThreadByAddress(thread);
                     checkNotNull(threadObject);
 
-                    CID cid = threadObject.getCID();
+                    CID cid = threadObject.getCid();
                     checkNotNull(cid);
                     String multihash = cid.getCid();
 
