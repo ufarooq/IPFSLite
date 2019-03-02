@@ -27,6 +27,7 @@ import threads.core.api.UserType;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.ExperimentalConfig;
 import threads.ipfs.api.PID;
+import threads.ipfs.api.SwarmConfig;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -163,8 +164,13 @@ public class DaemonService extends Service {
                     boolean hasConfigChanged = Application.hasConfigChanged(getApplicationContext());
 
 
+                    SwarmConfig swarmConfig = ipfs.getSwarm();
+                    swarmConfig.setEnableAutoRelay(
+                            Preferences.isAutoRelayEnabled(getApplicationContext()));
+
                     ipfs.init(Preferences.getProfile(getApplicationContext()), false,
-                            hasConfigChanged, null, experimentalConfig);
+                            hasConfigChanged, null, experimentalConfig,
+                            null, null, swarmConfig);
 
                     Application.setConfigChanged(getApplicationContext(), false);
 

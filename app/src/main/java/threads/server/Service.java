@@ -98,7 +98,7 @@ class Service {
 
 
                     try {
-                        CID cid = ipfs.add(inputStream, filename, true);
+                        CID cid = ipfs.add(inputStream, filename, true, false);
                         checkNotNull(cid);
 
                         // cleanup of entries with same CID
@@ -288,7 +288,7 @@ class Service {
                     CID cid = threadObject.getCID();
                     checkNotNull(cid);
 
-                    List<Link> links = threadsAPI.getLinks(ipfs, threadObject, 20);
+                    List<Link> links = threadsAPI.getLinks(ipfs, threadObject, 20, true);
                     Link link = links.get(0);
                     String path = link.getPath();
 
@@ -346,7 +346,7 @@ class Service {
         checkNotNull(cid);
         String multihash = cid.getCid();
 
-        List<Link> links = threads.getLinks(ipfs, thread, 20);
+        List<Link> links = threads.getLinks(ipfs, thread, 20, false);
 
         if (links.isEmpty()) {
             threads.setStatus(thread, ThreadStatus.ERROR);
@@ -390,7 +390,7 @@ class Service {
         try {
 
             boolean success = threads.store(ipfs, file,
-                    link.getCid(), link.getSize(), true, (percent) -> {
+                    link.getCid(), link.getSize(), true, false, (percent) -> {
                         builder.setProgress(100, percent, false);
                         if (notificationManager != null) {
                             notificationManager.notify(notifyID, builder.build());

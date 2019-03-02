@@ -63,9 +63,6 @@ dependencies {
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
-    // ANDROID SUPPORT (LICENSE done)
-    implementation 'com.google.android.material:material:1.1.0-alpha02'
-
     // API (LICENSE done)
     implementation 'org.apache.ant:ant:1.8.2'
 
@@ -73,7 +70,7 @@ dependencies {
     implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
 
     // UI+API (LICENSE done)
-    implementation 'threads.share:share:1.2.2'
+    implementation 'threads.share:share:1.2.4'
 
     // QR Scanner (LICENSE done)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'

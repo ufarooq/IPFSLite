@@ -105,6 +105,20 @@ public class SettingsDialogFragment extends DialogFragment {
 
         });
 
+
+        Switch auto_relay_support = view.findViewById(R.id.auto_relay_support);
+        auto_relay_support.setChecked(Preferences.isAutoRelayEnabled(getContext()));
+        auto_relay_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Preferences.setAutoRelayEnabled(getContext(), isChecked);
+            Application.setConfigChanged(getContext(), true);
+            if (DaemonService.DAEMON_RUNNING.get()) {
+                Toast.makeText(getContext(),
+                        R.string.daemon_restart_config_changed,
+                        Toast.LENGTH_LONG).show();
+            }
+
+        });
+
         builder.setView(view);
 
         return new androidx.appcompat.app.AlertDialog.Builder(getActivity())

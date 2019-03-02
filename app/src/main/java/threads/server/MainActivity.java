@@ -788,7 +788,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     checkNotNull(cid);
                     String multihash = cid.getCid();
 
-                    List<Link> links = threadsAPI.getLinks(ipfs, threadObject, 20);
+                    List<Link> links = threadsAPI.getLinks(ipfs, threadObject, 20, true);
                     Link link = links.get(0);
                     String path = link.getPath();
 
