@@ -392,9 +392,10 @@ class Service {
 
         File file = getCacheFile(context, multihash + filename);
 
+        boolean success = false;
         try {
 
-            boolean success = threads.store(ipfs, file,
+            success = threads.store(ipfs, file,
                     link.getCid(), link.getSize(), true, false, (percent) -> {
                         builder.setProgress(100, percent, false);
                         if (notificationManager != null) {
@@ -429,8 +430,9 @@ class Service {
             }
         }
 
-
-        NotificationSender.showLinkNotification(context.getApplicationContext(), link);
+        if (success) {
+            NotificationSender.showLinkNotification(context.getApplicationContext(), link);
+        }
     }
 
     @NonNull
