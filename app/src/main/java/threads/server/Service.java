@@ -339,7 +339,7 @@ class Service {
     private static void downloadMultihash(@NonNull Context context,
                                           @NonNull THREADS threads,
                                           @NonNull IPFS ipfs,
-                                          @NonNull Thread thread) throws Exception {
+                                          @NonNull Thread thread) {
         checkNotNull(context);
         checkNotNull(threads);
         checkNotNull(ipfs);
@@ -423,7 +423,6 @@ class Service {
 
         } catch (Throwable e) {
             threads.setStatus(thread, ThreadStatus.ERROR);
-            throw e;
         } finally {
             file.delete();
             if (notificationManager != null) {
