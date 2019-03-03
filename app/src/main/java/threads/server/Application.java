@@ -18,6 +18,7 @@ import threads.core.api.User;
 import threads.core.api.UserStatus;
 import threads.core.api.UserType;
 import threads.ipfs.IPFS;
+import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -53,32 +54,38 @@ public class Application extends android.app.Application {
         if (ipfs != null) {
             new Thread(() -> {
 
+                try {
 
-                PID pid = Preferences.getPID(context);
-                checkNotNull(pid);
-                User user = threadsApi.getUserByPID(pid);
-                if (user == null) {
+                    PID pid = Preferences.getPID(context);
+                    checkNotNull(pid);
+                    User user = threadsApi.getUserByPID(pid);
+                    if (user == null) {
 
-                    String inbox = Preferences.getInbox(context);
-                    checkNotNull(inbox);
-                    String publicKey = ipfs.getPublicKey();
-                    byte[] image = THREADS.getImage(context,
-                            pid.getPid(), R.drawable.server_network);
-                    user = threadsApi.createUser(pid, inbox, publicKey,
-                            getDeviceName(), UserType.VERIFIED, image, null);
-                    user.setStatus(UserStatus.BLOCKED);
-                    threadsApi.storeUser(user);
+                        String inbox = Preferences.getInbox(context);
+                        checkNotNull(inbox);
+                        String publicKey = ipfs.getPublicKey();
+                        byte[] data = THREADS.getImage(context,
+                                pid.getPid(), R.drawable.server_network);
+
+                        CID image = ipfs.add(data, true);
+                        user = threadsApi.createUser(pid, inbox, publicKey,
+                                getDeviceName(), UserType.VERIFIED, image, null);
+                        user.setStatus(UserStatus.BLOCKED);
+                        threadsApi.storeUser(user);
+                    }
+
+                    threadsApi.storeMessage(threadsApi.createMessage(MessageKind.INFO,
+                            "\nWelcome to IPFS",
+                            System.currentTimeMillis()));
+
+                    threadsApi.storeMessage(threadsApi.createMessage(MessageKind.INFO,
+                            "Please feel free to start an IPFS daemon ...\n\n"
+                            , System.currentTimeMillis()));
+
+                    DaemonService.evalUserStatus(threadsApi);
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
-
-                threadsApi.storeMessage(threadsApi.createMessage(MessageKind.INFO,
-                        "\nWelcome to IPFS",
-                        System.currentTimeMillis()));
-
-                threadsApi.storeMessage(threadsApi.createMessage(MessageKind.INFO,
-                        "Please feel free to start an IPFS daemon ...\n\n"
-                        , System.currentTimeMillis()));
-
-                DaemonService.evalUserStatus(threadsApi);
 
             }).start();
         }

@@ -25,6 +25,7 @@ import threads.core.api.User;
 import threads.core.api.UserStatus;
 import threads.core.api.UserType;
 import threads.ipfs.IPFS;
+import threads.ipfs.api.CID;
 import threads.ipfs.api.ExperimentalConfig;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.SwarmConfig;
@@ -250,8 +251,9 @@ public class DaemonService extends Service {
                     }
 
                     // create a new user which is blocked (User has to unblock and verified the user)
-                    byte[] image = THREADS.getImage(getApplicationContext(),
+                    byte[] data = THREADS.getImage(getApplicationContext(),
                             pid.getPid(), R.drawable.server_network);
+                    CID image = ipfs.add(data, true);
                     sender = threadsAPI.createUser(senderPid,
                             senderPid.getPid(),
                             senderPid.getPid(),

@@ -680,8 +680,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     THREADS threadsAPI = Singleton.getInstance().getThreads();
                     User user = threadsAPI.getUserByPID(pid);
                     if (user == null) {
-                        byte[] image = THREADS.getImage(getApplicationContext(),
+                        byte[] data = THREADS.getImage(getApplicationContext(),
                                 pid.getPid(), R.drawable.server_network);
+                        CID image = ipfs.add(data, true);
                         user = threadsAPI.createUser(pid,
                                 pid.getPid(),
                                 pid.getPid(),
@@ -915,25 +916,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(name);
 
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
 
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    User user = threadsAPI.getUserByPID(PID.create(pid));
+                    checkNotNull(user);
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                User user = threadsAPI.getUserByPID(PID.create(pid));
-                checkNotNull(user);
+                    user.setAlias(name);
+                    byte[] data = THREADS.getImage(getApplicationContext(),
+                            name, R.drawable.server_network);
+                    CID image = ipfs.add(data, true);
+                    user.setImage(image);
 
-                user.setAlias(name);
-                byte[] image = THREADS.getImage(getApplicationContext(),
-                        name, R.drawable.server_network);
-                user.setImage(image);
+                    threadsAPI.storeUser(user);
 
-                threadsAPI.storeUser(user);
-
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-        });
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        }
 
 
     }

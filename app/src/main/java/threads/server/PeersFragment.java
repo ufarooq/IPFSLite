@@ -1,5 +1,6 @@
 package threads.server;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -87,7 +88,8 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.peers_view, container, false);
 
-
+        Activity activity = getActivity();
+        checkNotNull(activity);
         FloatingActionButton fab_action = view.findViewById(R.id.fab_action);
         fab_action.setOnClickListener((v) -> {
 
@@ -132,7 +134,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
 
         mRecyclerView.setLayoutManager(linearLayout);
-        usersViewAdapter = new UsersViewAdapter(this);
+        usersViewAdapter = new UsersViewAdapter(activity, this);
         mRecyclerView.setAdapter(usersViewAdapter);
 
         PID host = null;

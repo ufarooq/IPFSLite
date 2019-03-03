@@ -92,7 +92,10 @@ class Service {
 
 
                     Thread thread = threadsAPI.createThread(user, ThreadStatus.OFFLINE, Kind.IN,
-                            filename, null, bytes, false, false);
+                            filename, null, false, false);
+
+                    CID image = ipfs.add(bytes, true);
+                    thread.setImage(image);
                     thread.setMimeType(mimeType);
                     threadsAPI.storeThread(thread);
 
@@ -253,7 +256,8 @@ class Service {
                                 user.getAlias(), R.drawable.file_document);
 
                         Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
-                                "", cid, image, false, false);
+                                "", cid, false, false);
+                        thread.setImage(ipfs.add(image, true));
                         thread.setMimeType("");
                         threads.storeThread(thread);
 
@@ -346,6 +350,8 @@ class Service {
         checkNotNull(cid);
         String multihash = cid.getCid();
 
+        threads.setStatus(thread, ThreadStatus.OFFLINE);
+
         List<Link> links = threads.getLinks(ipfs, thread, 20, false);
 
         if (links.isEmpty()) {
@@ -403,7 +409,7 @@ class Service {
                 try {
                     byte[] image = THREADS.getPreviewImage(context, file);
                     if (image != null) {
-                        threads.setImage(thread, image);
+                        threads.setImage(ipfs, thread, image);
                     }
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);

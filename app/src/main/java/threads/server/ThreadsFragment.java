@@ -459,6 +459,11 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         return 0;
     }
 
+    @Override
+    public int getHeaderMediaResource(@NonNull Thread thread) {
+        return 0;
+    }
+
 
     public interface ActionListener {
 
