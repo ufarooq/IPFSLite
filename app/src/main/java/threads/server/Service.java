@@ -116,7 +116,6 @@ class Service {
 
                     } catch (Throwable e) {
                         threadsAPI.setStatus(thread, ThreadStatus.ERROR);
-                        throw e;
                     }
 
                 } catch (Throwable e) {
