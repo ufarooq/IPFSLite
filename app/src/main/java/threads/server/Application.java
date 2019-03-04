@@ -2,9 +2,6 @@ package threads.server;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
 
 import androidx.annotation.NonNull;
 import threads.core.Preferences;
@@ -22,20 +19,6 @@ public class Application extends android.app.Application {
     private static final String CONFIG_CHANGE_KEY = "configChangeKey";
     private static final String AUTO_CONNECTED_KEY = "autoConnectedKey";
 
-    public static boolean isConnected(@NonNull Context context) {
-        ConnectivityManager connectivityManager = (ConnectivityManager)
-                context.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        if (connectivityManager == null) return false;
-
-        Network network = connectivityManager.getActiveNetwork();
-        if (network == null) return false;
-
-        NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
-        return capabilities != null
-                && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
-
-    }
 
 
     private static void init(@NonNull Context context) {

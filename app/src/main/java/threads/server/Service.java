@@ -35,6 +35,7 @@ import threads.core.api.User;
 import threads.core.api.UserStatus;
 import threads.core.api.UserType;
 import threads.ipfs.IPFS;
+import threads.ipfs.Network;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
 import threads.ipfs.api.PID;
@@ -64,7 +65,7 @@ class Service {
         checkNotNull(context);
 
         final THREADS threads = Singleton.getInstance().getThreads();
-        if (Application.isConnected(context)) {
+        if (Network.isConnected(context)) {
 
             final IPFS ipfs = Singleton.getInstance().getIpfs();
             if (ipfs != null) {

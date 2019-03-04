@@ -31,6 +31,7 @@ import threads.core.THREADS;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.mdl.ThreadsViewModel;
+import threads.ipfs.Network;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThreadsViewAdapter;
 
@@ -248,7 +249,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         Context context = getContext();
         if (context != null) {
             // CHECKED
-            if (!Application.isConnected(context)) {
+            if (!Network.isConnected(context)) {
                 Preferences.error(getString(R.string.offline_mode));
                 return;
             }
@@ -401,7 +402,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         if (activity != null) {
 
             // CHECKED
-            if (!Application.isConnected(activity)) {
+            if (!Network.isConnected(activity)) {
                 Preferences.error(getString(R.string.offline_mode));
                 return;
             }

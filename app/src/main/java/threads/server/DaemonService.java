@@ -24,6 +24,7 @@ import threads.core.api.User;
 import threads.core.api.UserStatus;
 import threads.core.api.UserType;
 import threads.ipfs.IPFS;
+import threads.ipfs.Network;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.SwarmConfig;
@@ -193,7 +194,7 @@ public class DaemonService extends Service {
                 PID relay = Preferences.getRelay(getApplicationContext());
                 if (relay != null) {
                     while (DAEMON_RUNNING.get()) {
-                        if (Application.isConnected(getApplicationContext())) {
+                        if (Network.isConnected(getApplicationContext())) {
                             threads.server.Service.connectRelay(ipfs, relay);
                         }
                         Thread.sleep(30000);  // TODO optimize here when no network

@@ -51,6 +51,7 @@ import threads.core.api.UserStatus;
 import threads.core.api.UserType;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.IPFS;
+import threads.ipfs.Network;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
 import threads.ipfs.api.PID;
@@ -141,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(multihash);
 
         // CHECKED
-        if (!Application.isConnected(getApplicationContext())) {
+        if (!Network.isConnected(getApplicationContext())) {
             Preferences.error(getString(R.string.offline_mode));
             return;
         }
@@ -304,7 +305,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private void checkOnlineStatus() {
-        if (!Application.isConnected(getApplicationContext())) {
+        if (!Network.isConnected(getApplicationContext())) {
             Preferences.warning(getString(R.string.offline_mode));
         } else {
             if (!DaemonService.DAEMON_RUNNING.get()) {
@@ -589,7 +590,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(multihash);
 
         // CHECKED
-        if (!Application.isConnected(getApplicationContext())) {
+        if (!Network.isConnected(getApplicationContext())) {
             Preferences.error(getString(R.string.offline_mode));
             return;
         }
@@ -869,7 +870,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(thread);
 
         // CHECKED
-        if (!Application.isConnected(getApplicationContext())) {
+        if (!Network.isConnected(getApplicationContext())) {
             Preferences.error(getString(R.string.offline_mode));
             return;
         }
