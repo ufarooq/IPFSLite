@@ -13,6 +13,8 @@ import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.MessageKind;
 import threads.ipfs.IPFS;
+import threads.ipfs.api.PID;
+import threads.ipfs.api.Profile;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -117,14 +119,14 @@ public class Application extends android.app.Application {
         NotificationSender.createChannel(getApplicationContext());
         Preferences.setDaemonRunning(getApplicationContext(), false);
 
-
-        //Application.setConfigChanged(getApplicationContext(), true);
-        //Application.setAutoConnected(getApplicationContext(), true);
-        //Preferences.setProfile(getApplicationContext(), Profile.LOW_POWER);
-        //Preferences.setPubsubEnabled(getApplicationContext(), true);
-        //Preferences.setAutoRelayEnabled(getApplicationContext(), true);
-        //Preferences.setRelay(getApplicationContext(),
-        //        PID.create("QmchgNzyUFyf2wpfDMmpGxMKHA3PkC1f3H2wUgbs21vXoh"));
+        // TODO only for debugging
+        Application.setConfigChanged(getApplicationContext(), true);
+        Application.setAutoConnected(getApplicationContext(), true);
+        Preferences.setProfile(getApplicationContext(), Profile.LOW_POWER);
+        Preferences.setPubsubEnabled(getApplicationContext(), true);
+        Preferences.setAutoRelayEnabled(getApplicationContext(), true);
+        Preferences.setRelay(getApplicationContext(),
+                PID.create("QmchgNzyUFyf2wpfDMmpGxMKHA3PkC1f3H2wUgbs21vXoh"));
 
 
         try {
