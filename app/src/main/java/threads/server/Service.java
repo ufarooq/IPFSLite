@@ -6,8 +6,10 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
 import android.provider.OpenableColumns;
+import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
@@ -32,6 +34,7 @@ import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.api.User;
 import threads.core.api.UserStatus;
+import threads.core.api.UserType;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
@@ -46,7 +49,50 @@ class Service {
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
 
 
-    public static void storeData(@NonNull Context context, @NonNull Uri uri) {
+    static void connectUsers(@NonNull Context context) {
+        checkNotNull(context);
+        final THREADS threads = Singleton.getInstance().getThreads();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            List<User> users = threads.getUsers();
+            for (User user : users) {
+                if (user.getStatus() != UserStatus.BLOCKED &&
+                        user.getStatus() != UserStatus.DIALING) {
+                    UserStatus oldStatus = user.getStatus();
+                    try {
+                        if (ipfs.swarm_is_connected(user.getPID())) {
+                            if (UserStatus.ONLINE != oldStatus) {
+                                threads.setStatus(user, UserStatus.ONLINE);
+                            }
+                        } else {
+                            if (UserStatus.OFFLINE != oldStatus) {
+                                threads.setStatus(user, UserStatus.OFFLINE);
+                            }
+
+
+                            if (Application.isAutoConnected(context)) {
+
+                                boolean value = threads.connect(ipfs, user.getPID(),
+                                        Preferences.getRelay(context), Application.CON_TIMEOUT);
+                                if (value) {
+                                    threads.setStatus(user, UserStatus.ONLINE);
+                                } else {
+                                    threads.setStatus(user, UserStatus.OFFLINE);
+                                }
+                            }
+
+                        }
+                    } catch (Throwable e) {
+                        if (UserStatus.OFFLINE != oldStatus) {
+                            threads.setStatus(user, UserStatus.OFFLINE);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    static void storeData(@NonNull Context context, @NonNull Uri uri) {
         checkNotNull(context);
         checkNotNull(uri);
         Cursor returnCursor = context.getContentResolver().query(
@@ -126,7 +172,109 @@ class Service {
     }
 
 
-    static void shareThreads(@NonNull Context context, @NonNull ShareThreads listener, @NonNull String... threadAddresses) {
+    private static String getDeviceName() {
+        String manufacturer = Build.MANUFACTURER;
+        String model = Build.MODEL;
+        if (model.startsWith(manufacturer)) {
+            return capitalize(model);
+        }
+        return capitalize(manufacturer) + " " + model;
+    }
+
+    private static String capitalize(String str) {
+        if (TextUtils.isEmpty(str)) {
+            return str;
+        }
+        char[] arr = str.toCharArray();
+        boolean capitalizeNext = true;
+        String phrase = "";
+        for (char c : arr) {
+            if (capitalizeNext && Character.isLetter(c)) {
+                phrase = phrase.concat("" + Character.toUpperCase(c));
+                capitalizeNext = false;
+                continue;
+            } else if (Character.isWhitespace(c)) {
+                capitalizeNext = true;
+            }
+            phrase = phrase.concat("" + c);
+        }
+        return phrase;
+    }
+
+    static void createHost(@NonNull Context context, @NonNull IPFS ipfs) throws Exception {
+        checkNotNull(context);
+        checkNotNull(ipfs);
+        PID pid = Preferences.getPID(context);
+        checkNotNull(pid);
+        THREADS threads = Singleton.getInstance().getThreads();
+
+        User user = threads.getUserByPID(pid);
+        if (user == null) {
+
+            String inbox = Preferences.getInbox(context);
+            checkNotNull(inbox);
+            String publicKey = ipfs.getPublicKey();
+            byte[] data = THREADS.getImage(context,
+                    pid.getPid(), R.drawable.server_network);
+
+            CID image = ipfs.add(data, true);
+            user = threads.createUser(pid, inbox, publicKey,
+                    getDeviceName(), UserType.VERIFIED, image, null);
+            user.setStatus(UserStatus.BLOCKED);
+            threads.storeUser(user);
+        }
+
+    }
+
+    static void createRelay(@NonNull Context context, @NonNull IPFS ipfs) throws Exception {
+        checkNotNull(context);
+        checkNotNull(ipfs);
+        PID relay = PID.create("QmchgNzyUFyf2wpfDMmpGxMKHA3PkC1f3H2wUgbs21vXoh");
+
+
+        THREADS threads = Singleton.getInstance().getThreads();
+        User user = threads.getUserByPID(relay);
+        if (user == null) {
+            byte[] data = THREADS.getImage(context,
+                    relay.getPid(), R.drawable.server_network);
+            CID image = ipfs.add(data, true);
+            user = threads.createUser(relay,
+                    relay.getPid(),
+                    relay.getPid(),
+                    context.getString(R.string.relay), UserType.VERIFIED, image, null);
+            user.setStatus(UserStatus.OFFLINE);
+            threads.storeUser(user);
+        }
+    }
+
+    private static void shareUser(@NonNull Context context,
+                                  @NonNull User user,
+                                  @NonNull String... threadAddresses) throws Exception {
+        final THREADS threads = Singleton.getInstance().getThreads();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            if (threads.connect(ipfs, user.getPID(),
+                    Preferences.getRelay(context), Application.CON_TIMEOUT)) {
+
+                for (String thread : threadAddresses) {
+
+
+                    Thread threadObject = threads.getThreadByAddress(thread);
+                    checkNotNull(threadObject);
+
+                    CID cid = threadObject.getCid();
+                    checkNotNull(cid);
+
+                    ipfs.pubsub_pub(user.getPID().getPid(),
+                            cid.getCid().concat(System.lineSeparator()));
+                }
+            }
+        }
+    }
+
+    static void shareThreads(@NonNull Context context,
+                             @NonNull ShareThreads listener,
+                             @NonNull String... threadAddresses) {
         checkNotNull(context);
         checkNotNull(listener);
 
@@ -146,22 +294,18 @@ class Service {
                         if (user.getStatus() != UserStatus.BLOCKED) {
                             PID userPID = user.getPID();
                             if (!userPID.equals(host)) {
-                                if (threads.connect(ipfs, userPID, null, 30)) {
-                                    counter.incrementAndGet();
+                                counter.incrementAndGet();
 
-                                    for (String thread : threadAddresses) {
+                                new java.lang.Thread(() -> {
+                                    try {
+                                        shareUser(context, user, threadAddresses);
+                                    } catch (Throwable e) {
+                                        Preferences.evaluateException(Preferences.EXCEPTION, e);
 
-
-                                        Thread threadObject = threads.getThreadByAddress(thread);
-                                        checkNotNull(threadObject);
-
-                                        CID cid = threadObject.getCid();
-                                        checkNotNull(cid);
-
-                                        ipfs.pubsub_pub(user.getPID().getPid(),
-                                                cid.getCid().concat(System.lineSeparator()));
                                     }
-                                }
+
+                                }).start();
+
                             }
                         }
                     }
@@ -291,7 +435,8 @@ class Service {
                     CID cid = threadObject.getCid();
                     checkNotNull(cid);
 
-                    List<Link> links = threadsAPI.getLinks(ipfs, threadObject, 20, true);
+                    List<Link> links = threadsAPI.getLinks(ipfs, threadObject,
+                            Application.CON_TIMEOUT, true);
                     Link link = links.get(0);
                     String path = link.getPath();
 
@@ -351,7 +496,7 @@ class Service {
 
         threads.setStatus(thread, ThreadStatus.OFFLINE);
 
-        List<Link> links = threads.getLinks(ipfs, thread, 20, false);
+        List<Link> links = threads.getLinks(ipfs, thread, Application.CON_TIMEOUT, false);
 
         if (links.isEmpty()) {
             threads.setStatus(thread, ThreadStatus.ERROR);

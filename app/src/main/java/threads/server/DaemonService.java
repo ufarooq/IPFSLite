@@ -11,7 +11,6 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
@@ -43,33 +42,6 @@ public class DaemonService extends Service {
     private static final int NOTIFICATION_ID = 998;
     private static final String TAG = DaemonService.class.getSimpleName();
 
-    public static void evalUserStatus(@NonNull THREADS threads) {
-        checkNotNull(threads);
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-        if (ipfs != null) {
-            List<User> users = threads.getUsers();
-            for (User user : users) {
-                if (user.getStatus() != UserStatus.BLOCKED) {
-                    UserStatus oldStatus = user.getStatus();
-                    try {
-                        if (ipfs.swarm_is_connected(user.getPID())) {
-                            if (UserStatus.ONLINE != oldStatus) {
-                                threads.setStatus(user, UserStatus.ONLINE);
-                            }
-                        } else {
-                            if (UserStatus.OFFLINE != oldStatus) {
-                                threads.setStatus(user, UserStatus.OFFLINE);
-                            }
-                        }
-                    } catch (Throwable e) {
-                        if (UserStatus.OFFLINE != oldStatus) {
-                            threads.setStatus(user, UserStatus.OFFLINE);
-                        }
-                    }
-                }
-            }
-        }
-    }
 
     public static void createChannel(@NonNull Context context) {
         checkNotNull(context);
@@ -195,9 +167,16 @@ public class DaemonService extends Service {
                         new Thread(() -> startPubsub(getApplicationContext(), ipfs)).start();
                     }
                 }
+
+                if (DAEMON_RUNNING.get()) {
+                    PID relay = Preferences.getRelay(getApplicationContext());
+                    if (relay != null) {
+                        new java.lang.Thread(() -> connectRelay(ipfs, relay)).start();
+                    }
+                }
                 try {
                     while (DAEMON_RUNNING.get()) {
-                        evalUserStatus(threadsApi);
+                        threads.server.Service.connectUsers(getApplicationContext());
                         Thread.sleep(15000);
                     }
                 } catch (Throwable e) {
@@ -206,6 +185,28 @@ public class DaemonService extends Service {
             }).start();
         }
 
+    }
+
+    private void connectRelay(@NonNull IPFS ipfs, @NonNull PID relay) {
+        checkNotNull(ipfs);
+        checkNotNull(relay);
+        try {
+
+            while (true) {
+
+                if (!ipfs.swarm_is_connected(relay)) {
+                    boolean connected = ipfs.swarm_connect(relay);
+
+                    if (Preferences.DEBUG_MODE) {
+                        Log.e(TAG, "Connection to " + relay.getPid() + " " + connected);
+                    }
+                }
+                java.lang.Thread.sleep(30000);
+
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
     }
 
     private void startPubsub(@NonNull Context context, @NonNull IPFS ipfs) {
@@ -252,7 +253,7 @@ public class DaemonService extends Service {
 
                     // create a new user which is blocked (User has to unblock and verified the user)
                     byte[] data = THREADS.getImage(getApplicationContext(),
-                            pid.getPid(), R.drawable.server_network);
+                            name, R.drawable.server_network);
                     CID image = ipfs.add(data, true);
                     sender = threadsAPI.createUser(senderPid,
                             senderPid.getPid(),
@@ -312,7 +313,7 @@ public class DaemonService extends Service {
             // Stop foreground service and remove the notification.
             stopForeground(true);
 
-            new Thread(() -> evalUserStatus(Singleton.getInstance().getThreads())).start();
+            new Thread(() -> threads.server.Service.connectUsers(getApplicationContext())).start();
 
             // Stop the foreground service.
             stopSelf();

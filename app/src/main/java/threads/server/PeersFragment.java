@@ -107,32 +107,9 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
 
         mRecyclerView = view.findViewById(R.id.recycler_users);
+        mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
         LinearLayoutManager linearLayout = new LinearLayoutManager(getContext());
-        mRecyclerView.addOnLayoutChangeListener((View v,
-                                                 int left, int top, int right, int bottom,
-                                                 int oldLeft, int oldTop,
-                                                 int oldRight, int oldBottom) -> {
-
-            if (bottom < oldBottom) {
-                mRecyclerView.postDelayed(() -> {
-
-                    try {
-                        RecyclerView.Adapter adapter = mRecyclerView.getAdapter();
-                        if (adapter != null) {
-                            mRecyclerView.smoothScrollToPosition(
-                                    adapter.getItemCount());
-                        }
-                    } catch (Throwable e) {
-                        Preferences.evaluateException(Preferences.EXCEPTION, e);
-                    }
-
-                }, 50);
-            }
-
-        });
-
-
         mRecyclerView.setLayoutManager(linearLayout);
         usersViewAdapter = new UsersViewAdapter(activity, this);
         mRecyclerView.setAdapter(usersViewAdapter);
@@ -154,7 +131,11 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                         }
 
                     }
-                    updatePeers(peers);
+                    try {
+                        usersViewAdapter.updateData(peers);
+                    } catch (Throwable e) {
+                        Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    }
                 }
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -165,16 +146,6 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         return view;
     }
 
-    private void updatePeers(@NonNull List<User> users) {
-        try {
-            usersViewAdapter.updateData(users);
-
-            mRecyclerView.scrollToPosition(usersViewAdapter.getItemCount() - 1);
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
-
-    }
 
     @Override
     public void invokeGeneralAction(@NonNull User user) {

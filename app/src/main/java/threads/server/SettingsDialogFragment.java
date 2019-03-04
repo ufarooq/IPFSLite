@@ -119,11 +119,16 @@ public class SettingsDialogFragment extends DialogFragment {
 
         });
 
+
+        Switch auto_connect_support = view.findViewById(R.id.auto_connect_support);
+        auto_connect_support.setChecked(Application.isAutoConnected(getContext()));
+        auto_connect_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Application.setAutoConnected(getContext(), isChecked);
+        });
+
         builder.setView(view);
 
         return new androidx.appcompat.app.AlertDialog.Builder(getActivity())
-                .setTitle(R.string.settings)
-                .setMessage(R.string.settings_message)
                 .setView(view)
                 .setCancelable(false)
                 .create();

@@ -75,13 +75,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final int DOWNLOAD_EXTERNAL_STORAGE = 2;
     private final AtomicReference<String> storedThread = new AtomicReference<>(null);
     private final AtomicBoolean idScan = new AtomicBoolean(false);
-
     private DrawerLayout drawer_layout;
-
     private FloatingActionButton fab_daemon;
-
     private long mLastClickTime = 0;
-
 
     @Override
     public void onRequestPermissionsResult
@@ -623,7 +619,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             threadsAPI.setStatus(user, UserStatus.DIALING);
 
 
-                            boolean value = threadsAPI.connect(ipfs, pid, null, 30);
+                            boolean value = threadsAPI.connect(ipfs, pid,
+                                    Preferences.getRelay(getApplicationContext()),
+                                    Application.CON_TIMEOUT);
                             if (value) {
                                 threadsAPI.setStatus(user, UserStatus.ONLINE);
                             } else {
@@ -699,7 +697,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     try {
                         threadsAPI.setStatus(user, UserStatus.DIALING);
 
-                        boolean value = threadsAPI.connect(ipfs, pid, null, 30);
+                        boolean value = threadsAPI.connect(ipfs, pid,
+                                Preferences.getRelay(getApplicationContext()),
+                                Application.CON_TIMEOUT);
                         if (value) {
                             threadsAPI.setStatus(user, UserStatus.ONLINE);
 
@@ -789,7 +789,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     checkNotNull(cid);
                     String multihash = cid.getCid();
 
-                    List<Link> links = threadsAPI.getLinks(ipfs, threadObject, 20, true);
+                    List<Link> links = threadsAPI.getLinks(ipfs, threadObject,
+                            Application.CON_TIMEOUT, true);
                     Link link = links.get(0);
                     String path = link.getPath();
 

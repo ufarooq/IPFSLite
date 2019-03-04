@@ -58,30 +58,9 @@ public class ConsoleFragment extends Fragment {
         });
 
         mRecyclerView = view.findViewById(R.id.view_message_list);
+        mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
         LinearLayoutManager linearLayout = new LinearLayoutManager(getContext());
-        mRecyclerView.addOnLayoutChangeListener((View v,
-                                                 int left, int top, int right, int bottom,
-                                                 int oldLeft, int oldTop,
-                                                 int oldRight, int oldBottom) -> {
-
-            if (bottom < oldBottom) {
-                mRecyclerView.postDelayed(() -> {
-
-                    try {
-                        RecyclerView.Adapter adapter = mRecyclerView.getAdapter();
-                        if (adapter != null) {
-                            mRecyclerView.smoothScrollToPosition(
-                                    adapter.getItemCount());
-                        }
-                    } catch (Throwable e) {
-                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    }
-
-                }, 50);
-            }
-
-        });
 
 
         mRecyclerView.setLayoutManager(linearLayout);
