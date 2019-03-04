@@ -162,6 +162,11 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
     }
 
+    @Override
+    public boolean generalActionSupport(@NonNull User user) {
+        return true;
+    }
+
     public interface ActionListener {
 
         void clickUserInfo();

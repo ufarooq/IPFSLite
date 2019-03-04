@@ -50,6 +50,10 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private ThreadsViewAdapter threadsViewAdapter;
     private long mLastClickTime = 0;
 
+    private static String getCompactString(@NonNull String title) {
+        checkNotNull(title);
+        return title.replace("\n", " ");
+    }
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -259,7 +263,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         }
     }
 
-
     private void markThreads() {
         try {
             THREADS threadsAPI = Singleton.getInstance().getThreads();
@@ -287,7 +290,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         }
     }
 
-
     private void unmarkThreads() {
         try {
             for (String thread : threads) {
@@ -305,7 +307,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             }
         }
     }
-
 
     private void deleteAction() {
 
@@ -416,11 +417,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     }
 
-    private static String getCompactString(@NonNull String title) {
-        checkNotNull(title);
-        return title.replace("\n", " ");
-    }
-
     @Override
     @NonNull
     public String getContent(@NonNull Thread thread) {
@@ -441,6 +437,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public String getTitle(@NonNull Thread thread) {
         return getCompactString(thread.getTitle());
     }
+
     @Override
     public boolean showDate(@NonNull Thread thread) {
         return false;

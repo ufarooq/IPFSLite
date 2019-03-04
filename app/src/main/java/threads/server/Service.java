@@ -49,42 +49,66 @@ class Service {
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
 
 
-    static void connectUsers(@NonNull Context context) {
+    public static void connectRelay(@NonNull IPFS ipfs, @NonNull PID relay) {
+        checkNotNull(ipfs);
+        checkNotNull(relay);
+        try {
+            if (!ipfs.swarm_is_connected(relay)) {
+                boolean connected = ipfs.swarm_connect(relay, Application.CON_TIMEOUT);
+
+                if (Preferences.DEBUG_MODE) {
+                    Log.e(TAG, "Connection to " + relay.getPid() + " " + connected);
+                }
+            }
+        } catch (Throwable e) {
+            // ignore exception occurs when daemon is shutdown
+        }
+    }
+
+    static void connectPeers(@NonNull Context context) {
         checkNotNull(context);
-        final THREADS threads = Singleton.getInstance().getThreads();
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-        if (ipfs != null) {
-            List<User> users = threads.getUsers();
-            for (User user : users) {
-                if (user.getStatus() != UserStatus.BLOCKED &&
-                        user.getStatus() != UserStatus.DIALING) {
-                    UserStatus oldStatus = user.getStatus();
-                    try {
-                        if (ipfs.swarm_is_connected(user.getPID())) {
-                            if (UserStatus.ONLINE != oldStatus) {
-                                threads.setStatus(user, UserStatus.ONLINE);
+
+        if (Application.isConnected(context)) {
+            final THREADS threads = Singleton.getInstance().getThreads();
+            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            if (ipfs != null) {
+                List<User> users = threads.getUsers();
+                for (User user : users) {
+                    if (user.getStatus() != UserStatus.BLOCKED &&
+                            user.getStatus() != UserStatus.DIALING) {
+                        UserStatus oldStatus = user.getStatus();
+                        try {
+
+                            if (ipfs.swarm_is_connected(user.getPID())) {
+
+                                if (UserStatus.ONLINE != oldStatus) {
+                                    threads.setStatus(user, UserStatus.ONLINE);
+
+                                }
+                            } else {
+                                if (UserStatus.OFFLINE != oldStatus) {
+                                    threads.setStatus(user, UserStatus.OFFLINE);
+                                }
+
+                                if (Application.isAutoConnected(context)) {
+
+                                    threads.setStatus(user, UserStatus.DIALING);
+
+
+                                    boolean value = threads.connect(ipfs, user.getPID(),
+                                            Preferences.getRelay(context), Application.CON_TIMEOUT);
+                                    if (value) {
+                                        threads.setStatus(user, UserStatus.ONLINE);
+                                    } else {
+                                        threads.setStatus(user, UserStatus.OFFLINE);
+                                    }
+                                }
+
                             }
-                        } else {
+                        } catch (Throwable e) {
                             if (UserStatus.OFFLINE != oldStatus) {
                                 threads.setStatus(user, UserStatus.OFFLINE);
                             }
-
-
-                            if (Application.isAutoConnected(context)) {
-
-                                boolean value = threads.connect(ipfs, user.getPID(),
-                                        Preferences.getRelay(context), Application.CON_TIMEOUT);
-                                if (value) {
-                                    threads.setStatus(user, UserStatus.ONLINE);
-                                } else {
-                                    threads.setStatus(user, UserStatus.OFFLINE);
-                                }
-                            }
-
-                        }
-                    } catch (Throwable e) {
-                        if (UserStatus.OFFLINE != oldStatus) {
-                            threads.setStatus(user, UserStatus.OFFLINE);
                         }
                     }
                 }

@@ -162,61 +162,66 @@ public class DaemonService extends Service {
                     stopForeground(true);
                     stopSelf();
                 }
-                if (DAEMON_RUNNING.get()) {
-                    if (Preferences.isPubsubEnabled(getApplicationContext())) {
-                        new Thread(() -> startPubsub(getApplicationContext(), ipfs)).start();
-                    }
-                }
 
-                if (DAEMON_RUNNING.get()) {
-                    PID relay = Preferences.getRelay(getApplicationContext());
-                    if (relay != null) {
-                        new java.lang.Thread(() -> connectRelay(ipfs, relay)).start();
-                    }
-                }
-                try {
-                    while (DAEMON_RUNNING.get()) {
-                        threads.server.Service.connectUsers(getApplicationContext());
-                        Thread.sleep(15000);
-                    }
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
+                new Thread(this::startPubsub).start();
+
+                new Thread(this::startRelay).start();
+
+                new Thread(this::startPeers).start();
+
             }).start();
         }
 
     }
 
-    private void connectRelay(@NonNull IPFS ipfs, @NonNull PID relay) {
-        checkNotNull(ipfs);
-        checkNotNull(relay);
+    private void startPeers() {
         try {
-
-            while (true) {
-
-                if (!ipfs.swarm_is_connected(relay)) {
-                    boolean connected = ipfs.swarm_connect(relay);
-
-                    if (Preferences.DEBUG_MODE) {
-                        Log.e(TAG, "Connection to " + relay.getPid() + " " + connected);
-                    }
+            while (DAEMON_RUNNING.get()) {
+                if (Application.isConnected(getApplicationContext())) {
+                    threads.server.Service.connectPeers(getApplicationContext());
                 }
-                java.lang.Thread.sleep(30000);
-
+                Thread.sleep(15000);
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
-    private void startPubsub(@NonNull Context context, @NonNull IPFS ipfs) {
-        final PID pid = Preferences.getPID(context);
-        checkNotNull(pid);
-        checkArgument(!pid.getPid().isEmpty());
-        try {
-            pubsubDaemon(ipfs, pid);
-        } catch (Throwable e) {
-            // IGNORE exception occurs when daemon is shutdown
+
+    private void startRelay() {
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            try {
+                PID relay = Preferences.getRelay(getApplicationContext());
+                if (relay != null) {
+                    while (DAEMON_RUNNING.get()) {
+                        if (Application.isConnected(getApplicationContext())) {
+                            threads.server.Service.connectRelay(ipfs, relay);
+                        }
+                        Thread.sleep(30000);
+                    }
+                }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        }
+    }
+
+    private void startPubsub() {
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            if (DAEMON_RUNNING.get()) {
+                if (Preferences.isPubsubEnabled(getApplicationContext())) {
+                    final PID pid = Preferences.getPID(getApplicationContext());
+                    checkNotNull(pid);
+                    checkArgument(!pid.getPid().isEmpty());
+                    try {
+                        pubsubDaemon(ipfs, pid);
+                    } catch (Throwable e) {
+                        // IGNORE exception occurs when daemon is shutdown
+                    }
+                }
+            }
         }
     }
 
@@ -313,7 +318,7 @@ public class DaemonService extends Service {
             // Stop foreground service and remove the notification.
             stopForeground(true);
 
-            new Thread(() -> threads.server.Service.connectUsers(getApplicationContext())).start();
+            new Thread(() -> threads.server.Service.connectPeers(getApplicationContext())).start();
 
             // Stop the foreground service.
             stopSelf();

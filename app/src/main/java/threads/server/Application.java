@@ -65,7 +65,7 @@ public class Application extends android.app.Application {
                             , System.currentTimeMillis()));
 
 
-                    Service.connectUsers(context);
+                    Service.connectPeers(context);
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
