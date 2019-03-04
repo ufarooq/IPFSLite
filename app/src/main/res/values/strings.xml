@@ -47,7 +47,7 @@
     <string name="sorry_not_yet_implemented">Sorry not yet implemented</string>
     <string name="peer_name">New Peer Name</string>
     <string name="peer_is_blocked">Peer is blocked. Unblock first.</string>
-    <string name="user_connect_try">Peer connection request</string>
+    <string name="user_connect_try">Peer \"%1$s\" connection request</string>
     <string name="action_share">Share Peers</string>
     <string name="action_download">Download</string>
     <string name="no_peers_connected">Currently no peers are defined to share the data.</string>

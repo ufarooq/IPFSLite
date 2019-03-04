@@ -68,8 +68,9 @@ class Service {
     static void connectPeers(@NonNull Context context) {
         checkNotNull(context);
 
+        final THREADS threads = Singleton.getInstance().getThreads();
         if (Application.isConnected(context)) {
-            final THREADS threads = Singleton.getInstance().getThreads();
+
             final IPFS ipfs = Singleton.getInstance().getIpfs();
             if (ipfs != null) {
                 List<User> users = threads.getUsers();
@@ -112,6 +113,15 @@ class Service {
                         }
                     }
                 }
+            }
+        } else {
+            List<User> users = threads.getUsers();
+            for (User user : users) {
+
+                if (UserStatus.OFFLINE != user.getStatus()) {
+                    threads.setStatus(user, UserStatus.OFFLINE);
+                }
+
             }
         }
     }

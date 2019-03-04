@@ -177,13 +177,11 @@ public class DaemonService extends Service {
     private void startPeers() {
         try {
             while (DAEMON_RUNNING.get()) {
-                if (Application.isConnected(getApplicationContext())) {
-                    threads.server.Service.connectPeers(getApplicationContext());
-                }
-                Thread.sleep(15000);
+                threads.server.Service.connectPeers(getApplicationContext());
+                Thread.sleep(15000); // TODO optimize here when no network
             }
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            // IGNORE exception occurs when daemon is shutdown
         }
     }
 
@@ -198,11 +196,11 @@ public class DaemonService extends Service {
                         if (Application.isConnected(getApplicationContext())) {
                             threads.server.Service.connectRelay(ipfs, relay);
                         }
-                        Thread.sleep(30000);
+                        Thread.sleep(30000);  // TODO optimize here when no network
                     }
                 }
             } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                // IGNORE exception occurs when daemon is shutdown
             }
         }
     }
@@ -266,7 +264,9 @@ public class DaemonService extends Service {
                             name, UserType.UNKNOWN, image, null);
                     sender.setStatus(UserStatus.BLOCKED);
                     threadsAPI.storeUser(sender);
-                    Preferences.warning(getString(R.string.user_connect_try));
+
+
+                    Preferences.error(getString(R.string.user_connect_try, name));
 
                 } else {
                     if (!threadsAPI.isAccountBlocked(senderPid)) {
