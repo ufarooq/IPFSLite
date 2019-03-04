@@ -20,7 +20,6 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProviders;
@@ -158,6 +157,9 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         Activity activity = getActivity();
         if (activity != null) {
             mRecyclerView = view.findViewById(R.id.recycler_view_message_list);
+            mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
+
+
             LinearLayoutManager linearLayout = new LinearLayoutManager(activity);
             mRecyclerView.setLayoutManager(linearLayout);
             threadsViewAdapter = new ThreadsViewAdapter(activity, this);
@@ -168,8 +170,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                     if (threads != null) {
                         threads.sort(Comparator.comparing(Thread::getDate).reversed());
                         threadsViewAdapter.updateData(threads);
-
-                        mRecyclerView.scrollToPosition(0);
                     }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -309,38 +309,18 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     private void deleteAction() {
 
-        Context context = getContext();
-        if (context != null) {
-
-            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
-
-            alertDialogBuilder.setTitle(R.string.delete_threads);
-
-
-            alertDialogBuilder
-                    .setCancelable(false)
-                    .setMessage(R.string.delete_threads_message)
-                    .setPositiveButton(android.R.string.yes, (dialog, id) -> {
-
-                        Service.deleteThreads(context, Iterables.toArray(threads, String.class));
-                        dialog.dismiss();
-                        try {
-                            if (threads.contains(threadAddress)) {
-                                threadAddress = "";
-                            }
-                            threads.clear();
-                        } finally {
-                            evaluateFabDeleteVisibility();
-                        }
-                    })
-                    .setNegativeButton(android.R.string.no, (dialog, id) -> dialog.cancel());
-
-
-            AlertDialog alertDialog = alertDialogBuilder.create();
-
-            alertDialog.show();
-
+        Service.deleteThreads(Iterables.toArray(threads, String.class));
+        try {
+            if (threads.contains(threadAddress)) {
+                threadAddress = "";
+            }
+            threads.clear();
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        } finally {
+            evaluateFabDeleteVisibility();
         }
+
     }
 
     @Override

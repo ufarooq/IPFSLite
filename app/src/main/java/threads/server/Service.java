@@ -328,8 +328,7 @@ class Service {
         }
     }
 
-    static void deleteThreads(@NonNull Context context, @NonNull String... addresses) {
-        checkNotNull(context);
+    static void deleteThreads(@NonNull String... addresses) {
         checkNotNull(addresses);
 
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
