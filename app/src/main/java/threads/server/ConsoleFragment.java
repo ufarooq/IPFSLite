@@ -147,6 +147,11 @@ public class ConsoleFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        removeKeyboards();
+    }
 
     private void removeKeyboards() {
         if (getActivity() != null) {
