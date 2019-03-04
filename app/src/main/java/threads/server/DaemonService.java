@@ -25,7 +25,6 @@ import threads.core.api.UserStatus;
 import threads.core.api.UserType;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
-import threads.ipfs.api.ExperimentalConfig;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.SwarmConfig;
 
@@ -132,17 +131,18 @@ public class DaemonService extends Service {
         if (ipfs != null) {
             new Thread(() -> {
                 try {
-                    ExperimentalConfig experimentalConfig = ipfs.getExperimental();
-                    experimentalConfig.setQUIC(Preferences.isQUICEnabled(getApplicationContext()));
+
                     boolean hasConfigChanged = Application.hasConfigChanged(getApplicationContext());
 
+                    ipfs.supportQUIC(Preferences.isQUICEnabled(getApplicationContext()),
+                            Preferences.getSwarmPort(getApplicationContext()));
 
                     SwarmConfig swarmConfig = ipfs.getSwarm();
                     swarmConfig.setEnableAutoRelay(
                             Preferences.isAutoRelayEnabled(getApplicationContext()));
 
                     ipfs.init(Preferences.getProfile(getApplicationContext()), false,
-                            hasConfigChanged, null, experimentalConfig,
+                            hasConfigChanged, null, null,
                             null, null, swarmConfig);
 
                     Application.setConfigChanged(getApplicationContext(), false);
