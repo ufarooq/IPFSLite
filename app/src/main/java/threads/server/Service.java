@@ -10,7 +10,6 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.OpenableColumns;
 import android.text.TextUtils;
-import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import com.google.common.io.Files;
@@ -49,16 +48,12 @@ class Service {
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
 
 
-    public static void connectRelay(@NonNull IPFS ipfs, @NonNull PID relay) {
+    static void connectRelay(@NonNull IPFS ipfs, @NonNull PID relay) {
         checkNotNull(ipfs);
         checkNotNull(relay);
         try {
             if (!ipfs.swarm_is_connected(relay)) {
-                boolean connected = ipfs.swarm_connect(relay, Application.CON_TIMEOUT);
-
-                if (Preferences.DEBUG_MODE) {
-                    Log.e(TAG, "Connection to " + relay.getPid() + " " + connected);
-                }
+                ipfs.swarm_connect(relay, Application.CON_TIMEOUT);
             }
         } catch (Throwable e) {
             // ignore exception occurs when daemon is shutdown
@@ -590,7 +585,7 @@ class Service {
                         threads.setImage(ipfs, thread, image);
                     }
                 } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    // no exception will be reported
                 } finally {
                     threads.setStatus(thread, ThreadStatus.ONLINE);
                 }

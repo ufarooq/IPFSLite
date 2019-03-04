@@ -465,7 +465,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void scanMultihash() {
-        // Check that the device will let you use the camera
+
         PackageManager pm = getPackageManager();
 
         if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {

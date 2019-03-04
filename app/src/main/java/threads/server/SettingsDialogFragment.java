@@ -24,7 +24,8 @@ import threads.ipfs.api.Profile;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class SettingsDialogFragment extends DialogFragment {
-    public static final String TAG = SettingsDialogFragment.class.getSimpleName();
+
+    static final String TAG = SettingsDialogFragment.class.getSimpleName();
 
     @Override
     @NonNull
@@ -43,7 +44,7 @@ public class SettingsDialogFragment extends DialogFragment {
 
         Spinner spinner_profile = view.findViewById(R.id.spinner_profile);
         List<Profile> profiles = Lists.newArrayList(Profile.values());
-        ArrayAdapter<Profile> adapter = new ArrayAdapter<>(getContext(),
+        ArrayAdapter<Profile> adapter = new ArrayAdapter<>(activity,
                 android.R.layout.simple_spinner_item, profiles);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner_profile.setAdapter(adapter);
@@ -53,9 +54,9 @@ public class SettingsDialogFragment extends DialogFragment {
 
                 try {
                     Profile profile = (Profile) parent.getItemAtPosition(position);
-                    if (profile != Preferences.getProfile(getContext())) {
-                        Preferences.setProfile(getContext(), profile);
-                        Application.setConfigChanged(getContext(), true);
+                    if (profile != Preferences.getProfile(activity)) {
+                        Preferences.setProfile(activity, profile);
+                        Application.setConfigChanged(activity, true);
 
                         if (DaemonService.DAEMON_RUNNING.get()) {
                             Toast.makeText(getContext(),
@@ -74,15 +75,15 @@ public class SettingsDialogFragment extends DialogFragment {
 
             }
         });
-        int pos = profiles.indexOf(Preferences.getProfile(getContext()));
+        int pos = profiles.indexOf(Preferences.getProfile(activity));
         spinner_profile.setSelection(pos);
 
 
         Switch quic_support = view.findViewById(R.id.quic_support);
-        quic_support.setChecked(Preferences.isQUICEnabled(getContext()));
+        quic_support.setChecked(Preferences.isQUICEnabled(activity));
         quic_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Preferences.setQUICEnabled(getContext(), isChecked);
-            Application.setConfigChanged(getContext(), true);
+            Preferences.setQUICEnabled(activity, isChecked);
+            Application.setConfigChanged(activity, true);
             if (DaemonService.DAEMON_RUNNING.get()) {
                 Toast.makeText(getContext(),
                         R.string.daemon_restart_config_changed,
@@ -93,10 +94,10 @@ public class SettingsDialogFragment extends DialogFragment {
 
 
         Switch pubsub_support = view.findViewById(R.id.pubsub_support);
-        pubsub_support.setChecked(Preferences.isPubsubEnabled(getContext()));
+        pubsub_support.setChecked(Preferences.isPubsubEnabled(activity));
         pubsub_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Preferences.setPubsubEnabled(getContext(), isChecked);
-            Application.setConfigChanged(getContext(), true);
+            Preferences.setPubsubEnabled(activity, isChecked);
+            Application.setConfigChanged(activity, true);
             if (DaemonService.DAEMON_RUNNING.get()) {
                 Toast.makeText(getContext(),
                         R.string.daemon_restart_config_changed,
@@ -107,10 +108,10 @@ public class SettingsDialogFragment extends DialogFragment {
 
 
         Switch auto_relay_support = view.findViewById(R.id.auto_relay_support);
-        auto_relay_support.setChecked(Preferences.isAutoRelayEnabled(getContext()));
+        auto_relay_support.setChecked(Preferences.isAutoRelayEnabled(activity));
         auto_relay_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Preferences.setAutoRelayEnabled(getContext(), isChecked);
-            Application.setConfigChanged(getContext(), true);
+            Preferences.setAutoRelayEnabled(activity, isChecked);
+            Application.setConfigChanged(activity, true);
             if (DaemonService.DAEMON_RUNNING.get()) {
                 Toast.makeText(getContext(),
                         R.string.daemon_restart_config_changed,
@@ -121,14 +122,14 @@ public class SettingsDialogFragment extends DialogFragment {
 
 
         Switch auto_connect_support = view.findViewById(R.id.auto_connect_support);
-        auto_connect_support.setChecked(Application.isAutoConnected(getContext()));
-        auto_connect_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Application.setAutoConnected(getContext(), isChecked);
-        });
+        auto_connect_support.setChecked(Application.isAutoConnected(activity));
+        auto_connect_support.setOnCheckedChangeListener((buttonView, isChecked) ->
+                Application.setAutoConnected(activity, isChecked)
+        );
 
         builder.setView(view);
 
-        return new androidx.appcompat.app.AlertDialog.Builder(getActivity())
+        return new androidx.appcompat.app.AlertDialog.Builder(activity)
                 .setView(view)
                 .setCancelable(false)
                 .create();

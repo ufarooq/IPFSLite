@@ -36,7 +36,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
     private long mLastClickTime = 0;
 
-    private RecyclerView mRecyclerView;
+
     private UsersViewAdapter usersViewAdapter;
     private ActionListener actionListener;
 
@@ -106,7 +106,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         });
 
 
-        mRecyclerView = view.findViewById(R.id.recycler_users);
+        RecyclerView mRecyclerView = view.findViewById(R.id.recycler_users);
         mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
         LinearLayoutManager linearLayout = new LinearLayoutManager(getContext());

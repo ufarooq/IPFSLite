@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import threads.core.Preferences;
@@ -13,16 +12,12 @@ import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.MessageKind;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.PID;
-import threads.ipfs.api.Profile;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Application extends android.app.Application {
 
-
     public static final int CON_TIMEOUT = 30;
-    private static final String TAG = Application.class.getSimpleName();
     private static final String PREF_KEY = "prefKey";
     private static final String CONFIG_CHANGE_KEY = "configChangeKey";
     private static final String AUTO_CONNECTED_KEY = "autoConnectedKey";
@@ -106,27 +101,23 @@ public class Application extends android.app.Application {
     @Override
     public void onTerminate() {
         super.onTerminate();
-        Log.e(TAG, "...... end application");
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-
-        Log.e(TAG, "...... start application");
-
         NotificationSender.createChannel(getApplicationContext());
         Preferences.setDaemonRunning(getApplicationContext(), false);
 
-        // TODO only for debugging
+        /*
         Application.setConfigChanged(getApplicationContext(), true);
         Application.setAutoConnected(getApplicationContext(), true);
         Preferences.setProfile(getApplicationContext(), Profile.LOW_POWER);
         Preferences.setPubsubEnabled(getApplicationContext(), true);
         Preferences.setAutoRelayEnabled(getApplicationContext(), true);
         Preferences.setRelay(getApplicationContext(),
-                PID.create("QmchgNzyUFyf2wpfDMmpGxMKHA3PkC1f3H2wUgbs21vXoh"));
+                PID.create("QmchgNzyUFyf2wpfDMmpGxMKHA3PkC1f3H2wUgbs21vXoh"));*/
 
 
         try {

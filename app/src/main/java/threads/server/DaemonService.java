@@ -234,6 +234,7 @@ public class DaemonService extends Service {
         if (Preferences.DEBUG_MODE) {
             Log.e(TAG, "Pubsub Daemon :" + pid.getPid());
         }
+
         ipfs.pubsub_sub(pid.getPid(), false, (message) -> {
 
             try {

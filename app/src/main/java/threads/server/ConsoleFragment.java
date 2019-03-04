@@ -3,7 +3,6 @@ package threads.server;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,7 +15,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import org.apache.tools.ant.types.Commandline;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,14 +25,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.api.Message;
 import threads.core.mdl.MessagesViewModel;
 import threads.ipfs.IPFS;
 import threads.share.MessageViewAdapter;
 
 public class ConsoleFragment extends Fragment {
-    private static final String TAG = ConsoleFragment.class.getSimpleName();
-    private RecyclerView mRecyclerView;
+
     private MessageViewAdapter messageViewAdapter;
     private EditText console_box;
 
@@ -57,7 +53,7 @@ public class ConsoleFragment extends Fragment {
 
         });
 
-        mRecyclerView = view.findViewById(R.id.view_message_list);
+        RecyclerView mRecyclerView = view.findViewById(R.id.view_message_list);
         mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
         LinearLayoutManager linearLayout = new LinearLayoutManager(getContext());
@@ -107,7 +103,7 @@ public class ConsoleFragment extends Fragment {
                                 }
 
                             } catch (Throwable e) {
-                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                                // ignore any kind of exception here
                             }
                         });
                     } else {
@@ -121,7 +117,7 @@ public class ConsoleFragment extends Fragment {
                                 }
 
                             } catch (Throwable e) {
-                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                                // ignore any kind of exception here
                             }
                         });
                     }
@@ -134,12 +130,14 @@ public class ConsoleFragment extends Fragment {
         MessagesViewModel messagesViewModel = ViewModelProviders.of(this).get(MessagesViewModel.class);
         messagesViewModel.getMessages().observe(this, (messages) -> {
 
-            try {
-                if (messages != null) {
-                    updateMessages(messages);
+            if (messages != null) {
+                try {
+                    messageViewAdapter.updateData(messages);
+
+                    mRecyclerView.scrollToPosition(messageViewAdapter.getItemCount() - 1);
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage());
             }
 
         });
@@ -155,22 +153,12 @@ public class ConsoleFragment extends Fragment {
 
     private void removeKeyboards() {
         if (getActivity() != null) {
-            InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+            InputMethodManager imm = (InputMethodManager) getActivity().
+                    getSystemService(Context.INPUT_METHOD_SERVICE);
             if (imm != null) {
                 imm.hideSoftInputFromWindow(console_box.getWindowToken(), 0);
             }
         }
-    }
-
-    private void updateMessages(@NonNull List<Message> messages) {
-        try {
-            messageViewAdapter.updateData(messages);
-
-            mRecyclerView.scrollToPosition(messageViewAdapter.getItemCount() - 1);
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
-
     }
 
 }

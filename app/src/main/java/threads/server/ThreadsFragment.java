@@ -45,7 +45,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private String threadAddress = "";
 
     private ActionListener actionListener;
-    private RecyclerView mRecyclerView;
+
     private View view;
     private ThreadsViewAdapter threadsViewAdapter;
     private long mLastClickTime = 0;
@@ -160,7 +160,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         super.onViewCreated(view, savedInstanceState);
         Activity activity = getActivity();
         if (activity != null) {
-            mRecyclerView = view.findViewById(R.id.recycler_view_message_list);
+            RecyclerView mRecyclerView = view.findViewById(R.id.recycler_view_message_list);
             mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
 

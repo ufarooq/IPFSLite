@@ -19,15 +19,15 @@ import threads.core.Preferences;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ActionDialogFragment extends DialogFragment {
-    public static final String TAG = ActionDialogFragment.class.getSimpleName();
+    static final String TAG = ActionDialogFragment.class.getSimpleName();
     private static final String EDIT_PEER_ACTIVE = "EDIT_PEER_ACTIVE";
     private static final String SCAN_PEER_ACTIVE = "SCAN_PEER_ACTIVE";
 
     private ActionListener actionListener;
     private long mLastClickTime = 0;
 
-    public static ActionDialogFragment newInstance(boolean editPeerActive,
-                                                   boolean scanPeerActive) {
+    static ActionDialogFragment newInstance(boolean editPeerActive,
+                                            boolean scanPeerActive) {
 
         Bundle bundle = new Bundle();
 
