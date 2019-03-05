@@ -731,8 +731,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickThreadPin(@NonNull String thread) {
-        checkNotNull(thread);
+    public void clickThreadBlock(@NonNull String thread) {
         checkNotNull(thread);
         // NOT implemented
     }
