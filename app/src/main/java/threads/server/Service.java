@@ -17,10 +17,11 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.Future;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -45,7 +46,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 class Service {
 
-    private static final String TAG = Service.class.getSimpleName();
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
 
 
@@ -277,29 +277,36 @@ class Service {
         }
     }
 
-    private static void shareUser(@NonNull Context context,
-                                  @NonNull User user,
-                                  @NonNull String... threadAddresses) throws Exception {
+    private static boolean shareUser(@NonNull Context context,
+                                     @NonNull User user,
+                                     @NonNull String... threadAddresses) {
         final THREADS threads = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
+        boolean success = false;
         if (ipfs != null) {
-            if (threads.connect(ipfs, user.getPID(),
-                    Preferences.getRelay(context), Application.CON_TIMEOUT)) {
+            try {
+                if (threads.connect(ipfs, user.getPID(),
+                        Preferences.getRelay(context), Application.CON_TIMEOUT)) {
 
-                for (String thread : threadAddresses) {
+                    for (String thread : threadAddresses) {
 
 
-                    Thread threadObject = threads.getThreadByAddress(thread);
-                    checkNotNull(threadObject);
+                        Thread threadObject = threads.getThreadByAddress(thread);
+                        checkNotNull(threadObject);
 
-                    CID cid = threadObject.getCid();
-                    checkNotNull(cid);
+                        CID cid = threadObject.getCid();
+                        checkNotNull(cid);
 
-                    ipfs.pubsub_pub(user.getPID().getPid(),
-                            cid.getCid().concat(System.lineSeparator()));
+                        ipfs.pubsub_pub(user.getPID().getPid(),
+                                cid.getCid().concat(System.lineSeparator()));
+                    }
+                    success = true;
                 }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
         }
+        return success;
     }
 
     static void shareThreads(@NonNull Context context,
@@ -319,32 +326,34 @@ class Service {
                 try {
 
                     List<User> users = threads.getUsers();
-                    AtomicInteger counter = new AtomicInteger(0);
-                    for (User user : users) {
-                        if (user.getStatus() != UserStatus.BLOCKED) {
-                            PID userPID = user.getPID();
-                            if (!userPID.equals(host)) {
-                                counter.incrementAndGet();
-
-                                new java.lang.Thread(() -> {
-                                    try {
-                                        shareUser(context, user, threadAddresses);
-                                    } catch (Throwable e) {
-                                        Preferences.evaluateException(Preferences.EXCEPTION, e);
-
-                                    }
-
-                                }).start();
-
-                            }
-                        }
-                    }
-
                     if (users.isEmpty()) {
                         Preferences.warning(context.getString(R.string.no_peers_connected));
                     } else {
+
+                        ExecutorService sharedExecutor = Executors.newFixedThreadPool(5);
+
+                        LinkedList<Future<Boolean>> futures = new LinkedList<>();
+                        for (User user : users) {
+                            if (user.getStatus() != UserStatus.BLOCKED) {
+                                PID userPID = user.getPID();
+                                if (!userPID.equals(host)) {
+
+                                    Future<Boolean> future = sharedExecutor.submit(() ->
+                                            shareUser(context, user, threadAddresses));
+                                    futures.add(future);
+                                }
+                            }
+                        }
+                        int counter = 0;
+                        for (Future<Boolean> future : futures) {
+                            Boolean send = future.get();
+                            if (send) {
+                                counter++;
+                            }
+                        }
+
                         Preferences.warning(context.getString(R.string.data_shared_with_peers,
-                                String.valueOf(counter.get())));
+                                String.valueOf(counter)));
                     }
 
                 } catch (Throwable e) {
