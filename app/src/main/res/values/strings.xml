@@ -38,6 +38,7 @@
     <string name="action_scan_peer">Scan Peer</string>
     <string name="action_edit_peer">Edit Peer</string>
     <string name="multihash_not_valid">Multihash is not valid</string>
+    <string name="codec_not_supported">Codec is not supported</string>
     <string name="peers">Peers</string>
     <string name="console">Console</string>
     <string name="files">Files</string>

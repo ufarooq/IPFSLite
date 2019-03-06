@@ -138,8 +138,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    public void downloadMultihash(@NonNull String multihash) {
-        checkNotNull(multihash);
+    public void downloadMultihash(@NonNull String codec) {
+        checkNotNull(codec);
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
@@ -153,9 +153,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        PID pid = Preferences.getPID(getApplicationContext());
-        checkNotNull(pid);
-        Service.downloadMultihash(getApplicationContext(), pid, multihash);
+
+        CodecDecider codecDecider = CodecDecider.evaluate(codec);
+        if (codecDecider.getCodex() == CodecDecider.Codec.MULTIHASH ||
+                codecDecider.getCodex() == CodecDecider.Codec.URI) {
+
+            PID pid = Preferences.getPID(getApplicationContext());
+            checkNotNull(pid);
+            String multihash = codecDecider.getMultihash().toBase58();
+            Service.downloadMultihash(getApplicationContext(), pid, multihash);
+        } /*else if(codecDecider.getCodex() == CodecDecider.Codec.URI) {
+
+            PID pid = Preferences.getPID(getApplicationContext());
+            checkNotNull(pid);
+            URI uri = codecDecider.getUri();
+            String multihash = codecDecider.getMultihash().toBase58();
+            Service.downloadURI(getApplicationContext(), pid, uri, multihash);
+        } */ else {
+            Preferences.error(getString(R.string.codec_not_supported));
+        }
     }
 
     @Override
@@ -822,9 +838,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             executor.submit(() -> {
                 try {
                     Thread threadObject = threads.getThreadByAddress(thread);
-                    checkNotNull(threadObject);
-                    threads.removeThread(ipfs, threadObject);
-                    threads.repo_gc(ipfs);
+                    if (threadObject != null) {
+                        threads.removeThread(ipfs, threadObject);
+                    }
                 } catch (Throwable e) {
                     // ignore exception for now
                 }

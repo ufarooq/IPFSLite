@@ -30,6 +30,7 @@ import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
+import threads.core.mdl.EventViewModel;
 import threads.core.mdl.ThreadsViewModel;
 import threads.ipfs.Network;
 import threads.share.ThreadActionDialogFragment;
@@ -159,12 +160,13 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        RecyclerView mRecyclerView = view.findViewById(R.id.recycler_view_message_list);
+        mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
+
+
         Activity activity = getActivity();
         if (activity != null) {
-            RecyclerView mRecyclerView = view.findViewById(R.id.recycler_view_message_list);
-            mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
-
-
             LinearLayoutManager linearLayout = new LinearLayoutManager(activity);
             mRecyclerView.setLayoutManager(linearLayout);
             threadsViewAdapter = new ThreadsViewAdapter(activity, this);
@@ -226,6 +228,30 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             mLastClickTime = SystemClock.elapsedRealtime();
 
             shareAction();
+
+        });
+
+
+        EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
+
+
+        eventViewModel.getThreadSelectEvent().observe(this, (event) -> {
+            try {
+                if (event != null) {
+
+                    if (threadsViewAdapter != null) {
+                        int pos = threadsViewAdapter.getPositionOfItem(event.getContent());
+                        if (pos > -1) {
+                            threadAddress = event.getContent();
+                            threadsViewAdapter.setState(threadAddress, ThreadsViewAdapter.State.SELECTED);
+                            mRecyclerView.scrollToPosition(pos);
+                        }
+                    }
+
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
 
         });
 

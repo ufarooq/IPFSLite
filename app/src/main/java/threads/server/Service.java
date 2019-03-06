@@ -16,7 +16,8 @@ import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.Date;
+import java.net.URI;
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -192,6 +193,8 @@ class Service {
 
                     } catch (Throwable e) {
                         threadsAPI.setStatus(thread, ThreadStatus.ERROR);
+                    } finally {
+                        Preferences.event(Preferences.THREAD_SELECT_EVENT, thread.getAddress());
                     }
 
                 } catch (Throwable e) {
@@ -381,8 +384,9 @@ class Service {
 
                     for (String address : addresses) {
                         Thread thread = threadsAPI.getThreadByAddress(address);
-                        checkNotNull(thread);
-                        threadsAPI.removeThread(ipfs, thread);
+                        if (thread != null) {
+                            threadsAPI.removeThread(ipfs, thread);
+                        }
                     }
                     threadsAPI.repo_gc(ipfs);
 
@@ -393,6 +397,63 @@ class Service {
         }
     }
 
+
+    static void downloadURI(@NonNull Context context,
+                            @NonNull PID creator,
+                            @NonNull URI uri,
+                            @NonNull String multihash) {
+
+        checkNotNull(context);
+        checkNotNull(creator);
+        checkNotNull(uri);
+        checkNotNull(multihash);
+
+        final THREADS threads = Singleton.getInstance().getThreads();
+
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+
+            EXECUTOR_SERVICE.submit(() -> {
+                try {
+
+                    // check if thread exists with multihash
+                    CID cid = CID.create(multihash);
+                    List<Thread> entries = threads.getThreadsByCID(cid);
+                    if (!entries.isEmpty()) {
+                        for (Thread entry : entries) {
+                            if (entry.getStatus() != ThreadStatus.ONLINE) {
+                                downloadURI(context, threads, ipfs, entry, uri);
+                            } else {
+                                // UPDATE UI
+                                Preferences.event(Preferences.THREAD_SELECT_EVENT,
+                                        entry.getAddress());
+                            }
+                        }
+                    } else {
+                        User user = threads.getUserByPID(creator);
+                        checkNotNull(user);
+
+
+                        byte[] image = THREADS.getImage(context.getApplicationContext(),
+                                user.getAlias(), R.drawable.file_document);
+
+                        Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
+                                "", cid, false, false);
+                        thread.setImage(ipfs.add(image, true));
+                        thread.setMimeType("");
+                        threads.storeThread(thread);
+
+
+                        downloadURI(context, threads, ipfs, thread, uri);
+                    }
+
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        }
+    }
 
     static void downloadMultihash(@NonNull Context context,
                                   @NonNull PID creator,
@@ -425,9 +486,12 @@ class Service {
                             if (entry.getStatus() != ThreadStatus.ONLINE) {
                                 downloadMultihash(context, threads, ipfs, entry);
                             } else {
-                                threads.setDate(entry, new Date());
+                                // UPDATE UI
+                                Preferences.event(Preferences.THREAD_SELECT_EVENT,
+                                        entry.getAddress());
                             }
                         }
+
                     } else {
                         User user = threads.getUserByPID(creator);
                         checkNotNull(user);
@@ -442,9 +506,10 @@ class Service {
                         thread.setMimeType("");
                         threads.storeThread(thread);
 
-                        downloadMultihash(context, threads, ipfs, thread);
-                    }
 
+                        downloadMultihash(context, threads, ipfs, thread);
+
+                    }
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -518,33 +583,65 @@ class Service {
         }
     }
 
-    private static void downloadMultihash(@NonNull Context context,
-                                          @NonNull THREADS threads,
-                                          @NonNull IPFS ipfs,
-                                          @NonNull Thread thread) {
+    private static void downloadURI(@NonNull Context context,
+                                    @NonNull THREADS threads,
+                                    @NonNull IPFS ipfs,
+                                    @NonNull Thread thread,
+                                    @NonNull URI uri) {
+        checkNotNull(context);
+        checkNotNull(threads);
+        checkNotNull(ipfs);
+        checkNotNull(thread);
+        checkNotNull(uri);
+
+        threads.setStatus(thread, ThreadStatus.OFFLINE);
+
+
+        try {
+            URL url = uri.toURL();
+            ipfs.add(url.openStream(), false);
+
+            threads.setStatus(thread, ThreadStatus.ONLINE);
+
+            Link link = evaluateLinks(context, threads, ipfs, thread, false);
+            if (link == null) {
+                return;
+            }
+
+            // UPDATE UI
+            Preferences.event(Preferences.THREAD_SELECT_EVENT, thread.getAddress());
+
+            NotificationSender.showLinkNotification(context.getApplicationContext(), link);
+
+        } catch (Throwable e) {
+            downloadMultihash(context, threads, ipfs, thread);
+        }
+
+
+    }
+
+    private static Link evaluateLinks(@NonNull Context context,
+                                      @NonNull THREADS threads,
+                                      @NonNull IPFS ipfs,
+                                      @NonNull Thread thread,
+                                      boolean offline) {
         checkNotNull(context);
         checkNotNull(threads);
         checkNotNull(ipfs);
         checkNotNull(thread);
 
 
-        CID cid = thread.getCid();
-        checkNotNull(cid);
-        String multihash = cid.getCid();
-
-        threads.setStatus(thread, ThreadStatus.OFFLINE);
-
-        List<Link> links = threads.getLinks(ipfs, thread, Application.CON_TIMEOUT, false);
+        List<Link> links = threads.getLinks(ipfs, thread, Application.CON_TIMEOUT, offline);
 
         if (links.isEmpty()) {
             threads.setStatus(thread, ThreadStatus.ERROR);
-            return;
+            return null;
         }
 
         if (links.size() > 1) {
             threads.setStatus(thread, ThreadStatus.ERROR);
             Preferences.warning(context.getString(R.string.sorry_not_yet_implemented));
-            return;
+            return null;
         }
         Link link = links.get(0);
 
@@ -560,6 +657,36 @@ class Service {
                 threads.setMimeType(thread, mimeType);
             }
         }
+        return link;
+    }
+
+
+    private static void downloadMultihash(@NonNull Context context,
+                                          @NonNull THREADS threads,
+                                          @NonNull IPFS ipfs,
+                                          @NonNull Thread thread) {
+        checkNotNull(context);
+        checkNotNull(threads);
+        checkNotNull(ipfs);
+        checkNotNull(thread);
+
+
+        CID cid = thread.getCid();
+        checkNotNull(cid);
+        String multihash = cid.getCid();
+        threads.setStatus(thread, ThreadStatus.OFFLINE);
+
+        Link link = evaluateLinks(context, threads, ipfs, thread, false);
+        if (link == null) {
+            return;
+        }
+
+        // UPDATE UI
+        Preferences.event(Preferences.THREAD_SELECT_EVENT, thread.getAddress());
+
+
+        String filename = link.getPath();
+
 
         NotificationCompat.Builder builder =
                 NotificationSender.createDownloadProgressNotification(

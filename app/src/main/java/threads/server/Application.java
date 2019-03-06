@@ -20,7 +20,6 @@ public class Application extends android.app.Application {
     private static final String AUTO_CONNECTED_KEY = "autoConnectedKey";
 
 
-
     private static void init(@NonNull Context context) {
         checkNotNull(context);
 
