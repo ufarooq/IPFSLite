@@ -620,6 +620,24 @@ class Service {
 
     }
 
+
+    private static void downloadThread(@NonNull IPFS ipfs, @NonNull Thread thread, boolean offline) {
+        checkNotNull(ipfs);
+        checkNotNull(thread);
+        //checkArgument(timeout > 0);
+        CID cid = thread.getCid();
+        try {
+
+            //ipfs.cmd("object", "get", cid.getCid());
+            ipfs.cmd("get", cid.getCid());
+            //System.out.println(new String(content));
+
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+
+    }
+
     private static Link evaluateLinks(@NonNull Context context,
                                       @NonNull THREADS threads,
                                       @NonNull IPFS ipfs,
@@ -634,6 +652,8 @@ class Service {
         List<Link> links = threads.getLinks(ipfs, thread, Application.CON_TIMEOUT, offline);
 
         if (links.isEmpty()) {
+            //downloadThread(ipfs, thread, offline);
+            Preferences.warning(context.getString(R.string.sorry_not_yet_implemented));
             threads.setStatus(thread, ThreadStatus.ERROR);
             return null;
         }

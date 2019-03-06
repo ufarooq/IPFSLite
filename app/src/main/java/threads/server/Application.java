@@ -31,7 +31,7 @@ public class Application extends android.app.Application {
                 try {
 
                     Service.createHost(context, ipfs);
-                    Service.createRelay(context, ipfs);
+                    //Service.createRelay(context, ipfs);
 
                     threads.storeMessage(threads.createMessage(MessageKind.INFO,
                             "\nWelcome to IPFS",
