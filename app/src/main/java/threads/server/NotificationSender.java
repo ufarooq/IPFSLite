@@ -13,7 +13,6 @@ import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import threads.core.Preferences;
-import threads.ipfs.api.Link;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -45,14 +44,13 @@ class NotificationSender {
         }
     }
 
-    static void showLinkNotification(@NonNull Context context,
-                                     @NonNull Link link) {
+    static void showNotification(@NonNull Context context, @NonNull String message) {
         checkNotNull(context);
-        checkNotNull(link);
+        checkNotNull(message);
         try {
             buildGroupNotification(context);
             NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-            Notification notification = createNotification(context, link.getPath());
+            Notification notification = createNotification(context, message);
             notificationManager.notify(NOTIFICATIONS_COUNTER.incrementAndGet(), notification);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);

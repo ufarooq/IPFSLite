@@ -162,14 +162,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             checkNotNull(pid);
             String multihash = codecDecider.getMultihash().toBase58();
             Service.downloadMultihash(getApplicationContext(), pid, multihash);
-        } /*else if(codecDecider.getCodex() == CodecDecider.Codec.URI) {
-
-            PID pid = Preferences.getPID(getApplicationContext());
-            checkNotNull(pid);
-            URI uri = codecDecider.getUri();
-            String multihash = codecDecider.getMultihash().toBase58();
-            Service.downloadURI(getApplicationContext(), pid, uri, multihash);
-        } */ else {
+        } else {
             Preferences.error(getString(R.string.codec_not_supported));
         }
     }
@@ -807,21 +800,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     List<Link> links = threadsAPI.getLinks(ipfs, threadObject,
                             Application.CON_TIMEOUT, true);
-                    Link link = links.get(0);
-                    String path = link.getPath();
 
-                    Uri uri = Uri.parse(Preferences.getGateway(getApplicationContext()) + multihash + "/" + path);
+                    String path = "";
+                    if (links.size() == 1) {
+                        Link link = links.get(0);
+                        path = "/" + link.getPath();
+                    }
 
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setDataAndType(uri, threadObject.getMimeType());
-                    intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-                            Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(intent);
+                    Uri uri = Uri.parse(Preferences.getGateway(getApplicationContext()) +
+                            multihash + path);
+
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
+                        intent.setDataAndType(uri, threadObject.getMimeType()); // TODO might not be right
+                        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+                                Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        startActivity(intent);
 
 
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    } catch (Throwable e) {
+                        startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                    }
+                } catch (Throwable ex) {
+                    Preferences.error(getString(R.string.no_activity_found_to_handle_uri));
                 }
             });
         }

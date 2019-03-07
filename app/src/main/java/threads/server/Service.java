@@ -4,11 +4,9 @@ import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.provider.OpenableColumns;
 import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
@@ -16,13 +14,12 @@ import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
@@ -126,17 +123,13 @@ class Service {
     static void storeData(@NonNull Context context, @NonNull Uri uri) {
         checkNotNull(context);
         checkNotNull(uri);
-        Cursor returnCursor = context.getContentResolver().query(
-                uri, null, null, null, null);
 
-        checkNotNull(returnCursor);
-        int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-        returnCursor.moveToFirst();
 
-        final String filename = returnCursor.getString(nameIndex);
-        returnCursor.close();
-        String mimeType = context.getContentResolver().getType(uri);
-        checkNotNull(mimeType);
+        THREADS.FileDetails fileDetails = THREADS.getFileDetails(context, uri);
+        if (fileDetails == null) {
+            Preferences.error(context.getString(R.string.file_not_supported));
+            return;
+        }
 
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
@@ -169,16 +162,16 @@ class Service {
 
 
                     Thread thread = threadsAPI.createThread(user, ThreadStatus.OFFLINE, Kind.IN,
-                            filename, null, false, false);
+                            fileDetails.getFileName(), null, false, false);
 
                     CID image = ipfs.add(bytes, true);
                     thread.setImage(image);
-                    thread.setMimeType(mimeType);
+                    thread.setMimeType(fileDetails.getMimeType());
                     threadsAPI.storeThread(thread);
 
 
                     try {
-                        CID cid = ipfs.add(inputStream, filename, true, false);
+                        CID cid = ipfs.add(inputStream, fileDetails.getFileName(), true, false);
                         checkNotNull(cid);
 
                         // cleanup of entries with same CID
@@ -398,63 +391,6 @@ class Service {
     }
 
 
-    static void downloadURI(@NonNull Context context,
-                            @NonNull PID creator,
-                            @NonNull URI uri,
-                            @NonNull String multihash) {
-
-        checkNotNull(context);
-        checkNotNull(creator);
-        checkNotNull(uri);
-        checkNotNull(multihash);
-
-        final THREADS threads = Singleton.getInstance().getThreads();
-
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-        if (ipfs != null) {
-
-            EXECUTOR_SERVICE.submit(() -> {
-                try {
-
-                    // check if thread exists with multihash
-                    CID cid = CID.create(multihash);
-                    List<Thread> entries = threads.getThreadsByCID(cid);
-                    if (!entries.isEmpty()) {
-                        for (Thread entry : entries) {
-                            if (entry.getStatus() != ThreadStatus.ONLINE) {
-                                downloadURI(context, threads, ipfs, entry, uri);
-                            } else {
-                                // UPDATE UI
-                                Preferences.event(Preferences.THREAD_SELECT_EVENT,
-                                        entry.getAddress());
-                            }
-                        }
-                    } else {
-                        User user = threads.getUserByPID(creator);
-                        checkNotNull(user);
-
-
-                        byte[] image = THREADS.getImage(context.getApplicationContext(),
-                                user.getAlias(), R.drawable.file_document);
-
-                        Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
-                                "", cid, false, false);
-                        thread.setImage(ipfs.add(image, true));
-                        thread.setMimeType("");
-                        threads.storeThread(thread);
-
-
-                        downloadURI(context, threads, ipfs, thread, uri);
-                    }
-
-
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
-            });
-        }
-    }
-
     static void downloadMultihash(@NonNull Context context,
                                   @NonNull PID creator,
                                   @NonNull String multihash) {
@@ -493,20 +429,7 @@ class Service {
                         }
 
                     } else {
-                        User user = threads.getUserByPID(creator);
-                        checkNotNull(user);
-
-
-                        byte[] image = THREADS.getImage(context.getApplicationContext(),
-                                user.getAlias(), R.drawable.file_document);
-
-                        Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
-                                "", cid, false, false);
-                        thread.setImage(ipfs.add(image, true));
-                        thread.setMimeType("");
-                        threads.storeThread(thread);
-
-
+                        Thread thread = createThread(context, ipfs, creator, cid);
                         downloadMultihash(context, threads, ipfs, thread);
 
                     }
@@ -516,6 +439,30 @@ class Service {
                 }
             });
         }
+    }
+
+    private static Thread createThread(@NonNull Context context,
+                                       @NonNull IPFS ipfs,
+                                       @NonNull PID creator,
+                                       @NonNull CID cid) {
+        final THREADS threads = Singleton.getInstance().getThreads();
+        User user = threads.getUserByPID(creator);
+        checkNotNull(user);
+
+
+        Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
+                "", cid, false, false);
+        try {
+            byte[] image = THREADS.getImage(context.getApplicationContext(),
+                    user.getAlias(), R.drawable.file_document);
+            thread.setImage(ipfs.add(image, true));
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+
+        thread.setMimeType("");
+        threads.storeThread(thread);
+        return thread;
     }
 
     static void localDownloadThread(@NonNull Context context, @NonNull String thread) {
@@ -540,13 +487,22 @@ class Service {
 
                     List<Link> links = threadsAPI.getLinks(ipfs, threadObject,
                             Application.CON_TIMEOUT, true);
-                    Link link = links.get(0);
-                    String path = link.getPath();
 
-                    Uri uri = Uri.parse(Preferences.getGateway(context) +
-                            cid.getCid() + "/" + path);
 
+                    Uri uri;
+                    String path;
+                    if (links.isEmpty() || links.size() > 1) {
+                        path = cid.getCid(); // TODO get real name
+                        uri = Uri.parse(Preferences.getGateway(context) + cid.getCid());
+                    } else {
+                        Link link = links.get(0);
+                        path = link.getPath();
+                        uri = Uri.parse(Preferences.getGateway(context) +
+                                cid.getCid() + "/" + path);
+                    }
                     DownloadManager.Request request = new DownloadManager.Request(uri);
+
+
                     request.setTitle(path);
 
                     request.setNotificationVisibility(
@@ -583,87 +539,60 @@ class Service {
         }
     }
 
-    private static void downloadURI(@NonNull Context context,
+
+    private static void downloadCID(@NonNull Context context,
                                     @NonNull THREADS threads,
                                     @NonNull IPFS ipfs,
-                                    @NonNull Thread thread,
-                                    @NonNull URI uri) {
-        checkNotNull(context);
-        checkNotNull(threads);
-        checkNotNull(ipfs);
-        checkNotNull(thread);
-        checkNotNull(uri);
-
-        threads.setStatus(thread, ThreadStatus.OFFLINE);
+                                    @NonNull Thread thread) {
+        // UPDATE UI
+        Preferences.event(Preferences.THREAD_SELECT_EVENT, thread.getAddress());
 
 
+        CID cid = thread.getCid();
+        checkNotNull(cid);
+
+
+        File file = getCacheFile(context, cid.getCid());
+
+        boolean success = true;
         try {
-            URL url = uri.toURL();
-            ipfs.add(url.openStream(), false);
 
-            threads.setStatus(thread, ThreadStatus.ONLINE);
+            threads.store(ipfs, file, cid, true, false);
 
-            Link link = evaluateLinks(context, threads, ipfs, thread, false);
-            if (link == null) {
-                return;
+            try {
+                byte[] image = THREADS.getPreviewImage(context, file);
+                if (image != null) {
+                    threads.setImage(ipfs, thread, image);
+                }
+            } catch (Throwable e) {
+                // no exception will be reported
+            } finally {
+                threads.setStatus(thread, ThreadStatus.ONLINE);
             }
 
-            // UPDATE UI
-            Preferences.event(Preferences.THREAD_SELECT_EVENT, thread.getAddress());
-
-            NotificationSender.showLinkNotification(context.getApplicationContext(), link);
 
         } catch (Throwable e) {
-            downloadMultihash(context, threads, ipfs, thread);
-        }
-
-
-    }
-
-
-    private static void downloadThread(@NonNull IPFS ipfs, @NonNull Thread thread, boolean offline) {
-        checkNotNull(ipfs);
-        checkNotNull(thread);
-        //checkArgument(timeout > 0);
-        CID cid = thread.getCid();
-        try {
-
-            //ipfs.cmd("object", "get", cid.getCid());
-            ipfs.cmd("get", cid.getCid());
-            //System.out.println(new String(content));
-
-        } catch (Throwable e) {
+            success = false;
+            threads.setStatus(thread, ThreadStatus.ERROR);
             Preferences.evaluateException(Preferences.EXCEPTION, e);
+        } finally {
+            file.delete();
+        }
+
+        if (success) {
+            NotificationSender.showNotification(context.getApplicationContext(), cid.getCid());
         }
 
     }
 
-    private static Link evaluateLinks(@NonNull Context context,
-                                      @NonNull THREADS threads,
-                                      @NonNull IPFS ipfs,
-                                      @NonNull Thread thread,
-                                      boolean offline) {
-        checkNotNull(context);
-        checkNotNull(threads);
-        checkNotNull(ipfs);
-        checkNotNull(thread);
 
-
-        List<Link> links = threads.getLinks(ipfs, thread, Application.CON_TIMEOUT, offline);
-
-        if (links.isEmpty()) {
-            //downloadThread(ipfs, thread, offline);
-            Preferences.warning(context.getString(R.string.sorry_not_yet_implemented));
-            threads.setStatus(thread, ThreadStatus.ERROR);
-            return null;
-        }
-
-        if (links.size() > 1) {
-            threads.setStatus(thread, ThreadStatus.ERROR);
-            Preferences.warning(context.getString(R.string.sorry_not_yet_implemented));
-            return null;
-        }
-        Link link = links.get(0);
+    private static boolean downloadLink(@NonNull Context context,
+                                        @NonNull THREADS threads,
+                                        @NonNull IPFS ipfs,
+                                        @NonNull Thread thread,
+                                        @NonNull Link link) {
+        // UPDATE UI
+        Preferences.event(Preferences.THREAD_SELECT_EVENT, thread.getAddress());
 
         String filename = link.getPath();
         if (thread.getTitle().isEmpty()) {
@@ -677,35 +606,6 @@ class Service {
                 threads.setMimeType(thread, mimeType);
             }
         }
-        return link;
-    }
-
-
-    private static void downloadMultihash(@NonNull Context context,
-                                          @NonNull THREADS threads,
-                                          @NonNull IPFS ipfs,
-                                          @NonNull Thread thread) {
-        checkNotNull(context);
-        checkNotNull(threads);
-        checkNotNull(ipfs);
-        checkNotNull(thread);
-
-
-        CID cid = thread.getCid();
-        checkNotNull(cid);
-        String multihash = cid.getCid();
-        threads.setStatus(thread, ThreadStatus.OFFLINE);
-
-        Link link = evaluateLinks(context, threads, ipfs, thread, false);
-        if (link == null) {
-            return;
-        }
-
-        // UPDATE UI
-        Preferences.event(Preferences.THREAD_SELECT_EVENT, thread.getAddress());
-
-
-        String filename = link.getPath();
 
 
         NotificationCompat.Builder builder =
@@ -720,9 +620,9 @@ class Service {
             notificationManager.notify(notifyID, notification);
         }
 
-        File file = getCacheFile(context, multihash + filename);
+        File file = getCacheFile(context, System.currentTimeMillis() + filename);
 
-        boolean success = false;
+        boolean success;
         try {
 
             success = threads.store(ipfs, file,
@@ -752,6 +652,7 @@ class Service {
             }
 
         } catch (Throwable e) {
+            success = false;
             threads.setStatus(thread, ThreadStatus.ERROR);
         } finally {
             file.delete();
@@ -761,8 +662,103 @@ class Service {
         }
 
         if (success) {
-            NotificationSender.showLinkNotification(context.getApplicationContext(), link);
+            NotificationSender.showNotification(context.getApplicationContext(), link.getPath());
         }
+
+        return success;
+    }
+
+    private static void downloadLinks(@NonNull Context context,
+                                      @NonNull THREADS threads,
+                                      @NonNull IPFS ipfs,
+                                      @NonNull Thread thread,
+                                      @NonNull List<Link> links) {
+        // UPDATE UI
+        Preferences.event(Preferences.THREAD_SELECT_EVENT, thread.getAddress());
+
+
+        AtomicInteger successCounter = new AtomicInteger(0);
+        for (Link link : links) {
+
+            boolean success = false;
+            CID cid = link.getCid();
+            List<Thread> entries = threads.getThreadsByCID(cid);
+            if (!entries.isEmpty()) {
+                for (Thread entry : entries) {
+                    if (entry.getStatus() != ThreadStatus.ONLINE) {
+                        success = downloadLink(context, threads, ipfs, entry, link);
+                    } else {
+                        // UPDATE UI
+                        Preferences.event(Preferences.THREAD_SELECT_EVENT,
+                                entry.getAddress());
+                        success = true;
+                    }
+                }
+            } else {
+                Thread entry = createThread(context, ipfs, thread.getSenderPid(), cid);
+                success = downloadLink(context, threads, ipfs, entry, link);
+
+            }
+
+            if (success) {
+                successCounter.incrementAndGet();
+            }
+        }
+        if (successCounter.get() == links.size()) {
+            threads.setStatus(thread, ThreadStatus.ONLINE);
+        } else {
+            threads.setStatus(thread, ThreadStatus.ERROR);
+        }
+    }
+
+    private static void downloadMultihash(@NonNull Context context,
+                                          @NonNull THREADS threads,
+                                          @NonNull IPFS ipfs,
+                                          @NonNull Thread thread) {
+        checkNotNull(context);
+        checkNotNull(threads);
+        checkNotNull(ipfs);
+        checkNotNull(thread);
+
+
+        CID cid = thread.getCid();
+        checkNotNull(cid);
+        threads.setStatus(thread, ThreadStatus.OFFLINE);
+
+        List<Link> links = threads.getLinks(ipfs, thread, Application.CON_TIMEOUT, false);
+
+        if (links.isEmpty()) {
+            threads.setTitle(thread, cid.getCid());
+            threads.setMimeType(thread, Application.QR_CODE_MIME_TYPE);
+            try {
+                CID image = THREADS.createResourceImage(context, ipfs, R.drawable.qrcode);
+                threads.setImage(thread, image);
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+            downloadCID(context, threads, ipfs, thread);
+
+        } else if (links.size() > 1) {
+
+            // real directory
+            threads.setTitle(thread, cid.getCid());
+            threads.setMimeType(thread, Application.QR_CODE_MIME_TYPE);
+
+            try {
+                CID image = THREADS.createResourceImage(context, ipfs, R.drawable.qrcode);
+                threads.setImage(thread, image);
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+            downloadLinks(context, threads, ipfs, thread, links);
+        } else {
+
+            Link link = links.get(0);
+
+            downloadLink(context, threads, ipfs, thread, link);
+        }
+
+
     }
 
     @NonNull

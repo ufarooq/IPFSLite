@@ -46,6 +46,7 @@
     <string name="peer_exists_with_pid">Peer with the PID exists already</string>
     <string name="same_pid_like_host">Same peer ID like the hosts peer ID</string>
     <string name="sorry_not_yet_implemented">Sorry not yet implemented</string>
+    <string name="empty_implemented">Empty multihash, not supported</string>
     <string name="peer_name">New Peer Name</string>
     <string name="peer_is_blocked">Peer is blocked. Unblock first.</string>
     <string name="user_connect_try">Peer \"%1$s\" connection request</string>
@@ -61,4 +62,6 @@
     <string name="auto_connect_support">Peer Auto Connection</string>
     <string name="application_settings">Application Settings</string>
     <string name="ipfs_settings">IPFS Settings</string>
+    <string name="file_not_supported">File not supported.</string>
+    <string name="no_activity_found_to_handle_uri">No activity found which support the file.</string>
 </resources>
