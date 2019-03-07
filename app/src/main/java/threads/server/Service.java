@@ -7,6 +7,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.provider.DocumentsContract;
 import android.text.TextUtils;
 import android.webkit.MimeTypeMap;
 
@@ -14,6 +15,7 @@ import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -39,6 +41,7 @@ import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
 import threads.ipfs.api.PID;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
@@ -586,27 +589,66 @@ class Service {
     }
 
 
-    private static boolean downloadLink(@NonNull Context context,
-                                        @NonNull THREADS threads,
-                                        @NonNull IPFS ipfs,
-                                        @NonNull Thread thread,
-                                        @NonNull Link link) {
-        // UPDATE UI
-        Preferences.event(Preferences.THREAD_SELECT_EVENT, thread.getAddress());
+    private static boolean handleDirectoryLink(@NonNull Context context,
+                                               @NonNull THREADS threads,
+                                               @NonNull IPFS ipfs,
+                                               @NonNull Thread thread,
+                                               @NonNull Link link) {
 
         String filename = link.getPath();
-        if (thread.getTitle().isEmpty()) {
-            threads.setTitle(thread, filename);
+        threads.setTitle(thread, filename.substring(0, filename.length() - 1)); // remove "/"
+        threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
+
+        try {
+            CID image = THREADS.createResourceImage(context, ipfs, R.drawable.folder_outline);
+            threads.setImage(thread, image);
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
-        if (thread.getMimeType().isEmpty()) {
+
+        List<Link> links = getLinks(ipfs, link, Application.CON_TIMEOUT, false);
+
+        return downloadLinks(context, threads, ipfs, thread, links);
+
+    }
+
+    public static List<Link> getLinks(@NonNull IPFS ipfs,
+                                      @NonNull Link link,
+                                      long timeout,
+                                      boolean offline) {
+        checkNotNull(ipfs);
+        checkNotNull(link);
+        checkArgument(timeout > 0);
+        CID cid = link.getCid();
+        List<Link> links = new ArrayList<>();
+        try {
+            links.addAll(ipfs.ls(cid, timeout, offline));
+        } catch (Throwable e) {
+            // ignore exception
+        }
+        return links;
+    }
+
+
+    private static boolean handleContentLink(@NonNull Context context,
+                                             @NonNull THREADS threads,
+                                             @NonNull IPFS ipfs,
+                                             @NonNull Thread thread,
+                                             @NonNull Link link) {
+
+        String filename = link.getPath();
+        threads.setTitle(thread, filename);
+
+
             String extension = Files.getFileExtension(filename);
             String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
             if (mimeType != null) {
                 threads.setMimeType(thread, mimeType);
             }
-        }
 
+        Long size = link.getSize();
+        checkNotNull(size);
 
         NotificationCompat.Builder builder =
                 NotificationSender.createDownloadProgressNotification(
@@ -626,7 +668,7 @@ class Service {
         try {
 
             success = threads.store(ipfs, file,
-                    link.getCid(), link.getSize(), true, false, (percent) -> {
+                    link.getCid(), size, true, false, (percent) -> {
                         builder.setProgress(100, percent, false);
                         if (notificationManager != null) {
                             notificationManager.notify(notifyID, builder.build());
@@ -643,17 +685,12 @@ class Service {
                     }
                 } catch (Throwable e) {
                     // no exception will be reported
-                } finally {
-                    threads.setStatus(thread, ThreadStatus.ONLINE);
                 }
 
-            } else {
-                threads.setStatus(thread, ThreadStatus.ERROR);
             }
 
         } catch (Throwable e) {
             success = false;
-            threads.setStatus(thread, ThreadStatus.ERROR);
         } finally {
             file.delete();
             if (notificationManager != null) {
@@ -668,11 +705,32 @@ class Service {
         return success;
     }
 
-    private static void downloadLinks(@NonNull Context context,
-                                      @NonNull THREADS threads,
-                                      @NonNull IPFS ipfs,
-                                      @NonNull Thread thread,
-                                      @NonNull List<Link> links) {
+    private static boolean downloadLink(@NonNull Context context,
+                                        @NonNull THREADS threads,
+                                        @NonNull IPFS ipfs,
+                                        @NonNull Thread thread,
+                                        @NonNull Link link) {
+        // UPDATE UI
+        Preferences.event(Preferences.THREAD_SELECT_EVENT, thread.getAddress());
+
+        String filename = link.getPath();
+
+
+        if (filename.endsWith("/")) {
+            // assume this is a directory
+            return handleDirectoryLink(context, threads, ipfs, thread, link);
+        } else {
+            return handleContentLink(context, threads, ipfs, thread, link);
+        }
+
+
+    }
+
+    private static boolean downloadLinks(@NonNull Context context,
+                                         @NonNull THREADS threads,
+                                         @NonNull IPFS ipfs,
+                                         @NonNull Thread thread,
+                                         @NonNull List<Link> links) {
         // UPDATE UI
         Preferences.event(Preferences.THREAD_SELECT_EVENT, thread.getAddress());
 
@@ -698,17 +756,20 @@ class Service {
                 Thread entry = createThread(context, ipfs, thread.getSenderPid(), cid);
                 success = downloadLink(context, threads, ipfs, entry, link);
 
+                if (success) {
+                    threads.setStatus(entry, ThreadStatus.ONLINE);
+                } else {
+                    threads.setStatus(entry, ThreadStatus.ERROR);
+                }
+
             }
 
             if (success) {
                 successCounter.incrementAndGet();
             }
         }
-        if (successCounter.get() == links.size()) {
-            threads.setStatus(thread, ThreadStatus.ONLINE);
-        } else {
-            threads.setStatus(thread, ThreadStatus.ERROR);
-        }
+
+        return successCounter.get() == links.size();
     }
 
     private static void downloadMultihash(@NonNull Context context,
@@ -750,12 +811,22 @@ class Service {
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
-            downloadLinks(context, threads, ipfs, thread, links);
+            boolean result = downloadLinks(context, threads, ipfs, thread, links);
+            if (result) {
+                threads.setStatus(thread, ThreadStatus.ONLINE);
+            } else {
+                threads.setStatus(thread, ThreadStatus.ERROR);
+            }
         } else {
 
             Link link = links.get(0);
 
-            downloadLink(context, threads, ipfs, thread, link);
+            boolean result = downloadLink(context, threads, ipfs, thread, link);
+            if (result) {
+                threads.setStatus(thread, ThreadStatus.ONLINE);
+            } else {
+                threads.setStatus(thread, ThreadStatus.ERROR);
+            }
         }
 
 
