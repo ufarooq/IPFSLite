@@ -31,8 +31,10 @@ import threads.core.THREADS;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.mdl.EventViewModel;
-import threads.core.mdl.ThreadsViewModel;
+import threads.core.mdl.ThreadModelFactory;
+import threads.core.mdl.ThreadViewModel;
 import threads.ipfs.Network;
+import threads.ipfs.api.PID;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThreadsViewAdapter;
 
@@ -176,15 +178,19 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             mRecyclerView.setLayoutManager(linearLayout);
             threadsViewAdapter = new ThreadsViewAdapter(activity, this);
             mRecyclerView.setAdapter(threadsViewAdapter);
-            ThreadsViewModel threadsViewModel = ViewModelProviders.of(this).get(ThreadsViewModel.class);
-            threadsViewModel.getThreads().observe(this, (threads) -> {
-                try {
-                    if (threads != null) {
-                        threads.sort(Comparator.comparing(Thread::getDate).reversed());
-                        threadsViewAdapter.updateData(threads);
-                    }
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+
+            PID pid = Preferences.getPID(getActivity()); // TODO current address
+            checkNotNull(pid);
+
+
+            ThreadViewModel threadViewModel = ViewModelProviders.of(this,
+                    new ThreadModelFactory(getActivity().getApplication(), pid.getPid())).get(
+                    ThreadViewModel.class);
+
+            threadViewModel.getThreads().observe(this, (threads) -> {
+                if (threads != null) {
+                    threads.sort(Comparator.comparing(Thread::getDate).reversed());
+                    threadsViewAdapter.updateData(threads);
                 }
 
             });

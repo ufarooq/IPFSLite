@@ -146,26 +146,26 @@ class Service {
 
                     PID pid = Preferences.getPID(context);
                     checkNotNull(pid);
-                    User user = threadsAPI.getUserByPID(pid);
-                    checkNotNull(user);
+                    User host = threadsAPI.getUserByPID(pid);
+                    checkNotNull(host);
 
 
                     byte[] bytes;
                     try {
                         bytes = THREADS.getPreviewImage(context, uri);
                         if (bytes == null) {
-                            bytes = THREADS.getImage(context, user.getAlias(),
+                            bytes = THREADS.getImage(context, host.getAlias(),
                                     R.drawable.file_document);
                         }
                     } catch (Throwable e) {
                         // ignore exception
-                        bytes = THREADS.getImage(context, user.getAlias(),
+                        bytes = THREADS.getImage(context, host.getAlias(),
                                 R.drawable.file_document);
                     }
 
 
-                    Thread thread = threadsAPI.createThread(user, ThreadStatus.OFFLINE, Kind.IN,
-                            fileDetails.getFileName(), null, false, false);
+                    Thread thread = threadsAPI.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
+                            fileDetails.getFileName(), pid.getPid(), null, false, false);
 
                     CID image = ipfs.add(bytes, true);
                     thread.setImage(image);
@@ -405,6 +405,9 @@ class Service {
 
         final THREADS threads = Singleton.getInstance().getThreads();
 
+        final PID pid = Preferences.getPID(context);
+        checkNotNull(pid);
+
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
 
@@ -433,7 +436,7 @@ class Service {
                         }
 
                     } else {
-                        long idx = createThread(context, ipfs, creator, cid);
+                        long idx = createThread(context, ipfs, creator, cid, pid.getPid());
                         Thread thread = threads.getThreadByIdx(idx);
                         checkNotNull(thread);
                         downloadMultihash(context, threads, ipfs, thread);
@@ -450,14 +453,24 @@ class Service {
     private static long createThread(@NonNull Context context,
                                      @NonNull IPFS ipfs,
                                      @NonNull PID creator,
-                                     @NonNull CID cid) {
+                                     @NonNull CID cid,
+                                     @NonNull String address) {
+
+        checkNotNull(context);
+        checkNotNull(ipfs);
+        checkNotNull(creator);
+        checkNotNull(cid);
+        checkNotNull(address);
+
         final THREADS threads = Singleton.getInstance().getThreads();
+
+
         User user = threads.getUserByPID(creator);
         checkNotNull(user);
 
 
         Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
-                "", cid, false, false);
+                address, "", cid, false, false);
         try {
             byte[] image = THREADS.getImage(context.getApplicationContext(),
                     user.getAlias(), R.drawable.file_document);
@@ -736,6 +749,7 @@ class Service {
         Preferences.event(Preferences.THREAD_SELECT_EVENT, String.valueOf(thread.getIdx()));
 
 
+
         AtomicInteger successCounter = new AtomicInteger(0);
         for (Link link : links) {
 
@@ -754,7 +768,7 @@ class Service {
                     }
                 }
             } else {
-                long idx = createThread(context, ipfs, thread.getSenderPid(), cid);
+                long idx = createThread(context, ipfs, thread.getSenderPid(), cid, cid.getCid()); // TODO check if correct
                 Thread entry = threads.getThreadByIdx(idx);
                 checkNotNull(entry);
                 success = downloadLink(context, threads, ipfs, entry, link);
