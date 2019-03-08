@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NameDialogFragment.ActionListener {
     public static final int SELECT_FILES = 1;
     private static final int DOWNLOAD_EXTERNAL_STORAGE = 2;
-    private final AtomicReference<String> storedThread = new AtomicReference<>(null);
+    private final AtomicReference<Long> storedThread = new AtomicReference<>(null);
     private final AtomicBoolean idScan = new AtomicBoolean(false);
     private DrawerLayout drawer_layout;
     private FloatingActionButton fab_daemon;
@@ -740,21 +740,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickThreadBlock(@NonNull String thread) {
-        checkNotNull(thread);
+    public void clickThreadBlock(long idx) {
+
         // NOT implemented
     }
 
     @Override
-    public void clickThreadInfo(@NonNull String thread) {
-        checkNotNull(thread);
+    public void clickThreadInfo(long idx) {
+
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    Thread threadObject = threadsAPI.getThreadByAddress(thread);
+                    Thread threadObject = threadsAPI.getThreadByIdx(idx);
                     checkNotNull(threadObject);
 
                     CID cid = threadObject.getCid();
@@ -776,8 +776,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickThreadPlay(@NonNull String thread) {
-        checkNotNull(thread);
+    public void clickThreadPlay(long idx) {
 
         // CHECKED
         if (!DaemonService.DAEMON_RUNNING.get()) {
@@ -791,7 +790,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    Thread threadObject = threadsAPI.getThreadByAddress(thread);
+                    Thread threadObject = threadsAPI.getThreadByIdx(idx);
                     checkNotNull(threadObject);
 
                     CID cid = threadObject.getCid();
@@ -830,8 +829,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickThreadDelete(@NonNull String thread) {
-        checkNotNull(thread);
+    public void clickThreadDelete(long idx) {
 
         final THREADS threads = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
@@ -839,7 +837,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    Thread threadObject = threads.getThreadByAddress(thread);
+                    Thread threadObject = threads.getThreadByIdx(idx);
                     if (threadObject != null) {
                         threads.removeThread(ipfs, threadObject);
                     }
@@ -851,9 +849,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickThreadView(@NonNull String thread) {
-        checkNotNull(thread);
-
+    public void clickThreadView(long idx) {
 
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
@@ -861,7 +857,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    Thread threadObject = threadsAPI.getThreadByAddress(thread);
+                    Thread threadObject = threadsAPI.getThreadByIdx(idx);
                     checkNotNull(threadObject);
 
                     CID cid = threadObject.getCid();
@@ -883,8 +879,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickThreadShare(@NonNull String thread) {
-        checkNotNull(thread);
+    public void clickThreadShare(long idx) {
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
@@ -897,12 +892,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
         Service.shareThreads(getApplicationContext(), () -> {
-        }, thread);
+        }, idx);
 
     }
 
     @Override
-    public void clickThreadDownload(@NonNull String thread) {
+    public void clickThreadDownload(long idx) {
 
         // CHECKED
         if (!DaemonService.DAEMON_RUNNING.get()) {
@@ -910,7 +905,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        storedThread.set(thread);
+        storedThread.set(idx);
         try {
             if (ContextCompat.checkSelfPermission(getApplicationContext(),
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -920,7 +915,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         DOWNLOAD_EXTERNAL_STORAGE);
 
             } else {
-                Service.localDownloadThread(getApplicationContext(), thread);
+                Service.localDownloadThread(getApplicationContext(), idx);
             }
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);

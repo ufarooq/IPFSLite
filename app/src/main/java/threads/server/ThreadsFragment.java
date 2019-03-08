@@ -42,9 +42,9 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private static final String TAG = ThreadsFragment.class.getSimpleName();
     private static final String SELECTION = "SELECTION";
     @NonNull
-    private final ArrayList<String> threads = new ArrayList<>();
-    @NonNull
-    private String threadAddress = "";
+    private final List<Long> threads = new ArrayList<>();
+
+    private long threadIdx;
 
     private ActionListener actionListener;
 
@@ -127,9 +127,12 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
-
-        outState.putStringArrayList(TAG, threads);
-        outState.putString(SELECTION, threadAddress);
+        long[] storedEntries = new long[threads.size()];
+        for (int i = 0; i < threads.size(); i++) {
+            storedEntries[i] = threads.get(i);
+        }
+        outState.putLongArray(TAG, storedEntries);
+        outState.putLong(SELECTION, threadIdx);
 
         super.onSaveInstanceState(outState);
     }
@@ -138,20 +141,22 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (savedInstanceState != null) {
-            ArrayList<String> storedThreads = savedInstanceState.getStringArrayList(TAG);
+            long[] storedThreads = savedInstanceState.getLongArray(TAG);
             if (storedThreads != null) {
-                threads.addAll(storedThreads);
+                for (long idx : storedThreads) {
+                    threads.add(idx);
+                }
                 if (threadsViewAdapter != null) {
-                    for (String address : storedThreads) {
-                        threadsViewAdapter.setState(address, ThreadsViewAdapter.State.MARKED);
+                    for (long idx : storedThreads) {
+                        threadsViewAdapter.setState(idx, ThreadsViewAdapter.State.MARKED);
                     }
                 }
             }
-            String selection = savedInstanceState.getString(SELECTION);
-            if (selection != null) {
-                threadAddress = selection;
+            long selection = savedInstanceState.getLong(SELECTION);
+            if (selection > 0) {
+                threadIdx = selection;
                 if (threadsViewAdapter != null) {
-                    threadsViewAdapter.setState(threadAddress, ThreadsViewAdapter.State.SELECTED);
+                    threadsViewAdapter.setState(threadIdx, ThreadsViewAdapter.State.SELECTED);
                 }
             }
         }
@@ -240,11 +245,17 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 if (event != null) {
 
                     if (threadsViewAdapter != null) {
-                        int pos = threadsViewAdapter.getPositionOfItem(event.getContent());
-                        if (pos > -1) {
-                            threadAddress = event.getContent();
-                            threadsViewAdapter.setState(threadAddress, ThreadsViewAdapter.State.SELECTED);
-                            mRecyclerView.scrollToPosition(pos);
+                        String content = event.getContent();
+                        try {
+                            long idx = Long.valueOf(content);
+                            int pos = threadsViewAdapter.getPositionOfItem(idx);
+                            if (pos > -1) {
+                                threadIdx = idx;
+                                threadsViewAdapter.setState(threadIdx, ThreadsViewAdapter.State.SELECTED);
+                                mRecyclerView.scrollToPosition(pos);
+                            }
+                        } catch (Throwable e) {
+                            // ignore exception
                         }
                     }
 
@@ -286,7 +297,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             }
 
             Service.shareThreads(context, this::unmarkThreads,
-                    Iterables.toArray(threads, String.class));
+                    Iterables.toArray(threads, Long.class));
         }
     }
 
@@ -295,14 +306,14 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             THREADS threadsAPI = Singleton.getInstance().getThreads();
             List<Thread> threadObjects = threadsAPI.getThreads();
             for (Thread thread : threadObjects) {
-                if (!threads.contains(thread.getAddress())) {
-                    threads.add(thread.getAddress());
-                    threadAddress = thread.getAddress();
+                if (!threads.contains(thread.getIdx())) {
+                    threads.add(thread.getIdx());
+                    threadIdx = thread.getIdx();
                 }
             }
 
-            for (String thread : threads) {
-                threadsViewAdapter.setState(thread, ThreadsViewAdapter.State.MARKED);
+            for (long idx : threads) {
+                threadsViewAdapter.setState(idx, ThreadsViewAdapter.State.MARKED);
             }
 
             if (getActivity() != null) {
@@ -319,8 +330,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     private void unmarkThreads() {
         try {
-            for (String thread : threads) {
-                threadsViewAdapter.setState(thread, ThreadsViewAdapter.State.NONE);
+            for (long idx : threads) {
+                threadsViewAdapter.setState(idx, ThreadsViewAdapter.State.NONE);
             }
             threads.clear();
             if (getActivity() != null) {
@@ -337,10 +348,10 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     private void deleteAction() {
 
-        Service.deleteThreads(Iterables.toArray(threads, String.class));
+        Service.deleteThreads(Iterables.toArray(threads, Long.class));
         try {
-            if (threads.contains(threadAddress)) {
-                threadAddress = "";
+            if (threads.contains(threadIdx)) {
+                threadIdx = -1;
             }
             threads.clear();
         } catch (Throwable e) {
@@ -364,7 +375,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             FragmentManager fm = getActivity().getSupportFragmentManager();
 
             ThreadActionDialogFragment.newInstance(
-                    thread.getAddress(), true, true, true,
+                    thread.getIdx(), true, true, true,
                     true, false, shareActive, true)
                     .show(fm, ThreadActionDialogFragment.TAG);
         }
@@ -373,9 +384,9 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void onMarkClick(@NonNull Thread thread) {
         checkNotNull(thread);
-        if (!threads.contains(thread.getAddress())) {
+        if (!threads.contains(thread.getIdx())) {
             boolean isEmpty = threads.isEmpty();
-            threads.add(thread.getAddress());
+            threads.add(thread.getIdx());
             if (isEmpty) {
                 Activity activity = getActivity();
                 if (activity != null) {
@@ -390,7 +401,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void onClick(@NonNull Thread thread) {
         checkNotNull(thread);
         if (threads.isEmpty()) {
-            threadAddress = thread.getAddress();
+            threadIdx = thread.getIdx();
         }
 
     }
@@ -398,7 +409,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void onUnmarkClick(@NonNull Thread thread) {
         checkNotNull(thread);
-        threads.remove(thread.getAddress());
+        threads.remove(thread.getIdx());
         if (threads.isEmpty()) {
             Activity activity = getActivity();
             if (activity != null) {

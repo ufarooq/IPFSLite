@@ -170,9 +170,11 @@ class Service {
                     CID image = ipfs.add(bytes, true);
                     thread.setImage(image);
                     thread.setMimeType(fileDetails.getMimeType());
-                    threadsAPI.storeThread(thread);
+                    long idx = threadsAPI.storeThread(thread);
 
 
+                    thread = threadsAPI.getThreadByIdx(idx); // TODO optimize here
+                    checkNotNull(thread);
                     try {
                         CID cid = ipfs.add(inputStream, fileDetails.getFileName(), true, false);
                         checkNotNull(cid);
@@ -190,7 +192,8 @@ class Service {
                     } catch (Throwable e) {
                         threadsAPI.setStatus(thread, ThreadStatus.ERROR);
                     } finally {
-                        Preferences.event(Preferences.THREAD_SELECT_EVENT, thread.getAddress());
+                        Preferences.event(Preferences.THREAD_SELECT_EVENT,
+                                String.valueOf(thread.getIdx()));
                     }
 
                 } catch (Throwable e) {
@@ -278,7 +281,7 @@ class Service {
 
     private static boolean shareUser(@NonNull Context context,
                                      @NonNull User user,
-                                     @NonNull String... threadAddresses) {
+                                     @NonNull Long... idxs) {
         final THREADS threads = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         boolean success = false;
@@ -287,10 +290,10 @@ class Service {
                 if (threads.connect(ipfs, user.getPID(),
                         Preferences.getRelay(context), Application.CON_TIMEOUT)) {
 
-                    for (String thread : threadAddresses) {
+                    for (long idx : idxs) {
 
 
-                        Thread threadObject = threads.getThreadByAddress(thread);
+                        Thread threadObject = threads.getThreadByIdx(idx);
                         checkNotNull(threadObject);
 
                         CID cid = threadObject.getCid();
@@ -310,7 +313,7 @@ class Service {
 
     static void shareThreads(@NonNull Context context,
                              @NonNull ShareThreads listener,
-                             @NonNull String... threadAddresses) {
+                             @NonNull Long... idxs) {
         checkNotNull(context);
         checkNotNull(listener);
 
@@ -338,7 +341,7 @@ class Service {
                                 if (!userPID.equals(host)) {
 
                                     Future<Boolean> future = sharedExecutor.submit(() ->
-                                            shareUser(context, user, threadAddresses));
+                                            shareUser(context, user, idxs));
                                     futures.add(future);
                                 }
                             }
@@ -366,9 +369,7 @@ class Service {
         }
     }
 
-    static void deleteThreads(@NonNull String... addresses) {
-        checkNotNull(addresses);
-
+    static void deleteThreads(Long... idxs) {
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
 
         final IPFS ipfs = Singleton.getInstance().getIpfs();
@@ -378,8 +379,8 @@ class Service {
 
                 try {
 
-                    for (String address : addresses) {
-                        Thread thread = threadsAPI.getThreadByAddress(address);
+                    for (long idx : idxs) {
+                        Thread thread = threadsAPI.getThreadByIdx(idx);
                         if (thread != null) {
                             threadsAPI.removeThread(ipfs, thread);
                         }
@@ -427,12 +428,14 @@ class Service {
                             } else {
                                 // UPDATE UI
                                 Preferences.event(Preferences.THREAD_SELECT_EVENT,
-                                        entry.getAddress());
+                                        String.valueOf(entry.getIdx()));
                             }
                         }
 
                     } else {
-                        Thread thread = createThread(context, ipfs, creator, cid);
+                        long idx = createThread(context, ipfs, creator, cid);
+                        Thread thread = threads.getThreadByIdx(idx);
+                        checkNotNull(thread);
                         downloadMultihash(context, threads, ipfs, thread);
 
                     }
@@ -444,10 +447,10 @@ class Service {
         }
     }
 
-    private static Thread createThread(@NonNull Context context,
-                                       @NonNull IPFS ipfs,
-                                       @NonNull PID creator,
-                                       @NonNull CID cid) {
+    private static long createThread(@NonNull Context context,
+                                     @NonNull IPFS ipfs,
+                                     @NonNull PID creator,
+                                     @NonNull CID cid) {
         final THREADS threads = Singleton.getInstance().getThreads();
         User user = threads.getUserByPID(creator);
         checkNotNull(user);
@@ -462,15 +465,13 @@ class Service {
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-
         thread.setMimeType("");
-        threads.storeThread(thread);
-        return thread;
+        return threads.storeThread(thread);
     }
 
-    static void localDownloadThread(@NonNull Context context, @NonNull String thread) {
+    static void localDownloadThread(@NonNull Context context, long idx) {
         checkNotNull(context);
-        checkNotNull(thread);
+
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
         final DownloadManager downloadManager = (DownloadManager)
                 context.getSystemService(Context.DOWNLOAD_SERVICE);
@@ -482,7 +483,7 @@ class Service {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    Thread threadObject = threadsAPI.getThreadByAddress(thread);
+                    Thread threadObject = threadsAPI.getThreadByIdx(idx);
                     checkNotNull(threadObject);
 
                     CID cid = threadObject.getCid();
@@ -548,7 +549,7 @@ class Service {
                                     @NonNull IPFS ipfs,
                                     @NonNull Thread thread) {
         // UPDATE UI
-        Preferences.event(Preferences.THREAD_SELECT_EVENT, thread.getAddress());
+        Preferences.event(Preferences.THREAD_SELECT_EVENT, String.valueOf(thread.getIdx()));
 
 
         CID cid = thread.getCid();
@@ -711,7 +712,7 @@ class Service {
                                         @NonNull Thread thread,
                                         @NonNull Link link) {
         // UPDATE UI
-        Preferences.event(Preferences.THREAD_SELECT_EVENT, thread.getAddress());
+        Preferences.event(Preferences.THREAD_SELECT_EVENT, String.valueOf(thread.getIdx()));
 
         String filename = link.getPath();
 
@@ -732,7 +733,7 @@ class Service {
                                          @NonNull Thread thread,
                                          @NonNull List<Link> links) {
         // UPDATE UI
-        Preferences.event(Preferences.THREAD_SELECT_EVENT, thread.getAddress());
+        Preferences.event(Preferences.THREAD_SELECT_EVENT, String.valueOf(thread.getIdx()));
 
 
         AtomicInteger successCounter = new AtomicInteger(0);
@@ -748,12 +749,14 @@ class Service {
                     } else {
                         // UPDATE UI
                         Preferences.event(Preferences.THREAD_SELECT_EVENT,
-                                entry.getAddress());
+                                String.valueOf(entry.getIdx()));
                         success = true;
                     }
                 }
             } else {
-                Thread entry = createThread(context, ipfs, thread.getSenderPid(), cid);
+                long idx = createThread(context, ipfs, thread.getSenderPid(), cid);
+                Thread entry = threads.getThreadByIdx(idx);
+                checkNotNull(entry);
                 success = downloadLink(context, threads, ipfs, entry, link);
 
                 if (success) {
