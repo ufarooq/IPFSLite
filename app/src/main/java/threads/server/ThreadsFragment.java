@@ -17,6 +17,7 @@ import com.google.common.collect.Iterables;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,6 +34,7 @@ import threads.core.api.ThreadStatus;
 import threads.core.mdl.EventViewModel;
 import threads.core.mdl.ThreadViewModel;
 import threads.ipfs.Network;
+import threads.ipfs.api.PID;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThreadsViewAdapter;
 
@@ -52,7 +54,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private View view;
     private ThreadsViewAdapter threadsViewAdapter;
     private long mLastClickTime = 0;
-
+    private final AtomicBoolean toplevel = new AtomicBoolean(false);
 
     private static String getCompactString(@NonNull String title) {
         checkNotNull(title);
@@ -197,22 +199,33 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
             });
 
-
+            PID host = Preferences.getPID(getActivity());
+            checkNotNull(host);
+            toplevel.set(host.getPid().equals(address));
         }
-        threads.clear();
+        threads.clear(); // ??? sure TODO
 
 
         evaluateFabDeleteVisibility();
 
         FloatingActionButton fab_action = view.findViewById(R.id.fab_action);
+        if (toplevel.get()) {
+            fab_action.setImageResource(R.drawable.plus);
+        } else {
+            fab_action.setImageResource(R.drawable.arrow_left);
+        }
         fab_action.setOnClickListener((v) -> {
 
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1500) {
                 return;
             }
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            actionListener.clickUploadMultihash();
+            if (toplevel.get()) {
+                actionListener.clickUpload();
+            } else {
+                actionListener.clickBack(address, this);
+            }
 
         });
 
@@ -283,7 +296,11 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 view.findViewById(R.id.fab_delete).setVisibility(View.INVISIBLE);
                 view.findViewById(R.id.fab_share).setVisibility(View.INVISIBLE);
             } else {
-                view.findViewById(R.id.fab_delete).setVisibility(View.VISIBLE);
+                if (toplevel.get()) {
+                    view.findViewById(R.id.fab_delete).setVisibility(View.VISIBLE);
+                } else {
+                    view.findViewById(R.id.fab_delete).setVisibility(View.INVISIBLE);
+                }
                 view.findViewById(R.id.fab_share).setVisibility(View.VISIBLE);
             }
         } catch (Throwable e) {
@@ -385,7 +402,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
             ThreadActionDialogFragment.newInstance(
                     thread.getIdx(), true, true, true,
-                    true, false, shareActive, true)
+                    toplevel.get(), false, shareActive, true)
                     .show(fm, ThreadActionDialogFragment.TAG);
         }
     }
@@ -510,10 +527,12 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     public interface ActionListener {
 
-        void clickUploadMultihash();
+        void clickUpload();
 
         void scanMultihash();
 
         void selectThread(@NonNull Thread thread, @NonNull Fragment fragment);
+
+        void clickBack(@NonNull String address, @NonNull Fragment fragment);
     }
 }

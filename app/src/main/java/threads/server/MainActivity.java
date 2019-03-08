@@ -493,8 +493,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void selectThread(@NonNull Thread thread, Fragment fragment) {
+    public void selectThread(@NonNull Thread thread, @NonNull Fragment fragment) {
         checkNotNull(thread);
+        checkNotNull(fragment);
+
 
         CID cid = thread.getCid();
         checkNotNull(cid);
@@ -508,6 +510,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else {
             getSupportFragmentManager().beginTransaction().detach(fragment).attach(fragment).commit();
         }
+
+    }
+
+    @Override
+    public void clickBack(@NonNull String address, @NonNull Fragment fragment) {
 
     }
 
@@ -532,7 +539,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickUploadMultihash() {
+    public void clickUpload() {
 
         // CHECKED
         if (!DaemonService.DAEMON_RUNNING.get()) {
