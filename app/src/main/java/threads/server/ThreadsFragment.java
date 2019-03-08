@@ -40,8 +40,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.ThreadsViewAdapterListener {
     public static final String TAG = ThreadsFragment.class.getSimpleName();
-    private static final String SELECTION = "SELECTION";
     public static final String ADDRESS = "ADDRESS";
+    private static final String SELECTION = "SELECTION";
     @NonNull
     private final List<Long> threads = new ArrayList<>();
 
@@ -274,6 +274,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
         });
 
+
     }
 
     private void evaluateFabDeleteVisibility() {
@@ -411,7 +412,12 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         if (threads.isEmpty()) {
             threadIdx = thread.getIdx();
 
-            actionListener.selectThread(thread, this);
+            String threadKind = thread.getAdditional(Application.THREAD_KIND);
+            checkNotNull(threadKind);
+            Service.ThreadKind kind = Service.ThreadKind.valueOf(threadKind);
+            if (kind == Service.ThreadKind.NODE) {
+                actionListener.selectThread(thread, this);
+            }
         }
 
     }
@@ -508,6 +514,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
         void scanMultihash();
 
-        void selectThread(@NonNull Thread thread, Fragment fragment);
+        void selectThread(@NonNull Thread thread, @NonNull Fragment fragment);
     }
 }

@@ -165,8 +165,8 @@ class Service {
 
 
                     Thread thread = threadsAPI.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
-                            fileDetails.getFileName(), pid.getPid(), null, false, false);
-
+                            pid.getPid(), fileDetails.getFileName(), null, false, false);
+                    thread.addAdditional(Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
                     CID image = ipfs.add(bytes, true);
                     thread.setImage(image);
                     thread.setMimeType(fileDetails.getMimeType());
@@ -462,6 +462,7 @@ class Service {
         checkNotNull(cid);
         checkNotNull(address);
 
+
         final THREADS threads = Singleton.getInstance().getThreads();
 
 
@@ -471,6 +472,7 @@ class Service {
 
         Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
                 address, "", cid, false, false);
+
         try {
             byte[] image = THREADS.getImage(context.getApplicationContext(),
                     user.getAlias(), R.drawable.file_document);
@@ -556,7 +558,6 @@ class Service {
         }
     }
 
-
     private static void downloadCID(@NonNull Context context,
                                     @NonNull THREADS threads,
                                     @NonNull IPFS ipfs,
@@ -602,7 +603,6 @@ class Service {
 
     }
 
-
     private static boolean handleDirectoryLink(@NonNull Context context,
                                                @NonNull THREADS threads,
                                                @NonNull IPFS ipfs,
@@ -612,7 +612,7 @@ class Service {
         String filename = link.getPath();
         threads.setTitle(thread, filename.substring(0, filename.length() - 1)); // remove "/"
         threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
-
+        threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.NODE.name(), true);
         try {
             CID image = THREADS.createResourceImage(context, ipfs, R.drawable.folder_outline);
             threads.setImage(thread, image);
@@ -644,7 +644,6 @@ class Service {
         return links;
     }
 
-
     private static boolean handleContentLink(@NonNull Context context,
                                              @NonNull THREADS threads,
                                              @NonNull IPFS ipfs,
@@ -655,11 +654,12 @@ class Service {
         threads.setTitle(thread, filename);
 
 
-            String extension = Files.getFileExtension(filename);
-            String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-            if (mimeType != null) {
-                threads.setMimeType(thread, mimeType);
-            }
+        String extension = Files.getFileExtension(filename);
+        String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+        if (mimeType != null) {
+            threads.setMimeType(thread, mimeType);
+        }
+        threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
 
         Long size = link.getSize();
         checkNotNull(size);
@@ -749,7 +749,6 @@ class Service {
         Preferences.event(Preferences.THREAD_SELECT_EVENT, String.valueOf(thread.getIdx()));
 
 
-
         AtomicInteger successCounter = new AtomicInteger(0);
         for (Link link : links) {
 
@@ -810,7 +809,9 @@ class Service {
 
         if (links.isEmpty()) {
             threads.setTitle(thread, cid.getCid());
+            threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
             threads.setMimeType(thread, Application.QR_CODE_MIME_TYPE);
+
             try {
                 CID image = THREADS.createResourceImage(context, ipfs, R.drawable.qrcode);
                 threads.setImage(thread, image);
@@ -824,7 +825,7 @@ class Service {
             // real directory
             threads.setTitle(thread, cid.getCid());
             threads.setMimeType(thread, Application.QR_CODE_MIME_TYPE);
-
+            threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.NODE.name(), true);
             try {
                 CID image = THREADS.createResourceImage(context, ipfs, R.drawable.qrcode);
                 threads.setImage(thread, image);
@@ -867,6 +868,10 @@ class Service {
             }
         }
         return file;
+    }
+
+    public enum ThreadKind {
+        LEAF, NODE
     }
 
     public interface ShareThreads {
