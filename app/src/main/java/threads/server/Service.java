@@ -768,7 +768,10 @@ class Service {
                     }
                 }
             } else {
-                long idx = createThread(context, ipfs, thread.getSenderPid(), cid, cid.getCid()); // TODO check if correct
+                CID threadCid = thread.getCid();
+                checkNotNull(threadCid);
+
+                long idx = createThread(context, ipfs, thread.getSenderPid(), cid, threadCid.getCid());
                 Thread entry = threads.getThreadByIdx(idx);
                 checkNotNull(entry);
                 success = downloadLink(context, threads, ipfs, entry, link);

@@ -31,18 +31,17 @@ import threads.core.THREADS;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.mdl.EventViewModel;
-import threads.core.mdl.ThreadModelFactory;
 import threads.core.mdl.ThreadViewModel;
 import threads.ipfs.Network;
-import threads.ipfs.api.PID;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThreadsViewAdapter;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.ThreadsViewAdapterListener {
-    private static final String TAG = ThreadsFragment.class.getSimpleName();
+    public static final String TAG = ThreadsFragment.class.getSimpleName();
     private static final String SELECTION = "SELECTION";
+    public static final String ADDRESS = "ADDRESS";
     @NonNull
     private final List<Long> threads = new ArrayList<>();
 
@@ -53,6 +52,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private View view;
     private ThreadsViewAdapter threadsViewAdapter;
     private long mLastClickTime = 0;
+
 
     private static String getCompactString(@NonNull String title) {
         checkNotNull(title);
@@ -168,26 +168,28 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+
+        Bundle args = getArguments();
+        checkNotNull(args);
+        String address = args.getString(ADDRESS);
+        checkNotNull(address);
+
+
         RecyclerView mRecyclerView = view.findViewById(R.id.recycler_view_message_list);
         mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
 
         Activity activity = getActivity();
         if (activity != null) {
+
             LinearLayoutManager linearLayout = new LinearLayoutManager(activity);
             mRecyclerView.setLayoutManager(linearLayout);
             threadsViewAdapter = new ThreadsViewAdapter(activity, this);
             mRecyclerView.setAdapter(threadsViewAdapter);
 
-            PID pid = Preferences.getPID(getActivity()); // TODO current address
-            checkNotNull(pid);
+            ThreadViewModel threadViewModel = ViewModelProviders.of(this).get(ThreadViewModel.class);
 
-
-            ThreadViewModel threadViewModel = ViewModelProviders.of(this,
-                    new ThreadModelFactory(getActivity().getApplication(), pid.getPid())).get(
-                    ThreadViewModel.class);
-
-            threadViewModel.getThreads().observe(this, (threads) -> {
+            threadViewModel.getThreads(address).observe(this, (threads) -> {
                 if (threads != null) {
                     threads.sort(Comparator.comparing(Thread::getDate).reversed());
                     threadsViewAdapter.updateData(threads);
@@ -408,6 +410,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         checkNotNull(thread);
         if (threads.isEmpty()) {
             threadIdx = thread.getIdx();
+
+            actionListener.selectThread(thread, this);
         }
 
     }
@@ -503,5 +507,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         void clickUploadMultihash();
 
         void scanMultihash();
+
+        void selectThread(@NonNull Thread thread, Fragment fragment);
     }
 }

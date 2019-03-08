@@ -12,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -79,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private DrawerLayout drawer_layout;
     private FloatingActionButton fab_daemon;
     private long mLastClickTime = 0;
+    private PagerAdapter adapter;
 
     @Override
     public void onRequestPermissionsResult
@@ -184,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         final ViewPager viewPager = findViewById(R.id.viewPager);
-        final PagerAdapter adapter = new PagerAdapter
+        adapter = new PagerAdapter
                 (getSupportFragmentManager(), tabLayout.getTabCount());
         viewPager.setAdapter(adapter);
         viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
@@ -486,6 +488,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else {
             Toast.makeText(getApplicationContext(),
                     getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
+        }
+
+    }
+
+    @Override
+    public void selectThread(@NonNull Thread thread, Fragment fragment) {
+        checkNotNull(thread);
+
+        CID cid = thread.getCid();
+        checkNotNull(cid);
+
+        Bundle bundle = new Bundle();
+        bundle.putString(ThreadsFragment.ADDRESS, cid.getCid());
+        fragment.setArguments(bundle);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            getSupportFragmentManager().beginTransaction().detach(fragment).commitNow();
+            getSupportFragmentManager().beginTransaction().attach(fragment).commitNow();
+        } else {
+            getSupportFragmentManager().beginTransaction().detach(fragment).attach(fragment).commit();
         }
 
     }
@@ -994,6 +1015,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public int getCount() {
             return mNumOfTabs;
         }
+
+        @NonNull
+        @Override
+        public Object instantiateItem(@NonNull ViewGroup container, int position) {
+            Object value = super.instantiateItem(container, position);
+            if (value instanceof ThreadsFragment) {
+                ThreadsFragment threadsFragment = (ThreadsFragment) value;
+
+                Bundle bundle = new Bundle();
+                PID pid = Preferences.getPID(getApplicationContext()); // TODO current address
+                checkNotNull(pid);
+                bundle.putString(ThreadsFragment.ADDRESS, pid.getPid());
+                threadsFragment.setArguments(bundle);
+            }
+            return value;
+        }
+
+
     }
 
 }
