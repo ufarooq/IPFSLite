@@ -501,8 +501,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         CID cid = thread.getCid();
         checkNotNull(cid);
 
+        updateFragment(fragment, cid.getCid());
+
+    }
+
+    private void updateFragment(@NonNull Fragment fragment, @NonNull String address) {
+        checkNotNull(fragment);
+        checkNotNull(address);
+
+
         Bundle bundle = new Bundle();
-        bundle.putString(ThreadsFragment.ADDRESS, cid.getCid());
+        bundle.putString(ThreadsFragment.ADDRESS, address);
         fragment.setArguments(bundle);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             getSupportFragmentManager().beginTransaction().detach(fragment).commitNow();
@@ -510,11 +519,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else {
             getSupportFragmentManager().beginTransaction().detach(fragment).attach(fragment).commit();
         }
-
     }
 
     @Override
     public void clickBack(@NonNull String address, @NonNull Fragment fragment) {
+
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            List<Thread> threads = threadsAPI.getThreadsByCID(CID.create(address));
+            if (!threads.isEmpty()) {  // TODO should always be one
+                Thread thread = threads.get(0);
+                runOnUiThread(() -> updateFragment(fragment, thread.getAddress()));
+            }
+        });
 
     }
 
@@ -577,7 +596,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
-
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {

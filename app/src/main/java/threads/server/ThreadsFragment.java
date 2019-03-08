@@ -41,9 +41,13 @@ import threads.share.ThreadsViewAdapter;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.ThreadsViewAdapterListener {
-    public static final String TAG = ThreadsFragment.class.getSimpleName();
-    public static final String ADDRESS = "ADDRESS";
+
+
+    static final String ADDRESS = "ADDRESS";
+    private static final String IDXS = "IDXS";
     private static final String SELECTION = "SELECTION";
+
+
     @NonNull
     private final List<Long> threads = new ArrayList<>();
 
@@ -135,7 +139,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         for (int i = 0; i < threads.size(); i++) {
             storedEntries[i] = threads.get(i);
         }
-        outState.putLongArray(TAG, storedEntries);
+        outState.putLongArray(IDXS, storedEntries);
         outState.putLong(SELECTION, threadIdx);
 
         super.onSaveInstanceState(outState);
@@ -145,7 +149,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         if (savedInstanceState != null) {
-            long[] storedThreads = savedInstanceState.getLongArray(TAG);
+            long[] storedThreads = savedInstanceState.getLongArray(IDXS);
             if (storedThreads != null) {
                 for (long idx : storedThreads) {
                     threads.add(idx);
@@ -216,14 +220,23 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         }
         fab_action.setOnClickListener((v) -> {
 
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 1500) {
-                return;
-            }
-            mLastClickTime = SystemClock.elapsedRealtime();
-
             if (toplevel.get()) {
+
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1500) {
+                    return;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+
                 actionListener.clickUpload();
             } else {
+
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 500) {
+                    return;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+
                 actionListener.clickBack(address, this);
             }
 
@@ -234,7 +247,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         fab_delete.setOnClickListener((v) -> {
 
             // mis-clicking prevention, using threshold of 1000 ms
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1500) {
                 return;
             }
             mLastClickTime = SystemClock.elapsedRealtime();
@@ -248,7 +261,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         fab_share.setOnClickListener((v) -> {
 
             // mis-clicking prevention, using threshold of 1000 ms
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1500) {
                 return;
             }
             mLastClickTime = SystemClock.elapsedRealtime();
