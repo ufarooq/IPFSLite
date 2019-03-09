@@ -50,7 +50,6 @@
     <string name="peer_name">New Peer Name</string>
     <string name="peer_is_blocked">Peer is blocked. Unblock first.</string>
     <string name="user_connect_try">Peer \"%1$s\" connection request</string>
-    <string name="action_share">Share Peers</string>
     <string name="action_download">Download</string>
     <string name="no_peers_connected">Currently no peers are defined to share the data.</string>
     <string name="data_shared_with_peers">\"%1$s\" peers were notify to download the data.</string>
