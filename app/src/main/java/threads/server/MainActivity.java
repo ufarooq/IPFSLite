@@ -37,6 +37,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -946,7 +947,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     Bitmap bitmap = Preferences.getBitmap(getApplicationContext(), multihash);
                     checkNotNull(bitmap);
-                    File file = Preferences.getExternalCacheFile(getApplicationContext(),
+                    File file = Service.getCacheFile(getApplicationContext(),
                             multihash + ".png");
 
                     FileOutputStream fileOutputStream = new FileOutputStream(file);
@@ -954,13 +955,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     bitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream);
                     fileOutputStream.flush();
                     fileOutputStream.close();
+
+                    Uri uri = FileProvider.getUriForFile(getApplicationContext(),
+                            "threads.server.provider", file);
+
                     if (file.exists()) {
                         Intent shareIntent = new Intent();
                         shareIntent.setAction(Intent.ACTION_SEND);
                         shareIntent.putExtra(Intent.EXTRA_SUBJECT, multihash);
                         shareIntent.putExtra(Intent.EXTRA_TEXT,
                                 getString(R.string.multihash_access, multihash));
-                        shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+                        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
                         shareIntent.setType("image/png");
                         startActivity(Intent.createChooser(shareIntent,
                                 getResources().getText(R.string.share)));
@@ -971,14 +976,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
             });
-        }
-
-
-        try {
-
-
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
     }
@@ -1117,5 +1114,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
+
 
 }

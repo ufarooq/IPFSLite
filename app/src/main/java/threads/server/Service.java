@@ -853,8 +853,9 @@ class Service {
 
     }
 
+
     @NonNull
-    private static File getCacheFile(@NonNull Context context, @NonNull String name) {
+    public static File getCacheFile(@NonNull Context context, @NonNull String name) {
         checkNotNull(name);
         File dir = context.getCacheDir();
         File file = new File(dir, name);
