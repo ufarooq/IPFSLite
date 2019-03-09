@@ -85,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private FloatingActionButton fab_daemon;
     private long mLastClickTime = 0;
     private PagerAdapter adapter;
+    private ViewPager viewPager;
 
     @Override
     public void onRequestPermissionsResult
@@ -160,16 +161,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-        CodecDecider codecDecider = CodecDecider.evaluate(codec);
-        if (codecDecider.getCodex() == CodecDecider.Codec.MULTIHASH ||
-                codecDecider.getCodex() == CodecDecider.Codec.URI) {
+        try {
+            CodecDecider codecDecider = CodecDecider.evaluate(codec);
+            if (codecDecider.getCodex() == CodecDecider.Codec.MULTIHASH ||
+                    codecDecider.getCodex() == CodecDecider.Codec.URI) {
 
-            PID pid = Preferences.getPID(getApplicationContext());
-            checkNotNull(pid);
-            String multihash = codecDecider.getMultihash().toBase58();
-            Service.downloadMultihash(getApplicationContext(), pid, multihash);
-        } else {
-            Preferences.error(getString(R.string.codec_not_supported));
+                PID pid = Preferences.getPID(getApplicationContext());
+                checkNotNull(pid);
+                String multihash = codecDecider.getMultihash().toBase58();
+                Service.downloadMultihash(getApplicationContext(), pid, multihash);
+            } else {
+                Preferences.error(getString(R.string.codec_not_supported));
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
@@ -189,9 +194,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
 
-        final ViewPager viewPager = findViewById(R.id.viewPager);
-        adapter = new PagerAdapter
-                (getSupportFragmentManager(), tabLayout.getTabCount());
+        viewPager = findViewById(R.id.viewPager);
+        adapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
         viewPager.setAdapter(adapter);
         viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -538,6 +542,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 runOnUiThread(() -> updateFragment(fragment, thread.getAddress()));
             }
         });
+
+    }
+
+    @Override
+    public void clickToplevel(@NonNull Fragment fragment) {
+
+        try {
+
+            PID pid = Preferences.getPID(getApplicationContext());
+            checkNotNull(pid);
+            updateFragment(fragment, pid.getPid());
+
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
 
     }
 

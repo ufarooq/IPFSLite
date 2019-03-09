@@ -50,15 +50,12 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     @NonNull
     private final List<Long> threads = new ArrayList<>();
-
+    private final AtomicBoolean toplevel = new AtomicBoolean(false);
     private long threadIdx;
-
     private ActionListener actionListener;
-
     private View view;
     private ThreadsViewAdapter threadsViewAdapter;
     private long mLastClickTime = 0;
-    private final AtomicBoolean toplevel = new AtomicBoolean(false);
 
     private static String getCompactString(@NonNull String title) {
         checkNotNull(title);
@@ -100,6 +97,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 mLastClickTime = SystemClock.elapsedRealtime();
 
                 actionListener.scanMultihash();
+
+                actionListener.clickToplevel(this);
                 return true;
             }
             case R.id.action_mark_all: {
@@ -547,5 +546,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         void selectThread(@NonNull Thread thread, @NonNull Fragment fragment);
 
         void clickBack(@NonNull String address, @NonNull Fragment fragment);
+
+        void clickToplevel(@NonNull Fragment fragment);
     }
 }
