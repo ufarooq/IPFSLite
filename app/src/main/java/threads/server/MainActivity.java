@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -22,6 +23,8 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -924,8 +927,64 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+
     @Override
     public void clickThreadShare(long idx) {
+
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    Thread threadObject = threadsAPI.getThreadByIdx(idx);
+                    checkNotNull(threadObject);
+
+                    CID cid = threadObject.getCid();
+                    checkNotNull(cid);
+                    String multihash = cid.getCid();
+
+                    Bitmap bitmap = Preferences.getBitmap(getApplicationContext(), multihash);
+                    checkNotNull(bitmap);
+                    File file = Preferences.getExternalCacheFile(getApplicationContext(),
+                            multihash + ".png");
+
+                    FileOutputStream fileOutputStream = new FileOutputStream(file);
+
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream);
+                    fileOutputStream.flush();
+                    fileOutputStream.close();
+                    if (file.exists()) {
+                        Intent shareIntent = new Intent();
+                        shareIntent.setAction(Intent.ACTION_SEND);
+                        shareIntent.putExtra(Intent.EXTRA_SUBJECT, multihash);
+                        shareIntent.putExtra(Intent.EXTRA_TEXT,
+                                getString(R.string.multihash_access, multihash));
+                        shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(file));
+                        shareIntent.setType("image/png");
+                        startActivity(Intent.createChooser(shareIntent,
+                                getResources().getText(R.string.share)));
+                    }
+
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        }
+
+
+        try {
+
+
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+
+    }
+
+    @Override
+    public void clickThreadSend(long idx) {
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
@@ -937,9 +996,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Preferences.error(getString(R.string.daemon_not_running));
             return;
         }
-        Service.shareThreads(getApplicationContext(), () -> {
+        Service.sendThreads(getApplicationContext(), () -> {
         }, idx);
-
     }
 
     @Override

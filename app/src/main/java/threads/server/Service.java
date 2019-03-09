@@ -311,9 +311,9 @@ class Service {
         return success;
     }
 
-    static void shareThreads(@NonNull Context context,
-                             @NonNull ShareThreads listener,
-                             @NonNull Long... idxs) {
+    static void sendThreads(@NonNull Context context,
+                            @NonNull ShareThreads listener,
+                            @NonNull Long... idxs) {
         checkNotNull(context);
         checkNotNull(listener);
 

@@ -197,7 +197,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
             threadViewModel.getThreads(address).observe(this, (threads) -> {
                 if (threads != null) {
-                    threads.sort(Comparator.comparing(Thread::getDate).reversed());
+                    threads.sort(Comparator.comparing(Thread::getTitle).reversed());
                     threadsViewAdapter.updateData(threads);
                 }
 
@@ -257,8 +257,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         });
 
 
-        FloatingActionButton fab_share = view.findViewById(R.id.fab_share);
-        fab_share.setOnClickListener((v) -> {
+        FloatingActionButton fab_send = view.findViewById(R.id.fab_send);
+        fab_send.setOnClickListener((v) -> {
 
             // mis-clicking prevention, using threshold of 1000 ms
             if (SystemClock.elapsedRealtime() - mLastClickTime < 1500) {
@@ -266,7 +266,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             }
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            shareAction();
+            sendAction();
 
         });
 
@@ -307,21 +307,21 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         try {
             if (threads.isEmpty()) {
                 view.findViewById(R.id.fab_delete).setVisibility(View.INVISIBLE);
-                view.findViewById(R.id.fab_share).setVisibility(View.INVISIBLE);
+                view.findViewById(R.id.fab_send).setVisibility(View.INVISIBLE);
             } else {
                 if (toplevel.get()) {
                     view.findViewById(R.id.fab_delete).setVisibility(View.VISIBLE);
                 } else {
                     view.findViewById(R.id.fab_delete).setVisibility(View.INVISIBLE);
                 }
-                view.findViewById(R.id.fab_share).setVisibility(View.VISIBLE);
+                view.findViewById(R.id.fab_send).setVisibility(View.VISIBLE);
             }
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
-    private void shareAction() {
+    private void sendAction() {
         Context context = getContext();
         if (context != null) {
             // CHECKED
@@ -335,7 +335,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 return;
             }
 
-            Service.shareThreads(context, this::unmarkThreads,
+            Service.sendThreads(context, this::unmarkThreads,
                     Iterables.toArray(threads, Long.class));
         }
     }
@@ -410,12 +410,12 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void invokeGeneralAction(@NonNull Thread thread) {
         if (getActivity() != null) {
-            boolean shareActive = Preferences.isPubsubEnabled(getActivity());
+            boolean sendActive = Preferences.isPubsubEnabled(getActivity());
             FragmentManager fm = getActivity().getSupportFragmentManager();
 
             ThreadActionDialogFragment.newInstance(
                     thread.getIdx(), true, true, true,
-                    toplevel.get(), false, shareActive, true)
+                    toplevel.get(), false, true, sendActive, true)
                     .show(fm, ThreadActionDialogFragment.TAG);
         }
     }

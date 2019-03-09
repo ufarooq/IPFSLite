@@ -17,14 +17,14 @@
 
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_share"
+        android:id="@+id/fab_send"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top|end"
         android:layout_margin="@dimen/fab_margin"
         app:backgroundTint="@color/lightGray"
         app:fabSize="mini"
-        app:srcCompat="@drawable/share_fab" />
+        app:srcCompat="@drawable/send" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_delete"
@@ -34,7 +34,7 @@
         android:layout_marginBottom="80dp"
         app:backgroundTint="@color/lightGray"
         app:fabSize="mini"
-        app:layout_anchor="@id/fab_share"
+        app:layout_anchor="@id/fab_send"
         app:layout_anchorGravity="bottom"
         app:srcCompat="@drawable/delete_fab" />
 
