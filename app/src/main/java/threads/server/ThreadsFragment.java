@@ -17,12 +17,16 @@ import com.google.common.collect.Iterables;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -34,6 +38,7 @@ import threads.core.api.ThreadStatus;
 import threads.core.mdl.EventViewModel;
 import threads.core.mdl.ThreadViewModel;
 import threads.ipfs.Network;
+import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThreadsViewAdapter;
@@ -43,19 +48,27 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.ThreadsViewAdapterListener {
 
 
-    static final String ADDRESS = "ADDRESS";
+    private static final String DIRECTORY = "DIRECTORY";
     private static final String IDXS = "IDXS";
     private static final String SELECTION = "SELECTION";
 
 
     @NonNull
     private final List<Long> threads = new ArrayList<>();
-    private final AtomicBoolean toplevel = new AtomicBoolean(false);
+    @NonNull
+    private final AtomicReference<LiveData<List<Thread>>> observer = new AtomicReference<>(null);
+    @NonNull
+    private final AtomicReference<String> directory = new AtomicReference<>();
+    @NonNull
+    private final AtomicBoolean toplevel = new AtomicBoolean(true);
+
     private long threadIdx;
     private ActionListener actionListener;
     private View view;
     private ThreadsViewAdapter threadsViewAdapter;
+    private ThreadViewModel threadViewModel;
     private long mLastClickTime = 0;
+
 
     private static String getCompactString(@NonNull String title) {
         checkNotNull(title);
@@ -98,7 +111,11 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
                 actionListener.scanMultihash();
 
-                actionListener.clickToplevel(this);
+                if (getActivity() != null) {
+                    PID pid = Preferences.getPID(getActivity());
+                    checkNotNull(pid);
+                    update(pid.getPid());
+                }
                 return true;
             }
             case R.id.action_mark_all: {
@@ -140,7 +157,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         }
         outState.putLongArray(IDXS, storedEntries);
         outState.putLong(SELECTION, threadIdx);
-
+        outState.putString(DIRECTORY, directory.get());
         super.onSaveInstanceState(outState);
     }
 
@@ -166,7 +183,23 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                     threadsViewAdapter.setState(threadIdx, ThreadsViewAdapter.State.SELECTED);
                 }
             }
+
+            directory.set(savedInstanceState.getString(DIRECTORY));
         }
+
+        Activity activity = getActivity();
+        checkNotNull(activity);
+
+        if (directory.get() == null) {
+            PID host = Preferences.getPID(getActivity());
+            checkNotNull(host);
+
+            directory.set(host.getPid());
+        }
+
+        update(directory.get());
+
+
     }
 
     @Override
@@ -174,49 +207,23 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         super.onViewCreated(view, savedInstanceState);
 
 
-        Bundle args = getArguments();
-        checkNotNull(args);
-        String address = args.getString(ADDRESS);
-        checkNotNull(address);
-
+        threadViewModel = ViewModelProviders.of(this).get(ThreadViewModel.class);
 
         RecyclerView mRecyclerView = view.findViewById(R.id.recycler_view_message_list);
         mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
-
         Activity activity = getActivity();
-        if (activity != null) {
-
-            LinearLayoutManager linearLayout = new LinearLayoutManager(activity);
-            mRecyclerView.setLayoutManager(linearLayout);
-            threadsViewAdapter = new ThreadsViewAdapter(activity, this);
-            mRecyclerView.setAdapter(threadsViewAdapter);
-
-            ThreadViewModel threadViewModel = ViewModelProviders.of(this).get(ThreadViewModel.class);
-
-            threadViewModel.getThreads(address).observe(this, (threads) -> {
-                if (threads != null) {
-                    threads.sort(Comparator.comparing(Thread::getTitle).reversed());
-                    threadsViewAdapter.updateData(threads);
-                }
-
-            });
-
-            PID host = Preferences.getPID(getActivity());
-            checkNotNull(host);
-            toplevel.set(host.getPid().equals(address));
-        }
-        threads.clear(); // ??? sure TODO
+        checkNotNull(activity);
 
 
-        evaluateFabDeleteVisibility();
+        LinearLayoutManager linearLayout = new LinearLayoutManager(activity);
+        mRecyclerView.setLayoutManager(linearLayout);
+        threadsViewAdapter = new ThreadsViewAdapter(activity, this);
+        mRecyclerView.setAdapter(threadsViewAdapter);
+
 
         FloatingActionButton fab_action = view.findViewById(R.id.fab_action);
-        if (toplevel.get()) {
-            fab_action.setImageResource(R.drawable.plus);
-        } else {
-            fab_action.setImageResource(R.drawable.arrow_left);
-        }
+
         fab_action.setOnClickListener((v) -> {
 
             if (toplevel.get()) {
@@ -236,7 +243,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 mLastClickTime = SystemClock.elapsedRealtime();
 
 
-                actionListener.clickBack(address, this);
+                back();
+
             }
 
         });
@@ -270,7 +278,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         });
 
 
-        EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
+        EventViewModel eventViewModel =
+                ViewModelProviders.of(this).get(EventViewModel.class);
 
 
         eventViewModel.getThreadSelectEvent().observe(this, (event) -> {
@@ -284,7 +293,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                             int pos = threadsViewAdapter.getPositionOfItem(idx);
                             if (pos > -1) {
                                 threadIdx = idx;
-                                threadsViewAdapter.setState(threadIdx, ThreadsViewAdapter.State.SELECTED);
+                                threadsViewAdapter.setState(threadIdx,
+                                        ThreadsViewAdapter.State.SELECTED);
                                 mRecyclerView.scrollToPosition(pos);
                             }
                         } catch (Throwable e) {
@@ -299,11 +309,56 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
         });
 
-
     }
+
+    private void update(@NonNull String address) {
+        checkNotNull(address);
+
+
+        Activity activity = getActivity();
+        if (activity != null) {
+            PID host = Preferences.getPID(activity);
+            checkNotNull(host);
+            toplevel.set(host.getPid().equals(address));
+        }
+        directory.set(address);
+
+        LiveData<List<Thread>> obs = observer.get();
+        if (obs != null) {
+            obs.removeObservers(this);
+        }
+
+        LiveData<List<Thread>> liveData = threadViewModel.getThreads(address);
+        observer.set(liveData);
+
+        liveData.observe(this, (threads) -> {
+
+            if (threads != null) {
+
+                List<Thread> data = new ArrayList<>();
+                for (Thread thread : threads) {
+                    if (thread.getStatus() != ThreadStatus.DELETING) {
+                        data.add(thread);
+                    }
+                }
+                data.sort(Comparator.comparing(Thread::getTitle).reversed());
+                threadsViewAdapter.updateData(data);
+            }
+        });
+
+        evaluateFabDeleteVisibility();
+    }
+
 
     private void evaluateFabDeleteVisibility() {
         try {
+            FloatingActionButton fab_action = view.findViewById(R.id.fab_action);
+            if (toplevel.get()) {
+                fab_action.setImageResource(R.drawable.plus);
+            } else {
+                fab_action.setImageResource(R.drawable.arrow_left);
+            }
+
             if (threads.isEmpty()) {
                 view.findViewById(R.id.fab_delete).setVisibility(View.INVISIBLE);
                 view.findViewById(R.id.fab_send).setVisibility(View.INVISIBLE);
@@ -372,12 +427,14 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 threadsViewAdapter.setState(idx, ThreadsViewAdapter.State.NONE);
             }
             threads.clear();
+            threadIdx = -1;
             if (getActivity() != null) {
                 getActivity().runOnUiThread(() -> threadsViewAdapter.notifyDataSetChanged());
             }
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         } finally {
+
             if (getActivity() != null) {
                 getActivity().runOnUiThread(this::evaluateFabDeleteVisibility);
             }
@@ -398,6 +455,27 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             evaluateFabDeleteVisibility();
         }
 
+    }
+
+    private void back() {
+
+        unmarkThreads();
+
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+
+            if (directory.get() != null) {
+                List<Thread> threads = threadsAPI.getThreadsByCID(CID.create(directory.get()));
+                if (!threads.isEmpty()) {
+                    Thread thread = threads.get(0);
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> update(thread.getAddress()));
+                    }
+                }
+            }
+        });
     }
 
     @Override
@@ -445,7 +523,9 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             checkNotNull(threadKind);
             Service.ThreadKind kind = Service.ThreadKind.valueOf(threadKind);
             if (kind == Service.ThreadKind.NODE) {
-                actionListener.selectThread(thread, this);
+                CID cid = thread.getCid();
+                checkNotNull(cid);
+                update(cid.getCid());
             }
         }
 
@@ -543,10 +623,5 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
         void scanMultihash();
 
-        void selectThread(@NonNull Thread thread, @NonNull Fragment fragment);
-
-        void clickBack(@NonNull String address, @NonNull Fragment fragment);
-
-        void clickToplevel(@NonNull Fragment fragment);
     }
 }

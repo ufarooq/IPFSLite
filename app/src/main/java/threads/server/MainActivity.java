@@ -13,7 +13,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -500,65 +499,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    @Override
-    public void selectThread(@NonNull Thread thread, @NonNull Fragment fragment) {
-        checkNotNull(thread);
-        checkNotNull(fragment);
-
-
-        CID cid = thread.getCid();
-        checkNotNull(cid);
-
-        updateFragment(fragment, cid.getCid());
-
-    }
-
-    private void updateFragment(@NonNull Fragment fragment, @NonNull String address) {
-        checkNotNull(fragment);
-        checkNotNull(address);
-
-
-        Bundle bundle = new Bundle();
-        bundle.putString(ThreadsFragment.ADDRESS, address);
-        fragment.setArguments(bundle);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            getSupportFragmentManager().beginTransaction().detach(fragment).commitNow();
-            getSupportFragmentManager().beginTransaction().attach(fragment).commitNow();
-        } else {
-            getSupportFragmentManager().beginTransaction().detach(fragment).attach(fragment).commit();
-        }
-    }
-
-    @Override
-    public void clickBack(@NonNull String address, @NonNull Fragment fragment) {
-
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            List<Thread> threads = threadsAPI.getThreadsByCID(CID.create(address));
-            if (!threads.isEmpty()) {  // TODO should always be one
-                Thread thread = threads.get(0);
-                runOnUiThread(() -> updateFragment(fragment, thread.getAddress()));
-            }
-        });
-
-    }
-
-    @Override
-    public void clickToplevel(@NonNull Fragment fragment) {
-
-        try {
-
-            PID pid = Preferences.getPID(getApplicationContext());
-            checkNotNull(pid);
-            updateFragment(fragment, pid.getPid());
-
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
-
-    }
 
     @Override
     public void clickConnectPeer() {
@@ -900,16 +840,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadDelete(long idx) {
 
-        final THREADS threads = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    Thread threadObject = threads.getThreadByIdx(idx);
-                    if (threadObject != null) {
-                        threads.removeThread(ipfs, threadObject);
-                    }
+                    Service.deleteThread(ipfs, idx);
                 } catch (Throwable e) {
                     // ignore exception for now
                 }
@@ -1114,24 +1050,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public int getCount() {
             return mNumOfTabs;
         }
-
-        @NonNull
-        @Override
-        public Object instantiateItem(@NonNull ViewGroup container, int position) {
-            Object value = super.instantiateItem(container, position);
-            if (value instanceof ThreadsFragment) {
-                ThreadsFragment threadsFragment = (ThreadsFragment) value;
-
-                Bundle bundle = new Bundle();
-                PID pid = Preferences.getPID(getApplicationContext()); // TODO current address
-                checkNotNull(pid);
-                bundle.putString(ThreadsFragment.ADDRESS, pid.getPid());
-                threadsFragment.setArguments(bundle);
-            }
-            return value;
-        }
-
-
     }
 
 

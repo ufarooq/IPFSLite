@@ -380,10 +380,7 @@ class Service {
                 try {
 
                     for (long idx : idxs) {
-                        Thread thread = threadsAPI.getThreadByIdx(idx);
-                        if (thread != null) {
-                            threadsAPI.removeThread(ipfs, thread);
-                        }
+                        deleteThread(ipfs, idx);
                     }
                     threadsAPI.repo_gc(ipfs);
 
@@ -394,6 +391,39 @@ class Service {
         }
     }
 
+    static void deleteThread(@NonNull IPFS ipfs, long idx) {
+        checkNotNull(ipfs);
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+        Thread thread = threadsAPI.getThreadByIdx(idx);
+        if (thread != null) {
+            deleteThread(ipfs, thread);
+        }
+    }
+
+    private static void deleteThread(@NonNull IPFS ipfs, @NonNull Thread thread) {
+        checkNotNull(ipfs);
+        checkNotNull(thread);
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+
+        String threadKind = thread.getAdditional(Application.THREAD_KIND);
+        checkNotNull(threadKind);
+        Service.ThreadKind kind = Service.ThreadKind.valueOf(threadKind);
+        threadsAPI.setStatus(thread, ThreadStatus.DELETING);
+
+        if (kind == Service.ThreadKind.NODE) {
+
+            CID cid = thread.getCid();
+            if (cid != null) {
+                List<Thread> entries = threadsAPI.getThreadsByAddress(cid.getCid());
+                for (Thread entry : entries) {
+                    deleteThread(ipfs, entry);
+                }
+            }
+        }
+
+        threadsAPI.removeThread(ipfs, thread);
+
+    }
 
     static void downloadMultihash(@NonNull Context context,
                                   @NonNull PID creator,
@@ -468,7 +498,6 @@ class Service {
 
         User user = threads.getUserByPID(creator);
         checkNotNull(user);
-
 
         Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
                 address, "", cid, false, false);
@@ -613,9 +642,18 @@ class Service {
         threads.setTitle(thread, filename.substring(0, filename.length() - 1)); // remove "/"
         threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
         threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.NODE.name(), true);
+
         try {
             CID image = THREADS.createResourceImage(context, ipfs, R.drawable.folder_outline);
             threads.setImage(thread, image);
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+        try {
+            CID cid = thread.getCid();
+            if (cid != null) {
+                threads.pin_add(ipfs, cid);
+            }
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
