@@ -70,7 +70,7 @@ dependencies {
     implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
 
     // UI+API (LICENSE done)
-    implementation 'threads.share:share:1.7.9'
+    implementation 'threads.share:share:1.8.1'
 
     // QR Scanner (LICENSE done)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'
