@@ -165,7 +165,8 @@ class Service {
 
 
                     Thread thread = threadsAPI.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
-                            pid.getPid(), fileDetails.getFileName(), null, false, false);
+                            pid.getPid(), fileDetails.getFileName(),
+                            "", null, false);
                     thread.addAdditional(Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
                     CID image = ipfs.add(bytes, true);
                     thread.setImage(image);
@@ -500,7 +501,7 @@ class Service {
         checkNotNull(user);
 
         Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
-                address, "", cid, false, false);
+                address, "", "", cid, false);
 
         try {
             byte[] image = THREADS.getImage(context.getApplicationContext(),
@@ -604,7 +605,7 @@ class Service {
         boolean success = true;
         try {
 
-            threads.store(ipfs, file, cid, true, false);
+            threads.stream(ipfs, file, cid, true, false);
 
             try {
                 byte[] image = THREADS.getPreviewImage(context, file);
@@ -644,7 +645,8 @@ class Service {
         threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.NODE.name(), true);
 
         try {
-            CID image = THREADS.createResourceImage(context, ipfs, R.drawable.folder_outline);
+            CID image = THREADS.createResourceImage(context, threads, ipfs, "",
+                    R.drawable.folder_outline);
             threads.setImage(thread, image);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -719,7 +721,7 @@ class Service {
         boolean success;
         try {
 
-            success = threads.store(ipfs, file,
+            success = threads.stream(ipfs, file,
                     link.getCid(), size, true, false, (percent) -> {
                         builder.setProgress(100, percent, false);
                         if (notificationManager != null) {
@@ -851,7 +853,8 @@ class Service {
             threads.setMimeType(thread, Application.QR_CODE_MIME_TYPE);
 
             try {
-                CID image = THREADS.createResourceImage(context, ipfs, R.drawable.qrcode);
+                CID image = THREADS.createResourceImage(
+                        context, threads, ipfs, "", R.drawable.qrcode);
                 threads.setImage(thread, image);
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -865,7 +868,8 @@ class Service {
             threads.setMimeType(thread, Application.QR_CODE_MIME_TYPE);
             threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.NODE.name(), true);
             try {
-                CID image = THREADS.createResourceImage(context, ipfs, R.drawable.qrcode);
+                CID image = THREADS.createResourceImage(
+                        context, threads, ipfs, "", R.drawable.qrcode);
                 threads.setImage(thread, image);
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);

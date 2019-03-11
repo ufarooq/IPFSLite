@@ -602,6 +602,11 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     }
 
     @Override
+    public boolean roundImages() {
+        return false;
+    }
+
+    @Override
     public boolean showDate(@NonNull Thread thread) {
         return false;
     }
