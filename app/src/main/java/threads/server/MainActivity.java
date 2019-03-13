@@ -75,7 +75,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ThreadActionDialogFragment.ActionListener,
         EditMultihashDialogFragment.ActionListener,
         EditPeerDialogFragment.ActionListener,
-        ThreadsFragment.ActionListener,
         PeersFragment.ActionListener,
         NameDialogFragment.ActionListener {
     public static final int SELECT_FILES = 1;
@@ -366,9 +365,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         switch (id) {
-            case R.id.action_download: {
-                return false;
-            }
             case R.id.action_info: {
                 return false;
             }
@@ -484,23 +480,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-    @Override
-    public void scanMultihash() {
-
-        PackageManager pm = getPackageManager();
-
-        if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-            idScan.set(false);
-            IntentIntegrator integrator = new IntentIntegrator(this);
-            integrator.setOrientationLocked(false);
-            integrator.initiateScan();
-        } else {
-            Toast.makeText(getApplicationContext(),
-                    getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
-        }
-
-    }
-
 
     @Override
     public void clickConnectPeer() {
@@ -524,7 +503,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickMulithash() {
-        scanMultihash();
+        PackageManager pm = getPackageManager();
+
+        if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+            idScan.set(false);
+            IntentIntegrator integrator = new IntentIntegrator(this);
+            integrator.setOrientationLocked(false);
+            integrator.initiateScan();
+        } else {
+            Toast.makeText(getApplicationContext(),
+                    getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override

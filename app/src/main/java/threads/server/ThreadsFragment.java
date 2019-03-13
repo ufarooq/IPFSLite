@@ -63,7 +63,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private final AtomicBoolean toplevel = new AtomicBoolean(true);
 
     private long threadIdx;
-    private ActionListener actionListener;
+
     private View view;
     private ThreadsViewAdapter threadsViewAdapter;
     private ThreadViewModel threadViewModel;
@@ -75,16 +75,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         return title.replace("\n", " ");
     }
 
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-
-        try {
-            actionListener = (ThreadsFragment.ActionListener) getActivity();
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
-    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -102,22 +92,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
         switch (item.getItemId()) {
-            case R.id.action_download: {
-
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                actionListener.scanMultihash();
-
-                if (getActivity() != null) {
-                    PID pid = Preferences.getPID(getActivity());
-                    checkNotNull(pid);
-                    update(pid.getPid());
-                }
-                return true;
-            }
             case R.id.action_mark_all: {
 
                 if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
@@ -624,10 +598,4 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         return 0;
     }
 
-
-    public interface ActionListener {
-
-        void scanMultihash();
-
-    }
 }
