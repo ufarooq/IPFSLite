@@ -239,7 +239,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 findViewById(R.id.fab_daemon).setVisibility(View.INVISIBLE);
 
             } else {
-                DaemonService.startDaemon(getApplicationContext());
+                DaemonService.stopDaemon(getApplicationContext());
                 findViewById(R.id.fab_daemon).setVisibility(View.INVISIBLE);
             }
 
