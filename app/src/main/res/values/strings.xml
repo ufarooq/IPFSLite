@@ -63,4 +63,7 @@
     <string name="ipfs_settings">IPFS Settings</string>
     <string name="file_not_supported">File not supported.</string>
     <string name="no_activity_found_to_handle_uri">No activity found which support the file.</string>
+    <string name="action_scan_cid">Scan Multihash</string>
+    <string name="action_edit_cid">Edit Multihash</string>
+    <string name="action_file_cid">Upload Files</string>
 </resources>

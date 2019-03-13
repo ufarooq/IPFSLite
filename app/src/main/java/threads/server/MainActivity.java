@@ -69,7 +69,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
-        ActionDialogFragment.ActionListener,
+        PeersDialogFragment.ActionListener,
+        ThreadsDialogFragment.ActionListener,
         UserActionDialogFragment.ActionListener,
         ThreadActionDialogFragment.ActionListener,
         EditMultihashDialogFragment.ActionListener,
@@ -518,6 +519,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
+    }
+
+    @Override
+    public void clickMulithash() {
+        scanMultihash();
+    }
+
+    @Override
+    public void clickEditMultihash() {
+        FragmentManager fm = getSupportFragmentManager();
+        EditMultihashDialogFragment editMultihashDialogFragment = new EditMultihashDialogFragment();
+        editMultihashDialogFragment.show(fm, EditMultihashDialogFragment.TAG);
     }
 
     @Override

@@ -228,13 +228,16 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
             if (toplevel.get()) {
 
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1500) {
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
                     return;
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
+                if (getActivity() != null) {
+                    ThreadsDialogFragment.newInstance(true, true, true)
+                            .show(getActivity().getSupportFragmentManager(), ThreadsDialogFragment.TAG);
+                }
 
-                actionListener.clickUpload();
             } else {
 
                 if (SystemClock.elapsedRealtime() - mLastClickTime < 500) {
@@ -354,7 +357,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         try {
             FloatingActionButton fab_action = view.findViewById(R.id.fab_action);
             if (toplevel.get()) {
-                fab_action.setImageResource(R.drawable.plus);
+                fab_action.setImageResource(R.drawable.dots);
             } else {
                 fab_action.setImageResource(R.drawable.arrow_left);
             }
@@ -623,8 +626,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
 
     public interface ActionListener {
-
-        void clickUpload();
 
         void scanMultihash();
 

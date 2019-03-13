@@ -10,27 +10,27 @@
         android:layout_height="match_parent">
 
         <TextView
-            android:id="@+id/menu_scan_peer"
+            android:id="@+id/menu_scan_cid"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
             android:layout_weight="1"
             android:drawableTop="@drawable/action_scan_peer"
+            android:drawablePadding="8dp"
             android:singleLine="true"
             android:text="@string/action_scan_peer"
-            android:drawablePadding="8dp"
             android:textAlignment="center" />
 
         <TextView
-            android:id="@+id/menu_edit_peer"
+            android:id="@+id/menu_edit_cid"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
             android:layout_weight="1"
             android:drawableTop="@drawable/action_edit_peer"
+            android:drawablePadding="8dp"
             android:singleLine="true"
             android:text="@string/action_edit_peer"
-            android:drawablePadding="8dp"
             android:textAlignment="center" />
 
     </TableRow>

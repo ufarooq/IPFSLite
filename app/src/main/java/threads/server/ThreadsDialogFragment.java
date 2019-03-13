@@ -18,22 +18,25 @@ import threads.core.Preferences;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class ActionDialogFragment extends DialogFragment {
-    static final String TAG = ActionDialogFragment.class.getSimpleName();
-    private static final String EDIT_PEER_ACTIVE = "EDIT_PEER_ACTIVE";
-    private static final String SCAN_PEER_ACTIVE = "SCAN_PEER_ACTIVE";
+public class ThreadsDialogFragment extends DialogFragment {
+    static final String TAG = ThreadsDialogFragment.class.getSimpleName();
+    private static final String EDIT_CID_ACTIVE = "EDIT_CID_ACTIVE";
+    private static final String SCAN_CID_ACTIVE = "SCAN_CID_ACTIVE";
+    private static final String FILE_CID_ACTIVE = "FILE_CID_ACTIVE";
 
-    private ActionListener actionListener;
+    private ThreadsDialogFragment.ActionListener actionListener;
     private long mLastClickTime = 0;
 
-    static ActionDialogFragment newInstance(boolean editPeerActive,
-                                            boolean scanPeerActive) {
+    static ThreadsDialogFragment newInstance(boolean editActive,
+                                             boolean scanActive,
+                                             boolean fileActive) {
 
         Bundle bundle = new Bundle();
 
-        bundle.putBoolean(EDIT_PEER_ACTIVE, editPeerActive);
-        bundle.putBoolean(SCAN_PEER_ACTIVE, scanPeerActive);
-        ActionDialogFragment fragment = new ActionDialogFragment();
+        bundle.putBoolean(EDIT_CID_ACTIVE, editActive);
+        bundle.putBoolean(SCAN_CID_ACTIVE, scanActive);
+        bundle.putBoolean(FILE_CID_ACTIVE, fileActive);
+        ThreadsDialogFragment fragment = new ThreadsDialogFragment();
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -43,7 +46,7 @@ public class ActionDialogFragment extends DialogFragment {
         super.onAttach(context);
 
         try {
-            actionListener = (ActionListener) getActivity();
+            actionListener = (ThreadsDialogFragment.ActionListener) getActivity();
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
@@ -62,18 +65,20 @@ public class ActionDialogFragment extends DialogFragment {
 
         Bundle args = getArguments();
         checkNotNull(args);
-        boolean editPeerActive = args.getBoolean(EDIT_PEER_ACTIVE);
-        boolean scanPeerActive = args.getBoolean(SCAN_PEER_ACTIVE);
+        boolean editActive = args.getBoolean(EDIT_CID_ACTIVE);
+        boolean scanActive = args.getBoolean(SCAN_CID_ACTIVE);
+        boolean fileActive = args.getBoolean(FILE_CID_ACTIVE);
 
 
         @SuppressWarnings("all")
-        View view = inflater.inflate(R.layout.action_view, null);
+        View view = inflater.inflate(R.layout.threads_action_view, null);
 
-        TextView menu_scan_peer = view.findViewById(R.id.menu_scan_peer);
-        if (!scanPeerActive) {
-            menu_scan_peer.setVisibility(View.GONE);
+
+        TextView menu_file_cid = view.findViewById(R.id.menu_file_cid);
+        if (!fileActive) {
+            menu_file_cid.setVisibility(View.GONE);
         } else {
-            menu_scan_peer.setOnClickListener((v) -> {
+            menu_file_cid.setOnClickListener((v) -> {
 
                 try {
                     if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
@@ -81,7 +86,28 @@ public class ActionDialogFragment extends DialogFragment {
                     }
 
                     mLastClickTime = SystemClock.elapsedRealtime();
-                    actionListener.clickConnectPeer();
+                    actionListener.clickUpload();
+                } finally {
+                    dismiss();
+                }
+
+
+            });
+        }
+
+        TextView menu_scan_cid = view.findViewById(R.id.menu_scan_cid);
+        if (!scanActive) {
+            menu_scan_cid.setVisibility(View.GONE);
+        } else {
+            menu_scan_cid.setOnClickListener((v) -> {
+
+                try {
+                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                        return;
+                    }
+
+                    mLastClickTime = SystemClock.elapsedRealtime();
+                    actionListener.clickMulithash();
                 } finally {
                     dismiss();
                 }
@@ -91,11 +117,11 @@ public class ActionDialogFragment extends DialogFragment {
         }
 
 
-        TextView menu_edit_peer = view.findViewById(R.id.menu_edit_peer);
-        if (!editPeerActive) {
-            menu_edit_peer.setVisibility(View.GONE);
+        TextView menu_edit_cid = view.findViewById(R.id.menu_edit_cid);
+        if (!editActive) {
+            menu_edit_cid.setVisibility(View.GONE);
         } else {
-            menu_edit_peer.setOnClickListener((v) -> {
+            menu_edit_cid.setOnClickListener((v) -> {
 
                 try {
                     if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
@@ -104,7 +130,7 @@ public class ActionDialogFragment extends DialogFragment {
 
                     mLastClickTime = SystemClock.elapsedRealtime();
 
-                    actionListener.clickEditPeer();
+                    actionListener.clickEditMultihash();
 
                 } finally {
                     dismiss();
@@ -113,7 +139,7 @@ public class ActionDialogFragment extends DialogFragment {
             });
         }
 
-        if (!editPeerActive && !scanPeerActive) {
+        if (!editActive && !scanActive) {
             view.findViewById(R.id.row_first).setVisibility(View.GONE);
         }
 
@@ -132,8 +158,10 @@ public class ActionDialogFragment extends DialogFragment {
 
     public interface ActionListener {
 
-        void clickConnectPeer();
+        void clickMulithash();
 
-        void clickEditPeer();
+        void clickEditMultihash();
+
+        void clickUpload();
     }
 }
