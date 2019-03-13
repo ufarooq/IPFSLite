@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -34,13 +35,27 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 public class DaemonService extends Service {
-    public static final String ACTION_START_DAEMON_SERVICE = "ACTION_START_DAEMON_SERVICE";
-    public static final String ACTION_STOP_DAEMON_SERVICE = "ACTION_STOP_DAEMON_SERVICE";
     public static final AtomicBoolean DAEMON_RUNNING = new AtomicBoolean(false);
-
+    private static final String ACTION_START_DAEMON_SERVICE = "ACTION_START_DAEMON_SERVICE";
+    private static final String ACTION_STOP_DAEMON_SERVICE = "ACTION_STOP_DAEMON_SERVICE";
     private static final String HIGH_CHANNEL_ID = "HIGH_CHANNEL_ID";
     private static final int NOTIFICATION_ID = 998;
     private static final String TAG = DaemonService.class.getSimpleName();
+
+
+    public static void startDaemon(@NonNull Context context) {
+        checkNotNull(context);
+        Intent intent = new Intent(context, DaemonService.class);
+        intent.setAction(DaemonService.ACTION_START_DAEMON_SERVICE);
+        ContextCompat.startForegroundService(context, intent);
+    }
+
+    public static void stopDaemon(@NonNull Context context) {
+        checkNotNull(context);
+        Intent intent = new Intent(context, DaemonService.class);
+        intent.setAction(DaemonService.ACTION_STOP_DAEMON_SERVICE);
+        ContextCompat.startForegroundService(context, intent);
+    }
 
 
     public static void createChannel(@NonNull Context context) {

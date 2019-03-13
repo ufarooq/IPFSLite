@@ -24,7 +24,7 @@
         android:layout_margin="@dimen/fab_margin"
         app:backgroundTint="@color/lightGray"
         app:fabSize="mini"
-        app:srcCompat="@drawable/send" />
+        app:srcCompat="@drawable/send_fab" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_delete"

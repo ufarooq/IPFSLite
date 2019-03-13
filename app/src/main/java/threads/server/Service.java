@@ -75,7 +75,7 @@ class Service {
                         UserStatus oldStatus = user.getStatus();
                         try {
 
-                            if (ipfs.swarm_connect(user.getPID())) {
+                            if (ipfs.swarm_peer(user.getPID()) != null) {
 
                                 if (UserStatus.ONLINE != oldStatus) {
                                     threads.setStatus(user, UserStatus.ONLINE);
@@ -257,26 +257,6 @@ class Service {
 
     }
 
-    static void createRelay(@NonNull Context context, @NonNull IPFS ipfs) throws Exception {
-        checkNotNull(context);
-        checkNotNull(ipfs);
-        PID relay = PID.create("QmchgNzyUFyf2wpfDMmpGxMKHA3PkC1f3H2wUgbs21vXoh");
-
-
-        THREADS threads = Singleton.getInstance().getThreads();
-        User user = threads.getUserByPID(relay);
-        if (user == null) {
-            byte[] data = THREADS.getImage(context,
-                    relay.getPid(), R.drawable.server_network);
-            CID image = ipfs.add(data, true);
-            user = threads.createUser(relay,
-                    relay.getPid(),
-                    relay.getPid(),
-                    context.getString(R.string.relay), UserType.VERIFIED, image, null);
-            user.setStatus(UserStatus.OFFLINE);
-            threads.storeUser(user);
-        }
-    }
 
     private static boolean shareUser(@NonNull Context context,
                                      @NonNull User user,

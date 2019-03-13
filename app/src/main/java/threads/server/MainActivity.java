@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.Menu;
@@ -236,25 +235,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             mLastClickTime = SystemClock.elapsedRealtime();
 
             if (!DaemonService.DAEMON_RUNNING.get()) {
-
-                Intent intent = new Intent(MainActivity.this, DaemonService.class);
-                intent.setAction(DaemonService.ACTION_START_DAEMON_SERVICE);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    startForegroundService(intent);
-                } else {
-                    startService(intent);
-                }
-
+                DaemonService.startDaemon(getApplicationContext());
                 findViewById(R.id.fab_daemon).setVisibility(View.INVISIBLE);
 
             } else {
-                Intent intent = new Intent(MainActivity.this, DaemonService.class);
-                intent.setAction(DaemonService.ACTION_STOP_DAEMON_SERVICE);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    startForegroundService(intent);
-                } else {
-                    startService(intent);
-                }
+                DaemonService.startDaemon(getApplicationContext());
                 findViewById(R.id.fab_daemon).setVisibility(View.INVISIBLE);
             }
 
@@ -320,17 +305,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         });
 
-        checkOnlineStatus();
-    }
-
-    private void checkOnlineStatus() {
-        if (!Network.isConnected(getApplicationContext())) {
-            Preferences.warning(getString(R.string.offline_mode));
-        } else {
-            if (!DaemonService.DAEMON_RUNNING.get()) {
-                Preferences.warning(getString(R.string.daemon_not_running));
-            }
-        }
     }
 
 
@@ -737,8 +711,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         }
                     } catch (Throwable e) {
                         threadsAPI.setStatus(user, UserStatus.OFFLINE);
-                        checkOnlineStatus();
-                        // ignore exception when not connected
                     }
 
 

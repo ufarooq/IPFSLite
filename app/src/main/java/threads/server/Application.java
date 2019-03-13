@@ -33,7 +33,6 @@ public class Application extends android.app.Application {
                 try {
 
                     Service.createHost(context, ipfs);
-                    //Service.createRelay(context, ipfs);
 
                     threads.storeMessage(threads.createMessage(MessageKind.INFO,
                             "\nWelcome to IPFS",
@@ -99,9 +98,7 @@ public class Application extends android.app.Application {
         Application.setAutoConnected(getApplicationContext(), true);
         Preferences.setProfile(getApplicationContext(), Profile.LOW_POWER);
         Preferences.setPubsubEnabled(getApplicationContext(), true);
-        Preferences.setAutoRelayEnabled(getApplicationContext(), true);
-        Preferences.setRelay(getApplicationContext(),
-                PID.create("QmchgNzyUFyf2wpfDMmpGxMKHA3PkC1f3H2wUgbs21vXoh"));*/
+        Preferences.setAutoRelayEnabled(getApplicationContext(), true);*/
 
 
         try {
@@ -113,6 +110,7 @@ public class Application extends android.app.Application {
 
         init(getApplicationContext());
 
+        DaemonService.startDaemon(getApplicationContext());
 
     }
 
