@@ -107,7 +107,7 @@ public class ThreadsDialogFragment extends DialogFragment {
                     }
 
                     mLastClickTime = SystemClock.elapsedRealtime();
-                    actionListener.clickMulithash();
+                    actionListener.clickMultihash();
                 } finally {
                     dismiss();
                 }
@@ -158,7 +158,7 @@ public class ThreadsDialogFragment extends DialogFragment {
 
     public interface ActionListener {
 
-        void clickMulithash();
+        void clickMultihash();
 
         void clickEditMultihash();
 

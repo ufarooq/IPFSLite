@@ -60,7 +60,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @NonNull
     private final AtomicReference<String> directory = new AtomicReference<>();
     @NonNull
-    private final AtomicBoolean toplevel = new AtomicBoolean(true);
+    private final AtomicBoolean topLevel = new AtomicBoolean(true);
 
     private long threadIdx;
 
@@ -200,7 +200,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
         fab_action.setOnClickListener((v) -> {
 
-            if (toplevel.get()) {
+            if (topLevel.get()) {
 
                 if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
                     return;
@@ -296,7 +296,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         if (activity != null) {
             PID host = Preferences.getPID(activity);
             checkNotNull(host);
-            toplevel.set(host.getPid().equals(address));
+            topLevel.set(host.getPid().equals(address));
         }
         directory.set(address);
 
@@ -330,7 +330,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private void evaluateFabDeleteVisibility() {
         try {
             FloatingActionButton fab_action = view.findViewById(R.id.fab_action);
-            if (toplevel.get()) {
+            if (topLevel.get()) {
                 fab_action.setImageResource(R.drawable.dots);
             } else {
                 fab_action.setImageResource(R.drawable.arrow_left);
@@ -340,7 +340,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 view.findViewById(R.id.fab_delete).setVisibility(View.INVISIBLE);
                 view.findViewById(R.id.fab_send).setVisibility(View.INVISIBLE);
             } else {
-                if (toplevel.get()) {
+                if (topLevel.get()) {
                     view.findViewById(R.id.fab_delete).setVisibility(View.VISIBLE);
                 } else {
                     view.findViewById(R.id.fab_delete).setVisibility(View.INVISIBLE);
@@ -469,7 +469,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
             ThreadActionDialogFragment.newInstance(
                     thread.getIdx(), true, true, true,
-                    toplevel.get(), false, true, sendActive, true)
+                    topLevel.get(), false, true, sendActive, true)
                     .show(fm, ThreadActionDialogFragment.TAG);
         }
     }

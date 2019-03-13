@@ -476,7 +476,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickMulithash() {
+    public void clickMultihash() {
         PackageManager pm = getPackageManager();
 
         if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {

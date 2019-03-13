@@ -19,7 +19,7 @@ public class CodecDecider {
     private CodecDecider() {
     }
 
-    public static CodecDecider evaluate(@NonNull String code) {
+    static CodecDecider evaluate(@NonNull String code) {
         Preconditions.checkNotNull(code);
         CodecDecider codecDecider = new CodecDecider();
 
@@ -56,19 +56,19 @@ public class CodecDecider {
         return codecDecider;
     }
 
-    public Multihash getMultihash() {
+    Multihash getMultihash() {
         return multihash;
     }
 
-    public void setMultihash(Multihash multihash) {
+    private void setMultihash(Multihash multihash) {
         this.multihash = multihash;
     }
 
-    public Codec getCodex() {
+    Codec getCodex() {
         return codex;
     }
 
-    public void setCodex(Codec codex) {
+    private void setCodex(Codec codex) {
         this.codex = codex;
     }
 
@@ -76,7 +76,7 @@ public class CodecDecider {
         return uri;
     }
 
-    public void setUri(URI uri) {
+    private void setUri(URI uri) {
         this.uri = uri;
     }
 
