@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         UserActionDialogFragment.ActionListener,
         ThreadActionDialogFragment.ActionListener,
         EditMultihashDialogFragment.ActionListener,
+        EditPeerDialogFragment.ActionListener,
         ThreadsFragment.ActionListener,
         PeersFragment.ActionListener,
         NameDialogFragment.ActionListener {
@@ -84,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private DrawerLayout drawer_layout;
     private FloatingActionButton fab_daemon;
     private long mLastClickTime = 0;
-    private PagerAdapter adapter;
+
     private ViewPager viewPager;
 
     @Override
@@ -195,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         viewPager = findViewById(R.id.viewPager);
-        adapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
+        PagerAdapter adapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
         viewPager.setAdapter(adapter);
         viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -562,8 +563,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickEditPeer() {
         FragmentManager fm = getSupportFragmentManager();
-        EditMultihashDialogFragment editMultihashDialogFragment = new EditMultihashDialogFragment();
-        editMultihashDialogFragment.show(fm, EditMultihashDialogFragment.TAG);
+        EditPeerDialogFragment editPeerDialogFragment = new EditPeerDialogFragment();
+        editPeerDialogFragment.show(fm, EditPeerDialogFragment.TAG);
     }
 
     @Override
@@ -651,8 +652,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             threadsAPI.setStatus(user, UserStatus.DIALING);
 
 
-                            boolean value = threadsAPI.connect(ipfs, pid,
-                                    Preferences.getRelay(getApplicationContext()),
+                            boolean value = threadsAPI.connect(ipfs, pid, null,
                                     Application.CON_TIMEOUT);
                             if (value) {
                                 threadsAPI.setStatus(user, UserStatus.ONLINE);
@@ -729,8 +729,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     try {
                         threadsAPI.setStatus(user, UserStatus.DIALING);
 
-                        boolean value = threadsAPI.connect(ipfs, pid,
-                                Preferences.getRelay(getApplicationContext()),
+                        boolean value = threadsAPI.connect(ipfs, pid, null,
                                 Application.CON_TIMEOUT);
                         if (value) {
                             threadsAPI.setStatus(user, UserStatus.ONLINE);

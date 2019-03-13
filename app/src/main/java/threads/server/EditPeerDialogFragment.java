@@ -29,11 +29,11 @@ import threads.core.Preferences;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class EditMultihashDialogFragment extends DialogFragment {
-    public static final String TAG = EditMultihashDialogFragment.class.getSimpleName();
+public class EditPeerDialogFragment extends DialogFragment {
+    public static final String TAG = EditPeerDialogFragment.class.getSimpleName();
     private static final int MULTIHASH_SIZE = 128;
     private final AtomicBoolean notPrintErrorMessages = new AtomicBoolean(false);
-    private EditMultihashDialogFragment.ActionListener actionListener;
+    private EditPeerDialogFragment.ActionListener actionListener;
     private long mLastClickTime = 0;
     private TextInputLayout edit_multihash_layout;
     private TextInputEditText multihash;
@@ -44,7 +44,7 @@ public class EditMultihashDialogFragment extends DialogFragment {
         super.onAttach(context);
 
         try {
-            actionListener = (EditMultihashDialogFragment.ActionListener) getActivity();
+            actionListener = (EditPeerDialogFragment.ActionListener) getActivity();
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
@@ -111,7 +111,7 @@ public class EditMultihashDialogFragment extends DialogFragment {
                     checkNotNull(text);
                     String hash = text.toString();
                     dismiss();
-                    actionListener.downloadMultihash(hash);
+                    actionListener.clickConnectPeer(hash);
 
 
                 })
@@ -127,7 +127,7 @@ public class EditMultihashDialogFragment extends DialogFragment {
                     dismiss();
 
                 })
-                .setTitle(getString(R.string.multihash));
+                .setTitle(getString(R.string.peer_id));
 
 
         Dialog dialog = builder.create();
@@ -217,7 +217,8 @@ public class EditMultihashDialogFragment extends DialogFragment {
 
     public interface ActionListener {
 
-        void downloadMultihash(@NonNull String multihash);
+        void clickConnectPeer(@NonNull String multihash);
 
     }
 }
+

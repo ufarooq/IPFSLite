@@ -191,7 +191,7 @@ public class DaemonService extends Service {
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             try {
-                PID relay = Preferences.getRelay(getApplicationContext());
+                PID relay = null;
                 if (relay != null) {
                     while (DAEMON_RUNNING.get()) {
                         if (Network.isConnected(getApplicationContext())) {

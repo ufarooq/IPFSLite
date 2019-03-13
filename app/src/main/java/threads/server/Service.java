@@ -54,9 +54,7 @@ class Service {
         checkNotNull(ipfs);
         checkNotNull(relay);
         try {
-            if (!ipfs.swarm_is_connected(relay)) {
-                ipfs.swarm_connect(relay, Application.CON_TIMEOUT);
-            }
+            ipfs.swarm_connect(relay, Application.CON_TIMEOUT);
         } catch (Throwable e) {
             // ignore exception occurs when daemon is shutdown
         }
@@ -77,7 +75,7 @@ class Service {
                         UserStatus oldStatus = user.getStatus();
                         try {
 
-                            if (ipfs.swarm_is_connected(user.getPID())) {
+                            if (ipfs.swarm_connect(user.getPID())) {
 
                                 if (UserStatus.ONLINE != oldStatus) {
                                     threads.setStatus(user, UserStatus.ONLINE);
@@ -94,7 +92,7 @@ class Service {
 
 
                                     boolean value = threads.connect(ipfs, user.getPID(),
-                                            Preferences.getRelay(context), Application.CON_TIMEOUT);
+                                            null, Application.CON_TIMEOUT);
                                     if (value) {
                                         threads.setStatus(user, UserStatus.ONLINE);
                                     } else {
@@ -289,7 +287,7 @@ class Service {
         if (ipfs != null) {
             try {
                 if (threads.connect(ipfs, user.getPID(),
-                        Preferences.getRelay(context), Application.CON_TIMEOUT)) {
+                        null, Application.CON_TIMEOUT)) {
 
                     for (long idx : idxs) {
 

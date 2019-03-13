@@ -17,7 +17,7 @@
     <string name="licences">Licences</string>
     <string name="webui">WebUI</string>
     <string name="application">Application</string>
-    <string name="multihash">Multihash</string>
+    <string name="multihash">Multihash (CID)</string>
     <string name="multihash_access">The QR code (CID \"%1$s\") contains all necessary information to get the content of the hash.</string>
     <string name="feature_camera_required">Feature camera required</string>
     <string name="share">Share</string>
@@ -63,7 +63,7 @@
     <string name="ipfs_settings">IPFS Settings</string>
     <string name="file_not_supported">File not supported.</string>
     <string name="no_activity_found_to_handle_uri">No activity found which support the file.</string>
-    <string name="action_scan_cid">Scan Multihash</string>
-    <string name="action_edit_cid">Edit Multihash</string>
-    <string name="action_file_cid">Upload Files</string>
+    <string name="action_scan_cid">Scan CID</string>
+    <string name="action_edit_cid">Edit CID</string>
+    <string name="action_file_cid">Upload</string>
 </resources>
