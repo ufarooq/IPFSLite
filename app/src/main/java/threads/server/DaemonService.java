@@ -198,6 +198,8 @@ public class DaemonService extends Service {
             }
         } catch (Throwable e) {
             // IGNORE exception occurs when daemon is shutdown
+        } finally {
+            threads.server.Service.connectPeers(getApplicationContext());
         }
     }
 
@@ -336,6 +338,8 @@ public class DaemonService extends Service {
             stopForeground(true);
 
             new Thread(() -> threads.server.Service.connectPeers(getApplicationContext())).start();
+
+            new Thread(() -> threads.server.Service.closeTasks(getApplicationContext())).start();
 
             // Stop the foreground service.
             stopSelf();

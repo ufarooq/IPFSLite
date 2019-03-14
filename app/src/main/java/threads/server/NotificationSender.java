@@ -7,8 +7,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -17,7 +15,6 @@ import threads.core.Preferences;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 class NotificationSender {
-    static final AtomicInteger NOTIFICATIONS_COUNTER = new AtomicInteger(1000);
     private static final String CHANNEL_ID = "CHANNEL_ID";
     private static final String GROUP_ID = "GROUP_ID";
     private static final int GROUP_IDX = 999;
@@ -44,14 +41,14 @@ class NotificationSender {
         }
     }
 
-    static void showNotification(@NonNull Context context, @NonNull String message) {
+    static void showNotification(@NonNull Context context, @NonNull String message, int code) {
         checkNotNull(context);
         checkNotNull(message);
         try {
             buildGroupNotification(context);
             NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
             Notification notification = createNotification(context, message);
-            notificationManager.notify(NOTIFICATIONS_COUNTER.incrementAndGet(), notification);
+            notificationManager.notify(code, notification);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }

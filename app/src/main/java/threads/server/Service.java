@@ -47,8 +47,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 class Service {
 
-    private static final ExecutorService EXECUTOR_SERVICE = Executors.newFixedThreadPool(5);
-
+    private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(5);
+    private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(5);
 
     static void connectRelay(@NonNull IPFS ipfs, @NonNull PID relay) {
         checkNotNull(ipfs);
@@ -69,43 +69,52 @@ class Service {
             final IPFS ipfs = Singleton.getInstance().getIpfs();
             if (ipfs != null) {
                 List<User> users = threads.getUsers();
-                for (User user : users) {
-                    if (user.getStatus() != UserStatus.BLOCKED &&
-                            user.getStatus() != UserStatus.DIALING) {
-                        UserStatus oldStatus = user.getStatus();
-                        try {
+                if (DaemonService.DAEMON_RUNNING.get()) {
+                    for (User user : users) {
+                        if (user.getStatus() != UserStatus.BLOCKED &&
+                                user.getStatus() != UserStatus.DIALING) {
+                            UserStatus oldStatus = user.getStatus();
+                            try {
 
-                            if (ipfs.swarm_peer(user.getPID()) != null) {
+                                if (ipfs.swarm_peer(user.getPID()) != null) {
 
-                                if (UserStatus.ONLINE != oldStatus) {
-                                    threads.setStatus(user, UserStatus.ONLINE);
+                                    if (UserStatus.ONLINE != oldStatus) {
+                                        threads.setStatus(user, UserStatus.ONLINE);
+
+                                    }
+                                } else {
+                                    if (UserStatus.OFFLINE != oldStatus) {
+                                        threads.setStatus(user, UserStatus.OFFLINE);
+                                    }
+
+                                    if (Application.isAutoConnected(context)) {
+
+                                        threads.setStatus(user, UserStatus.DIALING);
+
+
+                                        boolean value = threads.connect(ipfs, user.getPID(),
+                                                null, Application.CON_TIMEOUT);
+                                        if (value) {
+                                            threads.setStatus(user, UserStatus.ONLINE);
+                                        } else {
+                                            threads.setStatus(user, UserStatus.OFFLINE);
+                                        }
+                                    }
 
                                 }
-                            } else {
+                            } catch (Throwable e) {
                                 if (UserStatus.OFFLINE != oldStatus) {
                                     threads.setStatus(user, UserStatus.OFFLINE);
                                 }
-
-                                if (Application.isAutoConnected(context)) {
-
-                                    threads.setStatus(user, UserStatus.DIALING);
-
-
-                                    boolean value = threads.connect(ipfs, user.getPID(),
-                                            null, Application.CON_TIMEOUT);
-                                    if (value) {
-                                        threads.setStatus(user, UserStatus.ONLINE);
-                                    } else {
-                                        threads.setStatus(user, UserStatus.OFFLINE);
-                                    }
-                                }
-
-                            }
-                        } catch (Throwable e) {
-                            if (UserStatus.OFFLINE != oldStatus) {
-                                threads.setStatus(user, UserStatus.OFFLINE);
                             }
                         }
+                    }
+                } else {
+                    for (User user : users) {
+                        if (UserStatus.OFFLINE != user.getStatus()) {
+                            threads.setStatus(user, UserStatus.OFFLINE);
+                        }
+
                     }
                 }
             }
@@ -136,7 +145,7 @@ class Service {
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
         if (ipfs != null) {
 
-            EXECUTOR_SERVICE.submit(() -> {
+            UPLOAD_SERVICE.submit(() -> {
                 try {
                     InputStream inputStream =
                             context.getContentResolver().openInputStream(uri);
@@ -175,7 +184,8 @@ class Service {
                     thread = threadsAPI.getThreadByIdx(idx); // TODO optimize here
                     checkNotNull(thread);
                     try {
-                        CID cid = ipfs.add(inputStream, fileDetails.getFileName(), true, false);
+                        CID cid = ipfs.add(inputStream, fileDetails.getFileName(),
+                                true, true);
                         checkNotNull(cid);
 
                         // cleanup of entries with same CID
@@ -420,7 +430,7 @@ class Service {
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
 
-            EXECUTOR_SERVICE.submit(() -> {
+            DOWNLOAD_SERVICE.submit(() -> {
                 try {
                     // check if multihash is valid
                     try {
@@ -554,7 +564,7 @@ class Service {
 
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
-            EXECUTOR_SERVICE.submit(() -> {
+            DOWNLOAD_SERVICE.submit(() -> {
                 try {
 
                     downloadMultihash(context, threadsAPI, ipfs, thread);
@@ -606,7 +616,7 @@ class Service {
         }
 
         if (success) {
-            NotificationSender.showNotification(context.getApplicationContext(), cid.getCid());
+            NotificationSender.showNotification(context, cid.getCid(), cid.hashCode());
         }
 
     }
@@ -688,7 +698,7 @@ class Service {
 
         final NotificationManager notificationManager = (NotificationManager)
                 context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        int notifyID = NotificationSender.NOTIFICATIONS_COUNTER.incrementAndGet();
+        int notifyID = link.getCid().hashCode();
         Notification notification = builder.build();
         if (notificationManager != null) {
             notificationManager.notify(notifyID, notification);
@@ -731,7 +741,8 @@ class Service {
         }
 
         if (success) {
-            NotificationSender.showNotification(context.getApplicationContext(), link.getPath());
+            NotificationSender.showNotification(context,
+                    link.getPath(), link.getCid().hashCode());
         }
 
         return success;
@@ -889,6 +900,19 @@ class Service {
             }
         }
         return file;
+    }
+
+    public static void closeTasks(@NonNull Context context) {
+        checkNotNull(context);
+
+        final THREADS threads = Singleton.getInstance().getThreads();
+
+
+        List<Thread> entries = threads.getThreadsByKindAndThreadStatus(
+                Kind.OUT, ThreadStatus.OFFLINE);
+        for (Thread entry : entries) {
+            threads.setStatus(entry, ThreadStatus.ERROR);
+        }
     }
 
     public enum ThreadKind {

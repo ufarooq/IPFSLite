@@ -500,13 +500,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickUpload() {
 
-        // CHECKED
-        if (!DaemonService.DAEMON_RUNNING.get()) {
-            Preferences.error(getString(R.string.daemon_not_running));
-            return;
-        }
-
-
         try {
             Intent intent = new Intent();
             intent.setType("*/*");

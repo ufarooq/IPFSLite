@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import threads.core.Preferences;
 import threads.core.api.User;
+import threads.core.api.UserStatus;
 import threads.core.mdl.UsersViewModel;
 import threads.ipfs.api.PID;
 import threads.share.UserActionDialogFragment;
@@ -164,7 +165,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
     @Override
     public boolean generalActionSupport(@NonNull User user) {
-        return true;
+        return user.getStatus() != UserStatus.DIALING;
     }
 
     public interface ActionListener {
