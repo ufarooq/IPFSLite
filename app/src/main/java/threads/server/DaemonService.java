@@ -25,7 +25,6 @@ import threads.core.api.User;
 import threads.core.api.UserStatus;
 import threads.core.api.UserType;
 import threads.ipfs.IPFS;
-import threads.ipfs.Network;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.SwarmConfig;
@@ -181,7 +180,7 @@ public class DaemonService extends Service {
 
                 new Thread(this::startPubsub).start();
 
-                new Thread(this::startRelay).start();
+                //new Thread(this::startRelay).start();
 
                 new Thread(this::startPeers).start();
 
@@ -203,25 +202,6 @@ public class DaemonService extends Service {
         }
     }
 
-
-    private void startRelay() {
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-        if (ipfs != null) {
-            try {
-                PID relay = null;
-                if (relay != null) {
-                    while (DAEMON_RUNNING.get()) {
-                        if (Network.isConnected(getApplicationContext())) {
-                            threads.server.Service.connectRelay(ipfs, relay);
-                        }
-                        Thread.sleep(30000);  // TODO optimize here when no network
-                    }
-                }
-            } catch (Throwable e) {
-                // IGNORE exception occurs when daemon is shutdown
-            }
-        }
-    }
 
     private void startPubsub() {
         final IPFS ipfs = Singleton.getInstance().getIpfs();

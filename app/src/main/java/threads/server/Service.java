@@ -50,16 +50,6 @@ class Service {
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(5);
     private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(5);
 
-    static void connectRelay(@NonNull IPFS ipfs, @NonNull PID relay) {
-        checkNotNull(ipfs);
-        checkNotNull(relay);
-        try {
-            ipfs.swarm_connect(relay, Application.CON_TIME_OUT);
-        } catch (Throwable e) {
-            // ignore exception occurs when daemon is shutdown
-        }
-    }
-
     static void connectPeers(@NonNull Context context) {
         checkNotNull(context);
 
