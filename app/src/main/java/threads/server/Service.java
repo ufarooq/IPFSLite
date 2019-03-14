@@ -498,7 +498,7 @@ class Service {
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-        thread.setMimeType("");
+        thread.setMimeType(Application.OCTET_MIME_TYPE); // not known yet
         return threads.storeThread(thread);
     }
 
@@ -525,29 +525,58 @@ class Service {
                     List<Link> links = threadsAPI.getLinks(ipfs, threadObject,
                             Application.CON_TIMEOUT, true);
 
-
-                    Uri uri;
-                    String path;
-                    if (links.isEmpty() || links.size() > 1) {
-                        path = cid.getCid(); // TODO get real name
-                        uri = Uri.parse(Preferences.getGateway(context) + cid.getCid());
-                    } else {
+                    if (links.size() == 1) {
                         Link link = links.get(0);
-                        path = link.getPath();
-                        uri = Uri.parse(Preferences.getGateway(context) +
-                                cid.getCid() + "/" + path);
+                        cid = link.getCid();
                     }
-                    DownloadManager.Request request = new DownloadManager.Request(uri);
 
 
-                    request.setTitle(path);
+                    File dir = Environment.getExternalStoragePublicDirectory(
+                            Environment.DIRECTORY_DOWNLOADS);
+                    File file = new File(dir, threadObject.getTitle());
 
-                    request.setNotificationVisibility(
-                            DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                    request.setDestinationInExternalPublicDir(
-                            Environment.DIRECTORY_DOWNLOADS, path);
 
-                    downloadManager.enqueue(request);
+                    /* // TODO progress not working yet (Bug entry for IPFS)
+                    NotificationCompat.Builder builder =
+                            NotificationSender.createDownloadProgressNotification(
+                                    context, threadObject.getTitle());
+
+                    final NotificationManager notificationManager = (NotificationManager)
+                            context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                    int notifyID = cid.hashCode();
+                    Notification notification = builder.build();
+                    if (notificationManager != null) {
+                        notificationManager.notify(notifyID, notification);
+                    }*/
+
+                    try {
+
+                        threadsAPI.store(ipfs, file, cid, (percent) -> {
+                                /* // TODO progress not working yet (Bug entry for IPFS)
+                                builder.setProgress(100, percent, false);
+                                if (notificationManager != null) {
+                                    notificationManager.notify(notifyID, builder.build());
+                                }*/
+
+                        });
+
+
+                        String mimeType = threadObject.getMimeType();
+                        checkNotNull(mimeType);
+
+                        downloadManager.addCompletedDownload(file.getName(),
+                                file.getName(), true,
+                                mimeType,
+                                file.getAbsolutePath(),
+                                file.length(), true);
+                    } catch (Throwable e) {
+                        Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    } finally {
+                        /* // TODO progress not working yet (Bug entry for IPFS)
+                        if (notificationManager != null) {
+                            notificationManager.cancel(notifyID);
+                        }*/
+                    }
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -686,6 +715,8 @@ class Service {
         String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
         if (mimeType != null) {
             threads.setMimeType(thread, mimeType);
+        } else {
+            threads.setMimeType(thread, Application.OCTET_MIME_TYPE); // not know what type
         }
         threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
 
@@ -694,7 +725,7 @@ class Service {
 
         NotificationCompat.Builder builder =
                 NotificationSender.createDownloadProgressNotification(
-                        context.getApplicationContext(), link.getPath());
+                        context, link.getPath());
 
         final NotificationManager notificationManager = (NotificationManager)
                 context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
@@ -839,11 +870,11 @@ class Service {
         if (links.isEmpty()) {
             threads.setTitle(thread, cid.getCid());
             threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
-            threads.setMimeType(thread, Application.QR_CODE_MIME_TYPE);
+            threads.setMimeType(thread, Application.OCTET_MIME_TYPE);
 
             try {
                 CID image = THREADS.createResourceImage(
-                        context, threads, ipfs, "", R.drawable.qrcode);
+                        context, threads, ipfs, "", R.drawable.file_document);
                 threads.setImage(thread, image);
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -854,11 +885,11 @@ class Service {
 
             // real directory
             threads.setTitle(thread, cid.getCid());
-            threads.setMimeType(thread, Application.QR_CODE_MIME_TYPE);
+            threads.setMimeType(thread, Application.OCTET_MIME_TYPE);
             threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.NODE.name(), true);
             try {
                 CID image = THREADS.createResourceImage(
-                        context, threads, ipfs, "", R.drawable.qrcode);
+                        context, threads, ipfs, "", R.drawable.file_document);
                 threads.setImage(thread, image);
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);

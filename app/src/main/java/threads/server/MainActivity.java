@@ -921,12 +921,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadDownload(long idx) {
 
-        // CHECKED
-        if (!DaemonService.DAEMON_RUNNING.get()) {
-            Preferences.error(getString(R.string.daemon_not_running));
-            return;
-        }
-
         storedThread.set(idx);
         try {
             if (ContextCompat.checkSelfPermission(getApplicationContext(),

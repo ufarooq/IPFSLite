@@ -15,7 +15,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class Application extends android.app.Application {
 
     public static final int CON_TIMEOUT = 30;
-    public static final String QR_CODE_MIME_TYPE = "qr_code/ipfs";
+    public static final String OCTET_MIME_TYPE = "application/octet-stream";
     public static final String THREAD_KIND = "THREAD_KIND";
     private static final String PREF_KEY = "prefKey";
     private static final String CONFIG_CHANGE_KEY = "configChangeKey";
