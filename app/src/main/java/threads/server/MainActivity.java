@@ -609,7 +609,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                             boolean value = threadsAPI.connect(ipfs, pid, null,
-                                    Application.CON_TIMEOUT);
+                                    Application.CON_TIME_OUT);
                             if (value) {
                                 threadsAPI.setStatus(user, UserStatus.ONLINE);
                             } else {
@@ -686,7 +686,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         threadsAPI.setStatus(user, UserStatus.DIALING);
 
                         boolean value = threadsAPI.connect(ipfs, pid, null,
-                                Application.CON_TIMEOUT);
+                                Application.CON_TIME_OUT);
                         if (value) {
                             threadsAPI.setStatus(user, UserStatus.ONLINE);
 
@@ -773,7 +773,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     String multihash = cid.getCid();
 
                     List<Link> links = threadsAPI.getLinks(ipfs, threadObject,
-                            Application.CON_TIMEOUT, true);
+                            Application.CON_TIME_OUT, true);
 
                     String path = "";
                     if (links.size() == 1) {

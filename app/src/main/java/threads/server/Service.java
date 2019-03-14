@@ -54,7 +54,7 @@ class Service {
         checkNotNull(ipfs);
         checkNotNull(relay);
         try {
-            ipfs.swarm_connect(relay, Application.CON_TIMEOUT);
+            ipfs.swarm_connect(relay, Application.CON_TIME_OUT);
         } catch (Throwable e) {
             // ignore exception occurs when daemon is shutdown
         }
@@ -93,7 +93,7 @@ class Service {
 
 
                                         boolean value = threads.connect(ipfs, user.getPID(),
-                                                null, Application.CON_TIMEOUT);
+                                                null, Application.CON_TIME_OUT);
                                         if (value) {
                                             threads.setStatus(user, UserStatus.ONLINE);
                                         } else {
@@ -277,7 +277,7 @@ class Service {
         if (ipfs != null) {
             try {
                 if (threads.connect(ipfs, user.getPID(),
-                        null, Application.CON_TIMEOUT)) {
+                        null, Application.CON_TIME_OUT)) {
 
                     for (long idx : idxs) {
 
@@ -523,7 +523,7 @@ class Service {
                     checkNotNull(cid);
 
                     List<Link> links = threadsAPI.getLinks(ipfs, threadObject,
-                            Application.CON_TIMEOUT, true);
+                            Application.CON_TIME_OUT, true);
 
                     if (links.size() == 1) {
                         Link link = links.get(0);
@@ -678,7 +678,7 @@ class Service {
         }
 
 
-        List<Link> links = getLinks(ipfs, link, Application.CON_TIMEOUT, false);
+        List<Link> links = getLinks(ipfs, link, Application.CON_TIME_OUT, false);
 
         return downloadLinks(context, threads, ipfs, thread, links);
 
@@ -865,7 +865,7 @@ class Service {
         checkNotNull(cid);
         threads.setStatus(thread, ThreadStatus.OFFLINE);
 
-        List<Link> links = threads.getLinks(ipfs, thread, Application.CON_TIMEOUT, false);
+        List<Link> links = threads.getLinks(ipfs, thread, Application.CON_TIME_OUT, false);
 
         if (links.isEmpty()) {
             threads.setTitle(thread, cid.getCid());
