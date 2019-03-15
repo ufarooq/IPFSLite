@@ -40,6 +40,7 @@ import threads.ipfs.Network;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
 import threads.ipfs.api.PID;
+import threads.share.ConnectService;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -82,8 +83,8 @@ class Service {
                                         threads.setStatus(user, UserStatus.DIALING);
 
 
-                                        boolean value = threads.connect(ipfs, user.getPID(),
-                                                null, Application.CON_TIME_OUT);
+                                        boolean value = ConnectService.connect(ipfs,
+                                                user.getPID(), Application.CON_TIME_OUT);
                                         if (value) {
                                             threads.setStatus(user, UserStatus.ONLINE);
                                         } else {
@@ -258,20 +259,15 @@ class Service {
     }
 
 
-    private static boolean shareUser(@NonNull Context context,
-                                     @NonNull User user,
-                                     @NonNull Long... idxs) {
+    private static boolean shareUser(@NonNull User user, @NonNull Long... idxs) {
         final THREADS threads = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         boolean success = false;
         if (ipfs != null) {
             try {
-                if (threads.connect(ipfs, user.getPID(),
-                        null, Application.CON_TIME_OUT)) {
+                if (ConnectService.connect(ipfs, user.getPID(), Application.CON_TIME_OUT)) {
 
                     for (long idx : idxs) {
-
-
                         Thread threadObject = threads.getThreadByIdx(idx);
                         checkNotNull(threadObject);
 
@@ -320,7 +316,7 @@ class Service {
                                 if (!userPID.equals(host)) {
 
                                     Future<Boolean> future = sharedExecutor.submit(() ->
-                                            shareUser(context, user, idxs));
+                                            shareUser(user, idxs));
                                     futures.add(future);
                                 }
                             }

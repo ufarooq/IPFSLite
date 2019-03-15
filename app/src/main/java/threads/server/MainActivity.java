@@ -58,6 +58,7 @@ import threads.ipfs.Network;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
 import threads.ipfs.api.PID;
+import threads.share.ConnectService;
 import threads.share.InfoDialogFragment;
 import threads.share.NameDialogFragment;
 import threads.share.ThreadActionDialogFragment;
@@ -608,7 +609,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             threadsAPI.setStatus(user, UserStatus.DIALING);
 
 
-                            boolean value = threadsAPI.connect(ipfs, pid, null,
+                            boolean value = ConnectService.connect(ipfs, pid,
                                     Application.CON_TIME_OUT);
                             if (value) {
                                 threadsAPI.setStatus(user, UserStatus.ONLINE);
@@ -685,8 +686,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     try {
                         threadsAPI.setStatus(user, UserStatus.DIALING);
 
-                        boolean value = threadsAPI.connect(ipfs, pid, null,
-                                Application.CON_TIME_OUT);
+                        boolean value = ConnectService.connect(ipfs, pid, Application.CON_TIME_OUT);
                         if (value) {
                             threadsAPI.setStatus(user, UserStatus.ONLINE);
 
