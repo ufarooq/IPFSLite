@@ -537,7 +537,7 @@ class Service {
 
                     try {
 
-                        threadsAPI.store(ipfs, file, cid, (percent) -> {
+                        threadsAPI.download(ipfs, file, cid, threadObject.getSesKey(), (percent) -> {
                                 /* // TODO progress not working yet (Bug entry for IPFS)
                                 builder.setProgress(100, percent, false);
                                 if (notificationManager != null) {
