@@ -672,7 +672,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         CID image = ipfs.add(data, true);
                         user = threadsAPI.createUser(pid,
                                 pid.getPid(),
-                                pid.getPid(),
                                 pid.getPid(), UserType.VERIFIED, image, null);
                         user.setStatus(UserStatus.OFFLINE);
                         threadsAPI.storeUser(user);

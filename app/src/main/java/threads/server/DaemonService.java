@@ -259,7 +259,6 @@ public class DaemonService extends Service {
                     CID image = ipfs.add(data, true);
                     sender = threadsAPI.createUser(senderPid,
                             senderPid.getPid(),
-                            senderPid.getPid(),
                             name, UserType.UNKNOWN, image, null);
                     sender.setStatus(UserStatus.BLOCKED);
                     threadsAPI.storeUser(sender);

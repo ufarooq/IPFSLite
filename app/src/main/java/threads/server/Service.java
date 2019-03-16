@@ -242,15 +242,12 @@ class Service {
 
         User user = threads.getUserByPID(pid);
         if (user == null) {
-
-            String inbox = Preferences.getInbox(context);
-            checkNotNull(inbox);
             String publicKey = ipfs.getPublicKey();
             byte[] data = THREADS.getImage(context,
                     pid.getPid(), R.drawable.server_network);
 
             CID image = ipfs.add(data, true);
-            user = threads.createUser(pid, inbox, publicKey,
+            user = threads.createUser(pid, publicKey,
                     getDeviceName(), UserType.VERIFIED, image, null);
             user.setStatus(UserStatus.BLOCKED);
             threads.storeUser(user);
@@ -537,7 +534,8 @@ class Service {
 
                     try {
 
-                        threadsAPI.download(ipfs, file, cid, threadObject.getSesKey(), (percent) -> {
+                        threadsAPI.download(ipfs, file, cid, threadObject.getSesKey(),
+                                true, false, (percent) -> {
                                 /* // TODO progress not working yet (Bug entry for IPFS)
                                 builder.setProgress(100, percent, false);
                                 if (notificationManager != null) {
