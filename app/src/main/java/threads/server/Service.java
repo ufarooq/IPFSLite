@@ -519,7 +519,7 @@ class Service {
                     File file = new File(dir, threadObject.getTitle());
 
 
-                    /* // TODO progress not working yet (Bug entry for IPFS)
+
                     NotificationCompat.Builder builder =
                             NotificationSender.createDownloadProgressNotification(
                                     context, threadObject.getTitle());
@@ -530,36 +530,44 @@ class Service {
                     Notification notification = builder.build();
                     if (notificationManager != null) {
                         notificationManager.notify(notifyID, notification);
-                    }*/
+                    }
 
                     try {
 
-                        threadsAPI.download(ipfs, file, cid, threadObject.getSesKey(),
-                                true, false, (percent) -> {
-                                /* // TODO progress not working yet (Bug entry for IPFS)
-                                builder.setProgress(100, percent, false);
-                                if (notificationManager != null) {
-                                    notificationManager.notify(notifyID, builder.build());
-                                }*/
+                        boolean finished = threadsAPI.download(ipfs, file, cid,
+                                threadObject.getSesKey(),
+                                true, false, new THREADS.Progress() {
+                                    @Override
+                                    public void setProgress(int percent) {
+                                        builder.setProgress(100, percent, false);
+                                        if (notificationManager != null) {
+                                            notificationManager.notify(notifyID, builder.build());
+                                        }
+                                    }
 
-                        });
+                                    @Override
+                                    public boolean isStopped() {
+                                        return false;
+                                    }
+                                });
 
+                        if (finished) {
+                            String mimeType = threadObject.getMimeType();
+                            checkNotNull(mimeType);
 
-                        String mimeType = threadObject.getMimeType();
-                        checkNotNull(mimeType);
-
-                        downloadManager.addCompletedDownload(file.getName(),
-                                file.getName(), true,
-                                mimeType,
-                                file.getAbsolutePath(),
-                                file.length(), true);
+                            downloadManager.addCompletedDownload(file.getName(),
+                                    file.getName(), true,
+                                    mimeType,
+                                    file.getAbsolutePath(),
+                                    file.length(), true);
+                        }
                     } catch (Throwable e) {
                         Preferences.evaluateException(Preferences.EXCEPTION, e);
                     } finally {
-                        /* // TODO progress not working yet (Bug entry for IPFS)
+
                         if (notificationManager != null) {
                             notificationManager.cancel(notifyID);
-                        }*/
+                        }
                     }
 
                 } catch (Throwable e) {
@@ -723,14 +731,20 @@ class Service {
 
         boolean success;
         try {
-
             success = threads.stream(ipfs, file,
-                    link.getCid(), size, true, false, (percent) -> {
-                        builder.setProgress(100, percent, false);
-                        if (notificationManager != null) {
-                            notificationManager.notify(notifyID, builder.build());
+                    link.getCid(), size, true, false, new THREADS.Progress() {
+                        @Override
+                        public void setProgress(int percent) {
+                            builder.setProgress(100, percent, false);
+                            if (notificationManager != null) {
+                                notificationManager.notify(notifyID, builder.build());
+                            }
                         }
 
+                        @Override
+                        public boolean isStopped() {
+                            return false;
+                        }
                     });
 
 
