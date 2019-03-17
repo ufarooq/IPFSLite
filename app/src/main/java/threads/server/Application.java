@@ -18,6 +18,7 @@ public class Application extends android.app.Application {
     public static final String OCTET_MIME_TYPE = "application/octet-stream";
     public static final String THREAD_KIND = "THREAD_KIND";
     public static final long MIN_CON_TIME_OUT = 5;
+    public static final long MAX_CON_TIME_OUT = 60;
     private static final String PREF_KEY = "prefKey";
     private static final String CONFIG_CHANGE_KEY = "configChangeKey";
     private static final String AUTO_CONNECTED_KEY = "autoConnectedKey";

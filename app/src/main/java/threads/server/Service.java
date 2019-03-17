@@ -519,7 +519,6 @@ class Service {
                     File file = new File(dir, threadObject.getTitle());
 
 
-
                     NotificationCompat.Builder builder =
                             NotificationSender.createDownloadProgressNotification(
                                     context, threadObject.getTitle());
@@ -549,7 +548,7 @@ class Service {
                                     public boolean isStopped() {
                                         return false;
                                     }
-                                });
+                                }, Application.MAX_CON_TIME_OUT);
 
                         if (finished) {
                             String mimeType = threadObject.getMimeType();
@@ -639,7 +638,7 @@ class Service {
                 public boolean isStopped() {
                     return false;
                 }
-            });
+            }, Application.MAX_CON_TIME_OUT);
 
             try {
                 byte[] image = THREADS.getPreviewImage(context, file);
@@ -756,6 +755,7 @@ class Service {
 
         boolean success;
         try {
+
             success = threads.download(ipfs, file,
                     link.getCid(), true, false, thread.getSesKey(), new THREADS.Progress() {
                         @Override
@@ -770,7 +770,7 @@ class Service {
                         public boolean isStopped() {
                             return false;
                         }
-                    });
+                    }, Application.MAX_CON_TIME_OUT);
 
 
             if (success) {
