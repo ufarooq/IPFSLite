@@ -535,8 +535,8 @@ class Service {
                     try {
 
                         boolean finished = threadsAPI.download(ipfs, file, cid,
-                                threadObject.getSesKey(),
-                                true, false, new THREADS.Progress() {
+                                false, true, threadObject.getSesKey(),
+                                new THREADS.Progress() {
                                     @Override
                                     public void setProgress(int percent) {
                                         builder.setProgress(100, percent, false);
@@ -597,10 +597,10 @@ class Service {
         }
     }
 
-    private static void downloadCID(@NonNull Context context,
-                                    @NonNull THREADS threads,
-                                    @NonNull IPFS ipfs,
-                                    @NonNull Thread thread) {
+    private static void downloadThread(@NonNull Context context,
+                                       @NonNull THREADS threads,
+                                       @NonNull IPFS ipfs,
+                                       @NonNull Thread thread) {
         // UPDATE UI
         Preferences.event(Preferences.THREAD_SELECT_EVENT, String.valueOf(thread.getIdx()));
 
@@ -608,13 +608,38 @@ class Service {
         CID cid = thread.getCid();
         checkNotNull(cid);
 
+        NotificationCompat.Builder builder =
+                NotificationSender.createDownloadProgressNotification(
+                        context, thread.getTitle());
+
+        final NotificationManager notificationManager = (NotificationManager)
+                context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        int notifyID = cid.getCid().hashCode();
+        Notification notification = builder.build();
+        if (notificationManager != null) {
+            notificationManager.notify(notifyID, notification);
+        }
+
 
         File file = getCacheFile(context, cid.getCid());
 
         boolean success = true;
         try {
 
-            threads.stream(ipfs, file, cid, true, false);
+            success = threads.download(ipfs, file, cid, true, false, thread.getSesKey(), new THREADS.Progress() {
+                @Override
+                public void setProgress(int percent) {
+                    builder.setProgress(100, percent, false);
+                    if (notificationManager != null) {
+                        notificationManager.notify(notifyID, builder.build());
+                    }
+                }
+
+                @Override
+                public boolean isStopped() {
+                    return false;
+                }
+            });
 
             try {
                 byte[] image = THREADS.getPreviewImage(context, file);
@@ -623,10 +648,7 @@ class Service {
                 }
             } catch (Throwable e) {
                 // no exception will be reported
-            } finally {
-                threads.setStatus(thread, ThreadStatus.ONLINE);
             }
-
 
         } catch (Throwable e) {
             success = false;
@@ -634,6 +656,9 @@ class Service {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         } finally {
             file.delete();
+            if (notificationManager != null) {
+                notificationManager.cancel(notifyID);
+            }
         }
 
         if (success) {
@@ -731,8 +756,8 @@ class Service {
 
         boolean success;
         try {
-            success = threads.stream(ipfs, file,
-                    link.getCid(), size, true, false, new THREADS.Progress() {
+            success = threads.download(ipfs, file,
+                    link.getCid(), true, false, thread.getSesKey(), new THREADS.Progress() {
                         @Override
                         public void setProgress(int percent) {
                             builder.setProgress(100, percent, false);
@@ -757,7 +782,6 @@ class Service {
                 } catch (Throwable e) {
                     // no exception will be reported
                 }
-
             }
 
         } catch (Throwable e) {
@@ -877,7 +901,7 @@ class Service {
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
-            downloadCID(context, threads, ipfs, thread);
+            downloadThread(context, threads, ipfs, thread);
 
         } else if (links.size() > 1) {
 
