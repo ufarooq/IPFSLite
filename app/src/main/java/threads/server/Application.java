@@ -104,8 +104,8 @@ public class Application extends android.app.Application {
 
 
         try {
-            Singleton.getInstance().init(getApplicationContext(), () -> "",
-                    null, false, true);
+            Singleton.getInstance().init(getApplicationContext(),
+                    Preferences.getProfile(getApplicationContext()));
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.IPFS_INSTALL_FAILURE, e);
         }

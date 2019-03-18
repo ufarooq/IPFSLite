@@ -25,7 +25,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
-import io.ipfs.multihash.Multihash;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -37,6 +36,7 @@ import threads.core.api.UserStatus;
 import threads.core.api.UserType;
 import threads.ipfs.IPFS;
 import threads.ipfs.Network;
+import threads.ipfs.api.Base58;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
 import threads.ipfs.api.PID;
@@ -417,7 +417,7 @@ class Service {
                 try {
                     // check if multihash is valid
                     try {
-                        Multihash.fromBase58(multihash);
+                        Base58.decode(multihash);
                     } catch (Throwable e) {
                         Preferences.error(context.getString(R.string.multihash_not_valid));
                         return;

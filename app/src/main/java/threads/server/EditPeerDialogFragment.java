@@ -24,8 +24,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
-import io.ipfs.multihash.Multihash;
 import threads.core.Preferences;
+import threads.ipfs.api.Base58;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -158,7 +158,7 @@ public class EditPeerDialogFragment extends DialogFragment {
 
             if (result) {
                 try {
-                    Multihash.fromBase58(multi);
+                    Base58.decode(multi);
                     result = true;
                 } catch (Throwable e) {
                     result = false;

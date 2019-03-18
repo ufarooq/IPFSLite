@@ -7,12 +7,11 @@ import com.google.common.base.Preconditions;
 import java.net.URI;
 
 import androidx.annotation.NonNull;
-import io.ipfs.multihash.Multihash;
 
 public class CodecDecider {
 
 
-    private Multihash multihash = null;
+    private String multihash = null;
     private URI uri = null;
     private Codec codex = Codec.UNKNOWN;
 
@@ -26,7 +25,7 @@ public class CodecDecider {
 
         // check if multihash is valid
         try {
-            codecDecider.setMultihash(Multihash.fromBase58(code));
+            codecDecider.setMultihash(code);
             codecDecider.setCodex(Codec.MULTIHASH);
             return codecDecider;
         } catch (Throwable e) {
@@ -41,7 +40,7 @@ public class CodecDecider {
                 String path = uri.getPath();
                 if (path.startsWith("/ipfs/")) {
                     String multihash = path.replace("/ipfs/", "");
-                    codecDecider.setMultihash(Multihash.fromBase58(multihash));
+                    codecDecider.setMultihash(multihash);
                     codecDecider.setCodex(Codec.URI);
                     codecDecider.setUri(uri);
                     return codecDecider;
@@ -56,11 +55,11 @@ public class CodecDecider {
         return codecDecider;
     }
 
-    Multihash getMultihash() {
+    String getMultihash() {
         return multihash;
     }
 
-    private void setMultihash(Multihash multihash) {
+    private void setMultihash(String multihash) {
         this.multihash = multihash;
     }
 

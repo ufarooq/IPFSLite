@@ -44,7 +44,6 @@ import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
 import de.psdev.licensesdialog.LicensesDialogFragment;
-import io.ipfs.multihash.Multihash;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -55,6 +54,7 @@ import threads.core.api.UserType;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.Network;
+import threads.ipfs.api.Base58;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
 import threads.ipfs.api.PID;
@@ -168,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 PID pid = Preferences.getPID(getApplicationContext());
                 checkNotNull(pid);
-                String multihash = codecDecider.getMultihash().toBase58();
+                String multihash = codecDecider.getMultihash();
                 Service.downloadMultihash(getApplicationContext(), pid, multihash);
             } else {
                 Preferences.error(getString(R.string.codec_not_supported));
@@ -649,7 +649,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     // check if multihash is valid
                     try {
-                        Multihash.fromBase58(multihash);
+                        Base58.decode(multihash);
                     } catch (Throwable e) {
                         Preferences.error(getString(R.string.multihash_not_valid));
                         return;
