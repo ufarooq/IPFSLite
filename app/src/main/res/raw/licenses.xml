@@ -71,20 +71,6 @@
     </notice>
 
     <notice>
-        <name>multiformats/java-multiaddr</name>
-        <url>https://github.com/multiformats/java-multiaddr/blob/master/LICENSE</url>
-        <copyright />
-        <license>MIT License</license>
-    </notice>
-
-    <notice>
-        <name>multiformats/java-multihash</name>
-        <url>https://github.com/multiformats/java-multihash/blob/master/LICENSE</url>
-        <copyright />
-        <license>MIT License</license>
-    </notice>
-
-    <notice>
         <name>multiformats/java-multibase</name>
         <url>https://github.com/multiformats/java-multihash/blob/master/LICENSE</url>
         <copyright />
