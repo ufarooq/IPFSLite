@@ -163,8 +163,9 @@ class Service {
 
 
                     Thread thread = threadsAPI.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
-                            pid.getPid(), fileDetails.getFileName(),
-                            "", null, false);
+                            pid.getPid(), "", null, false);
+
+                    thread.addAdditional(Application.TITLE, fileDetails.getFileName(), false);
                     thread.addAdditional(Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
                     CID image = ipfs.add(bytes, true);
                     thread.setImage(image);
@@ -472,7 +473,7 @@ class Service {
         checkNotNull(user);
 
         Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
-                address, "", "", cid, false);
+                address, "", cid, false);
 
         try {
             byte[] image = THREADS.getImage(context.getApplicationContext(),
@@ -512,16 +513,16 @@ class Service {
                         Link link = links.get(0);
                         cid = link.getCid();
                     }
-
+                    String title = threadObject.getAdditional(Application.TITLE);
 
                     File dir = Environment.getExternalStoragePublicDirectory(
                             Environment.DIRECTORY_DOWNLOADS);
-                    File file = new File(dir, threadObject.getTitle());
+                    File file = new File(dir, title);
 
 
                     NotificationCompat.Builder builder =
                             NotificationSender.createDownloadProgressNotification(
-                                    context, threadObject.getTitle());
+                                    context, title);
 
                     final NotificationManager notificationManager = (NotificationManager)
                             context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
@@ -607,9 +608,12 @@ class Service {
         CID cid = thread.getCid();
         checkNotNull(cid);
 
+        String title = thread.getAdditional(Application.TITLE);
+
+
         NotificationCompat.Builder builder =
                 NotificationSender.createDownloadProgressNotification(
-                        context, thread.getTitle());
+                        context, title);
 
         final NotificationManager notificationManager = (NotificationManager)
                 context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
@@ -666,6 +670,11 @@ class Service {
 
     }
 
+    private static void setTitle(@NonNull THREADS threads, @NonNull Thread thread, @NonNull String title) {
+        thread.addAdditional(Application.TITLE, title, false);
+        threads.updateThread(thread);
+    }
+
     private static boolean handleDirectoryLink(@NonNull Context context,
                                                @NonNull THREADS threads,
                                                @NonNull IPFS ipfs,
@@ -673,7 +682,7 @@ class Service {
                                                @NonNull Link link) {
 
         String filename = link.getPath();
-        threads.setTitle(thread, filename.substring(0, filename.length() - 1)); // remove "/"
+        setTitle(threads, thread, filename.substring(0, filename.length() - 1));// remove "/"
         threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
         threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.NODE.name(), true);
 
@@ -724,7 +733,7 @@ class Service {
                                              @NonNull Link link) {
 
         String filename = link.getPath();
-        threads.setTitle(thread, filename);
+        setTitle(threads, thread, filename);
 
 
         String extension = Files.getFileExtension(filename);
@@ -890,7 +899,7 @@ class Service {
         List<Link> links = threads.getLinks(ipfs, thread, Application.CON_TIME_OUT, false);
 
         if (links.isEmpty()) {
-            threads.setTitle(thread, cid.getCid());
+            setTitle(threads, thread, cid.getCid());
             threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
             threads.setMimeType(thread, Application.OCTET_MIME_TYPE);
 
@@ -906,7 +915,7 @@ class Service {
         } else if (links.size() > 1) {
 
             // real directory
-            threads.setTitle(thread, cid.getCid());
+            setTitle(threads, thread, cid.getCid());
             threads.setMimeType(thread, Application.OCTET_MIME_TYPE);
             threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.NODE.name(), true);
             try {

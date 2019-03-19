@@ -54,9 +54,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    testOptions {
-        unitTests.returnDefaultValues = true
-    }
+
 }
 
 dependencies {
@@ -70,7 +68,7 @@ dependencies {
     implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
 
     // UI+API (LICENSE done)
-    implementation 'threads.share:share:2.3.1'
+    implementation 'threads.share:share:2.3.5'
 
     // QR Scanner (LICENSE done)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'

@@ -318,7 +318,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                         data.add(thread);
                     }
                 }
-                data.sort(Comparator.comparing(Thread::getTitle).reversed());
+                data.sort(Comparator.comparing(Thread::getDate).reversed());
                 threadsViewAdapter.updateData(data);
             }
         });
@@ -575,7 +575,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @NonNull
     @Override
     public String getTitle(@NonNull Thread thread) {
-        return getCompactString(thread.getTitle());
+        return getCompactString(thread.getAdditional(Application.TITLE));
     }
 
     @Override
