@@ -24,6 +24,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import threads.core.Preferences;
 import threads.core.Singleton;
@@ -163,7 +164,7 @@ class Service {
 
 
                     Thread thread = threadsAPI.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
-                            pid.getPid(), "", null, false);
+                            "", false, null, null);
 
                     thread.addAdditional(Application.TITLE, fileDetails.getFileName(), false);
                     thread.addAdditional(Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
@@ -387,7 +388,7 @@ class Service {
 
             CID cid = thread.getCid();
             if (cid != null) {
-                List<Thread> entries = threadsAPI.getThreadsByAddress(cid.getCid());
+                List<Thread> entries = threadsAPI.getThreadsByThread(cid);
                 for (Thread entry : entries) {
                     deleteThread(ipfs, entry);
                 }
@@ -439,7 +440,7 @@ class Service {
                         }
 
                     } else {
-                        long idx = createThread(context, ipfs, creator, cid, pid.getPid());
+                        long idx = createThread(context, ipfs, creator, cid, null);
                         Thread thread = threads.getThreadByIdx(idx);
                         checkNotNull(thread);
                         downloadMultihash(context, threads, ipfs, thread);
@@ -457,13 +458,13 @@ class Service {
                                      @NonNull IPFS ipfs,
                                      @NonNull PID creator,
                                      @NonNull CID cid,
-                                     @NonNull String address) {
+                                     @Nullable CID parent) {
 
         checkNotNull(context);
         checkNotNull(ipfs);
         checkNotNull(creator);
         checkNotNull(cid);
-        checkNotNull(address);
+        checkNotNull(parent);
 
 
         final THREADS threads = Singleton.getInstance().getThreads();
@@ -473,7 +474,7 @@ class Service {
         checkNotNull(user);
 
         Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
-                address, "", cid, false);
+                "", false, cid, parent);
 
         try {
             byte[] image = THREADS.getImage(context.getApplicationContext(),
@@ -861,7 +862,7 @@ class Service {
                 CID threadCid = thread.getCid();
                 checkNotNull(threadCid);
 
-                long idx = createThread(context, ipfs, thread.getSenderPid(), cid, threadCid.getCid());
+                long idx = createThread(context, ipfs, thread.getSenderPid(), cid, threadCid);
                 Thread entry = threads.getThreadByIdx(idx);
                 checkNotNull(entry);
                 success = downloadLink(context, threads, ipfs, entry, link);

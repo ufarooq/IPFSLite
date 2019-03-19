@@ -287,17 +287,17 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     }
 
-    private void update(@Nullable CID cid) {
+    private void update(@Nullable CID thread) {
 
 
-        directory.set(cid);
+        directory.set(thread);
 
         LiveData<List<Thread>> obs = observer.get();
         if (obs != null) {
             obs.removeObservers(this);
         }
 
-        LiveData<List<Thread>> liveData = threadViewModel.getThreads(cid);
+        LiveData<List<Thread>> liveData = threadViewModel.getThreadsByThread(thread);
         observer.set(liveData);
 
         liveData.observe(this, (threads) -> {
@@ -305,9 +305,9 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             if (threads != null) {
 
                 List<Thread> data = new ArrayList<>();
-                for (Thread thread : threads) {
-                    if (thread.getStatus() != ThreadStatus.DELETING) {
-                        data.add(thread);
+                for (Thread threadObject : threads) {
+                    if (threadObject.getStatus() != ThreadStatus.DELETING) {
+                        data.add(threadObject);
                     }
                 }
                 data.sort(Comparator.comparing(Thread::getDate).reversed());
@@ -436,14 +436,15 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         executor.submit(() -> {
 
             CID cid = directory.get();
-
-            List<Thread> threads = threadsAPI.getThreadsByCID(cid);
+            if (cid != null) {
+                List<Thread> threads = threadsAPI.getThreadsByCID(cid);
                 if (!threads.isEmpty()) {
                     Thread thread = threads.get(0);
                     if (getActivity() != null) {
                         getActivity().runOnUiThread(() -> update(thread.getCid()));
                     }
                 }
+            }
         });
     }
 
