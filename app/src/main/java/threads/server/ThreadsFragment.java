@@ -39,7 +39,6 @@ import threads.core.mdl.EventViewModel;
 import threads.core.mdl.ThreadViewModel;
 import threads.ipfs.Network;
 import threads.ipfs.api.CID;
-import threads.ipfs.api.PID;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThreadsViewAdapter;
 
@@ -58,7 +57,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @NonNull
     private final AtomicReference<LiveData<List<Thread>>> observer = new AtomicReference<>(null);
     @NonNull
-    private final AtomicReference<String> directory = new AtomicReference<>();
+    private final AtomicReference<CID> directory = new AtomicReference<>();
     @NonNull
     private final AtomicBoolean topLevel = new AtomicBoolean(true);
 
@@ -131,7 +130,10 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         }
         outState.putLongArray(IDXS, storedEntries);
         outState.putLong(SELECTION, threadIdx);
-        outState.putString(DIRECTORY, directory.get());
+        CID dir = directory.get();
+        if (dir != null) {
+            outState.putString(DIRECTORY, dir.getCid());
+        }
         super.onSaveInstanceState(outState);
     }
 
@@ -158,18 +160,15 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 }
             }
 
-            directory.set(savedInstanceState.getString(DIRECTORY));
+            String value = savedInstanceState.getString(DIRECTORY);
+            if (value != null) {
+                directory.set(CID.create(value));
+            }
         }
 
         Activity activity = getActivity();
         checkNotNull(activity);
 
-        if (directory.get() == null) {
-            PID host = Preferences.getPID(getActivity());
-            checkNotNull(host);
-
-            directory.set(host.getPid());
-        }
 
         update(directory.get());
 
@@ -288,24 +287,17 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     }
 
-    private void update(@NonNull String address) {
-        checkNotNull(address);
+    private void update(@Nullable CID cid) {
 
 
-        Activity activity = getActivity();
-        if (activity != null) {
-            PID host = Preferences.getPID(activity);
-            checkNotNull(host);
-            topLevel.set(host.getPid().equals(address));
-        }
-        directory.set(address);
+        directory.set(cid);
 
         LiveData<List<Thread>> obs = observer.get();
         if (obs != null) {
             obs.removeObservers(this);
         }
 
-        LiveData<List<Thread>> liveData = threadViewModel.getThreads(address);
+        LiveData<List<Thread>> liveData = threadViewModel.getThreads(cid);
         observer.set(liveData);
 
         liveData.observe(this, (threads) -> {
@@ -443,15 +435,15 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
 
-            if (directory.get() != null) {
-                List<Thread> threads = threadsAPI.getThreadsByCID(CID.create(directory.get()));
+            CID cid = directory.get();
+
+            List<Thread> threads = threadsAPI.getThreadsByCID(cid);
                 if (!threads.isEmpty()) {
                     Thread thread = threads.get(0);
                     if (getActivity() != null) {
-                        getActivity().runOnUiThread(() -> update(thread.getAddress()));
+                        getActivity().runOnUiThread(() -> update(thread.getCid()));
                     }
                 }
-            }
         });
     }
 
@@ -502,7 +494,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             if (kind == Service.ThreadKind.NODE) {
                 CID cid = thread.getCid();
                 checkNotNull(cid);
-                update(cid.getCid());
+                update(cid);
             }
         }
 
