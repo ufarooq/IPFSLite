@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         EditPeerDialogFragment.ActionListener,
         PeersFragment.ActionListener,
         NameDialogFragment.ActionListener {
-    public static final int SELECT_FILES = 1;
+    private static final int SELECT_FILES = 1;
     private static final int DOWNLOAD_EXTERNAL_STORAGE = 2;
     private final AtomicReference<Long> storedThread = new AtomicReference<>(null);
     private final AtomicBoolean idScan = new AtomicBoolean(false);
@@ -528,7 +528,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickUserBlock(@NonNull String pid) {
         checkNotNull(pid);
 
-
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -790,8 +789,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
                                 Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
-
-
                     } catch (Throwable e) {
                         startActivity(new Intent(Intent.ACTION_VIEW, uri));
                     }
@@ -980,7 +977,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-    public class PagerAdapter extends FragmentStatePagerAdapter {
+    private class PagerAdapter extends FragmentStatePagerAdapter {
         final int mNumOfTabs;
 
         PagerAdapter(FragmentManager fm, int NumOfTabs) {

@@ -189,8 +189,6 @@ class Service {
 
                         threadsAPI.setCID(thread, cid);
                         threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
-
-
                     } catch (Throwable e) {
                         threadsAPI.setStatus(thread, ThreadStatus.ERROR);
                     } finally {
@@ -588,9 +586,7 @@ class Service {
         if (ipfs != null) {
             DOWNLOAD_SERVICE.submit(() -> {
                 try {
-
                     downloadMultihash(context, threadsAPI, ipfs, thread);
-
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
