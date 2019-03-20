@@ -54,9 +54,9 @@ import threads.core.api.UserType;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.Network;
-import threads.ipfs.api.Base58;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
+import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
 import threads.share.InfoDialogFragment;
@@ -648,7 +648,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     // check if multihash is valid
                     try {
-                        Base58.decode(multihash);
+                        Multihash.fromBase58(multihash);
                     } catch (Throwable e) {
                         Preferences.error(getString(R.string.multihash_not_valid));
                         return;

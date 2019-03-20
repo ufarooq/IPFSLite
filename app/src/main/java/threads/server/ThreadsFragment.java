@@ -39,6 +39,7 @@ import threads.core.mdl.EventViewModel;
 import threads.core.mdl.ThreadViewModel;
 import threads.ipfs.Network;
 import threads.ipfs.api.CID;
+import threads.ipfs.api.PID;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThreadsViewAdapter;
 
@@ -289,7 +290,14 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     private void update(@Nullable CID thread) {
 
-
+        Activity activity = getActivity();
+        if (activity != null) {
+            if (thread == null) {
+                final PID pid = Preferences.getPID(activity);
+                checkNotNull(pid);
+                thread = CID.create(pid.getPid());
+            }
+        }
         directory.set(thread);
 
         LiveData<List<Thread>> obs = observer.get();

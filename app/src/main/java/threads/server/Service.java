@@ -24,7 +24,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import threads.core.Preferences;
 import threads.core.Singleton;
@@ -37,9 +36,9 @@ import threads.core.api.UserStatus;
 import threads.core.api.UserType;
 import threads.ipfs.IPFS;
 import threads.ipfs.Network;
-import threads.ipfs.api.Base58;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
+import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
 
@@ -164,7 +163,7 @@ class Service {
 
 
                     Thread thread = threadsAPI.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
-                            "", false, null, null);
+                            "", false, null, CID.create(pid.getPid()));
 
                     thread.addAdditional(Application.TITLE, fileDetails.getFileName(), false);
                     thread.addAdditional(Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
@@ -417,7 +416,7 @@ class Service {
                 try {
                     // check if multihash is valid
                     try {
-                        Base58.decode(multihash);
+                        Multihash.fromBase58(multihash);
                     } catch (Throwable e) {
                         Preferences.error(context.getString(R.string.multihash_not_valid));
                         return;
@@ -438,7 +437,8 @@ class Service {
                         }
 
                     } else {
-                        long idx = createThread(context, ipfs, creator, cid, null);
+                        long idx = createThread(context, ipfs, creator, cid,
+                                CID.create(pid.getPid()));
                         Thread thread = threads.getThreadByIdx(idx);
                         checkNotNull(thread);
                         downloadMultihash(context, threads, ipfs, thread);
@@ -456,7 +456,7 @@ class Service {
                                      @NonNull IPFS ipfs,
                                      @NonNull PID creator,
                                      @NonNull CID cid,
-                                     @Nullable CID parent) {
+                                     @NonNull CID parent) {
 
         checkNotNull(context);
         checkNotNull(ipfs);
