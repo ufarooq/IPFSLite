@@ -42,6 +42,7 @@ import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThreadsViewAdapter;
+import threads.share.UtilitySevice;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -587,6 +588,11 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public boolean showProgress() {
         return true;
+    }
+
+    @Override
+    public int getMediaResource(@NonNull Thread thread) {
+        return UtilitySevice.getMediaResource(thread.getMimeType(), false);
     }
 
     @Override
