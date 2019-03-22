@@ -16,7 +16,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class CodecDecider {
 
-    private static Gson gson = new Gson();
+    private static final Gson gson = new Gson();
     private String multihash = null;
     private URI uri = null;
     private Map<String, String> map = null;

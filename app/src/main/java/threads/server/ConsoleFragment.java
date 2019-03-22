@@ -70,8 +70,4 @@ public class ConsoleFragment extends Fragment {
         return view;
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
 }
