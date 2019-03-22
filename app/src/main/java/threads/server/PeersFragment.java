@@ -78,7 +78,6 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
                 actionListener.clickUserInfo();
 
-
                 return true;
             }
         }
@@ -151,14 +150,17 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
     @Override
     public void invokeGeneralAction(@NonNull User user) {
         checkNotNull(user);
+        try {
+            if (getActivity() != null) {
+                FragmentManager fm = getActivity().getSupportFragmentManager();
 
-        if (getActivity() != null) {
-            FragmentManager fm = getActivity().getSupportFragmentManager();
-
-            UserActionDialogFragment.newInstance(
-                    user.getPID().getPid(), true, true,
-                    true, true, true)
-                    .show(fm, UserActionDialogFragment.TAG);
+                UserActionDialogFragment.newInstance(
+                        user.getPID().getPid(), true, true,
+                        true, true, true)
+                        .show(fm, UserActionDialogFragment.TAG);
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
     }

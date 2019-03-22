@@ -6,81 +6,64 @@ import android.content.SharedPreferences;
 import androidx.annotation.NonNull;
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.MessageKind;
-import threads.ipfs.IPFS;
+import threads.ipfs.api.Profile;
+import threads.share.ConnectService;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Application extends android.app.Application {
 
-    public static final int CON_TIME_OUT = 30;
-    public static final String OCTET_MIME_TYPE = "application/octet-stream";
+    public static final String APP_KEY = "AppKey";
+    public static final String UPDATE = "UPDATE";
     public static final String THREAD_KIND = "THREAD_KIND";
-    public static final long MIN_CON_TIME_OUT = 5;
-    public static final long MAX_CON_TIME_OUT = 60;
+
     public static final String TITLE = "TITLE";
-    private static final String PREF_KEY = "prefKey";
-    private static final String CONFIG_CHANGE_KEY = "configChangeKey";
-    private static final String AUTO_CONNECTED_KEY = "autoConnectedKey";
 
 
     private static void init(@NonNull Context context) {
         checkNotNull(context);
+        new Thread(() -> {
+            try {
+                Service.createHost(context);
+                Service.checkPeers(context);
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+        }).start();
 
-        final THREADS threads = Singleton.getInstance().getThreads();
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-        if (ipfs != null) {
-            new Thread(() -> {
+    }
 
-                try {
+    private void runUpdatesIfNecessary() {
+        try {
+            int versionCode = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
+            SharedPreferences prefs = this.getSharedPreferences(
+                    Application.APP_KEY, Context.MODE_PRIVATE);
+            if (prefs.getInt(Application.UPDATE, 0) != versionCode) {
 
-                    Service.createHost(context, ipfs);
-
-                    threads.storeMessage(threads.createMessage(MessageKind.INFO,
-                            "\nWelcome to IPFS",
-                            System.currentTimeMillis()));
-
-                    threads.storeMessage(threads.createMessage(MessageKind.INFO,
-                            "Please feel free to start an IPFS daemon ...\n\n"
-                            , System.currentTimeMillis()));
+                Preferences.setConfigChanged(getApplicationContext(), true);
+                Preferences.setBinaryUpgrade(getApplicationContext(), true);
 
 
-                    Service.connectPeers(context);
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
+                Preferences.setProfile(getApplicationContext(), Profile.LOW_POWER);
 
-            }).start();
+                Preferences.setApiPort(getApplicationContext(), 5001);
+                Preferences.setGatewayPort(getApplicationContext(), 8080);
+                Preferences.setSwarmPort(getApplicationContext(), 4001);
+
+                Preferences.setPubsubEnabled(getApplicationContext(), true);
+                Preferences.setAutoRelayEnabled(getApplicationContext(), true);
+                Preferences.setQUICEnabled(getApplicationContext(), true);
+
+                ConnectService.setConnectionTimeout(getApplicationContext(), 60);
+                ConnectService.setAutoRelay(getApplicationContext(), false);
+
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putInt(Application.UPDATE, versionCode);
+                editor.apply();
+            }
+        } catch (Throwable e) {
+            // ignore exception
         }
-    }
-
-    public static boolean isAutoConnected(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(AUTO_CONNECTED_KEY, false);
-    }
-
-    public static void setAutoConnected(@NonNull Context context, boolean enable) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(AUTO_CONNECTED_KEY, enable);
-        editor.apply();
-    }
-
-    public static boolean hasConfigChanged(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(CONFIG_CHANGE_KEY, true);
-    }
-
-    public static void setConfigChanged(@NonNull Context context, boolean enable) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(CONFIG_CHANGE_KEY, enable);
-        editor.apply();
     }
 
 
@@ -88,27 +71,27 @@ public class Application extends android.app.Application {
     public void onCreate() {
         super.onCreate();
 
-        NotificationSender.createChannel(getApplicationContext());
+        runUpdatesIfNecessary();
+
         Preferences.setDaemonRunning(getApplicationContext(), false);
 
-        /*
-        Application.setConfigChanged(getApplicationContext(), true);
-        Application.setAutoConnected(getApplicationContext(), true);
-        Preferences.setProfile(getApplicationContext(), Profile.LOW_POWER);
-        Preferences.setPubsubEnabled(getApplicationContext(), true);
-        Preferences.setAutoRelayEnabled(getApplicationContext(), true);*/
 
+        NotificationSender.createChannel(getApplicationContext());
 
         try {
-            Singleton.getInstance().init(getApplicationContext(),
-                    Preferences.getProfile(getApplicationContext()));
+            Singleton.getInstance().init(getApplicationContext(), () -> "",
+                    null, true);
+
+            Preferences.setConfigChanged(getApplicationContext(), false);
+            Preferences.setBinaryUpgrade(getApplicationContext(), false);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.IPFS_INSTALL_FAILURE, e);
         }
 
-        init(getApplicationContext());
 
-        DaemonService.startDaemon(getApplicationContext());
+        Service.startDaemon(getApplicationContext());
+
+        init(getApplicationContext());
 
     }
 

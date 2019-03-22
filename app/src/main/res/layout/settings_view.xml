@@ -77,14 +77,29 @@
         android:textColor="@color/colorPrimary" />
 
     <Switch
-        android:id="@+id/auto_connect_support"
+        android:id="@+id/connect_relay_support"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginRight="16dp"
         android:padding="8dp"
-        android:text="@string/auto_connect_support" />
+        android:text="@string/auto_relay_connect_support" />
+
+    <TextView
+        android:id="@+id/connection_timeout_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/fab_margin"
+        android:layout_marginTop="16dp"
+        android:layout_marginRight="@dimen/fab_margin"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+
+    <SeekBar
+        android:id="@+id/connection_timeout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp" />
 
     <View
         android:layout_width="match_parent"

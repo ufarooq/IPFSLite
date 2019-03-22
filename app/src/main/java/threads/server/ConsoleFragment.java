@@ -1,22 +1,12 @@
 package threads.server;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.EditText;
-import android.widget.ImageView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
-import org.apache.tools.ant.types.Commandline;
-
-import java.util.Arrays;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -26,13 +16,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.mdl.MessagesViewModel;
-import threads.ipfs.IPFS;
 import threads.share.MessageViewAdapter;
 
 public class ConsoleFragment extends Fragment {
 
     private MessageViewAdapter messageViewAdapter;
-    private EditText console_box;
 
     private long mLastClickTime = 0;
 
@@ -63,69 +51,6 @@ public class ConsoleFragment extends Fragment {
         messageViewAdapter = new MessageViewAdapter();
         mRecyclerView.setAdapter(messageViewAdapter);
 
-        ImageView console_send = view.findViewById(R.id.console_send);
-
-        console_box = view.findViewById(R.id.console_box);
-
-        console_send.setOnClickListener((v) -> {
-
-            // mis-clicking prevention, using threshold of 1500 ms
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 1500) {
-                return;
-            }
-            mLastClickTime = SystemClock.elapsedRealtime();
-
-            removeKeyboards();
-
-            String text = console_box.getText().toString();
-
-            if (!text.isEmpty()) {
-                // Hack to mack sure that last index is line separator
-                if (text.contains("pubsub pub") && !text.endsWith(System.lineSeparator())) {
-                    text = text.concat(System.lineSeparator());
-                }
-
-                console_box.setText("");
-
-                String[] parts = Commandline.translateCommandline(text);
-                if (parts.length > 0) {
-
-
-                    if (parts[0].equalsIgnoreCase("ipfs")) {
-                        String[] commands = Arrays.copyOfRange(parts, 1, parts.length);
-                        ExecutorService executor = Executors.newSingleThreadExecutor();
-                        executor.submit(() -> {
-                            try {
-                                IPFS ipfs = Singleton.getInstance().getIpfs();
-
-                                if (ipfs != null) {
-                                    ipfs.cmd(commands);
-                                }
-
-                            } catch (Throwable e) {
-                                // ignore any kind of exception here
-                            }
-                        });
-                    } else {
-                        ExecutorService executor = Executors.newSingleThreadExecutor();
-                        executor.submit(() -> {
-                            try {
-                                IPFS ipfs = Singleton.getInstance().getIpfs();
-
-                                if (ipfs != null) {
-                                    ipfs.cmd(parts);
-                                }
-
-                            } catch (Throwable e) {
-                                // ignore any kind of exception here
-                            }
-                        });
-                    }
-                }
-            }
-
-        });
-
 
         MessagesViewModel messagesViewModel = ViewModelProviders.of(this).get(MessagesViewModel.class);
         messagesViewModel.getMessages().observe(this, (messages) -> {
@@ -148,17 +73,5 @@ public class ConsoleFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        removeKeyboards();
     }
-
-    private void removeKeyboards() {
-        if (getActivity() != null) {
-            InputMethodManager imm = (InputMethodManager) getActivity().
-                    getSystemService(Context.INPUT_METHOD_SERVICE);
-            if (imm != null) {
-                imm.hideSoftInputFromWindow(console_box.getWindowToken(), 0);
-            }
-        }
-    }
-
 }

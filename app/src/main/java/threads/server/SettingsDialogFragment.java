@@ -7,8 +7,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.common.collect.Lists;
@@ -20,6 +22,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import threads.core.Preferences;
 import threads.ipfs.api.Profile;
+import threads.share.ConnectService;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -44,6 +47,7 @@ public class SettingsDialogFragment extends DialogFragment {
 
         Spinner spinner_profile = view.findViewById(R.id.spinner_profile);
         List<Profile> profiles = Lists.newArrayList(Profile.values());
+        profiles.remove(Profile.RANDOMPORTS);
         ArrayAdapter<Profile> adapter = new ArrayAdapter<>(activity,
                 android.R.layout.simple_spinner_item, profiles);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -56,13 +60,13 @@ public class SettingsDialogFragment extends DialogFragment {
                     Profile profile = (Profile) parent.getItemAtPosition(position);
                     if (profile != Preferences.getProfile(activity)) {
                         Preferences.setProfile(activity, profile);
-                        Application.setConfigChanged(activity, true);
+                        Preferences.setConfigChanged(activity, true);
 
-                        if (DaemonService.DAEMON_RUNNING.get()) {
-                            Toast.makeText(getContext(),
-                                    R.string.daemon_restart_config_changed,
-                                    Toast.LENGTH_LONG).show();
-                        }
+
+                        Toast.makeText(getContext(),
+                                R.string.daemon_restart_config_changed,
+                                Toast.LENGTH_LONG).show();
+
                     }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -83,12 +87,12 @@ public class SettingsDialogFragment extends DialogFragment {
         quic_support.setChecked(Preferences.isQUICEnabled(activity));
         quic_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Preferences.setQUICEnabled(activity, isChecked);
-            Application.setConfigChanged(activity, true);
-            if (DaemonService.DAEMON_RUNNING.get()) {
-                Toast.makeText(getContext(),
-                        R.string.daemon_restart_config_changed,
-                        Toast.LENGTH_LONG).show();
-            }
+            Preferences.setConfigChanged(activity, true);
+
+            Toast.makeText(getContext(),
+                    R.string.daemon_restart_config_changed,
+                    Toast.LENGTH_LONG).show();
+
 
         });
 
@@ -97,12 +101,12 @@ public class SettingsDialogFragment extends DialogFragment {
         pubsub_support.setChecked(Preferences.isPubsubEnabled(activity));
         pubsub_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Preferences.setPubsubEnabled(activity, isChecked);
-            Application.setConfigChanged(activity, true);
-            if (DaemonService.DAEMON_RUNNING.get()) {
-                Toast.makeText(getContext(),
-                        R.string.daemon_restart_config_changed,
-                        Toast.LENGTH_LONG).show();
-            }
+            Preferences.setConfigChanged(activity, true);
+
+            Toast.makeText(getContext(),
+                    R.string.daemon_restart_config_changed,
+                    Toast.LENGTH_LONG).show();
+
 
         });
 
@@ -111,22 +115,52 @@ public class SettingsDialogFragment extends DialogFragment {
         auto_relay_support.setChecked(Preferences.isAutoRelayEnabled(activity));
         auto_relay_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Preferences.setAutoRelayEnabled(activity, isChecked);
-            Application.setConfigChanged(activity, true);
-            if (DaemonService.DAEMON_RUNNING.get()) {
-                Toast.makeText(getContext(),
-                        R.string.daemon_restart_config_changed,
-                        Toast.LENGTH_LONG).show();
-            }
+            Preferences.setConfigChanged(activity, true);
+
+            Toast.makeText(getContext(),
+                    R.string.daemon_restart_config_changed,
+                    Toast.LENGTH_LONG).show();
+
 
         });
 
 
-        Switch auto_connect_support = view.findViewById(R.id.auto_connect_support);
-        auto_connect_support.setChecked(Application.isAutoConnected(activity));
-        auto_connect_support.setOnCheckedChangeListener((buttonView, isChecked) ->
-                Application.setAutoConnected(activity, isChecked)
+        Switch connect_relay_support = view.findViewById(R.id.connect_relay_support);
+        connect_relay_support.setChecked(ConnectService.isAutoRelay(activity));
+        connect_relay_support.setOnCheckedChangeListener((buttonView, isChecked) ->
+                ConnectService.setAutoRelay(activity, isChecked)
         );
 
+        TextView connection_timeout_text = view.findViewById(R.id.connection_timeout_text);
+        SeekBar connection_timeout = view.findViewById(R.id.connection_timeout);
+
+
+        int offset = 10;
+        connection_timeout.setMax(170);
+        int timeout = ConnectService.getConnectionTimeout(activity);
+        connection_timeout_text.setText(getString(R.string.connection_timeout,
+                String.valueOf(timeout)));
+        connection_timeout.setProgress(timeout - offset);
+        connection_timeout.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+                int newProgress = progress + offset;
+                ConnectService.setConnectionTimeout(activity, newProgress);
+                connection_timeout_text.setText(
+                        getString(R.string.connection_timeout,
+                                String.valueOf(newProgress)));
+
+            }
+
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // ignore, not used
+            }
+
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // ignore, not used
+            }
+        });
         builder.setView(view);
 
         return new androidx.appcompat.app.AlertDialog.Builder(activity)

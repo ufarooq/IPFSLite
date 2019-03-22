@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
@@ -15,49 +14,15 @@
         android:orientation="vertical">
 
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/view_message_list"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="100"
-        android:scrollbars="vertical" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/view_message_list"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="100"
+            android:scrollbars="vertical" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <EditText
-            android:id="@+id/console_box"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_margin="6dp"
-            android:layout_weight="1"
-            android:background="@drawable/round_corners"
-            android:hint="@string/ipfs_command"
-            android:inputType="textVisiblePassword|textMultiLine"
-            android:maxLines="6"
-            android:padding="6dp"
-            android:scrollbars="vertical"
-            android:importantForAutofill="no"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            tools:targetApi="o" />
-
-        <ImageView
-            android:id="@+id/console_send"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_margin="8dp"
-            android:layout_gravity="bottom"
-            android:layout_weight="0"
-            app:srcCompat="@drawable/send"
-            tools:ignore="ContentDescription" />
 
     </LinearLayout>
-
-
-</LinearLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_delete"
@@ -66,7 +31,6 @@
         android:layout_gravity="top|end"
         android:layout_margin="@dimen/fab_margin"
         app:backgroundTint="@color/lightGray"
-        app:fabSize="mini"
         app:srcCompat="@drawable/delete_fab" />
 
 

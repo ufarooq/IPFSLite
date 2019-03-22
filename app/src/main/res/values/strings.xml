@@ -4,7 +4,7 @@
     <string name="channel_description">For normal notifications like download</string>
     <string name="daemon_channel_name">Daemon Notifications</string>
     <string name="daemon_channel_description">Notification that the daemon has started</string>
-    <string name="daemon_title">IPFS daemon is running &#8230;</string>
+    <string name="daemon_title">IPFS daemon is running forever &#8230;</string>
     <string name="navigation_drawer_open">Navigation open</string>
     <string name="navigation_drawer_close">Navigation close</string>
     <string name="action_info">Info</string>
@@ -23,7 +23,7 @@
     <string name="share">Share</string>
     <string name="settings">Settings</string>
     <string name="profile">Profile</string>
-    <string name="daemon_restart_config_changed">Please restart IPFS due to configuration changes</string>
+    <string name="daemon_restart_config_changed">Please restart the application due to the configuration changes.</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="quic_support">QUIC Support</string>
     <string name="pubsub_support">Pubsub Support</string>
@@ -44,7 +44,7 @@
     <string name="files">Files</string>
     <string name="offline_mode">Offline Mode</string>
     <string name="peer_exists_with_pid">Peer with the PID exists already</string>
-    <string name="same_pid_like_host">Same peer ID like the hosts peer ID</string>
+    <string name="same_pid_like_host">Same Peer ID like the hosts Peer ID</string>
     <string name="peer_name">New Peer Name</string>
     <string name="peer_is_blocked">Peer is blocked. Unblock first.</string>
     <string name="user_connect_try">Peer \"%1$s\" connection request</string>
@@ -55,8 +55,7 @@
     <string name="action_select_all">Select All</string>
     <string name="action_clear_selection">Clear Selection</string>
     <string name="auto_relay_support">Enable Auto Relay</string>
-
-    <string name="auto_connect_support">Peer Auto Connection</string>
+    <string name="auto_relay_connect_support">Automatic Connection to a Relay</string>
     <string name="application_settings">Application Settings</string>
     <string name="ipfs_settings">IPFS Settings</string>
     <string name="file_not_supported">File not supported.</string>
@@ -64,4 +63,5 @@
     <string name="action_scan_cid">Scan CID</string>
     <string name="action_edit_cid">Edit CID</string>
     <string name="action_file_cid">Upload</string>
+    <string name="connection_timeout">Connection Timeout %1$s[s]</string>
 </resources>

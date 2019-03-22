@@ -23,7 +23,6 @@
         android:layout_gravity="top|end"
         android:layout_margin="@dimen/fab_margin"
         app:backgroundTint="@color/lightGray"
-        app:fabSize="mini"
         app:srcCompat="@drawable/send_fab" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -33,7 +32,6 @@
         android:layout_gravity="bottom|end"
         android:layout_marginBottom="80dp"
         app:backgroundTint="@color/lightGray"
-        app:fabSize="mini"
         app:layout_anchor="@id/fab_send"
         app:layout_anchorGravity="bottom"
         app:srcCompat="@drawable/delete_fab" />

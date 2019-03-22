@@ -64,7 +64,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private final AtomicBoolean topLevel = new AtomicBoolean(true);
 
     private long threadIdx;
-
+    private CID root;
     private View view;
     private ThreadsViewAdapter threadsViewAdapter;
     private ThreadViewModel threadViewModel;
@@ -100,7 +100,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                new java.lang.Thread(this::markThreads).start();
+                markThreads();
                 return true;
             }
             case R.id.action_unmark_all: {
@@ -110,7 +110,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                new java.lang.Thread(this::unmarkThreads).start();
+                clearUnreadNotes();
+                unmarkThreads();
                 return true;
             }
         }
@@ -133,9 +134,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         outState.putLongArray(IDXS, storedEntries);
         outState.putLong(SELECTION, threadIdx);
         CID dir = directory.get();
-        if (dir != null) {
-            outState.putString(DIRECTORY, dir.getCid());
-        }
+        outState.putString(DIRECTORY, dir.getCid());
         super.onSaveInstanceState(outState);
     }
 
@@ -170,10 +169,14 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
         Activity activity = getActivity();
         checkNotNull(activity);
-
-
+        PID pid = Preferences.getPID(activity);
+        checkNotNull(pid);
+        root = CID.create(pid.getPid());
+        CID current = directory.get();
+        if (current == null) {
+            directory.set(root);
+        }
         update(directory.get());
-
 
     }
 
@@ -289,42 +292,42 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     }
 
-    private void update(@Nullable CID thread) {
+    private void update(@NonNull CID thread) {
+        checkNotNull(thread);
+        try {
 
-        Activity activity = getActivity();
-        if (activity != null) {
-            if (thread == null) {
-                final PID pid = Preferences.getPID(activity);
-                checkNotNull(pid);
-                thread = CID.create(pid.getPid());
+            topLevel.set(thread.equals(root));
+
+            directory.set(thread);
+
+            LiveData<List<Thread>> obs = observer.get();
+            if (obs != null) {
+                obs.removeObservers(this);
             }
-        }
-        directory.set(thread);
 
-        LiveData<List<Thread>> obs = observer.get();
-        if (obs != null) {
-            obs.removeObservers(this);
-        }
+            LiveData<List<Thread>> liveData = threadViewModel.getThreadsByThread(thread);
+            observer.set(liveData);
 
-        LiveData<List<Thread>> liveData = threadViewModel.getThreadsByThread(thread);
-        observer.set(liveData);
+            liveData.observe(this, (threads) -> {
 
-        liveData.observe(this, (threads) -> {
+                if (threads != null) {
 
-            if (threads != null) {
-
-                List<Thread> data = new ArrayList<>();
-                for (Thread threadObject : threads) {
-                    if (threadObject.getStatus() != ThreadStatus.DELETING) {
-                        data.add(threadObject);
+                    List<Thread> data = new ArrayList<>();
+                    for (Thread threadObject : threads) {
+                        if (threadObject.getStatus() != ThreadStatus.DELETING) {
+                            data.add(threadObject);
+                        }
                     }
+                    data.sort(Comparator.comparing(Thread::getDate).reversed());
+                    threadsViewAdapter.updateData(data);
                 }
-                data.sort(Comparator.comparing(Thread::getDate).reversed());
-                threadsViewAdapter.updateData(data);
-            }
-        });
+            });
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        } finally {
+            evaluateFabDeleteVisibility();
+        }
 
-        evaluateFabDeleteVisibility();
     }
 
 
@@ -362,41 +365,59 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 return;
             }
             // CHECKED
-            if (!DaemonService.DAEMON_RUNNING.get()) {
+            if (!Preferences.isDaemonRunning(context)) {
                 Preferences.error(getString(R.string.daemon_not_running));
                 return;
             }
 
-            Service.sendThreads(context, this::unmarkThreads,
-                    Iterables.toArray(threads, Long.class));
+            Service.sendThreads(context, () -> {
+            }, Iterables.toArray(threads, Long.class));
+            unmarkThreads();
         }
     }
 
     private void markThreads() {
-        try {
-            THREADS threadsAPI = Singleton.getInstance().getThreads();
-            List<Thread> threadObjects = threadsAPI.getThreads();
-            for (Thread thread : threadObjects) {
-                if (!threads.contains(thread.getIdx())) {
-                    threads.add(thread.getIdx());
-                    threadIdx = thread.getIdx();
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                List<Thread> threadObjects = threadsAPI.getThreadsByThread(directory.get());
+                for (Thread thread : threadObjects) {
+                    if (!threads.contains(thread.getIdx())) {
+                        threads.add(thread.getIdx());
+                        threadIdx = thread.getIdx();
+                    }
+                }
+
+                for (long idx : threads) {
+                    threadsViewAdapter.setState(idx, ThreadsViewAdapter.State.MARKED);
+                }
+
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> threadsViewAdapter.notifyDataSetChanged());
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            } finally {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(this::evaluateFabDeleteVisibility);
                 }
             }
+        });
+    }
 
-            for (long idx : threads) {
-                threadsViewAdapter.setState(idx, ThreadsViewAdapter.State.MARKED);
-            }
+    private void clearUnreadNotes() {
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
 
-            if (getActivity() != null) {
-                getActivity().runOnUiThread(() -> threadsViewAdapter.notifyDataSetChanged());
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try { // TODO faster DB
+                threadsAPI.resetThreadUnreadNotesNumber(directory.get());
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        } finally {
-            if (getActivity() != null) {
-                getActivity().runOnUiThread(this::evaluateFabDeleteVisibility);
-            }
-        }
+        });
     }
 
     private void unmarkThreads() {
@@ -406,16 +427,11 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             }
             threads.clear();
             threadIdx = -1;
-            if (getActivity() != null) {
-                getActivity().runOnUiThread(() -> threadsViewAdapter.notifyDataSetChanged());
-            }
+            threadsViewAdapter.notifyDataSetChanged();
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         } finally {
-
-            if (getActivity() != null) {
-                getActivity().runOnUiThread(this::evaluateFabDeleteVisibility);
-            }
+            evaluateFabDeleteVisibility();
         }
     }
 
@@ -443,16 +459,21 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
-
-            CID cid = directory.get();
-            if (cid != null) {
-                List<Thread> threads = threadsAPI.getThreadsByCID(cid);
-                if (!threads.isEmpty()) {
-                    Thread thread = threads.get(0);
-                    if (getActivity() != null) {
-                        getActivity().runOnUiThread(() -> update(thread.getCid()));
+            try {
+                CID cid = directory.get();
+                if (cid != null) {
+                    List<Thread> threads = threadsAPI.getThreadsByCID(cid);
+                    if (!threads.isEmpty()) {
+                        Thread thread = threads.get(0);
+                        CID dir = thread.getThread();
+                        checkNotNull(dir);
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(() -> update(dir));
+                        }
                     }
                 }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
         });
     }
@@ -465,29 +486,37 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     @Override
     public void invokeGeneralAction(@NonNull Thread thread) {
-        if (getActivity() != null) {
-            boolean sendActive = Preferences.isPubsubEnabled(getActivity());
-            FragmentManager fm = getActivity().getSupportFragmentManager();
+        try {
+            if (getActivity() != null) {
+                boolean sendActive = Preferences.isPubsubEnabled(getActivity());
+                FragmentManager fm = getActivity().getSupportFragmentManager();
 
-            ThreadActionDialogFragment.newInstance(
-                    thread.getIdx(), true, true, true,
-                    topLevel.get(), false, true, sendActive, true)
-                    .show(fm, ThreadActionDialogFragment.TAG);
+                ThreadActionDialogFragment.newInstance(
+                        thread.getIdx(), true, true, true,
+                        topLevel.get(), false, true, sendActive, true)
+                        .show(fm, ThreadActionDialogFragment.TAG);
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
     @Override
     public void onMarkClick(@NonNull Thread thread) {
         checkNotNull(thread);
-        if (!threads.contains(thread.getIdx())) {
-            boolean isEmpty = threads.isEmpty();
-            threads.add(thread.getIdx());
-            if (isEmpty) {
-                Activity activity = getActivity();
-                if (activity != null) {
-                    evaluateFabDeleteVisibility();
+        try {
+            if (!threads.contains(thread.getIdx())) {
+                boolean isEmpty = threads.isEmpty();
+                threads.add(thread.getIdx());
+                if (isEmpty) {
+                    Activity activity = getActivity();
+                    if (activity != null) {
+                        evaluateFabDeleteVisibility();
+                    }
                 }
             }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
     }
@@ -495,17 +524,21 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void onClick(@NonNull Thread thread) {
         checkNotNull(thread);
-        if (threads.isEmpty()) {
-            threadIdx = thread.getIdx();
+        try {
+            if (threads.isEmpty()) {
+                threadIdx = thread.getIdx();
 
-            String threadKind = thread.getAdditional(Application.THREAD_KIND);
-            checkNotNull(threadKind);
-            Service.ThreadKind kind = Service.ThreadKind.valueOf(threadKind);
-            if (kind == Service.ThreadKind.NODE) {
-                CID cid = thread.getCid();
-                checkNotNull(cid);
-                update(cid);
+                String threadKind = thread.getAdditional(Application.THREAD_KIND);
+                checkNotNull(threadKind);
+                Service.ThreadKind kind = Service.ThreadKind.valueOf(threadKind);
+                if (kind == Service.ThreadKind.NODE) {
+                    CID cid = thread.getCid();
+                    checkNotNull(cid);
+                    update(cid);
+                }
             }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
     }
@@ -513,12 +546,16 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void onUnmarkClick(@NonNull Thread thread) {
         checkNotNull(thread);
-        threads.remove(thread.getIdx());
-        if (threads.isEmpty()) {
-            Activity activity = getActivity();
-            if (activity != null) {
-                evaluateFabDeleteVisibility();
+        try {
+            threads.remove(thread.getIdx());
+            if (threads.isEmpty()) {
+                Activity activity = getActivity();
+                if (activity != null) {
+                    evaluateFabDeleteVisibility();
+                }
             }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
@@ -538,25 +575,27 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void invokeActionError(@NonNull Thread thread) {
         checkNotNull(thread);
+        try {
+            Activity activity = getActivity();
+            if (activity != null) {
 
-        Activity activity = getActivity();
-        if (activity != null) {
+                // CHECKED
+                if (!Network.isConnected(activity)) {
+                    Preferences.error(getString(R.string.offline_mode));
+                    return;
+                }
 
-            // CHECKED
-            if (!Network.isConnected(activity)) {
-                Preferences.error(getString(R.string.offline_mode));
-                return;
+                // CHECKED
+                if (!Preferences.isDaemonRunning(activity)) {
+                    Preferences.error(getString(R.string.daemon_not_running));
+                    return;
+                }
+
+                Service.downloadThread(activity, thread);
             }
-
-            // CHECKED
-            if (!DaemonService.DAEMON_RUNNING.get()) {
-                Preferences.error(getString(R.string.daemon_not_running));
-                return;
-            }
-
-            Service.downloadThread(activity, thread);
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-
     }
 
     @Override

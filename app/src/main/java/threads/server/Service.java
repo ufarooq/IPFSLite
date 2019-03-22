@@ -9,25 +9,30 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import com.google.common.io.Files;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.annotation.Nullable;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
+import threads.core.api.Content;
 import threads.core.api.Kind;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
@@ -47,77 +52,234 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 
 class Service {
-
+    private static final String TAG = Service.class.getSimpleName();
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(5);
     private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(5);
 
-    static void connectPeers(@NonNull Context context) {
+    private static void startPeers(@NonNull Context context) {
+        try {
+            while (Preferences.isDaemonRunning(context)) {
+                threads.server.Service.checkPeers(context);
+                if (Network.isConnected(context)) {
+                    java.lang.Thread.sleep(1000);
+                } else {
+                    java.lang.Thread.sleep(30000);
+                }
+            }
+        } catch (Throwable e) {
+            // IGNORE exception occurs when daemon is shutdown
+        } finally {
+            threads.server.Service.checkPeers(context);
+        }
+    }
+
+
+    private static void startPubsub(@NonNull Context context) {
         checkNotNull(context);
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            if (Preferences.isDaemonRunning(context)) {
+                if (Preferences.isPubsubEnabled(context)) {
+                    final PID pid = Preferences.getPID(context);
+                    checkNotNull(pid);
+                    checkArgument(!pid.getPid().isEmpty());
+                    try {
+                        pubsubDaemon(context, ipfs, pid);
+                    } catch (Throwable e) {
+                        // IGNORE exception occurs when daemon is shutdown
+                    }
+                }
+            }
+        }
+    }
 
-        final THREADS threads = Singleton.getInstance().getThreads();
-        if (Network.isConnected(context)) {
+    private static void pubsubDaemon(@NonNull Context context,
+                                     @NonNull IPFS ipfs,
+                                     @NonNull PID pid) throws Exception {
+        checkNotNull(context);
+        checkNotNull(ipfs);
+        checkNotNull(pid);
 
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+
+
+        if (Preferences.DEBUG_MODE) {
+            Log.e(TAG, "Pubsub Daemon :" + pid.getPid());
+        }
+
+        ipfs.pubsub_sub(pid.getPid(), false, (message) -> {
+
+            try {
+
+
+                PID senderPid = PID.create(message.getSenderPid());
+
+                if (!threadsAPI.isAccountBlocked(senderPid)) {
+
+                    String code = message.getMessage().trim();
+
+                    CodecDecider result = CodecDecider.evaluate(code);
+
+                    if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
+                        Service.downloadMultihash(context, senderPid, result.getMultihash());
+                    } else if (result.getCodex() == CodecDecider.Codec.URI) {
+                        Service.downloadMultihash(context, senderPid, result.getMultihash());
+                    } else if (result.getCodex() == CodecDecider.Codec.JSON_MAP) {
+                        Map<String, String> map = result.getMap();
+                        if (map.containsKey(Content.ALIAS)) {
+                            String alias = map.get(Content.ALIAS);
+                            checkNotNull(alias);
+                            String relay = map.get(Content.RELAY);
+                            createUser(context, senderPid, alias, relay);
+                        }
+                    } else if (result.getCodex() == CodecDecider.Codec.UNKNOWN) {
+                        // check content if might be a name
+                        String name = senderPid.getPid();
+
+                        try {
+                            String alias = message.getMessage().trim();
+                            if (alias.length() < name.length()) { // small shitty security
+                                name = alias;
+                            }
+                        } catch (Throwable e) {
+                            // ignore exception
+                        }
+
+                        createUser(context, senderPid, name, null);
+                    }
+
+                }
+            } catch (Throwable e) {
+                if (Preferences.DEBUG_MODE) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            } finally {
+                if (Preferences.DEBUG_MODE) {
+                    Log.e(TAG, "Received : " + message.toString());
+                }
+            }
+
+
+        });
+
+    }
+
+    private static void createUser(@NonNull Context context,
+                                   @NonNull PID senderPid,
+                                   @NonNull String alias,
+                                   @Nullable String relayValue) {
+        checkNotNull(context);
+        checkNotNull(senderPid);
+        checkNotNull(alias);
+
+        try {
+            final THREADS threadsAPI = Singleton.getInstance().getThreads();
             final IPFS ipfs = Singleton.getInstance().getIpfs();
             if (ipfs != null) {
-                List<User> users = threads.getUsers();
-                if (DaemonService.DAEMON_RUNNING.get()) {
-                    for (User user : users) {
-                        if (user.getStatus() != UserStatus.BLOCKED &&
-                                user.getStatus() != UserStatus.DIALING) {
-                            UserStatus oldStatus = user.getStatus();
-                            try {
+                User sender = threadsAPI.getUserByPID(senderPid);
+                if (sender == null) {
 
-                                if (ipfs.swarm_peer(user.getPID()) != null) {
+                    // create a new user which is blocked (User has to unblock and verified the user)
+                    byte[] data = THREADS.getImage(context, alias, R.drawable.server_network);
+                    CID image = ipfs.add(data, true);
+                    PID relay = null;
+                    if (relayValue != null) {
+                        relay = PID.create(relayValue);
+                    }
+                    sender = threadsAPI.createUser(senderPid,
+                            senderPid.getPid(), // TODO public key
+                            alias,
+                            UserType.UNKNOWN,
+                            image,
+                            relay);
+                    sender.setStatus(UserStatus.BLOCKED);
+                    threadsAPI.storeUser(sender);
 
-                                    if (UserStatus.ONLINE != oldStatus) {
+
+                    Preferences.error(context.getString(R.string.user_connect_try, alias));
+                }
+            }
+        } catch (Throwable e) {
+            // ignore exception
+        }
+    }
+
+    static void startDaemon(@NonNull Context context) {
+        checkNotNull(context);
+        try {
+            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            if (ipfs != null) {
+
+                try {
+                    ipfs.daemon(Preferences.isPubsubEnabled(context));
+                    Preferences.setDaemonRunning(context, true);
+                } catch (Throwable e) {
+                    Preferences.setDaemonRunning(context, false);
+                    Preferences.evaluateException(Preferences.IPFS_START_FAILURE, e);
+                }
+
+                if (Preferences.isDaemonRunning(context)) {
+                    new java.lang.Thread(() -> startPubsub(context)).start();
+                }
+
+                if (Preferences.isDaemonRunning(context)) {
+                    new java.lang.Thread(() -> startPeers(context)).start();
+                }
+
+                new java.lang.Thread(() -> ConnectService.runRelay(context, 10, 1000)).start();
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+    }
+
+    static void checkPeers(@NonNull Context context) {
+        checkNotNull(context);
+
+        try {
+            final THREADS threads = Singleton.getInstance().getThreads();
+            if (Network.isConnected(context)) {
+
+                final IPFS ipfs = Singleton.getInstance().getIpfs();
+                if (ipfs != null) {
+                    List<User> users = threads.getUsers();
+                    if (Network.isConnected(context)) {
+                        for (User user : users) {
+                            if (user.getStatus() != UserStatus.BLOCKED &&
+                                    user.getStatus() != UserStatus.DIALING) {
+                                try {
+                                    boolean value = ipfs.swarm_peer(user.getPID()) != null;
+                                    if (value) {
                                         threads.setStatus(user, UserStatus.ONLINE);
-
-                                    }
-                                } else {
-                                    if (UserStatus.OFFLINE != oldStatus) {
+                                    } else {
                                         threads.setStatus(user, UserStatus.OFFLINE);
                                     }
-
-                                    if (Application.isAutoConnected(context)) {
-
-                                        threads.setStatus(user, UserStatus.DIALING);
-
-
-                                        boolean value = ConnectService.connect(ipfs,
-                                                user.getPID(), Application.CON_TIME_OUT);
-                                        if (value) {
-                                            threads.setStatus(user, UserStatus.ONLINE);
-                                        } else {
-                                            threads.setStatus(user, UserStatus.OFFLINE);
-                                        }
-                                    }
-
-                                }
-                            } catch (Throwable e) {
-                                if (UserStatus.OFFLINE != oldStatus) {
+                                } catch (Throwable e) {
                                     threads.setStatus(user, UserStatus.OFFLINE);
                                 }
                             }
                         }
-                    }
-                } else {
-                    for (User user : users) {
-                        if (UserStatus.OFFLINE != user.getStatus()) {
-                            threads.setStatus(user, UserStatus.OFFLINE);
+                    } else {
+                        for (User user : users) {
+                            if (UserStatus.OFFLINE != user.getStatus()) {
+                                threads.setStatus(user, UserStatus.OFFLINE);
+                            }
+
                         }
-
                     }
                 }
-            }
-        } else {
-            List<User> users = threads.getUsers();
-            for (User user : users) {
+            } else {
+                List<User> users = threads.getUsers();
+                for (User user : users) {
 
-                if (UserStatus.OFFLINE != user.getStatus()) {
-                    threads.setStatus(user, UserStatus.OFFLINE);
+                    if (UserStatus.OFFLINE != user.getStatus()) {
+                        threads.setStatus(user, UserStatus.OFFLINE);
+                    }
+
                 }
-
             }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
@@ -204,12 +366,17 @@ class Service {
 
 
     private static String getDeviceName() {
-        String manufacturer = Build.MANUFACTURER;
-        String model = Build.MODEL;
-        if (model.startsWith(manufacturer)) {
-            return capitalize(model);
+        try {
+            String manufacturer = Build.MANUFACTURER;
+            String model = Build.MODEL;
+            if (model.startsWith(manufacturer)) {
+                return capitalize(model);
+            }
+            return capitalize(manufacturer) + " " + model;
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-        return capitalize(manufacturer) + " " + model;
+        return "";
     }
 
     private static String capitalize(String str) {
@@ -232,36 +399,43 @@ class Service {
         return phrase;
     }
 
-    static void createHost(@NonNull Context context, @NonNull IPFS ipfs) throws Exception {
+    static void createHost(@NonNull Context context) {
         checkNotNull(context);
-        checkNotNull(ipfs);
-        PID pid = Preferences.getPID(context);
-        checkNotNull(pid);
-        THREADS threads = Singleton.getInstance().getThreads();
 
-        User user = threads.getUserByPID(pid);
-        if (user == null) {
-            String publicKey = ipfs.getPublicKey();
-            byte[] data = THREADS.getImage(context,
-                    pid.getPid(), R.drawable.server_network);
+        final THREADS threads = Singleton.getInstance().getThreads();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            try {
+                PID pid = Preferences.getPID(context);
+                checkNotNull(pid);
 
-            CID image = ipfs.add(data, true);
-            user = threads.createUser(pid, publicKey,
-                    getDeviceName(), UserType.VERIFIED, image, null);
-            user.setStatus(UserStatus.BLOCKED);
-            threads.storeUser(user);
+                User user = threads.getUserByPID(pid);
+                if (user == null) {
+                    String publicKey = ipfs.getPublicKey();
+                    byte[] data = THREADS.getImage(context, pid.getPid(), R.drawable.server_network);
+
+                    CID image = ipfs.add(data, true);
+
+                    user = threads.createUser(pid, publicKey,
+                            getDeviceName(), UserType.VERIFIED, image, null);
+                    user.setStatus(UserStatus.BLOCKED);
+                    threads.storeUser(user);
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
         }
-
     }
 
 
-    private static boolean shareUser(@NonNull User user, @NonNull Long... idxs) {
+    private static boolean shareUser(@NonNull User user, int timeout,
+                                     @NonNull Long... idxs) {
         final THREADS threads = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         boolean success = false;
         if (ipfs != null) {
             try {
-                if (ConnectService.connect(ipfs, user.getPID(), Application.CON_TIME_OUT)) {
+                if (ConnectService.connectUser(user, timeout, timeout)) {
 
                     for (long idx : idxs) {
                         Thread threadObject = threads.getThreadByIdx(idx);
@@ -270,9 +444,12 @@ class Service {
                         CID cid = threadObject.getCid();
                         checkNotNull(cid);
 
+
                         ipfs.pubsub_pub(user.getPID().getPid(),
                                 cid.getCid().concat(System.lineSeparator()));
+                        threads.incrementUnreadNotesNumber(threadObject);
                     }
+
                     success = true;
                 }
             } catch (Throwable e) {
@@ -297,14 +474,16 @@ class Service {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-
+                    // clean-up
+                    for (long idx : idxs) {
+                        threads.resetUnreadNotesNumber(idx);
+                    }
                     List<User> users = threads.getUsers();
                     if (users.isEmpty()) {
                         Preferences.warning(context.getString(R.string.no_peers_connected));
                     } else {
-
                         ExecutorService sharedExecutor = Executors.newFixedThreadPool(5);
-
+                        int timeout = ConnectService.getConnectionTimeout(context);
                         LinkedList<Future<Boolean>> futures = new LinkedList<>();
                         for (User user : users) {
                             if (user.getStatus() != UserStatus.BLOCKED) {
@@ -312,7 +491,7 @@ class Service {
                                 if (!userPID.equals(host)) {
 
                                     Future<Boolean> future = sharedExecutor.submit(() ->
-                                            shareUser(user, idxs));
+                                            shareUser(user, timeout, idxs));
                                     futures.add(future);
                                 }
                             }
@@ -327,6 +506,8 @@ class Service {
 
                         Preferences.warning(context.getString(R.string.data_shared_with_peers,
                                 String.valueOf(counter)));
+
+
                     }
 
                 } catch (Throwable e) {
@@ -351,6 +532,10 @@ class Service {
                 try {
 
                     for (long idx : idxs) {
+                        threadsAPI.setThreadStatus(idx, ThreadStatus.DELETING);
+                    }
+
+                    for (long idx : idxs) {
                         deleteThread(ipfs, idx);
                     }
                     threadsAPI.repo_gc(ipfs);
@@ -364,10 +549,14 @@ class Service {
 
     static void deleteThread(@NonNull IPFS ipfs, long idx) {
         checkNotNull(ipfs);
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
-        Thread thread = threadsAPI.getThreadByIdx(idx);
-        if (thread != null) {
-            deleteThread(ipfs, thread);
+        try {
+            final THREADS threadsAPI = Singleton.getInstance().getThreads();
+            Thread thread = threadsAPI.getThreadByIdx(idx);
+            if (thread != null) {
+                deleteThread(ipfs, thread);
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
@@ -422,7 +611,6 @@ class Service {
                         return;
                     }
 
-                    // check if thread exists with multihash
                     CID cid = CID.create(multihash);
                     List<Thread> entries = threads.getThreadsByCID(cid);
                     if (!entries.isEmpty()) {
@@ -481,123 +669,130 @@ class Service {
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-        thread.setMimeType(Application.OCTET_MIME_TYPE); // not known yet
+        thread.setMimeType(Preferences.OCTET_MIME_TYPE); // not known yet
         return threads.storeThread(thread);
     }
 
     static void localDownloadThread(@NonNull Context context, long idx) {
         checkNotNull(context);
+        try {
+            final THREADS threadsAPI = Singleton.getInstance().getThreads();
+            final DownloadManager downloadManager = (DownloadManager)
+                    context.getSystemService(Context.DOWNLOAD_SERVICE);
+            checkNotNull(downloadManager);
 
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
-        final DownloadManager downloadManager = (DownloadManager)
-                context.getSystemService(Context.DOWNLOAD_SERVICE);
-        checkNotNull(downloadManager);
+            final IPFS ipfs = Singleton.getInstance().getIpfs();
 
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-
-        if (ipfs != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    Thread threadObject = threadsAPI.getThreadByIdx(idx);
-                    checkNotNull(threadObject);
-
-                    CID cid = threadObject.getCid();
-                    checkNotNull(cid);
-
-                    List<Link> links = threadsAPI.getLinks(ipfs, threadObject,
-                            Application.CON_TIME_OUT, true);
-
-                    if (links.size() == 1) {
-                        Link link = links.get(0);
-                        cid = link.getCid();
-                    }
-                    String title = threadObject.getAdditional(Application.TITLE);
-
-                    File dir = Environment.getExternalStoragePublicDirectory(
-                            Environment.DIRECTORY_DOWNLOADS);
-                    File file = new File(dir, title);
-
-
-                    NotificationCompat.Builder builder =
-                            NotificationSender.createDownloadProgressNotification(
-                                    context, title);
-
-                    final NotificationManager notificationManager = (NotificationManager)
-                            context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-                    int notifyID = cid.hashCode();
-                    Notification notification = builder.build();
-                    if (notificationManager != null) {
-                        notificationManager.notify(notifyID, notification);
-                    }
-
+            if (ipfs != null) {
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(() -> {
                     try {
+                        Thread threadObject = threadsAPI.getThreadByIdx(idx);
+                        checkNotNull(threadObject);
 
-                        boolean finished = threadsAPI.download(ipfs, file, cid,
-                                false, true, threadObject.getSesKey(),
-                                new THREADS.Progress() {
-                                    @Override
-                                    public void setProgress(int percent) {
-                                        builder.setProgress(100, percent, false);
-                                        if (notificationManager != null) {
-                                            notificationManager.notify(notifyID, builder.build());
-                                        }
-                                    }
+                        CID cid = threadObject.getCid();
+                        checkNotNull(cid);
 
-                                    @Override
-                                    public boolean isStopped() {
-                                        return false;
-                                    }
-                                }, Application.MAX_CON_TIME_OUT);
+                        long timeout = ConnectService.getConnectionTimeout(context);
 
-                        if (finished) {
-                            String mimeType = threadObject.getMimeType();
-                            checkNotNull(mimeType);
-
-                            downloadManager.addCompletedDownload(file.getName(),
-                                    file.getName(), true,
-                                    mimeType,
-                                    file.getAbsolutePath(),
-                                    file.length(), true);
+                        List<Link> links = threadsAPI.getLinks(ipfs, threadObject,
+                                timeout, true);
+                        checkNotNull(links);
+                        if (links.size() == 1) {
+                            Link link = links.get(0);
+                            cid = link.getCid();
                         }
+                        String title = threadObject.getAdditional(Application.TITLE);
+
+                        File dir = Environment.getExternalStoragePublicDirectory(
+                                Environment.DIRECTORY_DOWNLOADS);
+                        File file = new File(dir, title);
+
+
+                        NotificationCompat.Builder builder =
+                                NotificationSender.createDownloadProgressNotification(
+                                        context, title);
+
+                        final NotificationManager notificationManager = (NotificationManager)
+                                context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                        int notifyID = cid.hashCode();
+                        Notification notification = builder.build();
+                        if (notificationManager != null) {
+                            notificationManager.notify(notifyID, notification);
+                        }
+
+                        try {
+                            boolean finished = threadsAPI.download(ipfs, file, cid,
+                                    false, true, threadObject.getSesKey(),
+                                    new THREADS.Progress() {
+                                        @Override
+                                        public void setProgress(int percent) {
+                                            builder.setProgress(100, percent, false);
+                                            if (notificationManager != null) {
+                                                notificationManager.notify(notifyID, builder.build());
+                                            }
+                                        }
+
+                                        @Override
+                                        public boolean isStopped() {
+                                            return !Network.isConnected(context);
+                                        }
+                                    }, timeout);
+
+                            if (finished) {
+                                String mimeType = threadObject.getMimeType();
+                                checkNotNull(mimeType);
+
+                                downloadManager.addCompletedDownload(file.getName(),
+                                        file.getName(), true,
+                                        mimeType,
+                                        file.getAbsolutePath(),
+                                        file.length(), true);
+                            }
+                        } catch (Throwable e) {
+                            Preferences.evaluateException(Preferences.EXCEPTION, e);
+                        } finally {
+
+                            if (notificationManager != null) {
+                                notificationManager.cancel(notifyID);
+                            }
+                        }
+
                     } catch (Throwable e) {
                         Preferences.evaluateException(Preferences.EXCEPTION, e);
-                    } finally {
-
-                        if (notificationManager != null) {
-                            notificationManager.cancel(notifyID);
-                        }
                     }
-
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
-            });
+                });
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
     static void downloadThread(@NonNull Context context, @NonNull Thread thread) {
 
         checkNotNull(context);
+        try {
+            final THREADS threadsAPI = Singleton.getInstance().getThreads();
 
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
-
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-        if (ipfs != null) {
-            DOWNLOAD_SERVICE.submit(() -> {
-                try {
-                    downloadMultihash(context, threadsAPI, ipfs, thread);
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
-            });
+            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            if (ipfs != null) {
+                DOWNLOAD_SERVICE.submit(() -> {
+                    try {
+                        downloadMultihash(context, threadsAPI, ipfs, thread);
+                    } catch (Throwable e) {
+                        Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    }
+                });
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
-    private static void downloadThread(@NonNull Context context,
-                                       @NonNull THREADS threads,
-                                       @NonNull IPFS ipfs,
-                                       @NonNull Thread thread) {
+    private static boolean downloadThread(@NonNull Context context,
+                                          @NonNull THREADS threads,
+                                          @NonNull IPFS ipfs,
+                                          @NonNull Thread thread) {
         // UPDATE UI
         Preferences.event(Preferences.THREAD_SELECT_EVENT, String.valueOf(thread.getIdx()));
 
@@ -623,9 +818,9 @@ class Service {
 
         File file = getCacheFile(context, cid.getCid());
 
-        boolean success = true;
+        boolean success;
         try {
-
+            long timeout = ConnectService.getConnectionTimeout(context);
             success = threads.download(ipfs, file, cid, true, false, thread.getSesKey(), new THREADS.Progress() {
                 @Override
                 public void setProgress(int percent) {
@@ -637,39 +832,35 @@ class Service {
 
                 @Override
                 public boolean isStopped() {
-                    return false;
+                    return !Network.isConnected(context);
                 }
-            }, Application.MAX_CON_TIME_OUT);
+            }, timeout);
 
-            try {
-                byte[] image = THREADS.getPreviewImage(context, file);
-                if (image != null) {
-                    threads.setImage(ipfs, thread, image);
+            if (success) {
+                try {
+                    byte[] image = THREADS.getPreviewImage(context, file);
+                    if (image != null) {
+                        threads.setImage(ipfs, thread, image);
+                    }
+                } catch (Throwable e) {
+                    // no exception will be reported
                 }
-            } catch (Throwable e) {
-                // no exception will be reported
             }
-
         } catch (Throwable e) {
             success = false;
-            threads.setStatus(thread, ThreadStatus.ERROR);
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
         } finally {
-            file.delete();
             if (notificationManager != null) {
                 notificationManager.cancel(notifyID);
+            }
+            if (file.exists()) {
+                checkArgument(file.delete());
             }
         }
 
         if (success) {
             NotificationSender.showNotification(context, cid.getCid(), cid.hashCode());
         }
-
-    }
-
-    private static void setTitle(@NonNull THREADS threads, @NonNull Thread thread, @NonNull String title) {
-        thread.addAdditional(Application.TITLE, title, false);
-        threads.updateThread(thread);
+        return success;
     }
 
     private static boolean handleDirectoryLink(@NonNull Context context,
@@ -679,7 +870,8 @@ class Service {
                                                @NonNull Link link) {
 
         String filename = link.getPath();
-        setTitle(threads, thread, filename.substring(0, filename.length() - 1));// remove "/"
+        threads.setAdditional(thread, Application.TITLE,
+                filename.substring(0, filename.length() - 1), false);
         threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
         threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.NODE.name(), true);
 
@@ -699,24 +891,25 @@ class Service {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
-
-        List<Link> links = getLinks(ipfs, link, Application.CON_TIME_OUT, false);
-
-        return downloadLinks(context, threads, ipfs, thread, links);
+        long timeout = ConnectService.getConnectionTimeout(context);
+        List<Link> links = getLinks(ipfs, link, timeout);
+        if (links != null) {
+            return downloadLinks(context, threads, ipfs, thread, links);
+        } else {
+            return false;
+        }
 
     }
 
-    public static List<Link> getLinks(@NonNull IPFS ipfs,
-                                      @NonNull Link link,
-                                      long timeout,
-                                      boolean offline) {
+    @Nullable
+    private static List<Link> getLinks(@NonNull IPFS ipfs, @NonNull Link link, long timeout) {
         checkNotNull(ipfs);
         checkNotNull(link);
-        checkArgument(timeout > 0);
+
         CID cid = link.getCid();
-        List<Link> links = new ArrayList<>();
+        List<Link> links = null;
         try {
-            links.addAll(ipfs.ls(cid, timeout, offline));
+            links = ipfs.ls(cid, timeout, false);
         } catch (Throwable e) {
             // ignore exception
         }
@@ -730,17 +923,18 @@ class Service {
                                              @NonNull Link link) {
 
         String filename = link.getPath();
-        setTitle(threads, thread, filename);
-
+        threads.setAdditional(thread, Application.TITLE, filename, false);
 
         String extension = Files.getFileExtension(filename);
         String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
         if (mimeType != null) {
             threads.setMimeType(thread, mimeType);
         } else {
-            threads.setMimeType(thread, Application.OCTET_MIME_TYPE); // not know what type
+            threads.setMimeType(thread, Preferences.OCTET_MIME_TYPE); // not know what type
         }
         threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
+        threads.setDate(thread, new Date());
+
 
         Long size = link.getSize();
         checkNotNull(size);
@@ -761,7 +955,7 @@ class Service {
 
         boolean success;
         try {
-
+            long timeout = ConnectService.getConnectionTimeout(context);
             success = threads.download(ipfs, file,
                     link.getCid(), true, false, thread.getSesKey(), new THREADS.Progress() {
                         @Override
@@ -774,9 +968,9 @@ class Service {
 
                         @Override
                         public boolean isStopped() {
-                            return false;
+                            return !Network.isConnected(context);
                         }
-                    }, Application.MAX_CON_TIME_OUT);
+                    }, timeout);
 
 
             if (success) {
@@ -793,15 +987,16 @@ class Service {
         } catch (Throwable e) {
             success = false;
         } finally {
-            file.delete();
             if (notificationManager != null) {
                 notificationManager.cancel(notifyID);
+            }
+            if (file.exists()) {
+                checkArgument(file.delete());
             }
         }
 
         if (success) {
-            NotificationSender.showNotification(context,
-                    link.getPath(), link.getCid().hashCode());
+            NotificationSender.showNotification(context, link.getPath(), link.getCid().hashCode());
         }
 
         return success;
@@ -892,60 +1087,69 @@ class Service {
         CID cid = thread.getCid();
         checkNotNull(cid);
         threads.setStatus(thread, ThreadStatus.OFFLINE);
+        long timeout = ConnectService.getConnectionTimeout(context);
+        List<Link> links = threads.getLinks(ipfs, thread, timeout, false);
 
-        List<Link> links = threads.getLinks(ipfs, thread, Application.CON_TIME_OUT, false);
+        if (links != null) {
+            if (links.isEmpty()) {
+                threads.setAdditional(thread, Application.TITLE, cid.getCid(), false);
+                threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
+                threads.setMimeType(thread, Preferences.OCTET_MIME_TYPE);
 
-        if (links.isEmpty()) {
-            setTitle(threads, thread, cid.getCid());
-            threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
-            threads.setMimeType(thread, Application.OCTET_MIME_TYPE);
+                try {
+                    CID image = THREADS.createResourceImage(
+                            context, threads, ipfs, "", R.drawable.file_document);
+                    threads.setImage(thread, image);
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+                boolean result = downloadThread(context, threads, ipfs, thread);
+                if (result) {
+                    threads.setStatus(thread, ThreadStatus.ONLINE);
+                } else {
+                    threads.setStatus(thread, ThreadStatus.ERROR);
+                }
 
-            try {
-                CID image = THREADS.createResourceImage(
-                        context, threads, ipfs, "", R.drawable.file_document);
-                threads.setImage(thread, image);
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-            downloadThread(context, threads, ipfs, thread);
+            } else if (links.size() > 1) {
 
-        } else if (links.size() > 1) {
-
-            // real directory
-            setTitle(threads, thread, cid.getCid());
-            threads.setMimeType(thread, Application.OCTET_MIME_TYPE);
-            threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.NODE.name(), true);
-            try {
-                CID image = THREADS.createResourceImage(
-                        context, threads, ipfs, "", R.drawable.file_document);
-                threads.setImage(thread, image);
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-            boolean result = downloadLinks(context, threads, ipfs, thread, links);
-            if (result) {
-                threads.setStatus(thread, ThreadStatus.ONLINE);
+                // real directory
+                threads.setAdditional(thread, Application.TITLE, cid.getCid(), false);
+                threads.setMimeType(thread, Preferences.OCTET_MIME_TYPE);
+                threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.NODE.name(), true);
+                try {
+                    CID image = THREADS.createResourceImage(
+                            context, threads, ipfs, "", R.drawable.file_document);
+                    threads.setImage(thread, image);
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+                boolean result = downloadLinks(context, threads, ipfs, thread, links);
+                if (result) {
+                    threads.setStatus(thread, ThreadStatus.ONLINE);
+                } else {
+                    threads.setStatus(thread, ThreadStatus.ERROR);
+                }
             } else {
-                threads.setStatus(thread, ThreadStatus.ERROR);
+
+                Link link = links.get(0);
+
+                boolean result = downloadLink(context, threads, ipfs, thread, link);
+                if (result) {
+                    threads.setStatus(thread, ThreadStatus.ONLINE);
+                } else {
+                    threads.setStatus(thread, ThreadStatus.ERROR);
+                }
             }
         } else {
-
-            Link link = links.get(0);
-
-            boolean result = downloadLink(context, threads, ipfs, thread, link);
-            if (result) {
-                threads.setStatus(thread, ThreadStatus.ONLINE);
-            } else {
-                threads.setStatus(thread, ThreadStatus.ERROR);
-            }
+            threads.setStatus(thread, ThreadStatus.ERROR);
         }
-
 
     }
 
 
     @NonNull
-    public static File getCacheFile(@NonNull Context context, @NonNull String name) {
+    static File getCacheFile(@NonNull Context context, @NonNull String name) {
+        checkNotNull(context);
         checkNotNull(name);
         File dir = context.getCacheDir();
         File file = new File(dir, name);
@@ -961,18 +1165,6 @@ class Service {
         return file;
     }
 
-    public static void closeTasks(@NonNull Context context) {
-        checkNotNull(context);
-
-        final THREADS threads = Singleton.getInstance().getThreads();
-
-
-        List<Thread> entries = threads.getThreadsByKindAndThreadStatus(
-                Kind.OUT, ThreadStatus.OFFLINE);
-        for (Thread entry : entries) {
-            threads.setStatus(entry, ThreadStatus.ERROR);
-        }
-    }
 
     public enum ThreadKind {
         LEAF, NODE

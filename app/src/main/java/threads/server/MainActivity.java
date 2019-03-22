@@ -18,12 +18,15 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
+import com.google.gson.Gson;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,6 +50,7 @@ import de.psdev.licensesdialog.LicensesDialogFragment;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
+import threads.core.api.Content;
 import threads.core.api.Thread;
 import threads.core.api.User;
 import threads.core.api.UserStatus;
@@ -106,42 +110,46 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == SELECT_FILES && resultCode == RESULT_OK && data != null) {
+        try {
+            if (requestCode == SELECT_FILES && resultCode == RESULT_OK && data != null) {
 
-            if (data.getData() != null) {
-                Uri uri = data.getData();
-                Service.storeData(getApplicationContext(), uri);
-            } else {
-                if (data.getClipData() != null) {
-                    ClipData mClipData = data.getClipData();
-                    for (int i = 0; i < mClipData.getItemCount(); i++) {
-                        ClipData.Item item = mClipData.getItemAt(i);
-                        Uri uri = item.getUri();
-                        Service.storeData(getApplicationContext(), uri);
-                    }
-                }
-            }
-        } else {
-            IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
-            if (result != null) {
-                if (result.getContents() != null) {
-                    String multihash = result.getContents();
-
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 2000) {
-                        return;
-                    }
-                    mLastClickTime = SystemClock.elapsedRealtime();
-
-
-                    if (!idScan.get()) {
-                        downloadMultihash(multihash);
-                    } else {
-                        clickConnectPeer(multihash);
+                if (data.getData() != null) {
+                    Uri uri = data.getData();
+                    Service.storeData(getApplicationContext(), uri);
+                } else {
+                    if (data.getClipData() != null) {
+                        ClipData mClipData = data.getClipData();
+                        for (int i = 0; i < mClipData.getItemCount(); i++) {
+                            ClipData.Item item = mClipData.getItemAt(i);
+                            Uri uri = item.getUri();
+                            Service.storeData(getApplicationContext(), uri);
+                        }
                     }
                 }
             } else {
-                super.onActivityResult(requestCode, resultCode, data);
+                IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+                if (result != null) {
+                    if (result.getContents() != null) {
+                        String multihash = result.getContents();
+
+                        if (SystemClock.elapsedRealtime() - mLastClickTime < 2000) {
+                            return;
+                        }
+                        mLastClickTime = SystemClock.elapsedRealtime();
+
+
+                        if (!idScan.get()) {
+                            downloadMultihash(multihash);
+                        } else {
+                            clickConnectPeer(multihash);
+                        }
+                    }
+                } else {
+                    super.onActivityResult(requestCode, resultCode, data);
+                }
             }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
@@ -155,7 +163,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         // CHECKED
-        if (!DaemonService.DAEMON_RUNNING.get()) {
+        if (!Preferences.isDaemonRunning(getApplicationContext())) {
             Preferences.error(getString(R.string.daemon_not_running));
             return;
         }
@@ -235,14 +243,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            if (!DaemonService.DAEMON_RUNNING.get()) {
-                DaemonService.startDaemon(getApplicationContext());
-                findViewById(R.id.fab_daemon).setVisibility(View.INVISIBLE);
-
+            if (DaemonService.DAEMON_RUNNING.get()) {
+                DaemonService.DAEMON_RUNNING.set(false);
             } else {
-                DaemonService.stopDaemon(getApplicationContext());
-                findViewById(R.id.fab_daemon).setVisibility(View.INVISIBLE);
+                DaemonService.DAEMON_RUNNING.set(true);
             }
+            DaemonService.invoke(getApplicationContext());
+            serverStatus();
 
         });
         serverStatus();
@@ -275,30 +282,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Toast.makeText(
                             getApplicationContext(), event.getContent(), Toast.LENGTH_LONG).show();
                     eventViewModel.removeEvent(event);
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-
-        });
-
-
-        eventViewModel.getIPFSServerOfflineEvent().observe(this, (event) -> {
-
-            try {
-                if (event != null) {
-                    serverStatus();
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-
-        });
-        eventViewModel.getIPFSServerOnlineEvent().observe(this, (event) -> {
-
-            try {
-                if (event != null) {
-                    serverStatus();
                 }
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -395,6 +378,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 break;
             }
+            case R.id.nav_webui: {
+                // mis-clicking prevention, using threshold of 1000 ms
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    break;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(Preferences.getWebUI(getApplicationContext())));
+                    startActivity(intent);
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+                break;
+            }
             case R.id.nav_settings: {
                 try {
                     FragmentManager fm = getSupportFragmentManager();
@@ -405,24 +404,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 break;
             }
-            case R.id.nav_webui: {
-                // mis-clicking prevention, using threshold of 1000 ms
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
 
-                // CHECKED
-                if (!DaemonService.DAEMON_RUNNING.get()) {
-                    Preferences.error(getString(R.string.daemon_not_running));
-                    break;
-                }
-
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse(Preferences.getWebUI(getApplicationContext())));
-                startActivity(intent);
-                break;
-            }
             case R.id.nav_share: {
                 try {
                     Intent i = new Intent(Intent.ACTION_SEND);
@@ -443,10 +425,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     break;
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
-
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse("https://docs.ipfs.io/reference/api/cli"));
-                startActivity(intent);
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse("https://docs.ipfs.io/reference/api/cli"));
+                    startActivity(intent);
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
                 break;
             }
         }
@@ -479,23 +464,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickMultihash() {
         PackageManager pm = getPackageManager();
-
-        if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
-            idScan.set(false);
-            IntentIntegrator integrator = new IntentIntegrator(this);
-            integrator.setOrientationLocked(false);
-            integrator.initiateScan();
-        } else {
-            Toast.makeText(getApplicationContext(),
-                    getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
+        try {
+            if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+                idScan.set(false);
+                IntentIntegrator integrator = new IntentIntegrator(this);
+                integrator.setOrientationLocked(false);
+                integrator.initiateScan();
+            } else {
+                Toast.makeText(getApplicationContext(),
+                        getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
     @Override
     public void clickEditMultihash() {
-        FragmentManager fm = getSupportFragmentManager();
-        EditMultihashDialogFragment editMultihashDialogFragment = new EditMultihashDialogFragment();
-        editMultihashDialogFragment.show(fm, EditMultihashDialogFragment.TAG);
+        try {
+            FragmentManager fm = getSupportFragmentManager();
+            EditMultihashDialogFragment editMultihashDialogFragment = new EditMultihashDialogFragment();
+            editMultihashDialogFragment.show(fm, EditMultihashDialogFragment.TAG);
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
     }
 
     @Override
@@ -519,58 +511,70 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickEditPeer() {
-        FragmentManager fm = getSupportFragmentManager();
-        EditPeerDialogFragment editPeerDialogFragment = new EditPeerDialogFragment();
-        editPeerDialogFragment.show(fm, EditPeerDialogFragment.TAG);
+        try {
+            FragmentManager fm = getSupportFragmentManager();
+            EditPeerDialogFragment editPeerDialogFragment = new EditPeerDialogFragment();
+            editPeerDialogFragment.show(fm, EditPeerDialogFragment.TAG);
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
     }
 
     @Override
     public void clickUserBlock(@NonNull String pid) {
         checkNotNull(pid);
+        try {
+            final THREADS threadsAPI = Singleton.getInstance().getThreads();
 
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    User user = threadsAPI.getUserByPID(PID.create(pid));
+                    checkNotNull(user);
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                User user = threadsAPI.getUserByPID(PID.create(pid));
-                checkNotNull(user);
+                    if (user.getStatus() == UserStatus.BLOCKED) {
+                        threadsAPI.unblockUser(user, UserStatus.OFFLINE);
+                    } else {
+                        threadsAPI.blockUser(user);
+                    }
 
-                if (user.getStatus() == UserStatus.BLOCKED) {
-                    threadsAPI.unblockUser(user, UserStatus.OFFLINE);
-                } else {
-                    threadsAPI.blockUser(user);
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
-
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-        });
-
+            });
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
     }
 
     @Override
     public void clickUserInfo(@NonNull String pid) {
         checkNotNull(pid);
-
-        InfoDialogFragment.show(this, pid,
-                getString(R.string.peer_id),
-                getString(R.string.peer_access, pid));
+        try {
+            InfoDialogFragment.show(this, pid,
+                    getString(R.string.peer_id),
+                    getString(R.string.peer_access, pid));
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
     }
 
     @Override
     public void clickUserDelete(@NonNull String pid) {
         checkNotNull(pid);
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                THREADS threadsAPI = Singleton.getInstance().getThreads();
-                threadsAPI.removeUserByPID(PID.create(pid));
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-        });
+        try {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    THREADS threadsAPI = Singleton.getInstance().getThreads();
+                    threadsAPI.removeUserByPID(PID.create(pid));
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
     }
 
     @Override
@@ -583,132 +587,150 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
         // CHECKED
-        if (!DaemonService.DAEMON_RUNNING.get()) {
+        if (!Preferences.isDaemonRunning(getApplicationContext())) {
             Preferences.error(getString(R.string.daemon_not_running));
             return;
         }
 
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-        if (ipfs != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
+        try {
+            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            if (ipfs != null) {
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(() -> {
+                    try {
 
-                    PID pid = PID.create(multihash);
+                        PID pid = PID.create(multihash);
 
-                    THREADS threadsAPI = Singleton.getInstance().getThreads();
-                    User user = threadsAPI.getUserByPID(pid);
-                    checkNotNull(user);
+                        THREADS threadsAPI = Singleton.getInstance().getThreads();
+                        User user = threadsAPI.getUserByPID(pid);
+                        checkNotNull(user);
 
-                    if (user.getStatus() == UserStatus.BLOCKED) {
-                        Preferences.warning(getString(R.string.peer_is_blocked));
-                    } else {
+                        if (user.getStatus() == UserStatus.BLOCKED) {
+                            Preferences.warning(getString(R.string.peer_is_blocked));
+                        } else {
 
-                        try {
-                            threadsAPI.setStatus(user, UserStatus.DIALING);
+                            try {
+                                threadsAPI.setStatus(user, UserStatus.DIALING);
 
-
-                            boolean value = ConnectService.connect(ipfs, pid,
-                                    Application.CON_TIME_OUT);
-                            if (value) {
-                                threadsAPI.setStatus(user, UserStatus.ONLINE);
-                            } else {
+                                long timeout = ConnectService.getConnectionTimeout(
+                                        getApplicationContext());
+                                boolean value = ConnectService.connectUser(user, timeout, timeout);
+                                if (value) {
+                                    threadsAPI.setStatus(user, UserStatus.ONLINE);
+                                } else {
+                                    threadsAPI.setStatus(user, UserStatus.OFFLINE);
+                                }
+                            } catch (Throwable e) {
                                 threadsAPI.setStatus(user, UserStatus.OFFLINE);
                             }
-                        } catch (Throwable e) {
-                            threadsAPI.setStatus(user, UserStatus.OFFLINE);
                         }
+                    } catch (Throwable e) {
+                        Preferences.evaluateException(Preferences.EXCEPTION, e);
                     }
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
-            });
+                });
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
     @Override
     public void clickUserEdit(@NonNull String pid) {
 
-        FragmentManager fm = getSupportFragmentManager();
-
-        NameDialogFragment.newInstance(pid, getString(R.string.peer_name))
-                .show(fm, NameDialogFragment.TAG);
+        try {
+            FragmentManager fm = getSupportFragmentManager();
+            NameDialogFragment.newInstance(pid, getString(R.string.peer_name))
+                    .show(fm, NameDialogFragment.TAG);
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
     }
 
 
     @Override
     public void clickConnectPeer(@NonNull String multihash) {
         checkNotNull(multihash);
-
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-        if (ipfs != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-
-                    // check if multihash is valid
+        try {
+            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            if (ipfs != null) {
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(() -> {
                     try {
-                        Multihash.fromBase58(multihash);
-                    } catch (Throwable e) {
-                        Preferences.error(getString(R.string.multihash_not_valid));
-                        return;
-                    }
 
-                    PID host = Preferences.getPID(getApplicationContext());
-                    PID pid = PID.create(multihash);
+                        // check if multihash is valid
+                        try {
+                            Multihash.fromBase58(multihash);
+                        } catch (Throwable e) {
+                            Preferences.error(getString(R.string.multihash_not_valid));
+                            return;
+                        }
 
-                    if (pid.equals(host)) {
-                        Preferences.warning(getString(R.string.same_pid_like_host));
-                        return;
-                    }
+                        PID host = Preferences.getPID(getApplicationContext());
+                        PID pid = PID.create(multihash);
+
+                        if (pid.equals(host)) {
+                            Preferences.warning(getString(R.string.same_pid_like_host));
+                            return;
+                        }
 
 
-                    THREADS threadsAPI = Singleton.getInstance().getThreads();
-                    User user = threadsAPI.getUserByPID(pid);
-                    if (user == null) {
-                        byte[] data = THREADS.getImage(getApplicationContext(),
-                                pid.getPid(), R.drawable.server_network);
-                        CID image = ipfs.add(data, true);
-                        user = threadsAPI.createUser(pid,
-                                pid.getPid(),
-                                pid.getPid(), UserType.VERIFIED, image, null);
-                        user.setStatus(UserStatus.OFFLINE);
-                        threadsAPI.storeUser(user);
+                        THREADS threadsAPI = Singleton.getInstance().getThreads();
+                        User user = threadsAPI.getUserByPID(pid);
+                        if (user == null) {
+                            byte[] data = THREADS.getImage(getApplicationContext(),
+                                    pid.getPid(), R.drawable.server_network);
+                            CID image = ipfs.add(data, true);
+                            user = threadsAPI.createUser(pid,
+                                    pid.getPid(),
+                                    pid.getPid(), UserType.VERIFIED, image, null);
+                            user.setStatus(UserStatus.OFFLINE);
+                            threadsAPI.storeUser(user);
 
-                    } else {
-                        Preferences.warning(getString(R.string.peer_exists_with_pid));
-                        return;
-                    }
-                    checkNotNull(user);
-
-                    try {
-                        threadsAPI.setStatus(user, UserStatus.DIALING);
-
-                        boolean value = ConnectService.connect(ipfs, pid, Application.CON_TIME_OUT);
-                        if (value) {
-                            threadsAPI.setStatus(user, UserStatus.ONLINE);
-
-                            // make a connection to peer
-                            if (Preferences.isPubsubEnabled(getApplicationContext())) {
-                                checkNotNull(host);
-                                User hostUser = threadsAPI.getUserByPID(host);
-                                checkNotNull(hostUser);
-
-                                ipfs.pubsub_pub(user.getPID().getPid(),
-                                        hostUser.getAlias().concat(System.lineSeparator()));
-                            }
                         } else {
+                            Preferences.warning(getString(R.string.peer_exists_with_pid));
+                            return;
+                        }
+                        checkNotNull(user);
+
+                        try {
+                            threadsAPI.setStatus(user, UserStatus.DIALING);
+                            long timeout = ConnectService.getConnectionTimeout(
+                                    getApplicationContext());
+                            boolean value = ConnectService.connectUser(user,
+                                    timeout, timeout);
+                            if (value) {
+                                threadsAPI.setStatus(user, UserStatus.ONLINE);
+
+                                // make a connection to peer
+                                if (Preferences.isPubsubEnabled(getApplicationContext())) {
+                                    checkNotNull(host);
+                                    User hostUser = threadsAPI.getUserByPID(host);
+                                    checkNotNull(hostUser);
+
+                                    Map<String, String> map = new HashMap<>();
+                                    map.put(Content.ALIAS, hostUser.getAlias());
+                                    PID relay = hostUser.getRelay();
+                                    if (relay != null) {
+                                        map.put(Content.RELAY, relay.getPid());
+                                    }
+                                    Gson gson = new Gson();
+                                    ipfs.pubsub_pub(user.getPID().getPid(), gson.toJson(map));
+                                }
+                            } else {
+                                threadsAPI.setStatus(user, UserStatus.OFFLINE);
+                            }
+                        } catch (Throwable e) {
                             threadsAPI.setStatus(user, UserStatus.OFFLINE);
                         }
+
+
                     } catch (Throwable e) {
-                        threadsAPI.setStatus(user, UserStatus.OFFLINE);
+                        Preferences.evaluateException(Preferences.EXCEPTION, e);
                     }
-
-
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
-            });
+                });
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
@@ -720,31 +742,33 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickThreadInfo(long idx) {
+        try {
+            final THREADS threadsAPI = Singleton.getInstance().getThreads();
+            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            if (ipfs != null) {
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(() -> {
+                    try {
+                        Thread threadObject = threadsAPI.getThreadByIdx(idx);
+                        checkNotNull(threadObject);
 
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-        if (ipfs != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    Thread threadObject = threadsAPI.getThreadByIdx(idx);
-                    checkNotNull(threadObject);
+                        CID cid = threadObject.getCid();
+                        checkNotNull(cid);
+                        String multihash = cid.getCid();
 
-                    CID cid = threadObject.getCid();
-                    checkNotNull(cid);
-                    String multihash = cid.getCid();
-
-                    InfoDialogFragment.show(this, multihash,
-                            getString(R.string.multihash),
-                            getString(R.string.multihash_access, multihash));
+                        InfoDialogFragment.show(this, multihash,
+                                getString(R.string.multihash),
+                                getString(R.string.multihash_access, multihash));
 
 
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
-            });
+                    } catch (Throwable e) {
+                        Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    }
+                });
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-
 
     }
 
@@ -752,7 +776,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickThreadPlay(long idx) {
 
         // CHECKED
-        if (!DaemonService.DAEMON_RUNNING.get()) {
+        if (!Preferences.isDaemonRunning(getApplicationContext())) {
             Preferences.error(getString(R.string.daemon_not_running));
             return;
         }
@@ -769,10 +793,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     CID cid = threadObject.getCid();
                     checkNotNull(cid);
                     String multihash = cid.getCid();
-
-                    List<Link> links = threadsAPI.getLinks(ipfs, threadObject,
-                            Application.CON_TIME_OUT, true);
-
+                    long timeout = ConnectService.getConnectionTimeout(
+                            getApplicationContext());
+                    List<Link> links = threadsAPI.getLinks(ipfs, threadObject, timeout, true);
+                    checkNotNull(links);
                     String path = "";
                     if (links.size() == 1) {
                         Link link = links.get(0);
@@ -906,12 +930,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
         // CHECKED
-        if (!DaemonService.DAEMON_RUNNING.get()) {
+        if (!Preferences.isDaemonRunning(getApplicationContext())) {
             Preferences.error(getString(R.string.daemon_not_running));
             return;
         }
-        Service.sendThreads(getApplicationContext(), () -> {
-        }, idx);
+        try {
+            Service.sendThreads(getApplicationContext(), () -> {
+            }, idx);
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
     }
 
     @Override
@@ -970,9 +998,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickUserInfo() {
-        PID pid = Preferences.getPID(getApplicationContext());
-        checkNotNull(pid);
-        clickUserInfo(pid.getPid());
+
+        try {
+            PID pid = Preferences.getPID(getApplicationContext());
+            checkNotNull(pid);
+            clickUserInfo(pid.getPid());
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
 
     }
 
