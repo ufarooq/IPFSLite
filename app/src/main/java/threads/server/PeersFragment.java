@@ -1,6 +1,5 @@
 package threads.server;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -40,11 +39,19 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
     private UsersViewAdapter usersViewAdapter;
     private ActionListener actionListener;
+    private Context mContext;
+
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mContext = null;
+    }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-
+        mContext = context;
         try {
             actionListener = (PeersFragment.ActionListener) getActivity();
         } catch (Throwable e) {
@@ -88,8 +95,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.peers_view, container, false);
 
-        Activity activity = getActivity();
-        checkNotNull(activity);
+
         FloatingActionButton fab_action = view.findViewById(R.id.fab_action);
         fab_action.setOnClickListener((v) -> {
 
@@ -111,7 +117,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
         LinearLayoutManager linearLayout = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(linearLayout);
-        usersViewAdapter = new UsersViewAdapter(activity, this);
+        usersViewAdapter = new UsersViewAdapter(mContext, this);
         mRecyclerView.setAdapter(usersViewAdapter);
 
         PID host = null;

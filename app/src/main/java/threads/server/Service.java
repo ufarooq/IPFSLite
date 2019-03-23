@@ -252,17 +252,24 @@ class Service {
                     List<User> users = threads.getUsers();
                     if (Network.isConnected(context)) {
                         for (User user : users) {
-                            if (user.getStatus() != UserStatus.BLOCKED &&
-                                    user.getStatus() != UserStatus.DIALING) {
+                            UserStatus currentStatus = user.getStatus();
+                            if (currentStatus != UserStatus.BLOCKED &&
+                                    currentStatus != UserStatus.DIALING) {
                                 try {
                                     boolean value = ipfs.swarm_peer(user.getPID()) != null;
                                     if (value) {
-                                        threads.setStatus(user, UserStatus.ONLINE);
+                                        if (threads.getStatus(user) != UserStatus.DIALING) {
+                                            threads.setStatus(user, UserStatus.ONLINE);
+                                        }
                                     } else {
-                                        threads.setStatus(user, UserStatus.OFFLINE);
+                                        if (threads.getStatus(user) != UserStatus.DIALING) {
+                                            threads.setStatus(user, UserStatus.OFFLINE);
+                                        }
                                     }
                                 } catch (Throwable e) {
-                                    threads.setStatus(user, UserStatus.OFFLINE);
+                                    if (threads.getStatus(user) != UserStatus.DIALING) {
+                                        threads.setStatus(user, UserStatus.OFFLINE);
+                                    }
                                 }
                             }
                         }
@@ -638,6 +645,13 @@ class Service {
                         return;
                     }
 
+                    User user = threads.getUserByPID(creator);
+                    if (user == null) {
+                        Preferences.error(context.getString(R.string.unknown_peer_sends_data));
+                        return;
+                    }
+
+
                     CID cid = CID.create(multihash);
                     List<Thread> entries = threads.getThreadsByCID(cid);
                     if (!entries.isEmpty()) {
@@ -683,7 +697,6 @@ class Service {
 
         final THREADS threads = Singleton.getInstance().getThreads();
 
-
         User user = threads.getUserByPID(creator);
         checkNotNull(user);
 
@@ -706,7 +719,6 @@ class Service {
             thread.setMimeType(Preferences.OCTET_MIME_TYPE); // not known yet
             thread.addAdditional(Content.TITLE, cid.getCid(), false);
         }
-
 
 
         try {
@@ -892,19 +904,19 @@ class Service {
             long timeout = ConnectService.getConnectionTimeout(context);
             success = threads.download(ipfs, file, cid, true, false,
                     thread.getSesKey(), new THREADS.Progress() {
-                @Override
-                public void setProgress(int percent) {
-                    builder.setProgress(100, percent, false);
-                    if (notificationManager != null) {
-                        notificationManager.notify(notifyID, builder.build());
-                    }
-                }
+                        @Override
+                        public void setProgress(int percent) {
+                            builder.setProgress(100, percent, false);
+                            if (notificationManager != null) {
+                                notificationManager.notify(notifyID, builder.build());
+                            }
+                        }
 
-                @Override
-                public boolean isStopped() {
-                    return !Network.isConnected(context);
-                }
-            }, timeout);
+                        @Override
+                        public boolean isStopped() {
+                            return !Network.isConnected(context);
+                        }
+                    }, timeout);
 
             if (success) {
                 try {

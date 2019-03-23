@@ -18,7 +18,6 @@ public class Application extends android.app.Application {
     public static final String THREAD_KIND = "THREAD_KIND";
 
 
-
     private static void init(@NonNull Context context) {
         checkNotNull(context);
         new Thread(() -> {

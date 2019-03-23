@@ -1,6 +1,5 @@
 package threads.server;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -70,13 +69,24 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private ThreadsViewAdapter threadsViewAdapter;
     private ThreadViewModel threadViewModel;
     private long mLastClickTime = 0;
-
+    private Context mContext;
 
     private static String getCompactString(@NonNull String title) {
         checkNotNull(title);
         return title.replace("\n", " ");
     }
 
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        mContext = context;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mContext = null;
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -168,16 +178,18 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             }
         }
 
-        Activity activity = getActivity();
-        checkNotNull(activity);
-        PID pid = Preferences.getPID(activity);
-        checkNotNull(pid);
-        root = CID.create(pid.getPid());
-        CID current = directory.get();
-        if (current == null) {
-            directory.set(root);
+        try {
+            PID pid = Preferences.getPID(mContext);
+            checkNotNull(pid);
+            root = CID.create(pid.getPid());
+            CID current = directory.get();
+            if (current == null) {
+                directory.set(root);
+            }
+            update(directory.get());
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-        update(directory.get());
 
     }
 
@@ -191,13 +203,10 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         RecyclerView mRecyclerView = view.findViewById(R.id.recycler_view_message_list);
         mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
-        Activity activity = getActivity();
-        checkNotNull(activity);
 
-
-        LinearLayoutManager linearLayout = new LinearLayoutManager(activity);
+        LinearLayoutManager linearLayout = new LinearLayoutManager(mContext);
         mRecyclerView.setLayoutManager(linearLayout);
-        threadsViewAdapter = new ThreadsViewAdapter(activity, this);
+        threadsViewAdapter = new ThreadsViewAdapter(mContext, this);
         mRecyclerView.setAdapter(threadsViewAdapter);
 
 
@@ -413,7 +422,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
-            try { // TODO faster DB
+            try {
                 threadsAPI.resetThreadUnreadNotesNumber(directory.get());
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -489,7 +498,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void invokeGeneralAction(@NonNull Thread thread) {
         try {
             if (getActivity() != null) {
-                boolean sendActive = Preferences.isPubsubEnabled(getActivity());
+                boolean sendActive = Preferences.isPubsubEnabled(mContext);
                 FragmentManager fm = getActivity().getSupportFragmentManager();
 
                 ThreadActionDialogFragment.newInstance(
@@ -510,10 +519,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 boolean isEmpty = threads.isEmpty();
                 threads.add(thread.getIdx());
                 if (isEmpty) {
-                    Activity activity = getActivity();
-                    if (activity != null) {
-                        evaluateFabDeleteVisibility();
-                    }
+                    evaluateFabDeleteVisibility();
                 }
             }
         } catch (Throwable e) {
@@ -550,10 +556,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         try {
             threads.remove(thread.getIdx());
             if (threads.isEmpty()) {
-                Activity activity = getActivity();
-                if (activity != null) {
-                    evaluateFabDeleteVisibility();
-                }
+                evaluateFabDeleteVisibility();
             }
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -577,23 +580,19 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void invokeActionError(@NonNull Thread thread) {
         checkNotNull(thread);
         try {
-            Activity activity = getActivity();
-            if (activity != null) {
-
-                // CHECKED
-                if (!Network.isConnected(activity)) {
-                    Preferences.error(getString(R.string.offline_mode));
-                    return;
-                }
-
-                // CHECKED
-                if (!Preferences.isDaemonRunning(activity)) {
-                    Preferences.error(getString(R.string.daemon_not_running));
-                    return;
-                }
-
-                Service.downloadThread(activity, thread);
+            // CHECKED
+            if (!Network.isConnected(mContext)) {
+                Preferences.error(getString(R.string.offline_mode));
+                return;
             }
+
+            // CHECKED
+            if (!Preferences.isDaemonRunning(mContext)) {
+                Preferences.error(getString(R.string.daemon_not_running));
+                return;
+            }
+
+            Service.downloadThread(mContext, thread);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
