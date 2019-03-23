@@ -326,7 +326,6 @@ class Service {
 
                     Thread thread = threadsAPI.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
                             "", false, null, CID.create(pid.getPid()));
-
                     thread.addAdditional(Application.TITLE, fileDetails.getFileName(), false);
                     thread.addAdditional(Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
                     CID image = ipfs.add(bytes, true);
@@ -338,6 +337,7 @@ class Service {
                     thread = threadsAPI.getThreadByIdx(idx); // TODO optimize here
                     checkNotNull(thread);
                     try {
+                        threadsAPI.setStatus(thread, ThreadStatus.LEACHING);
                         CID cid = ipfs.add(inputStream, fileDetails.getFileName(),
                                 true, true);
                         checkNotNull(cid);
@@ -397,6 +397,20 @@ class Service {
             phrase = phrase.concat("" + c);
         }
         return phrase;
+    }
+
+    static void cleanStates(@NonNull Context context) {
+        checkNotNull(context);
+
+        final THREADS threads = Singleton.getInstance().getThreads();
+
+        try {
+            threads.setUserStatus(UserStatus.DIALING, UserStatus.OFFLINE);
+            threads.setThreadStatus(ThreadStatus.LEACHING, ThreadStatus.ERROR);
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+
     }
 
     static void createHost(@NonNull Context context) {
@@ -710,7 +724,7 @@ class Service {
 
 
                         NotificationCompat.Builder builder =
-                                NotificationSender.createDownloadProgressNotification(
+                                NotificationSender.createProgressNotification(
                                         context, title);
 
                         final NotificationManager notificationManager = (NotificationManager)
@@ -789,10 +803,16 @@ class Service {
         }
     }
 
-    private static boolean downloadThread(@NonNull Context context,
-                                          @NonNull THREADS threads,
-                                          @NonNull IPFS ipfs,
-                                          @NonNull Thread thread) {
+    private static boolean downloadUnknown(@NonNull Context context,
+                                           @NonNull THREADS threads,
+                                           @NonNull IPFS ipfs,
+                                           @NonNull Thread thread) {
+
+        checkNotNull(context);
+        checkNotNull(threads);
+        checkNotNull(ipfs);
+        checkNotNull(thread);
+
         // UPDATE UI
         Preferences.event(Preferences.THREAD_SELECT_EVENT, String.valueOf(thread.getIdx()));
 
@@ -800,12 +820,45 @@ class Service {
         CID cid = thread.getCid();
         checkNotNull(cid);
 
-        String title = thread.getAdditional(Application.TITLE);
+        threads.setAdditional(thread, Application.TITLE, cid.getCid(), false);
+        threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
+        threads.setMimeType(thread, Preferences.OCTET_MIME_TYPE);
 
+        try {
+            CID image = THREADS.createResourceImage(
+                    context, threads, ipfs, "", R.drawable.file_document);
+            threads.setImage(thread, image);
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+
+
+        return download(context, threads, ipfs, thread, cid, null);
+    }
+
+    private static boolean download(@NonNull Context context,
+                                    @NonNull THREADS threads,
+                                    @NonNull IPFS ipfs,
+                                    @NonNull Thread thread,
+                                    @NonNull CID cid,
+                                    @Nullable String filename) {
+
+        checkNotNull(context);
+        checkNotNull(threads);
+        checkNotNull(ipfs);
+        checkNotNull(thread);
+        checkNotNull(cid);
+
+        String content;
+        if (filename == null) {
+            content = cid.getCid();
+        } else {
+            content = filename;
+        }
 
         NotificationCompat.Builder builder =
-                NotificationSender.createDownloadProgressNotification(
-                        context, title);
+                NotificationSender.createProgressNotification(
+                        context, content);
 
         final NotificationManager notificationManager = (NotificationManager)
                 context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
@@ -814,14 +867,13 @@ class Service {
         if (notificationManager != null) {
             notificationManager.notify(notifyID, notification);
         }
-
-
-        File file = getCacheFile(context, cid.getCid());
+        File file = getCacheFile(context, System.currentTimeMillis() + content);
 
         boolean success;
         try {
             long timeout = ConnectService.getConnectionTimeout(context);
-            success = threads.download(ipfs, file, cid, true, false, thread.getSesKey(), new THREADS.Progress() {
+            success = threads.download(ipfs, file, cid, true, false,
+                    thread.getSesKey(), new THREADS.Progress() {
                 @Override
                 public void setProgress(int percent) {
                     builder.setProgress(100, percent, false);
@@ -857,9 +909,6 @@ class Service {
             }
         }
 
-        if (success) {
-            NotificationSender.showNotification(context, cid.getCid(), cid.hashCode());
-        }
         return success;
     }
 
@@ -936,70 +985,8 @@ class Service {
         threads.setDate(thread, new Date());
 
 
-        Long size = link.getSize();
-        checkNotNull(size);
+        return download(context, threads, ipfs, thread, link.getCid(), link.getPath());
 
-        NotificationCompat.Builder builder =
-                NotificationSender.createDownloadProgressNotification(
-                        context, link.getPath());
-
-        final NotificationManager notificationManager = (NotificationManager)
-                context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        int notifyID = link.getCid().hashCode();
-        Notification notification = builder.build();
-        if (notificationManager != null) {
-            notificationManager.notify(notifyID, notification);
-        }
-
-        File file = getCacheFile(context, System.currentTimeMillis() + filename);
-
-        boolean success;
-        try {
-            long timeout = ConnectService.getConnectionTimeout(context);
-            success = threads.download(ipfs, file,
-                    link.getCid(), true, false, thread.getSesKey(), new THREADS.Progress() {
-                        @Override
-                        public void setProgress(int percent) {
-                            builder.setProgress(100, percent, false);
-                            if (notificationManager != null) {
-                                notificationManager.notify(notifyID, builder.build());
-                            }
-                        }
-
-                        @Override
-                        public boolean isStopped() {
-                            return !Network.isConnected(context);
-                        }
-                    }, timeout);
-
-
-            if (success) {
-                try {
-                    byte[] image = THREADS.getPreviewImage(context, file);
-                    if (image != null) {
-                        threads.setImage(ipfs, thread, image);
-                    }
-                } catch (Throwable e) {
-                    // no exception will be reported
-                }
-            }
-
-        } catch (Throwable e) {
-            success = false;
-        } finally {
-            if (notificationManager != null) {
-                notificationManager.cancel(notifyID);
-            }
-            if (file.exists()) {
-                checkArgument(file.delete());
-            }
-        }
-
-        if (success) {
-            NotificationSender.showNotification(context, link.getPath(), link.getCid().hashCode());
-        }
-
-        return success;
     }
 
     private static boolean downloadLink(@NonNull Context context,
@@ -1084,26 +1071,14 @@ class Service {
         checkNotNull(thread);
 
 
-        CID cid = thread.getCid();
-        checkNotNull(cid);
-        threads.setStatus(thread, ThreadStatus.OFFLINE);
+        threads.setStatus(thread, ThreadStatus.LEACHING);
         long timeout = ConnectService.getConnectionTimeout(context);
         List<Link> links = threads.getLinks(ipfs, thread, timeout, false);
 
         if (links != null) {
             if (links.isEmpty()) {
-                threads.setAdditional(thread, Application.TITLE, cid.getCid(), false);
-                threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
-                threads.setMimeType(thread, Preferences.OCTET_MIME_TYPE);
 
-                try {
-                    CID image = THREADS.createResourceImage(
-                            context, threads, ipfs, "", R.drawable.file_document);
-                    threads.setImage(thread, image);
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
-                boolean result = downloadThread(context, threads, ipfs, thread);
+                boolean result = downloadUnknown(context, threads, ipfs, thread);
                 if (result) {
                     threads.setStatus(thread, ThreadStatus.ONLINE);
                 } else {
@@ -1111,18 +1086,6 @@ class Service {
                 }
 
             } else if (links.size() > 1) {
-
-                // real directory
-                threads.setAdditional(thread, Application.TITLE, cid.getCid(), false);
-                threads.setMimeType(thread, Preferences.OCTET_MIME_TYPE);
-                threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.NODE.name(), true);
-                try {
-                    CID image = THREADS.createResourceImage(
-                            context, threads, ipfs, "", R.drawable.file_document);
-                    threads.setImage(thread, image);
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
                 boolean result = downloadLinks(context, threads, ipfs, thread, links);
                 if (result) {
                     threads.setStatus(thread, ThreadStatus.ONLINE);

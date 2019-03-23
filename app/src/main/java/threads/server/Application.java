@@ -24,6 +24,8 @@ public class Application extends android.app.Application {
         checkNotNull(context);
         new Thread(() -> {
             try {
+
+                Service.cleanStates(context);
                 Service.createHost(context);
                 Service.checkPeers(context);
             } catch (Throwable e) {
