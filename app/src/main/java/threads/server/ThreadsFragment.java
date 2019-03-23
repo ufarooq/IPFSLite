@@ -33,6 +33,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
+import threads.core.api.Content;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.mdl.EventViewModel;
@@ -616,7 +617,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @NonNull
     @Override
     public String getTitle(@NonNull Thread thread) {
-        return getCompactString(thread.getAdditional(Application.TITLE));
+        return getCompactString(thread.getAdditional(Content.TITLE));
     }
 
     @Override

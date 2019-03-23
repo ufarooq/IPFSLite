@@ -81,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         EditPeerDialogFragment.ActionListener,
         PeersFragment.ActionListener,
         NameDialogFragment.ActionListener {
+    private static final Gson gson = new Gson();
     private static final int SELECT_FILES = 1;
     private static final int DOWNLOAD_EXTERNAL_STORAGE = 2;
     private final AtomicReference<Long> storedThread = new AtomicReference<>(null);
@@ -177,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 PID pid = Preferences.getPID(getApplicationContext());
                 checkNotNull(pid);
                 String multihash = codecDecider.getMultihash();
-                Service.downloadMultihash(getApplicationContext(), pid, multihash);
+                Service.downloadMultihash(getApplicationContext(), pid, multihash, null);
             } else {
                 Preferences.error(getString(R.string.codec_not_supported));
             }
@@ -713,7 +714,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     if (relay != null) {
                                         map.put(Content.RELAY, relay.getPid());
                                     }
-                                    Gson gson = new Gson();
+
                                     ipfs.pubsub_pub(user.getPID().getPid(), gson.toJson(map));
                                 }
                             } else {

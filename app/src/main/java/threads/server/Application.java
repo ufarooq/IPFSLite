@@ -17,7 +17,6 @@ public class Application extends android.app.Application {
     public static final String UPDATE = "UPDATE";
     public static final String THREAD_KIND = "THREAD_KIND";
 
-    public static final String TITLE = "TITLE";
 
 
     private static void init(@NonNull Context context) {
