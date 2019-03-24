@@ -80,6 +80,13 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
+        try {
+            PID pid = Preferences.getPID(mContext);
+            checkNotNull(pid);
+            root = CID.create(pid.getPid());
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
     }
 
     @Override
@@ -179,9 +186,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         }
 
         try {
-            PID pid = Preferences.getPID(mContext);
-            checkNotNull(pid);
-            root = CID.create(pid.getPid());
             CID current = directory.get();
             if (current == null) {
                 directory.set(root);
