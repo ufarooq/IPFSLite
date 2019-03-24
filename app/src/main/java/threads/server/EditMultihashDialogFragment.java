@@ -33,18 +33,24 @@ public class EditMultihashDialogFragment extends DialogFragment {
     public static final String TAG = EditMultihashDialogFragment.class.getSimpleName();
     private static final int MULTIHASH_SIZE = 128;
     private final AtomicBoolean notPrintErrorMessages = new AtomicBoolean(false);
-    private EditMultihashDialogFragment.ActionListener actionListener;
+    private EditMultihashDialogFragment.ActionListener mListener;
     private long mLastClickTime = 0;
     private TextInputLayout edit_multihash_layout;
     private TextInputEditText multihash;
+    private Context mContext;
 
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mContext = null;
+    }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-
+        mContext = context;
         try {
-            actionListener = (EditMultihashDialogFragment.ActionListener) getActivity();
+            mListener = (EditMultihashDialogFragment.ActionListener) getActivity();
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
@@ -59,7 +65,7 @@ public class EditMultihashDialogFragment extends DialogFragment {
         checkNotNull(activity);
 
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
 
 
         LayoutInflater inflater = activity.getLayoutInflater();
@@ -111,7 +117,7 @@ public class EditMultihashDialogFragment extends DialogFragment {
                     checkNotNull(text);
                     String hash = text.toString();
                     dismiss();
-                    actionListener.downloadMultihash(hash);
+                    mListener.downloadMultihash(hash);
 
 
                 })
@@ -186,13 +192,14 @@ public class EditMultihashDialogFragment extends DialogFragment {
 
     private void removeKeyboards() {
 
-        Activity activity = getActivity();
-        if (activity != null) {
+        try {
             InputMethodManager imm = (InputMethodManager)
-                    activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
             if (imm != null) {
                 imm.hideSoftInputFromWindow(multihash.getWindowToken(), 0);
             }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
     }
@@ -200,11 +207,8 @@ public class EditMultihashDialogFragment extends DialogFragment {
 
     @Override
     public void onDismiss(@NonNull DialogInterface dialog) {
-        Activity activity = getActivity();
-        if (activity != null) {
-            removeKeyboards();
-        }
         super.onDismiss(dialog);
+        removeKeyboards();
     }
 
     @Override

@@ -33,23 +33,60 @@ public class EditPeerDialogFragment extends DialogFragment {
     public static final String TAG = EditPeerDialogFragment.class.getSimpleName();
     private static final int MULTIHASH_SIZE = 128;
     private final AtomicBoolean notPrintErrorMessages = new AtomicBoolean(false);
-    private EditPeerDialogFragment.ActionListener actionListener;
+    private EditPeerDialogFragment.ActionListener mListener;
     private long mLastClickTime = 0;
     private TextInputLayout edit_multihash_layout;
     private TextInputEditText multihash;
-
+    private Context mContext;
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-
+        mContext = context;
         try {
-            actionListener = (EditPeerDialogFragment.ActionListener) getActivity();
+            mListener = (EditPeerDialogFragment.ActionListener) getActivity();
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
+
+    private void isValidMultihash(Dialog dialog) {
+        if (dialog instanceof android.app.AlertDialog) {
+            android.app.AlertDialog alertDialog = (android.app.AlertDialog) dialog;
+            Editable text = multihash.getText();
+            checkNotNull(text);
+            String multi = text.toString();
+
+
+            boolean result = !multi.isEmpty();
+
+            if (result) {
+                try {
+                    Multihash.fromBase58(multi);
+                    result = true;
+                } catch (Throwable e) {
+                    result = false;
+                }
+            }
+
+
+            alertDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setEnabled(result);
+
+
+            if (!notPrintErrorMessages.get()) {
+
+                if (multi.isEmpty()) {
+                    edit_multihash_layout.setError(getString(R.string.multihash_not_valid));
+                } else {
+                    edit_multihash_layout.setError(null);
+                }
+
+            } else {
+                edit_multihash_layout.setError(null);
+            }
+        }
+    }
 
     @Override
     @NonNull
@@ -58,8 +95,7 @@ public class EditPeerDialogFragment extends DialogFragment {
         Activity activity = getActivity();
         checkNotNull(activity);
 
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
 
 
         LayoutInflater inflater = activity.getLayoutInflater();
@@ -111,7 +147,7 @@ public class EditPeerDialogFragment extends DialogFragment {
                     checkNotNull(text);
                     String hash = text.toString();
                     dismiss();
-                    actionListener.clickConnectPeer(hash);
+                    mListener.clickConnectPeer(hash);
 
 
                 })
@@ -145,66 +181,31 @@ public class EditPeerDialogFragment extends DialogFragment {
         return dialog;
     }
 
-
-    private void isValidMultihash(Dialog dialog) {
-        if (dialog instanceof android.app.AlertDialog) {
-            android.app.AlertDialog alertDialog = (android.app.AlertDialog) dialog;
-            Editable text = multihash.getText();
-            checkNotNull(text);
-            String multi = text.toString();
-
-
-            boolean result = !multi.isEmpty();
-
-            if (result) {
-                try {
-                    Multihash.fromBase58(multi);
-                    result = true;
-                } catch (Throwable e) {
-                    result = false;
-                }
-            }
-
-
-            alertDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setEnabled(result);
-
-
-            if (!notPrintErrorMessages.get()) {
-
-                if (multi.isEmpty()) {
-                    edit_multihash_layout.setError(getString(R.string.multihash_not_valid));
-                } else {
-                    edit_multihash_layout.setError(null);
-                }
-
-            } else {
-                edit_multihash_layout.setError(null);
-            }
-        }
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mContext = null;
     }
 
 
     private void removeKeyboards() {
 
-        Activity activity = getActivity();
-        if (activity != null) {
+        try {
             InputMethodManager imm = (InputMethodManager)
-                    activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                    mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
             if (imm != null) {
                 imm.hideSoftInputFromWindow(multihash.getWindowToken(), 0);
             }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
     }
 
-
     @Override
     public void onDismiss(@NonNull DialogInterface dialog) {
-        Activity activity = getActivity();
-        if (activity != null) {
-            removeKeyboards();
-        }
         super.onDismiss(dialog);
+        removeKeyboards();
     }
 
     @Override
