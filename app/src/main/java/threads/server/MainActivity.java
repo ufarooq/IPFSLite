@@ -709,6 +709,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     checkNotNull(hostUser);
 
                                     Map<String, String> map = new HashMap<>();
+                                    map.put(Content.EST, Message.CONNECT.name());
                                     map.put(Content.ALIAS, hostUser.getAlias());
                                     PID relay = hostUser.getRelay();
                                     if (relay != null) {

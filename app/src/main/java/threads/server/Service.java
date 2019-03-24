@@ -55,8 +55,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 class Service {
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
-    private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(5);
-    private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(5);
+    private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(1);
+    private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(1);
 
     private static void startPeers(@NonNull Context context) {
         try {
@@ -128,16 +128,49 @@ class Service {
                         Service.downloadMultihash(context, senderPid, result.getMultihash(), null);
                     } else if (result.getCodex() == CodecDecider.Codec.JSON_MAP) {
                         Map<String, String> map = result.getMap();
-                        if (map.containsKey(Content.ALIAS)) {
-                            String alias = map.get(Content.ALIAS);
-                            checkNotNull(alias);
-                            String relay = map.get(Content.RELAY);
-                            createUser(context, senderPid, alias, relay);
-                        } else if (map.containsKey(Content.CID)) {
-                            String cid = map.get(Content.CID);
-                            checkNotNull(cid);
-                            String title = map.get(Content.TITLE);
-                            Service.downloadMultihash(context, senderPid, cid, title);
+
+                        if (map.containsKey(Content.EST)) {
+                            String est = map.get(Content.EST);
+                            Message type = Message.valueOf(est);
+                            switch (type) {
+                                case CONNECT: {
+                                    if (map.containsKey(Content.ALIAS)) {
+                                        String alias = map.get(Content.ALIAS);
+                                        checkNotNull(alias);
+                                        String relay = map.get(Content.RELAY);
+                                        createUser(context, senderPid, alias, relay);
+                                    }
+                                    break;
+                                }
+                                case SHARE: {
+                                    if (map.containsKey(Content.CID)) {
+                                        String cid = map.get(Content.CID);
+                                        checkNotNull(cid);
+                                        String title = map.get(Content.TITLE);
+                                        Service.downloadMultihash(context, senderPid, cid, title);
+                                    }
+                                    break;
+                                }
+                                case REPLY: {
+                                    if (map.containsKey(Content.CID)) {
+                                        String cid = map.get(Content.CID);
+                                        checkNotNull(cid);
+                                        Service.publishReply(context, senderPid, cid);
+                                    }
+                                }
+                            }
+                        } else {
+                            if (map.containsKey(Content.ALIAS)) {
+                                String alias = map.get(Content.ALIAS);
+                                checkNotNull(alias);
+                                String relay = map.get(Content.RELAY);
+                                createUser(context, senderPid, alias, relay);
+                            } else if (map.containsKey(Content.CID)) {
+                                String cid = map.get(Content.CID);
+                                checkNotNull(cid);
+                                String title = map.get(Content.TITLE);
+                                Service.downloadMultihash(context, senderPid, cid, title);
+                            }
                         }
                     } else if (result.getCodex() == CodecDecider.Codec.UNKNOWN) {
                         // check content if might be a name
@@ -168,6 +201,49 @@ class Service {
 
 
         });
+
+    }
+
+    private static void publishReply(@NonNull Context context,
+                                     @NonNull PID sender,
+                                     @NonNull String multihash) {
+        checkNotNull(context);
+
+        checkNotNull(sender);
+        checkNotNull(multihash);
+
+        try {
+            final THREADS threads = Singleton.getInstance().getThreads();
+            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            if (ipfs != null) {
+
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(() -> {
+                    // check if multihash is valid
+                    try {
+                        Multihash.fromBase58(multihash);
+                    } catch (Throwable e) {
+                        Preferences.error(context.getString(R.string.multihash_not_valid));
+                        return;
+                    }
+
+                    User user = threads.getUserByPID(sender);
+                    if (user == null) {
+                        Preferences.error(context.getString(R.string.unknown_peer_sends_data));
+                        return;
+                    }
+
+
+                    CID cid = CID.create(multihash);
+                    List<Thread> entries = threads.getThreadsByCID(cid);
+                    for (Thread thread : entries) {
+                        threads.incrementUnreadNotesNumber(thread);
+                    }
+                });
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
 
     }
 
@@ -474,13 +550,13 @@ class Service {
                         checkNotNull(cid);
 
                         Map<String, String> map = new HashMap<>();
+                        map.put(Content.EST, Message.SHARE.name());
                         String title = threadObject.getAdditional(Content.TITLE);
                         if (!title.isEmpty()) {
                             map.put(Content.TITLE, title);
                         }
                         map.put(Content.CID, cid.getCid());
                         ipfs.pubsub_pub(user.getPID().getPid(), gson.toJson(map));
-                        threads.incrementUnreadNotesNumber(threadObject);
                     }
 
                     success = true;
@@ -619,12 +695,12 @@ class Service {
     }
 
     static void downloadMultihash(@NonNull Context context,
-                                  @NonNull PID creator,
+                                  @NonNull PID sender,
                                   @NonNull String multihash,
                                   @Nullable String filename) {
 
         checkNotNull(context);
-        checkNotNull(creator);
+        checkNotNull(sender);
         checkNotNull(multihash);
 
         final THREADS threads = Singleton.getInstance().getThreads();
@@ -645,7 +721,7 @@ class Service {
                         return;
                     }
 
-                    User user = threads.getUserByPID(creator);
+                    User user = threads.getUserByPID(sender);
                     if (user == null) {
                         Preferences.error(context.getString(R.string.unknown_peer_sends_data));
                         return;
@@ -657,20 +733,18 @@ class Service {
                     if (!entries.isEmpty()) {
                         for (Thread entry : entries) {
                             if (entry.getStatus() != ThreadStatus.ONLINE) {
-                                downloadMultihash(context, threads, ipfs, entry);
+                                downloadMultihash(context, threads, ipfs, entry, sender);
                             } else {
-                                // UPDATE UI
-                                Preferences.event(Preferences.THREAD_SELECT_EVENT,
-                                        String.valueOf(entry.getIdx()));
+                                replySender(ipfs, sender, entry);
                             }
                         }
 
                     } else {
-                        long idx = createThread(context, ipfs, creator, cid,
+                        long idx = createThread(context, ipfs, sender, cid,
                                 CID.create(pid.getPid()), filename);
                         Thread thread = threads.getThreadByIdx(idx);
                         checkNotNull(thread);
-                        downloadMultihash(context, threads, ipfs, thread);
+                        downloadMultihash(context, threads, ipfs, thread, sender);
 
                     }
 
@@ -827,26 +901,6 @@ class Service {
         }
     }
 
-    static void downloadThread(@NonNull Context context, @NonNull Thread thread) {
-
-        checkNotNull(context);
-        try {
-            final THREADS threadsAPI = Singleton.getInstance().getThreads();
-
-            final IPFS ipfs = Singleton.getInstance().getIpfs();
-            if (ipfs != null) {
-                DOWNLOAD_SERVICE.submit(() -> {
-                    try {
-                        downloadMultihash(context, threadsAPI, ipfs, thread);
-                    } catch (Throwable e) {
-                        Preferences.evaluateException(Preferences.EXCEPTION, e);
-                    }
-                });
-            }
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
-    }
 
     private static boolean downloadUnknown(@NonNull Context context,
                                            @NonNull THREADS threads,
@@ -1099,10 +1153,26 @@ class Service {
         return successCounter.get() == links.size();
     }
 
-    private static void downloadMultihash(@NonNull Context context,
-                                          @NonNull THREADS threads,
-                                          @NonNull IPFS ipfs,
-                                          @NonNull Thread thread) {
+    private static void replySender(@NonNull IPFS ipfs, @NonNull PID sender, @NonNull Thread thread) {
+        CID cid = thread.getCid();
+        checkNotNull(cid);
+
+        Map<String, String> map = new HashMap<>();
+        map.put(Content.EST, Message.REPLY.name());
+        map.put(Content.CID, cid.getCid());
+
+        try {
+            ipfs.pubsub_pub(sender.getPid(), gson.toJson(map));
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+    }
+
+    static void downloadMultihash(@NonNull Context context,
+                                  @NonNull THREADS threads,
+                                  @NonNull IPFS ipfs,
+                                  @NonNull Thread thread,
+                                  @Nullable PID sender) {
         checkNotNull(context);
         checkNotNull(threads);
         checkNotNull(ipfs);
@@ -1118,6 +1188,9 @@ class Service {
                 boolean result = downloadUnknown(context, threads, ipfs, thread);
                 if (result) {
                     threads.setStatus(thread, ThreadStatus.ONLINE);
+                    if (sender != null) {
+                        replySender(ipfs, sender, thread);
+                    }
                 } else {
                     threads.setStatus(thread, ThreadStatus.ERROR);
                 }
@@ -1126,6 +1199,9 @@ class Service {
                 boolean result = downloadLinks(context, threads, ipfs, thread, links);
                 if (result) {
                     threads.setStatus(thread, ThreadStatus.ONLINE);
+                    if (sender != null) {
+                        replySender(ipfs, sender, thread);
+                    }
                 } else {
                     threads.setStatus(thread, ThreadStatus.ERROR);
                 }
@@ -1136,6 +1212,9 @@ class Service {
                 boolean result = downloadLink(context, threads, ipfs, thread, link);
                 if (result) {
                     threads.setStatus(thread, ThreadStatus.ONLINE);
+                    if (sender != null) {
+                        replySender(ipfs, sender, thread);
+                    }
                 } else {
                     threads.setStatus(thread, ThreadStatus.ERROR);
                 }

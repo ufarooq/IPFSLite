@@ -37,6 +37,7 @@ import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.mdl.EventViewModel;
 import threads.core.mdl.ThreadViewModel;
+import threads.ipfs.IPFS;
 import threads.ipfs.Network;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
@@ -596,7 +597,25 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 return;
             }
 
-            Service.downloadThread(mContext, thread);
+
+            try {
+                final THREADS threadsAPI = Singleton.getInstance().getThreads();
+
+                final IPFS ipfs = Singleton.getInstance().getIpfs();
+                if (ipfs != null) {
+                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                    executor.submit(() -> {
+                        try {
+                            Service.downloadMultihash(mContext, threadsAPI, ipfs, thread, null);
+                        } catch (Throwable e) {
+                            Preferences.evaluateException(Preferences.EXCEPTION, e);
+                        }
+                    });
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
