@@ -572,10 +572,8 @@ class Service {
     }
 
     static void sendThreads(@NonNull Context context,
-                            @NonNull ShareThreads listener,
                             @NonNull Long... idxs) {
         checkNotNull(context);
-        checkNotNull(listener);
 
         final PID host = Preferences.getPID(context.getApplicationContext());
         final THREADS threads = Singleton.getInstance().getThreads();
@@ -624,8 +622,6 @@ class Service {
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
-                } finally {
-                    listener.done();
                 }
             });
 

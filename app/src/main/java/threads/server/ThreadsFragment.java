@@ -120,6 +120,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 mLastClickTime = SystemClock.elapsedRealtime();
 
                 markThreads();
+
                 return true;
             }
             case R.id.action_unmark_all: {
@@ -255,8 +256,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         FloatingActionButton fab_delete = view.findViewById(R.id.fab_delete);
         fab_delete.setOnClickListener((v) -> {
 
-            // mis-clicking prevention, using threshold of 1000 ms
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 1500) {
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 750) {
                 return;
             }
             mLastClickTime = SystemClock.elapsedRealtime();
@@ -269,8 +269,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         FloatingActionButton fab_send = view.findViewById(R.id.fab_send);
         fab_send.setOnClickListener((v) -> {
 
-            // mis-clicking prevention, using threshold of 1000 ms
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 1500) {
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 750) {
                 return;
             }
             mLastClickTime = SystemClock.elapsedRealtime();
@@ -378,22 +377,24 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     }
 
     private void sendAction() {
-        Context context = getContext();
-        if (context != null) {
+        try {
             // CHECKED
-            if (!Network.isConnected(context)) {
+            if (!Network.isConnected(mContext)) {
                 Preferences.error(getString(R.string.offline_mode));
                 return;
             }
             // CHECKED
-            if (!Preferences.isDaemonRunning(context)) {
+            if (!Preferences.isDaemonRunning(mContext)) {
                 Preferences.error(getString(R.string.daemon_not_running));
                 return;
             }
 
-            Service.sendThreads(context, () -> {
-            }, Iterables.toArray(threads, Long.class));
+            Service.sendThreads(mContext, Iterables.toArray(threads, Long.class));
+
+
             unmarkThreads();
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 

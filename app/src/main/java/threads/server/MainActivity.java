@@ -926,19 +926,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadSend(long idx) {
 
-        // CHECKED
-        if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(getString(R.string.offline_mode));
-            return;
-        }
-        // CHECKED
-        if (!Preferences.isDaemonRunning(getApplicationContext())) {
-            Preferences.error(getString(R.string.daemon_not_running));
-            return;
-        }
         try {
-            Service.sendThreads(getApplicationContext(), () -> {
-            }, idx);
+            // CHECKED
+            if (!Network.isConnected(getApplicationContext())) {
+                Preferences.error(getString(R.string.offline_mode));
+                return;
+            }
+            // CHECKED
+            if (!Preferences.isDaemonRunning(getApplicationContext())) {
+                Preferences.error(getString(R.string.daemon_not_running));
+                return;
+            }
+
+            Service.sendThreads(getApplicationContext(), idx);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
