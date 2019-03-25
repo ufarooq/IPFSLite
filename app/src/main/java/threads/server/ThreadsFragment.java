@@ -146,14 +146,20 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
-        long[] storedEntries = new long[threads.size()];
-        for (int i = 0; i < threads.size(); i++) {
-            storedEntries[i] = threads.get(i);
+        try {
+            long[] storedEntries = new long[threads.size()];
+            for (int i = 0; i < threads.size(); i++) {
+                storedEntries[i] = threads.get(i);
+            }
+            outState.putLongArray(IDXS, storedEntries);
+            outState.putLong(SELECTION, threadIdx);
+            CID dir = directory.get();
+            if (dir != null) {
+                outState.putString(DIRECTORY, dir.getCid());
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-        outState.putLongArray(IDXS, storedEntries);
-        outState.putLong(SELECTION, threadIdx);
-        CID dir = directory.get();
-        outState.putString(DIRECTORY, dir.getCid());
         super.onSaveInstanceState(outState);
     }
 

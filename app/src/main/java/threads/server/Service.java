@@ -55,7 +55,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 class Service {
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
-    private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(1);
+    private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(3);
     private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(1);
 
     private static void startPeers(@NonNull Context context) {
@@ -309,7 +309,10 @@ class Service {
                     new java.lang.Thread(() -> startPeers(context)).start();
                 }
 
-                new java.lang.Thread(() -> ConnectService.runRelay(context, 10, 1000)).start();
+                if (ConnectService.isAutoConnectRelay(context)) {
+                    new java.lang.Thread(() -> ConnectService.connectRelay(context,
+                            10, 1000)).start();
+                }
             }
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);

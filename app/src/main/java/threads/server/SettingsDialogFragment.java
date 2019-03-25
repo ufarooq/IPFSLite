@@ -126,10 +126,14 @@ public class SettingsDialogFragment extends DialogFragment {
 
 
         Switch connect_relay_support = view.findViewById(R.id.connect_relay_support);
-        connect_relay_support.setChecked(ConnectService.isAutoRelay(activity));
-        connect_relay_support.setOnCheckedChangeListener((buttonView, isChecked) ->
-                ConnectService.setAutoRelay(activity, isChecked)
-        );
+        connect_relay_support.setChecked(ConnectService.isAutoConnectRelay(activity));
+        connect_relay_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            ConnectService.setAutoConnectRelay(activity, isChecked);
+            Toast.makeText(getContext(),
+                    R.string.daemon_restart_config_changed,
+                    Toast.LENGTH_LONG).show();
+
+        });
 
         TextView connection_timeout_text = view.findViewById(R.id.connection_timeout_text);
         SeekBar connection_timeout = view.findViewById(R.id.connection_timeout);

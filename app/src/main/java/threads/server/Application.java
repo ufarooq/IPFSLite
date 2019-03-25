@@ -55,7 +55,7 @@ public class Application extends android.app.Application {
                 Preferences.setQUICEnabled(getApplicationContext(), true);
 
                 ConnectService.setConnectionTimeout(getApplicationContext(), 60);
-                ConnectService.setAutoRelay(getApplicationContext(), false);
+                ConnectService.setAutoConnectRelay(getApplicationContext(), false);
 
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putInt(Application.UPDATE, versionCode);
