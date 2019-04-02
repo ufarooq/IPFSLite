@@ -14,6 +14,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,12 +25,16 @@ import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import threads.core.Preferences;
+import threads.core.Singleton;
 import threads.core.api.User;
 import threads.core.api.UserStatus;
 import threads.core.mdl.UsersViewModel;
+import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
+import threads.ipfs.api.PeerInfo;
 import threads.share.UserActionDialogFragment;
 import threads.share.UsersViewAdapter;
+import threads.share.WebViewDialogFragment;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -84,6 +90,49 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                 mLastClickTime = SystemClock.elapsedRealtime();
 
                 actionListener.clickUserInfo();
+
+                return true;
+            }
+
+            case R.id.action_id: {
+
+                // mis-clicking prevention, using threshold of 1000 ms
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    break;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+
+                final IPFS ipfs = Singleton.getInstance().getIpfs();
+                if (ipfs != null) {
+                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                    executor.submit(() -> {
+                        try {
+                            PeerInfo info = ipfs.id();
+
+                            String html = "<html><h2>Addresses</h2><ul>";
+                            List<String> addresses = info.getMultiAddresses();
+                            for (String address : addresses) {
+                                html = html.concat("<li><div style=\"width: 80%;" +
+                                        "  word-wrap:break-word;\">").concat(address).concat("</div></li>");
+                            }
+                            String agent = info.getAgentVersion();
+                            html = html.concat("</ul><br/><footer>Version : " + agent + "</footer></html>");
+
+                            WebViewDialogFragment.newInstance(
+                                    WebViewDialogFragment.Type.HTML, html).show(
+                                    getActivity().getSupportFragmentManager(),
+                                    WebViewDialogFragment.TAG);
+
+
+                        } catch (Throwable e) {
+                            // ignore exception for now
+                            Preferences.evaluateException(Preferences.EXCEPTION, e);
+                        }
+                    });
+
+                }
+
 
                 return true;
             }

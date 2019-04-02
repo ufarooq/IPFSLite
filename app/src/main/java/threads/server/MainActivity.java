@@ -615,7 +615,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                                 long timeout = ConnectService.getConnectionTimeout(
                                         getApplicationContext());
-                                boolean value = ConnectService.connectUser(user, timeout, timeout);
+
+                                boolean value = ConnectService.connectUser(user, timeout);
                                 if (value) {
                                     threadsAPI.setStatus(user, UserStatus.ONLINE);
                                 } else {
@@ -697,8 +698,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             threadsAPI.setStatus(user, UserStatus.DIALING);
                             long timeout = ConnectService.getConnectionTimeout(
                                     getApplicationContext());
-                            boolean value = ConnectService.connectUser(user,
-                                    timeout, timeout);
+                            boolean value = ConnectService.connectUser(user, timeout);
                             if (value) {
                                 threadsAPI.setStatus(user, UserStatus.ONLINE);
 
@@ -805,7 +805,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         path = "/" + link.getPath();
                     }
 
-                    Uri uri = Uri.parse(Preferences.getGateway(getApplicationContext()) +
+                    Uri uri = Uri.parse(Preferences.getGateway(getApplicationContext(),
+                            IPFS.Style.ipfs) +
                             multihash + path);
 
                     try {

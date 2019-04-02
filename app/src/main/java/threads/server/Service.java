@@ -116,6 +116,9 @@ class Service {
 
                 PID senderPid = PID.create(message.getSenderPid());
 
+
+                Log.e(TAG, ipfs.swarm_peer(senderPid).toString());
+
                 if (!threadsAPI.isAccountBlocked(senderPid)) {
 
                     String code = message.getMessage().trim();
@@ -311,7 +314,7 @@ class Service {
 
                 if (ConnectService.isAutoConnectRelay(context)) {
                     new java.lang.Thread(() -> ConnectService.connectRelay(context,
-                            10, 1000)).start();
+                            10, 10000)).start();
                 }
             }
         } catch (Throwable e) {
@@ -321,14 +324,20 @@ class Service {
 
     static void checkPeers(@NonNull Context context) {
         checkNotNull(context);
-
+        PID hostPID = Preferences.getPID(context);
         try {
             final THREADS threads = Singleton.getInstance().getThreads();
             if (Network.isConnected(context)) {
 
                 final IPFS ipfs = Singleton.getInstance().getIpfs();
                 if (ipfs != null) {
+
                     List<User> users = threads.getUsers();
+
+                    if (hostPID != null) {
+                        User host = threads.getUserByPID(hostPID);
+                        users.remove(host);
+                    }
                     if (Network.isConnected(context)) {
                         for (User user : users) {
                             UserStatus currentStatus = user.getStatus();
@@ -543,7 +552,7 @@ class Service {
         boolean success = false;
         if (ipfs != null) {
             try {
-                if (ConnectService.connectUser(user, timeout, timeout)) {
+                if (ConnectService.connectUser(user, timeout)) {
 
                     for (long idx : idxs) {
                         Thread threadObject = threads.getThreadByIdx(idx);
@@ -731,10 +740,11 @@ class Service {
                     List<Thread> entries = threads.getThreadsByCID(cid);
                     if (!entries.isEmpty()) {
                         for (Thread entry : entries) {
-                            if (entry.getStatus() != ThreadStatus.ONLINE) {
-                                downloadMultihash(context, threads, ipfs, entry, sender);
-                            } else {
+                            if (entry.getStatus() == ThreadStatus.DELETING ||
+                                    entry.getStatus() == ThreadStatus.ONLINE) {
                                 replySender(ipfs, sender, entry);
+                            } else {
+                                downloadMultihash(context, threads, ipfs, entry, sender);
                             }
                         }
 
@@ -1248,7 +1258,5 @@ class Service {
         LEAF, NODE
     }
 
-    public interface ShareThreads {
-        void done();
-    }
+
 }

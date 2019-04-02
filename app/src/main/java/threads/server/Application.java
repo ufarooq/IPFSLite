@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import androidx.annotation.NonNull;
 import threads.core.Preferences;
 import threads.core.Singleton;
+import threads.ipfs.api.ConnMgrConfig;
 import threads.ipfs.api.Profile;
 import threads.share.ConnectService;
 
@@ -44,7 +45,7 @@ public class Application extends android.app.Application {
                 Preferences.setBinaryUpgrade(getApplicationContext(), true);
 
 
-                Preferences.setProfile(getApplicationContext(), Profile.LOW_POWER);
+                Preferences.setProfile(getApplicationContext(), Profile.MOBILE);
 
                 Preferences.setApiPort(getApplicationContext(), 5001);
                 Preferences.setGatewayPort(getApplicationContext(), 8080);
@@ -52,10 +53,13 @@ public class Application extends android.app.Application {
 
                 Preferences.setPubsubEnabled(getApplicationContext(), true);
                 Preferences.setAutoRelayEnabled(getApplicationContext(), true);
+                Preferences.setAutoNATServiceEnabled(getApplicationContext(), true);
+                Preferences.setRelayHopEnabled(getApplicationContext(), true);
                 Preferences.setQUICEnabled(getApplicationContext(), true);
 
                 ConnectService.setConnectionTimeout(getApplicationContext(), 60);
                 ConnectService.setAutoConnectRelay(getApplicationContext(), false);
+
 
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putInt(Application.UPDATE, versionCode);
@@ -74,6 +78,24 @@ public class Application extends android.app.Application {
         runUpdatesIfNecessary();
 
         Preferences.setDaemonRunning(getApplicationContext(), false);
+
+
+        // TODO remove
+        Preferences.setProfile(getApplicationContext(), Profile.MOBILE);
+
+        Preferences.setAutoNATServiceEnabled(getApplicationContext(), false);
+        Preferences.setRelayHopEnabled(getApplicationContext(), false);
+        Preferences.setAutoRelayEnabled(getApplicationContext(), false);
+
+
+        Preferences.setConnMgrConfigType(getApplicationContext(), ConnMgrConfig.TypeEnum.basic);
+        Preferences.setLowWater(getApplicationContext(), 30);
+        Preferences.setHighWater(getApplicationContext(), 600);
+        Preferences.setGracePeriod(getApplicationContext(), "10s");
+
+
+        ConnectService.setConnectionTimeout(getApplicationContext(), 60);
+        ConnectService.setAutoConnectRelay(getApplicationContext(), true);
 
 
         NotificationSender.createChannel(getApplicationContext());
