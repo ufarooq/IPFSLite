@@ -63,5 +63,9 @@
     <string name="action_file_cid">Upload</string>
     <string name="connection_timeout">Connection Timeout %1$s[s]</string>
     <string name="unknown_peer_sends_data">An unknown peer sends data.</string>
-    <string name="action_id">ID</string>
+    <string name="peer_info">Peer Info</string>
+    <string name="info">Info</string>
+    <string name="ipfs_daemon_start_failure">IPFS failed during startup</string>
+    <string name="ipfs_no_data">No data communication between users  can be received nor send.</string>
+    <string name="ipfs_daemon_install_failure">IPFS installation failed</string>
 </resources>

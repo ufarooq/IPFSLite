@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
@@ -258,7 +259,60 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
 
+        eventViewModel.getIPFSInstallFailure().observe(this, (event) -> {
+            try {
+                if (event != null) {
+                    Snackbar snackbar = Snackbar.make(drawer_layout,
+                            R.string.ipfs_daemon_install_failure,
+                            Snackbar.LENGTH_INDEFINITE);
+                    snackbar.setAction(R.string.info, (view) -> {
 
+                        AlertDialog alertDialog = new AlertDialog.Builder(
+                                MainActivity.this).create();
+                        alertDialog.setMessage(event.getContent().concat("\n\n") +
+                                getString(R.string.ipfs_no_data));
+                        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL,
+                                getString(android.R.string.ok),
+                                (dialog, which) -> dialog.dismiss());
+                        alertDialog.show();
+                        eventViewModel.removeEvent(event);
+                        snackbar.dismiss();
+
+                    });
+                    snackbar.show();
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+
+        });
+        eventViewModel.getIPFSStartFailure().observe(this, (event) -> {
+            try {
+                if (event != null) {
+                    Snackbar snackbar = Snackbar.make(drawer_layout,
+                            R.string.ipfs_daemon_start_failure,
+                            Snackbar.LENGTH_INDEFINITE);
+                    snackbar.setAction(R.string.info, (view) -> {
+
+                        AlertDialog alertDialog = new AlertDialog.Builder(
+                                MainActivity.this).create();
+                        alertDialog.setMessage(event.getContent().concat("\n\n") +
+                                getString(R.string.ipfs_no_data));
+                        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL,
+                                getString(android.R.string.ok),
+                                (dialog, which) -> dialog.dismiss());
+                        alertDialog.show();
+                        eventViewModel.removeEvent(event);
+                        snackbar.dismiss();
+
+                    });
+                    snackbar.show();
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+
+        });
         eventViewModel.getException().observe(this, (event) -> {
             try {
                 if (event != null) {
