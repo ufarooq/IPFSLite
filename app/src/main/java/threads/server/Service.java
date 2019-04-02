@@ -140,8 +140,7 @@ class Service {
                                     if (map.containsKey(Content.ALIAS)) {
                                         String alias = map.get(Content.ALIAS);
                                         checkNotNull(alias);
-                                        String relay = map.get(Content.RELAY);
-                                        createUser(context, senderPid, alias, relay);
+                                        createUser(context, senderPid, alias);
                                     }
                                     break;
                                 }
@@ -166,8 +165,7 @@ class Service {
                             if (map.containsKey(Content.ALIAS)) {
                                 String alias = map.get(Content.ALIAS);
                                 checkNotNull(alias);
-                                String relay = map.get(Content.RELAY);
-                                createUser(context, senderPid, alias, relay);
+                                createUser(context, senderPid, alias);
                             } else if (map.containsKey(Content.CID)) {
                                 String cid = map.get(Content.CID);
                                 checkNotNull(cid);
@@ -188,7 +186,7 @@ class Service {
                             // ignore exception
                         }
 
-                        createUser(context, senderPid, name, null);
+                        createUser(context, senderPid, name);
                     }
 
                 }
@@ -252,8 +250,7 @@ class Service {
 
     private static void createUser(@NonNull Context context,
                                    @NonNull PID senderPid,
-                                   @NonNull String alias,
-                                   @Nullable String relayValue) {
+                                   @NonNull String alias) {
         checkNotNull(context);
         checkNotNull(senderPid);
         checkNotNull(alias);
@@ -269,15 +266,12 @@ class Service {
                     byte[] data = THREADS.getImage(context, alias, R.drawable.server_network);
                     CID image = ipfs.add(data, true);
                     PID relay = null;
-                    if (relayValue != null) {
-                        relay = PID.create(relayValue);
-                    }
+
                     sender = threadsAPI.createUser(senderPid,
                             senderPid.getPid(), // TODO public key
                             alias,
                             UserType.UNKNOWN,
-                            image,
-                            relay);
+                            image);
                     sender.setStatus(UserStatus.BLOCKED);
                     threadsAPI.storeUser(sender);
 
@@ -534,7 +528,7 @@ class Service {
                     CID image = ipfs.add(data, true);
 
                     user = threads.createUser(pid, publicKey,
-                            getDeviceName(), UserType.VERIFIED, image, null);
+                            getDeviceName(), UserType.VERIFIED, image);
                     user.setStatus(UserStatus.BLOCKED);
                     threads.storeUser(user);
                 }

@@ -738,7 +738,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             CID image = ipfs.add(data, true);
                             user = threadsAPI.createUser(pid,
                                     pid.getPid(),
-                                    pid.getPid(), UserType.VERIFIED, image, null);
+                                    pid.getPid(), UserType.VERIFIED, image);
                             user.setStatus(UserStatus.OFFLINE);
                             threadsAPI.storeUser(user);
 
@@ -765,10 +765,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     Map<String, String> map = new HashMap<>();
                                     map.put(Content.EST, Message.CONNECT.name());
                                     map.put(Content.ALIAS, hostUser.getAlias());
-                                    PID relay = hostUser.getRelay();
-                                    if (relay != null) {
-                                        map.put(Content.RELAY, relay.getPid());
-                                    }
 
                                     ipfs.pubsub_pub(user.getPID().getPid(), gson.toJson(map));
                                 }
