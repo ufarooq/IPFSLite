@@ -43,13 +43,6 @@
     </notice>
 
     <notice>
-        <name>Apache ant</name>
-        <url>https://github.com/apache/ant</url>
-        <copyright />
-        <license>Apache Software License 2.0</license>
-    </notice>
-
-    <notice>
         <name>journeyapps/zxing-android-embedded</name>
         <url>https://github.com/journeyapps/zxing-android-embedded</url>
         <copyright />
