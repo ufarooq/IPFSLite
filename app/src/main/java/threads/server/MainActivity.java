@@ -832,7 +832,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Preferences.error(getString(R.string.daemon_not_running));
             return;
         }
-
+        final int timeout = ConnectService.getConnectionTimeout(getApplicationContext());
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
@@ -845,8 +845,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     CID cid = threadObject.getCid();
                     checkNotNull(cid);
                     String multihash = cid.getCid();
-                    long timeout = ConnectService.getConnectionTimeout(
-                            getApplicationContext());
+
                     List<Link> links = threadsAPI.getLinks(ipfs, threadObject, timeout, true);
                     checkNotNull(links);
                     String path = "";

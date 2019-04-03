@@ -829,7 +829,7 @@ class Service {
                         CID cid = threadObject.getCid();
                         checkNotNull(cid);
 
-                        long timeout = ConnectService.getConnectionTimeout(context);
+                        int timeout = ConnectService.getConnectionTimeout(context);
 
                         List<Link> links = threadsAPI.getLinks(ipfs, threadObject,
                                 timeout, true);
@@ -958,7 +958,7 @@ class Service {
         boolean success;
         try {
             threads.setStatus(thread, ThreadStatus.LEACHING); // make sure
-            long timeout = ConnectService.getConnectionTimeout(context);
+            int timeout = ConnectService.getConnectionTimeout(context);
             success = threads.download(ipfs, file, cid, true, false,
                     thread.getSesKey(), new THREADS.Progress() {
                         @Override
@@ -1183,7 +1183,7 @@ class Service {
 
 
         threads.setStatus(thread, ThreadStatus.LEACHING);
-        long timeout = ConnectService.getConnectionTimeout(context);
+        int timeout = ConnectService.getConnectionTimeout(context);
         List<Link> links = threads.getLinks(ipfs, thread, timeout, false);
 
         if (links != null) {

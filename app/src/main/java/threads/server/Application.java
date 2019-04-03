@@ -90,7 +90,7 @@ public class Application extends android.app.Application {
 
         Preferences.setConnMgrConfigType(getApplicationContext(), ConnMgrConfig.TypeEnum.basic);
         Preferences.setLowWater(getApplicationContext(), 30);
-        Preferences.setHighWater(getApplicationContext(), 600);
+        Preferences.setHighWater(getApplicationContext(), 60);
         Preferences.setGracePeriod(getApplicationContext(), "10s");
 
 
