@@ -47,7 +47,10 @@ public class Application extends android.app.Application {
 
                 Preferences.setProfile(getApplicationContext(), Profile.LOW_POWER);
                 Preferences.setPubsubEnabled(getApplicationContext(), true);
+
+                // Experimental Features
                 Preferences.setQUICEnabled(getApplicationContext(), true);
+                Preferences.setFilestoreEnabled(getApplicationContext(), false);
 
                 Preferences.setApiPort(getApplicationContext(), 5001);
                 Preferences.setGatewayPort(getApplicationContext(), 8080);
@@ -56,17 +59,17 @@ public class Application extends android.app.Application {
 
                 Preferences.setAutoNATServiceEnabled(getApplicationContext(), false);
                 Preferences.setRelayHopEnabled(getApplicationContext(), false);
-                Preferences.setAutoRelayEnabled(getApplicationContext(), false);
+                Preferences.setAutoRelayEnabled(getApplicationContext(), true);
 
 
                 Preferences.setConnMgrConfigType(getApplicationContext(), ConnMgrConfig.TypeEnum.basic);
                 Preferences.setLowWater(getApplicationContext(), 30);
-                Preferences.setHighWater(getApplicationContext(), 60);
+                Preferences.setHighWater(getApplicationContext(), 600);
                 Preferences.setGracePeriod(getApplicationContext(), "10s");
 
 
                 ConnectService.setConnectionTimeout(getApplicationContext(), 60);
-                ConnectService.setAutoConnectRelay(getApplicationContext(), false);
+                ConnectService.setAutoConnectRelay(getApplicationContext(), true);
 
 
                 SharedPreferences.Editor editor = prefs.edit();

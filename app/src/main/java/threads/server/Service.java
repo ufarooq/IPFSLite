@@ -264,8 +264,7 @@ class Service {
 
                     // create a new user which is blocked (User has to unblock and verified the user)
                     byte[] data = THREADS.getImage(context, alias, R.drawable.server_network);
-                    CID image = ipfs.add(data, true);
-                    PID relay = null;
+                    CID image = ipfs.add(data, true, false);
 
                     sender = threadsAPI.createUser(senderPid,
                             senderPid.getPid(), // TODO public key
@@ -307,7 +306,7 @@ class Service {
                 }
 
                 if (ConnectService.isAutoConnectRelay(context)) {
-                    new java.lang.Thread(() -> ConnectService.connectRelay(context,
+                    new java.lang.Thread(() -> ConnectService.connectRelays(context,
                             10, 10000)).start();
                 }
             }
@@ -419,12 +418,11 @@ class Service {
                                 R.drawable.file_document);
                     }
 
-
                     Thread thread = threadsAPI.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
                             "", false, null, CID.create(pid.getPid()));
                     thread.addAdditional(Content.TITLE, fileDetails.getFileName(), false);
-                    thread.addAdditional(Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
-                    CID image = ipfs.add(bytes, true);
+                    thread.addAdditional(Application.THREAD_KIND, ThreadKind.LEAF.name(), false);
+                    CID image = ipfs.add(bytes, true, false);
                     thread.setImage(image);
                     thread.setMimeType(fileDetails.getMimeType());
                     long idx = threadsAPI.storeThread(thread);
@@ -433,10 +431,18 @@ class Service {
                     thread = threadsAPI.getThreadByIdx(idx); // TODO optimize here
                     checkNotNull(thread);
                     try {
+
                         threadsAPI.setStatus(thread, ThreadStatus.LEACHING);
+
                         CID cid = ipfs.add(inputStream, fileDetails.getFileName(),
-                                true, true);
+                                true, true, false);
                         checkNotNull(cid);
+
+
+                        String path = "/" + fileDetails.getFileName();
+                        ipfs.files_rm(path, true);
+                        ipfs.files_cp(cid, path);
+
 
                         // cleanup of entries with same CID
                         List<Thread> sameEntries = threadsAPI.getThreadsByCID(cid);
@@ -525,7 +531,7 @@ class Service {
                     String publicKey = ipfs.getPublicKey();
                     byte[] data = THREADS.getImage(context, pid.getPid(), R.drawable.server_network);
 
-                    CID image = ipfs.add(data, true);
+                    CID image = ipfs.add(data, true, false);
 
                     user = threads.createUser(pid, publicKey,
                             getDeviceName(), UserType.VERIFIED, image);
@@ -801,7 +807,7 @@ class Service {
         try {
             byte[] image = THREADS.getImage(context.getApplicationContext(),
                     user.getAlias(), R.drawable.file_document);
-            thread.setImage(ipfs.add(image, true));
+            thread.setImage(ipfs.add(image, true, false));
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
@@ -979,7 +985,7 @@ class Service {
                 try {
                     byte[] image = THREADS.getPreviewImage(context, file);
                     if (image != null) {
-                        threads.setImage(ipfs, thread, image);
+                        threads.setImage(ipfs, thread, image, true, false);
                     }
                 } catch (Throwable e) {
                     // no exception will be reported
