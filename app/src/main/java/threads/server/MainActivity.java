@@ -53,6 +53,7 @@ import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.Content;
 import threads.core.api.Thread;
+import threads.core.api.ThreadStatus;
 import threads.core.api.User;
 import threads.core.api.UserStatus;
 import threads.core.api.UserType;
@@ -787,9 +788,47 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickThreadBlock(long idx) {
+    public void clickThreadPublish(long idx) {
 
-        // NOT implemented
+        try {
+            final THREADS threadsAPI = Singleton.getInstance().getThreads();
+            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            if (ipfs != null) {
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(() -> {
+
+                    threadsAPI.setThreadStatus(idx, ThreadStatus.PUBLISHING);
+
+                    try {
+                        Thread threadObject = threadsAPI.getThreadByIdx(idx);
+                        checkNotNull(threadObject);
+                        CID cid = threadObject.getCid();
+                        checkNotNull(cid);
+                        String multihash = cid.getCid();
+
+                        ipfs.cmd("name", "publish", multihash);
+
+                        PID pid = Preferences.getPID(getApplicationContext());
+                        checkNotNull(pid);
+                        ipfs.cmd("name", "resolve", pid.getPid());
+
+                        Uri uri = Uri.parse("https://ipfs.io/ipns/" + pid.getPid());
+
+                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+
+                    } catch (Throwable e) {
+                        Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    } finally {
+                        threadsAPI.setThreadStatus(idx, ThreadStatus.ONLINE);
+                    }
+                });
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
     }
 
     @Override
@@ -907,7 +946,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     checkNotNull(cid);
                     String multihash = cid.getCid();
 
-                    Uri uri = Uri.parse("https://gateway.ipfs.io/ipfs/" + multihash);
+                    Uri uri = Uri.parse("https://ipfs.io/ipfs/" + multihash);
 
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

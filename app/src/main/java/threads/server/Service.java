@@ -117,8 +117,6 @@ class Service {
                 PID senderPid = PID.create(message.getSenderPid());
 
 
-                Log.e(TAG, ipfs.swarm_peer(senderPid).toString());
-
                 if (!threadsAPI.isAccountBlocked(senderPid)) {
 
                     String code = message.getMessage().trim();
@@ -741,7 +739,8 @@ class Service {
                     if (!entries.isEmpty()) {
                         for (Thread entry : entries) {
                             if (entry.getStatus() == ThreadStatus.DELETING ||
-                                    entry.getStatus() == ThreadStatus.ONLINE) {
+                                    entry.getStatus() == ThreadStatus.ONLINE ||
+                                    entry.getStatus() == ThreadStatus.PUBLISHING) {
                                 replySender(ipfs, sender, entry);
                             } else {
                                 downloadMultihash(context, threads, ipfs, entry, sender);
@@ -785,6 +784,7 @@ class Service {
 
         Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
                 "", false, cid, parent);
+        thread.addAdditional(Application.THREAD_KIND, ThreadKind.LEAF.name(), false); // not known yet
         if (filename != null) {
             thread.addAdditional(Content.TITLE, filename, false);
             try {
@@ -1205,6 +1205,19 @@ class Service {
                 }
 
             } else if (links.size() > 1) {
+
+                // thread is directory
+                threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
+                threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.NODE.name(), true);
+
+                try {
+                    CID image = THREADS.createResourceImage(context, threads, ipfs, "",
+                            R.drawable.folder_outline);
+                    threads.setImage(thread, image);
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+
                 boolean result = downloadLinks(context, threads, ipfs, thread, links);
                 if (result) {
                     threads.setStatus(thread, ThreadStatus.ONLINE);
