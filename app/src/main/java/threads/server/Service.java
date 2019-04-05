@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -436,11 +437,6 @@ class Service {
                         checkNotNull(cid);
 
 
-                        String path = "/" + fileDetails.getFileName();
-                        ipfs.files_rm(path, true);
-                        ipfs.files_cp(cid, path);
-
-
                         // cleanup of entries with same CID
                         List<Thread> sameEntries = threadsAPI.getThreadsByCID(cid);
                         for (Thread entry : sameEntries) {
@@ -762,6 +758,25 @@ class Service {
         }
     }
 
+    private static void evaluateMimeType(@NonNull Thread thread, @NonNull String filename) {
+        final THREADS threads = Singleton.getInstance().getThreads();
+        try {
+            Optional<String> extension = THREADS.getExtension(filename);
+            if (extension.isPresent()) {
+                String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.get());
+                if (mimeType != null) {
+                    threads.setMimeType(thread, mimeType);
+                } else {
+                    threads.setMimeType(thread, Preferences.OCTET_MIME_TYPE); // not know what type
+                }
+            } else {
+                threads.setMimeType(thread, Preferences.OCTET_MIME_TYPE); // not know what type
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+    }
+
     private static long createThread(@NonNull Context context,
                                      @NonNull IPFS ipfs,
                                      @NonNull PID creator,
@@ -786,17 +801,7 @@ class Service {
         thread.addAdditional(Application.THREAD_KIND, ThreadKind.LEAF.name(), false); // not known yet
         if (filename != null) {
             thread.addAdditional(Content.TITLE, filename, false);
-            try {
-                String extension = android.webkit.MimeTypeMap.getFileExtensionFromUrl(filename);
-                String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-                if (mimeType != null) {
-                    threads.setMimeType(thread, mimeType);
-                } else {
-                    threads.setMimeType(thread, Preferences.OCTET_MIME_TYPE); // not know what type
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
+            evaluateMimeType(thread, filename);
         } else {
             thread.setMimeType(Preferences.OCTET_MIME_TYPE); // not known yet
             thread.addAdditional(Content.TITLE, cid.getCid(), false);
@@ -1073,14 +1078,7 @@ class Service {
 
         String filename = link.getPath();
         threads.setAdditional(thread, Content.TITLE, filename, false);
-
-        String extension = android.webkit.MimeTypeMap.getFileExtensionFromUrl(filename);
-        String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-        if (mimeType != null) {
-            threads.setMimeType(thread, mimeType);
-        } else {
-            threads.setMimeType(thread, Preferences.OCTET_MIME_TYPE); // not know what type
-        }
+        evaluateMimeType(thread, filename);
         threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
 
 
