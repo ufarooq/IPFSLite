@@ -40,7 +40,7 @@ public class DaemonService extends Service {
     }
 
 
-    public static void createChannel(@NonNull Context context) {
+    private static void createChannel(@NonNull Context context) {
         checkNotNull(context);
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             try {

@@ -14,8 +14,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Application extends android.app.Application {
 
-    public static final String APP_KEY = "AppKey";
-    public static final String UPDATE = "UPDATE";
+    private static final String APP_KEY = "AppKey";
+    private static final String UPDATE = "UPDATE";
     public static final String THREAD_KIND = "THREAD_KIND";
 
 
@@ -69,7 +69,7 @@ public class Application extends android.app.Application {
 
 
                 ConnectService.setConnectionTimeout(getApplicationContext(), 60);
-                ConnectService.setAutoConnectRelay(getApplicationContext(), true);
+                ConnectService.setAutoConnectRelay(getApplicationContext(), false);
 
 
                 SharedPreferences.Editor editor = prefs.edit();

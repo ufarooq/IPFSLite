@@ -12,7 +12,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
-import com.google.common.io.Files;
 import com.google.gson.Gson;
 
 import java.io.File;
@@ -788,7 +787,7 @@ class Service {
         if (filename != null) {
             thread.addAdditional(Content.TITLE, filename, false);
             try {
-                String extension = Files.getFileExtension(filename);
+                String extension = android.webkit.MimeTypeMap.getFileExtensionFromUrl(filename);
                 String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
                 if (mimeType != null) {
                     threads.setMimeType(thread, mimeType);
@@ -1075,7 +1074,7 @@ class Service {
         String filename = link.getPath();
         threads.setAdditional(thread, Content.TITLE, filename, false);
 
-        String extension = Files.getFileExtension(filename);
+        String extension = android.webkit.MimeTypeMap.getFileExtensionFromUrl(filename);
         String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
         if (mimeType != null) {
             threads.setMimeType(thread, mimeType);
