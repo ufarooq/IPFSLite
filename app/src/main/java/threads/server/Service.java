@@ -304,8 +304,7 @@ class Service {
                 }
 
                 if (ConnectService.isAutoConnectRelay(context)) {
-                    new java.lang.Thread(() -> ConnectService.connectRelays(context,
-                            10, 10000)).start();
+                    new java.lang.Thread(() -> ConnectService.connectRelays(context, 10000)).start();
                 }
             }
         } catch (Throwable e) {
@@ -540,12 +539,13 @@ class Service {
 
     private static boolean shareUser(@NonNull User user, int timeout,
                                      @NonNull Long... idxs) {
+        checkNotNull(user);
         final THREADS threads = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         boolean success = false;
         if (ipfs != null) {
             try {
-                if (ConnectService.connectUser(user, timeout)) {
+                if (ConnectService.connectUser(user.getPID(), timeout)) {
 
                     for (long idx : idxs) {
                         Thread threadObject = threads.getThreadByIdx(idx);

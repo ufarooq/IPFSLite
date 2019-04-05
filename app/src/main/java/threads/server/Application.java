@@ -64,8 +64,8 @@ public class Application extends android.app.Application {
 
                 Preferences.setConnMgrConfigType(getApplicationContext(), ConnMgrConfig.TypeEnum.basic);
                 Preferences.setLowWater(getApplicationContext(), 30);
-                Preferences.setHighWater(getApplicationContext(), 100);
-                Preferences.setGracePeriod(getApplicationContext(), "10s");
+                Preferences.setHighWater(getApplicationContext(), 150);
+                Preferences.setGracePeriod(getApplicationContext(), "5s");
 
 
                 ConnectService.setConnectionTimeout(getApplicationContext(), 60);
@@ -94,6 +94,7 @@ public class Application extends android.app.Application {
 
         NotificationSender.createChannel(getApplicationContext());
 
+        ConnectService.setAutoConnectRelay(getApplicationContext(), true);
         try {
             Singleton.getInstance().init(getApplicationContext(), () -> "",
                     null, true);

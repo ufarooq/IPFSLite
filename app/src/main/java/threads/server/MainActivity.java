@@ -671,7 +671,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 long timeout = ConnectService.getConnectionTimeout(
                                         getApplicationContext());
 
-                                boolean value = ConnectService.connectUser(user, timeout);
+                                boolean value = ConnectService.connectUser(pid, timeout);
                                 if (value) {
                                     threadsAPI.setStatus(user, UserStatus.ONLINE);
                                 } else {
@@ -753,7 +753,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             threadsAPI.setStatus(user, UserStatus.DIALING);
                             long timeout = ConnectService.getConnectionTimeout(
                                     getApplicationContext());
-                            boolean value = ConnectService.connectUser(user, timeout);
+                            boolean value = ConnectService.connectUser(user.getPID(), timeout);
                             if (value) {
                                 threadsAPI.setStatus(user, UserStatus.ONLINE);
 
