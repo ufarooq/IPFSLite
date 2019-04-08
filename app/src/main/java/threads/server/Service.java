@@ -416,7 +416,7 @@ class Service {
                     }
 
                     Thread thread = threadsAPI.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
-                            "", false, null, CID.create(pid.getPid()));
+                            "", false, null, 0L);
                     thread.addAdditional(Content.TITLE, fileDetails.getFileName(), false);
                     thread.addAdditional(Application.THREAD_KIND, ThreadKind.LEAF.name(), false);
                     CID image = ipfs.add(bytes, true, false);
@@ -434,7 +434,6 @@ class Service {
                         CID cid = ipfs.add(inputStream, fileDetails.getFileName(),
                                 true, true, false);
                         checkNotNull(cid);
-
 
                         // cleanup of entries with same CID
                         List<Thread> sameEntries = threadsAPI.getThreadsByCID(cid);
@@ -663,36 +662,11 @@ class Service {
             final THREADS threadsAPI = Singleton.getInstance().getThreads();
             Thread thread = threadsAPI.getThreadByIdx(idx);
             if (thread != null) {
-                deleteThread(ipfs, thread);
+                threadsAPI.removeThread(ipfs, thread);
             }
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-    }
-
-    private static void deleteThread(@NonNull IPFS ipfs, @NonNull Thread thread) {
-        checkNotNull(ipfs);
-        checkNotNull(thread);
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
-
-        String threadKind = thread.getAdditional(Application.THREAD_KIND);
-        checkNotNull(threadKind);
-        Service.ThreadKind kind = Service.ThreadKind.valueOf(threadKind);
-        threadsAPI.setStatus(thread, ThreadStatus.DELETING);
-
-        if (kind == Service.ThreadKind.NODE) {
-
-            CID cid = thread.getCid();
-            if (cid != null) {
-                List<Thread> entries = threadsAPI.getThreadsByThread(cid);
-                for (Thread entry : entries) {
-                    deleteThread(ipfs, entry);
-                }
-            }
-        }
-
-        threadsAPI.removeThread(ipfs, thread);
-
     }
 
     static void downloadMultihash(@NonNull Context context,
@@ -743,8 +717,7 @@ class Service {
                         }
 
                     } else {
-                        long idx = createThread(context, ipfs, sender, cid,
-                                CID.create(pid.getPid()), filename);
+                        long idx = createThread(context, ipfs, sender, cid, filename, 0L);
                         Thread thread = threads.getThreadByIdx(idx);
                         checkNotNull(thread);
                         downloadMultihash(context, threads, ipfs, thread, sender);
@@ -781,14 +754,13 @@ class Service {
                                      @NonNull IPFS ipfs,
                                      @NonNull PID creator,
                                      @NonNull CID cid,
-                                     @NonNull CID parent,
-                                     @Nullable String filename) {
+                                     @Nullable String filename,
+                                     long parent) {
 
         checkNotNull(context);
         checkNotNull(ipfs);
         checkNotNull(creator);
         checkNotNull(cid);
-        checkNotNull(parent);
 
 
         final THREADS threads = Singleton.getInstance().getThreads();
@@ -1134,11 +1106,9 @@ class Service {
                     }
                 }
             } else {
-                CID threadCid = thread.getCid();
-                checkNotNull(threadCid);
 
                 long idx = createThread(context, ipfs,
-                        thread.getSenderPid(), cid, threadCid, null);
+                        thread.getSenderPid(), cid, null, thread.getIdx());
                 Thread entry = threads.getThreadByIdx(idx);
                 checkNotNull(entry);
                 success = downloadLink(context, threads, ipfs, entry, link);

@@ -60,7 +60,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @NonNull
     private final AtomicReference<LiveData<List<Thread>>> observer = new AtomicReference<>(null);
     @NonNull
-    private final AtomicReference<CID> directory = new AtomicReference<>();
+    private final AtomicReference<Long> directory = new AtomicReference<>();
     @NonNull
     private final AtomicBoolean topLevel = new AtomicBoolean(true);
 
@@ -154,9 +154,9 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             }
             outState.putLongArray(IDXS, storedEntries);
             outState.putLong(SELECTION, threadIdx);
-            CID dir = directory.get();
+            Long dir = directory.get();
             if (dir != null) {
-                outState.putString(DIRECTORY, dir.getCid());
+                outState.putLong(DIRECTORY, dir);
             }
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -187,16 +187,14 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 }
             }
 
-            String value = savedInstanceState.getString(DIRECTORY);
-            if (value != null) {
-                directory.set(CID.create(value));
-            }
+            Long value = savedInstanceState.getLong(DIRECTORY);
+            directory.set(value);
         }
 
         try {
-            CID current = directory.get();
+            Long current = directory.get();
             if (current == null) {
-                directory.set(root);
+                directory.set(0L);
             }
             update(directory.get());
         } catch (Throwable e) {
@@ -312,11 +310,11 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     }
 
-    private void update(@NonNull CID thread) {
+    private void update(@NonNull long thread) {
         checkNotNull(thread);
         try {
 
-            topLevel.set(thread.equals(root));
+            topLevel.set(thread == 0L);
 
             directory.set(thread);
 
@@ -482,18 +480,17 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                CID cid = directory.get();
-                if (cid != null) {
-                    List<Thread> threads = threadsAPI.getThreadsByCID(cid);
-                    if (!threads.isEmpty()) {
-                        Thread thread = threads.get(0);
-                        CID dir = thread.getThread();
-                        checkNotNull(dir);
+                Long idx = directory.get();
+
+                Thread thread = threadsAPI.getThreadByIdx(idx);
+                if (thread != null) {
+                    long parent = thread.getThread();
+
                         if (getActivity() != null) {
-                            getActivity().runOnUiThread(() -> update(dir));
+                            getActivity().runOnUiThread(() -> update(parent));
                         }
                     }
-                }
+
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
@@ -552,9 +549,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 checkNotNull(threadKind);
                 Service.ThreadKind kind = Service.ThreadKind.valueOf(threadKind);
                 if (kind == Service.ThreadKind.NODE) {
-                    CID cid = thread.getCid();
-                    checkNotNull(cid);
-                    update(cid);
+                    long idx = thread.getIdx();
+                    update(idx);
                 }
             }
         } catch (Throwable e) {
