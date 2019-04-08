@@ -49,7 +49,7 @@ public class Application extends android.app.Application {
                 Preferences.setPubsubEnabled(getApplicationContext(), true);
 
                 // Experimental Features
-                Preferences.setQUICEnabled(getApplicationContext(), true);
+                Preferences.setQUICEnabled(getApplicationContext(), false);
                 Preferences.setFilestoreEnabled(getApplicationContext(), false);
 
                 Preferences.setApiPort(getApplicationContext(), 5001);
@@ -94,7 +94,10 @@ public class Application extends android.app.Application {
 
         NotificationSender.createChannel(getApplicationContext());
 
+
+        Preferences.setAutoRelayEnabled(getApplicationContext(), false);
         ConnectService.setAutoConnectRelay(getApplicationContext(), true);
+
         try {
             Singleton.getInstance().init(getApplicationContext(), () -> "",
                     null, true);
