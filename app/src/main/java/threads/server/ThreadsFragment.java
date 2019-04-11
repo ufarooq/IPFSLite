@@ -39,8 +39,6 @@ import threads.core.mdl.EventViewModel;
 import threads.core.mdl.ThreadViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.Network;
-import threads.ipfs.api.CID;
-import threads.ipfs.api.PID;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThreadsViewAdapter;
 import threads.share.UtilitySevice;
@@ -65,7 +63,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private final AtomicBoolean topLevel = new AtomicBoolean(true);
 
     private long threadIdx;
-    private CID root;
+
     private View view;
     private ThreadsViewAdapter threadsViewAdapter;
     private ThreadViewModel threadViewModel;
@@ -81,13 +79,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
-        try {
-            PID pid = Preferences.getPID(mContext);
-            checkNotNull(pid);
-            root = CID.create(pid.getPid());
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
     }
 
     @Override
@@ -486,10 +477,10 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 if (thread != null) {
                     long parent = thread.getThread();
 
-                        if (getActivity() != null) {
-                            getActivity().runOnUiThread(() -> update(parent));
-                        }
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> update(parent));
                     }
+                }
 
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);

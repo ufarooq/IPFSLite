@@ -68,4 +68,6 @@
     <string name="ipfs_daemon_start_failure">IPFS failed during startup</string>
     <string name="ipfs_no_data">No data communication between users  can be received nor send.</string>
     <string name="ipfs_daemon_install_failure">IPFS installation failed</string>
+    <string name="app_settings">Settings</string>
+    <string name="permission_camera_denied">Permisssion camera denied</string>
 </resources>

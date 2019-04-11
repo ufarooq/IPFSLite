@@ -4,6 +4,7 @@ import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -13,6 +14,9 @@ import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 import com.google.gson.Gson;
+
+import org.webrtc.IceCandidate;
+import org.webrtc.SessionDescription;
 
 import java.io.File;
 import java.io.InputStream;
@@ -30,6 +34,7 @@ import javax.annotation.Nullable;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+import androidx.core.util.Preconditions;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -52,7 +57,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
-class Service {
+public class Service {
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(3);
@@ -134,6 +139,52 @@ class Service {
                             String est = map.get(Content.EST);
                             Message type = Message.valueOf(est);
                             switch (type) {
+                                case SESSION_START: {
+                                    Intent intent = new Intent(context, CallActivity.class);
+                                    intent.putExtra(Content.USER, senderPid.getPid());
+                                    intent.putExtra(Content.INITIATOR, false);
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    context.startActivity(intent);
+
+                                    break;
+                                }
+                                case SESSION_OFFER: {
+                                    String sdp = map.get(Content.SDP);
+                                    checkNotNull(sdp);
+
+                                    Singleton.getInstance().getThreads().invokeEvent(
+                                            type.name(), sdp);
+                                    break;
+                                }
+                                case SESSION_ANSWER: {
+                                    String sdp = map.get(Content.SDP);
+                                    checkNotNull(sdp);
+
+                                    Singleton.getInstance().getThreads().invokeEvent(
+                                            type.name(), sdp);
+                                    break;
+                                }
+                                case SESSION_CANDIDATE: {
+                                    String sdp = map.get(Content.SDP);
+                                    checkNotNull(sdp);
+                                    String mid = map.get(Content.MID);
+                                    checkNotNull(mid);
+                                    String index = map.get(Content.INDEX);
+                                    checkNotNull(index);
+                                    Map<String, String> content = new HashMap<>();
+                                    content.put(Content.SDP, sdp);
+                                    content.put(Content.MID, mid);
+                                    content.put(Content.INDEX, index);
+                                    Singleton.getInstance().getThreads().invokeEvent(
+                                            type.name(), gson.toJson(content));
+                                    break;
+                                }
+                                case SESSION_CLOSE: {
+                                    Singleton.getInstance().getThreads().invokeEvent(
+                                            type.name(), "");
+                                    break;
+                                }
                                 case CONNECT: {
                                     if (map.containsKey(Content.ALIAS)) {
                                         String alias = map.get(Content.ALIAS);
@@ -312,6 +363,87 @@ class Service {
         }
     }
 
+    public static void emitSessionStart(@NonNull PID user) {
+        checkNotNull(user);
+        try {
+            IPFS ipfs = Singleton.getInstance().getIpfs();
+            Preconditions.checkNotNull(ipfs);
+            HashMap<String, String> map = new HashMap<>();
+            map.put(Content.EST, Message.SESSION_START.name());
+            ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+        } catch (Exception e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+
+    }
+
+    public static void emitSessionClose(@NonNull PID user) {
+        checkNotNull(user);
+        try {
+            IPFS ipfs = Singleton.getInstance().getIpfs();
+            Preconditions.checkNotNull(ipfs);
+            HashMap<String, String> map = new HashMap<>();
+            map.put(Content.EST, Message.SESSION_CLOSE.name());
+            ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+        } catch (Exception e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+
+    }
+
+    public static void emitIceCandidate(@NonNull PID user, @NonNull IceCandidate candidate) {
+        checkNotNull(user);
+        checkNotNull(candidate);
+        try {
+            IPFS ipfs = Singleton.getInstance().getIpfs();
+            Preconditions.checkNotNull(ipfs);
+            HashMap<String, String> map = new HashMap<>();
+            map.put(Content.EST, Message.SESSION_CANDIDATE.name());
+            map.put(Content.SDP, candidate.sdp);
+            map.put(Content.MID, candidate.sdpMid);
+            map.put(Content.INDEX, String.valueOf(candidate.sdpMLineIndex));
+
+            ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+
+    }
+
+    public static void emitSessionOffer(@NonNull PID user, @NonNull SessionDescription message) {
+        checkNotNull(user);
+        checkNotNull(message);
+        try {
+            IPFS ipfs = Singleton.getInstance().getIpfs();
+            Preconditions.checkNotNull(ipfs);
+
+            HashMap<String, String> map = new HashMap<>();
+            map.put(Content.EST, Message.SESSION_OFFER.name());
+            map.put(Content.SDP, message.description);
+
+            ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+    }
+
+    public static void emitSessionAnswer(@NonNull PID user, @NonNull SessionDescription message) {
+        checkNotNull(user);
+        checkNotNull(message);
+        try {
+            IPFS ipfs = Singleton.getInstance().getIpfs();
+            Preconditions.checkNotNull(ipfs);
+
+            HashMap<String, String> map = new HashMap<>();
+            map.put(Content.EST, Message.SESSION_ANSWER.name());
+            map.put(Content.SDP, message.description);
+
+            ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+    }
+
     static void checkPeers(@NonNull Context context) {
         checkNotNull(context);
         PID hostPID = Preferences.getPID(context);
@@ -416,7 +548,7 @@ class Service {
                     }
 
                     Thread thread = threadsAPI.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
-                            "", false, null, 0L);
+                            "", null, 0L, false);
                     thread.addAdditional(Content.TITLE, fileDetails.getFileName(), false);
                     thread.addAdditional(Application.THREAD_KIND, ThreadKind.LEAF.name(), false);
                     CID image = ipfs.add(bytes, true, false);
@@ -769,7 +901,7 @@ class Service {
         checkNotNull(user);
 
         Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
-                "", false, cid, parent);
+                "", cid, parent, false);
         thread.addAdditional(Application.THREAD_KIND, ThreadKind.LEAF.name(), false); // not known yet
         if (filename != null) {
             thread.addAdditional(Content.TITLE, filename, false);

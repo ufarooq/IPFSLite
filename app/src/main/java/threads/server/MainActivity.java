@@ -86,7 +86,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final Gson gson = new Gson();
     private static final int SELECT_FILES = 1;
     private static final int DOWNLOAD_EXTERNAL_STORAGE = 2;
+    private static final int REQUEST_VIDEO_CAPTURE = 3;
     private final AtomicReference<Long> storedThread = new AtomicReference<>(null);
+    private final AtomicReference<String> storedUser = new AtomicReference<>(null);
     private final AtomicBoolean idScan = new AtomicBoolean(false);
     private DrawerLayout drawer_layout;
     private FloatingActionButton fab_daemon;
@@ -103,6 +105,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         Service.localDownloadThread(getApplicationContext(), storedThread.get());
+                    }
+                }
+
+                break;
+            }
+            case REQUEST_VIDEO_CAPTURE: {
+                for (int i = 0, len = permissions.length; i < len; i++) {
+                    if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                        Snackbar.make(drawer_layout,
+                                getString(R.string.permission_camera_denied),
+                                Snackbar.LENGTH_LONG)
+                                .setAction(R.string.app_settings, new PermissionAction()).show();
+                    }
+                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                        try {
+                            String pid = storedUser.get();
+                            Intent intent = new Intent(MainActivity.this, CallActivity.class);
+                            intent.putExtra(Content.USER, pid);
+                            intent.putExtra(Content.INITIATOR, true);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                        } catch (Throwable e) {
+                            Preferences.evaluateException(Preferences.EXCEPTION, e);
+                        }
                     }
                 }
 
@@ -700,6 +727,37 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     .show(fm, NameDialogFragment.TAG);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+    }
+
+    @Override
+    public void clickUserCall(@NonNull String pid) {
+
+
+        try {
+            Service.emitSessionStart(PID.create(pid));
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA},
+                    REQUEST_VIDEO_CAPTURE);
+            storedUser.set(pid);
+        } else {
+            try {
+                Intent intent = new Intent(MainActivity.this, CallActivity.class);
+                intent.putExtra(Content.USER, pid);
+                intent.putExtra(Content.INITIATOR, true);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
         }
     }
 

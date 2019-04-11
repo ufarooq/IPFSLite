@@ -2,6 +2,7 @@ package threads.server;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.StrictMode;
 
 import androidx.annotation.NonNull;
 import threads.core.Preferences;
@@ -14,10 +15,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class Application extends android.app.Application {
 
-    private static final String APP_KEY = "AppKey";
-    private static final String UPDATE = "UPDATE";
     public static final String THREAD_KIND = "THREAD_KIND";
 
+    private static final String APP_KEY = "AppKey";
+    private static final String UPDATE = "UPDATE";
 
     private static void init(@NonNull Context context) {
         checkNotNull(context);
@@ -91,7 +92,6 @@ public class Application extends android.app.Application {
         Preferences.setDaemonRunning(getApplicationContext(), false);
 
 
-
         NotificationSender.createChannel(getApplicationContext());
 
 
@@ -99,6 +99,11 @@ public class Application extends android.app.Application {
         ConnectService.setAutoConnectRelay(getApplicationContext(), true);
 
         try {
+            // TODO remove policy
+            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
+                    .permitNetwork().build();
+            StrictMode.setThreadPolicy(policy);
+
             Singleton.getInstance().init(getApplicationContext(), () -> "",
                     null, true);
 
@@ -112,6 +117,7 @@ public class Application extends android.app.Application {
         Service.startDaemon(getApplicationContext());
 
         init(getApplicationContext());
+
 
     }
 
