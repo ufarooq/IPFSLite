@@ -735,6 +735,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         try {
+            Service.clearSessionEvents();
+
             Service.emitSessionStart(PID.create(pid));
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);

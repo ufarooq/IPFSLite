@@ -153,7 +153,6 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         //Initialize PeerConnectionFactory globals.
         PeerConnectionFactory.InitializationOptions initializationOptions =
                 PeerConnectionFactory.InitializationOptions.builder(this)
-                        .setEnableVideoHwAcceleration(true)
                         .createInitializationOptions();
         PeerConnectionFactory.initialize(initializationOptions);
 
@@ -162,7 +161,13 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         DefaultVideoEncoderFactory defaultVideoEncoderFactory = new DefaultVideoEncoderFactory(
                 rootEglBase.getEglBaseContext(),  /* enableIntelVp8Encoder */true,  /* enableH264HighProfile */true);
         DefaultVideoDecoderFactory defaultVideoDecoderFactory = new DefaultVideoDecoderFactory(rootEglBase.getEglBaseContext());
-        peerConnectionFactory = new PeerConnectionFactory(options, defaultVideoEncoderFactory, defaultVideoDecoderFactory);
+
+        PeerConnectionFactory.Builder builder = PeerConnectionFactory.builder();
+        builder = builder.setOptions(options);
+        builder = builder.setVideoDecoderFactory(defaultVideoDecoderFactory);
+        builder = builder.setVideoEncoderFactory(defaultVideoEncoderFactory);
+
+        peerConnectionFactory = builder.createPeerConnectionFactory();
 
 
         //Now create a VideoCapturer instance.
