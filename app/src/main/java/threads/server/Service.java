@@ -15,6 +15,7 @@ import android.webkit.MimeTypeMap;
 
 import com.google.gson.Gson;
 
+import org.iota.jota.pow.pearldiver.PearlDiverLocalPoW;
 import org.webrtc.IceCandidate;
 import org.webrtc.SessionDescription;
 
@@ -52,7 +53,6 @@ import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
-import threads.pow.PearlDiver;
 import threads.share.ConnectService;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -66,13 +66,13 @@ public class Service {
     private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(1);
 
 
-    public static void checkTangleServer(@NonNull Context context) {
+    private static void checkTangleServer(@NonNull Context context) {
         checkNotNull(context);
         try {
             IOTA iota = Singleton.getInstance().getIota();
             if (iota != null) {
-                if (IOTA.remotePoW(iota.getNodeInfo())) {
-                    iota.setLocalPoW(new PearlDiver(context));
+                if (!IOTA.remotePoW(iota.getNodeInfo())) {
+                    iota.setLocalPoW(new PearlDiverLocalPoW());
                 }
             }
         } catch (Throwable e) {

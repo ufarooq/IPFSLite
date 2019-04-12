@@ -75,10 +75,11 @@ dependencies {
 
     implementation 'org.webrtc:google-webrtc:1.0.22672'
 
+    // API (LICENSE done)
     implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0-alpha04'
 
     // API (LICENSE done)
-    implementation 'threads.pow:pow:1.0.9'
+    //implementation 'threads.pow:pow:1.0.9'
 
 }
 
