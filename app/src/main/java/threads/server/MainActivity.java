@@ -753,6 +753,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         try {
+            Service.clearSessionEvents();
             Service.emitSessionStart(PID.create(pid));
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -792,6 +793,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void receiveUserCall(@NonNull String pid) {
+
+        try {
+            Service.clearSessionEvents();
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
 
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.RECORD_AUDIO)

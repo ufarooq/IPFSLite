@@ -2,14 +2,15 @@ package threads.server;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -44,8 +45,8 @@ import threads.core.api.Content;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.api.PID;
 
-public class CallActivity extends AppCompatActivity implements View.OnClickListener {
-    private static final String TAG = "CallActivity";
+public class CallActivity extends AppCompatActivity {
+    private static final String TAG = CallActivity.class.getSimpleName();
 
 
     PID user;
@@ -59,12 +60,13 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     AudioTrack localAudioTrack;
     SurfaceViewRenderer localVideoView;
     SurfaceViewRenderer remoteVideoView;
-    Button hangup;
+
     PeerConnection localPeer;
     EglBase rootEglBase;
 
     boolean gotUserMedia;
     List<PeerConnection.IceServer> peerIceServers = new ArrayList<>();
+    private long mLastClickTime = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,7 +74,8 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_webrtc);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        initViews();
+        localVideoView = findViewById(R.id.local_gl_surface_view);
+        remoteVideoView = findViewById(R.id.remote_gl_surface_view);
         initVideos();
 
         Intent intent = getIntent();
@@ -128,7 +131,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         eventViewModel.getEvent(Message.SESSION_CLOSE.name()).observe(this, (event) -> {
             try {
                 if (event != null) {
-                    runOnUiThread(this::hangup);
+                    hangup(false);
                     eventViewModel.removeEvent(event);
                 }
             } catch (Throwable e) {
@@ -136,15 +139,22 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
             }
 
         });
-    }
+
+        FloatingActionButton fab_hangup = findViewById(R.id.fab_hangup);
+        fab_hangup.setOnClickListener((view) -> {
 
 
-    private void initViews() {
-        hangup = findViewById(R.id.end_call);
-        localVideoView = findViewById(R.id.local_gl_surface_view);
-        remoteVideoView = findViewById(R.id.remote_gl_surface_view);
-        hangup.setOnClickListener(this);
+            // mis-clicking prevention, using threshold of 1000 ms
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            hangup(true);
+
+        });
     }
+
 
     private void initVideos() {
         rootEglBase = EglBase.create();
@@ -307,51 +317,14 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
             try {
                 //remoteVideoView.setVisibility(View.VISIBLE);
                 videoTrack.addSink(remoteVideoView);
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
         });
 
     }
 
 
-    /**
-     * SignallingCallback - called when the room is created - i.e. you are the initiator
-     */
-    //@Override
-    public void onCreatedRoom() {
-        showToast("You created the room " + gotUserMedia);
-        if (gotUserMedia) {
-            //SignallingClient.getInstance().emitMessage("got user media");
-        }
-    }
-
-    /**
-     * SignallingCallback - called when you join the room - you are a participant
-     */
-    //@Override
-    public void onJoinedRoom() {
-        showToast("You joined the room " + gotUserMedia);
-        if (gotUserMedia) {
-            //SignallingClient.getInstance().emitMessage("got user media");
-        }
-    }
-
-    //@Override
-    public void onNewPeerJoined() {
-        showToast("Remote Peer Joined");
-    }
-
-    //
-    public void onRemoteHangUp(String msg) {
-        showToast("Remote Peer hungup");
-        runOnUiThread(this::hangup);
-    }
-
-    /**
-     * SignallingCallback - Called when remote peer sends offer
-     */
-    //@Override
     public void onOfferReceived(final String sdp) {
         showToast("Received Offer");
         runOnUiThread(() -> {
@@ -359,8 +332,8 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                 localPeer.setRemoteDescription(new CustomSdpObserver("localSetRemote"), new SessionDescription(SessionDescription.Type.OFFER, sdp));
                 doAnswer();
                 updateVideoViews(true);
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
         });
     }
@@ -376,26 +349,19 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         }, new MediaConstraints());
     }
 
-    /**
-     * SignallingCallback - Called when remote peer sends answer to your offer
-     */
 
-    //@Override
     public void onAnswerReceived(String sdp) {
         showToast("Received Answer");
         try {
             localPeer.setRemoteDescription(new CustomSdpObserver("localSetRemote"),
                     new SessionDescription(SessionDescription.Type.ANSWER, sdp));
             updateVideoViews(true);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
-    /**
-     * Remote IceCandidate received
-     */
-    //@Override
+
     public void onIceCandidateReceived(String data) {
         try {
             Gson gson = new Gson();
@@ -406,8 +372,8 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                     map.get(Content.MID),
                     Integer.valueOf(map.get(Content.INDEX)),
                     map.get(Content.SDP)));
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
@@ -427,31 +393,21 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    /**
-     * Closing up - normal hangup and app destroye
-     */
-
-    @Override
-    public void onClick(View v) {
-        hangup();
-    }
-
-    private void hangup() {
+    private void hangup(boolean emitSessionClose) {
         try {
             localPeer.close();
-            localPeer = null;
-            Service.emitSessionClose(user);
-            //updateVideoViews(false);
+            if (emitSessionClose) {
+                Service.emitSessionClose(user);
+            }
             finish();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
     }
 
     @Override
     protected void onDestroy() {
-        Service.emitSessionClose(user);
         super.onDestroy();
     }
 

@@ -391,6 +391,17 @@ public class Service {
 
     }
 
+    public static void clearSessionEvents() {
+        final THREADS threads = Singleton.getInstance().getThreads();
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            threads.removeEvent(Message.SESSION_ANSWER.name());
+            threads.removeEvent(Message.SESSION_CANDIDATE.name());
+            threads.removeEvent(Message.SESSION_CLOSE.name());
+            threads.removeEvent(Message.SESSION_OFFER.name());
+        });
+    }
+
     public static void emitSessionClose(@NonNull PID user) {
         checkNotNull(user);
         try {
@@ -399,6 +410,7 @@ public class Service {
             HashMap<String, String> map = new HashMap<>();
             map.put(Content.EST, Message.SESSION_CLOSE.name());
             ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+            Log.e(TAG, "Session closed");
         } catch (Exception e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
