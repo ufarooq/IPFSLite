@@ -62,6 +62,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     Button hangup;
     PeerConnection localPeer;
     EglBase rootEglBase;
+
     boolean gotUserMedia;
     List<PeerConnection.IceServer> peerIceServers = new ArrayList<>();
 
@@ -154,6 +155,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         //Initialize PeerConnectionFactory globals.
         PeerConnectionFactory.InitializationOptions initializationOptions =
                 PeerConnectionFactory.InitializationOptions.builder(this)
+                        .setEnableVideoHwAcceleration(true)
                         .createInitializationOptions();
         PeerConnectionFactory.initialize(initializationOptions);
 
@@ -167,6 +169,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         builder = builder.setOptions(options);
         builder = builder.setVideoDecoderFactory(defaultVideoDecoderFactory);
         builder = builder.setVideoEncoderFactory(defaultVideoEncoderFactory);
+
 
         peerConnectionFactory = builder.createPeerConnectionFactory();
 
@@ -195,6 +198,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
             videoCapturerAndroid.startCapture(1024, 720, 30);
         }
         localVideoView.setVisibility(View.VISIBLE);
+        remoteVideoView.setVisibility(View.VISIBLE);
         // And finally, with our VideoRenderer ready, we
         // can add our renderer to the VideoTrack.
         localVideoTrack.addSink(localVideoView);
@@ -433,7 +437,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
             localPeer.close();
             localPeer = null;
             Service.emitSessionClose(user);
-            updateVideoViews(false);
+            //updateVideoViews(false);
             finish();
         } catch (Exception e) {
             e.printStackTrace();
