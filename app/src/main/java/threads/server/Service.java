@@ -4,7 +4,6 @@ import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -159,15 +158,8 @@ public class Service {
                             switch (type) {
                                 case SESSION_START: {
 
-                                    clearSessionEvents();
-
-                                    Intent intent = new Intent(context, CallActivity.class);
-                                    intent.putExtra(Content.USER, senderPid.getPid());
-                                    intent.putExtra(Content.INITIATOR, false);
-                                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    context.startActivity(intent);
-
+                                    Singleton.getInstance().getThreads().invokeEvent(
+                                            type.name(), senderPid.getPid());
                                     break;
                                 }
                                 case SESSION_OFFER: {
@@ -383,18 +375,6 @@ public class Service {
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-    }
-
-
-    public static void clearSessionEvents() {
-        final THREADS threads = Singleton.getInstance().getThreads();
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            threads.removeEvent(Message.SESSION_ANSWER.name());
-            threads.removeEvent(Message.SESSION_CANDIDATE.name());
-            threads.removeEvent(Message.SESSION_CLOSE.name());
-            threads.removeEvent(Message.SESSION_OFFER.name());
-        });
     }
 
     public static void emitSessionStart(@NonNull PID user) {

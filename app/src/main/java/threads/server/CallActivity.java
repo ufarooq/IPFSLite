@@ -91,6 +91,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
             try {
                 if (event != null) {
                     onOfferReceived(event.getContent());
+                    eventViewModel.removeEvent(event);
                 }
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -103,6 +104,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
             try {
                 if (event != null) {
                     onAnswerReceived(event.getContent());
+                    eventViewModel.removeEvent(event);
                 }
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -114,6 +116,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
             try {
                 if (event != null) {
                     onIceCandidateReceived(event.getContent());
+                    eventViewModel.removeEvent(event);
                 }
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -126,6 +129,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
             try {
                 if (event != null) {
                     runOnUiThread(this::hangup);
+                    eventViewModel.removeEvent(event);
                 }
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -301,7 +305,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
         final VideoTrack videoTrack = stream.videoTracks.get(0);
         runOnUiThread(() -> {
             try {
-                remoteVideoView.setVisibility(View.VISIBLE);
+                //remoteVideoView.setVisibility(View.VISIBLE);
                 videoTrack.addSink(remoteVideoView);
             } catch (Exception e) {
                 e.printStackTrace();
