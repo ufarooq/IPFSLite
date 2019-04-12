@@ -104,8 +104,7 @@ public class Application extends android.app.Application {
                     .permitNetwork().build();
             StrictMode.setThreadPolicy(policy);
 
-            Singleton.getInstance().init(getApplicationContext(), () -> "",
-                    null, true);
+            Singleton.getInstance().init(getApplicationContext(), () -> "", true);
 
             Preferences.setConfigChanged(getApplicationContext(), false);
             Preferences.setBinaryUpgrade(getApplicationContext(), false);

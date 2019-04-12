@@ -45,12 +45,14 @@ import threads.core.api.ThreadStatus;
 import threads.core.api.User;
 import threads.core.api.UserStatus;
 import threads.core.api.UserType;
+import threads.iota.IOTA;
 import threads.ipfs.IPFS;
 import threads.ipfs.Network;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
+import threads.pow.PearlDiver;
 import threads.share.ConnectService;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -62,6 +64,22 @@ public class Service {
     private static final Gson gson = new Gson();
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(3);
     private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(1);
+
+
+    public static void checkTangleServer(@NonNull Context context) {
+        checkNotNull(context);
+        try {
+            IOTA iota = Singleton.getInstance().getIota();
+            if (iota != null) {
+                if (IOTA.remotePoW(iota.getNodeInfo())) {
+                    iota.setLocalPoW(new PearlDiver(context));
+                }
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+    }
+
 
     private static void startPeers(@NonNull Context context) {
         try {
@@ -360,6 +378,7 @@ public class Service {
                 if (ConnectService.isAutoConnectRelay(context)) {
                     new java.lang.Thread(() -> ConnectService.connectRelays(context, 10000)).start();
                 }
+                new java.lang.Thread(() -> checkTangleServer(context)).start();
             }
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
