@@ -162,6 +162,24 @@ public class Service {
                                             type.name(), senderPid.getPid());
                                     break;
                                 }
+                                case SESSION_BUSY: {
+
+                                    Singleton.getInstance().getThreads().invokeEvent(
+                                            type.name(), senderPid.getPid());
+                                    break;
+                                }
+                                case SESSION_ACCEPT: {
+
+                                    Singleton.getInstance().getThreads().invokeEvent(
+                                            type.name(), senderPid.getPid());
+                                    break;
+                                }
+                                case SESSION_REJECT: {
+
+                                    Singleton.getInstance().getThreads().invokeEvent(
+                                            type.name(), senderPid.getPid());
+                                    break;
+                                }
                                 case SESSION_OFFER: {
                                     String sdp = map.get(Content.SDP);
                                     checkNotNull(sdp);
@@ -399,7 +417,52 @@ public class Service {
             threads.removeEvent(Message.SESSION_CANDIDATE.name());
             threads.removeEvent(Message.SESSION_CLOSE.name());
             threads.removeEvent(Message.SESSION_OFFER.name());
+            threads.removeEvent(Message.SESSION_ACCEPT.name());
+            threads.removeEvent(Message.SESSION_BUSY.name());
+            threads.removeEvent(Message.SESSION_REJECT.name());
         });
+    }
+
+    public static void emitSessionBusy(@NonNull PID user) {
+        checkNotNull(user);
+        try {
+            IPFS ipfs = Singleton.getInstance().getIpfs();
+            Preconditions.checkNotNull(ipfs);
+            HashMap<String, String> map = new HashMap<>();
+            map.put(Content.EST, Message.SESSION_BUSY.name());
+            ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+        } catch (Exception e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+
+    }
+
+    public static void emitSessionReject(@NonNull PID user) {
+        checkNotNull(user);
+        try {
+            IPFS ipfs = Singleton.getInstance().getIpfs();
+            Preconditions.checkNotNull(ipfs);
+            HashMap<String, String> map = new HashMap<>();
+            map.put(Content.EST, Message.SESSION_REJECT.name());
+            ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+        } catch (Exception e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+
+    }
+
+    public static void emitSessionAccept(@NonNull PID user) {
+        checkNotNull(user);
+        try {
+            IPFS ipfs = Singleton.getInstance().getIpfs();
+            Preconditions.checkNotNull(ipfs);
+            HashMap<String, String> map = new HashMap<>();
+            map.put(Content.EST, Message.SESSION_ACCEPT.name());
+            ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+        } catch (Exception e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+
     }
 
     public static void emitSessionClose(@NonNull PID user) {
@@ -410,7 +473,6 @@ public class Service {
             HashMap<String, String> map = new HashMap<>();
             map.put(Content.EST, Message.SESSION_CLOSE.name());
             ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
-            Log.e(TAG, "Session closed");
         } catch (Exception e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }

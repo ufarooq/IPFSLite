@@ -305,6 +305,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
         });
+
+
+        eventViewModel.getEvent(Message.SESSION_ACCEPT.name()).observe(this, (event) -> {
+            try {
+                if (event != null) {
+                    acceptUserCall(event.getContent());
+                    eventViewModel.removeEvent(event);
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+
+        });
+
         eventViewModel.getIPFSInstallFailure().observe(this, (event) -> {
             try {
                 if (event != null) {
@@ -780,6 +794,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
+        // TODO open dialog with timer
+
+    }
+
+    public void acceptUserCall(@NonNull String pid) {
         try {
             Intent intent = new Intent(MainActivity.this, CallActivity.class);
             intent.putExtra(Content.USER, pid);
@@ -793,6 +812,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void receiveUserCall(@NonNull String pid) {
+
+
+        // TODO open dialog with accept or reject option
 
         try {
             Service.clearSessionEvents();
@@ -820,6 +842,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
+
         try {
             Intent intent = new Intent(MainActivity.this, CallActivity.class);
             intent.putExtra(Content.USER, pid);
@@ -830,6 +853,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
+
+        Service.emitSessionAccept(PID.create(pid));
     }
 
 
