@@ -13,9 +13,6 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <uses-feature
-        android:glEsVersion="0x00020000"
-        android:required="true" />
-    <uses-feature
         android:name="android.hardware.camera"
         android:required="false" />
     <uses-feature
@@ -48,7 +45,7 @@
         </activity>
 
         <activity
-            android:name="threads.server.CallActivity"
+            android:name="threads.server.VideoActivity"
             android:parentActivityName=".MainActivity"
             android:theme="@style/ThreadsServerTheme"
             android:windowSoftInputMode="stateHidden">

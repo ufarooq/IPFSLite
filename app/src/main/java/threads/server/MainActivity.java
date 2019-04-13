@@ -800,7 +800,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void acceptUserCall(@NonNull String pid) {
         try {
-            Intent intent = new Intent(MainActivity.this, CallActivity.class);
+            Intent intent = new Intent(MainActivity.this, VideoActivity.class);
             intent.putExtra(Content.USER, pid);
             intent.putExtra(Content.INITIATOR, true);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -844,7 +844,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         try {
-            Intent intent = new Intent(MainActivity.this, CallActivity.class);
+            Intent intent = new Intent(MainActivity.this, VideoActivity.class);
             intent.putExtra(Content.USER, pid);
             intent.putExtra(Content.INITIATOR, false);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

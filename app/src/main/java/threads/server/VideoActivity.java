@@ -45,8 +45,8 @@ import threads.core.api.Content;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.api.PID;
 
-public class CallActivity extends AppCompatActivity {
-    private static final String TAG = CallActivity.class.getSimpleName();
+public class VideoActivity extends AppCompatActivity {
+    private static final String TAG = VideoActivity.class.getSimpleName();
 
 
     PID user;
@@ -71,9 +71,11 @@ public class CallActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_webrtc);
+        setContentView(R.layout.activity_video);
 
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+                | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         localVideoView = findViewById(R.id.local_gl_surface_view);
         remoteVideoView = findViewById(R.id.remote_gl_surface_view);
         initVideos();
@@ -331,7 +333,7 @@ public class CallActivity extends AppCompatActivity {
             try {
                 localPeer.setRemoteDescription(new CustomSdpObserver("localSetRemote"), new SessionDescription(SessionDescription.Type.OFFER, sdp));
                 doAnswer();
-                updateVideoViews(true);
+                //updateVideoViews(true);
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
@@ -355,7 +357,7 @@ public class CallActivity extends AppCompatActivity {
         try {
             localPeer.setRemoteDescription(new CustomSdpObserver("localSetRemote"),
                     new SessionDescription(SessionDescription.Type.ANSWER, sdp));
-            updateVideoViews(true);
+            //updateVideoViews(true);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
@@ -420,7 +422,7 @@ public class CallActivity extends AppCompatActivity {
     }
 
     public void showToast(final String msg) {
-        runOnUiThread(() -> Toast.makeText(CallActivity.this, msg, Toast.LENGTH_SHORT).show());
+        runOnUiThread(() -> Toast.makeText(VideoActivity.this, msg, Toast.LENGTH_SHORT).show());
     }
 
     private VideoCapturer createCameraCapturer(CameraEnumerator enumerator) {
