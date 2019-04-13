@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProviders;
 import threads.core.Preferences;
@@ -83,11 +84,10 @@ public class VideoActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String pid = intent.getStringExtra(Content.USER);
         user = PID.create(pid);
-        boolean initiator = intent.getBooleanExtra(Content.INITIATOR, true);
 
         start();
 
-        onTryToStart(initiator);
+        createPeerConnection();
 
 
         EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
@@ -141,6 +141,19 @@ public class VideoActivity extends AppCompatActivity {
             }
 
         });
+
+        eventViewModel.getEvent(Message.SESSION_ACCEPT.name()).observe(this, (event) -> {
+            try {
+                if (event != null) {
+                    doCall(PID.create(event.getContent()));
+                    eventViewModel.removeEvent(event);
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+
+        });
+
 
         FloatingActionButton fab_hangup = findViewById(R.id.fab_hangup);
         fab_hangup.setOnClickListener((view) -> {
@@ -228,27 +241,6 @@ public class VideoActivity extends AppCompatActivity {
     }
 
 
-    /**
-     * This method will be called directly by the app when it is the initiator and has got the local media
-     * or when the remote peer sends a message through socket that it is ready to transmit AV data
-     */
-    //@Override
-    public void onTryToStart(boolean doCall) {
-        runOnUiThread(() -> {
-            //if (!SignallingClient.getInstance().isStarted && localVideoTrack != null && SignallingClient.getInstance().isChannelReady) {
-            createPeerConnection();
-            //SignallingClient.getInstance().isStarted = true;
-            //if (SignallingClient.getInstance().isInitiator) {
-            if (doCall) doCall();
-            //}
-            //}
-        });
-    }
-
-
-    /**
-     * Creating the local peerconnection instance
-     */
     private void createPeerConnection() {
         PeerConnection.RTCConfiguration rtcConfig =
                 new PeerConnection.RTCConfiguration(peerIceServers);
@@ -293,7 +285,7 @@ public class VideoActivity extends AppCompatActivity {
      * This method is called when the app is initiator - We generate the offer and send it over through socket
      * to remote peer
      */
-    private void doCall() {
+    private void doCall(@NonNull PID user) {
         sdpConstraints = new MediaConstraints();
         sdpConstraints.mandatory.add(
                 new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));

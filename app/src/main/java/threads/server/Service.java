@@ -166,9 +166,6 @@ public class Service {
                                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                     context.startActivity(intent);
 
-                                    /*
-                                    Singleton.getInstance().getThreads().invokeEvent(
-                                            type.name(), senderPid.getPid());*/
                                     break;
                                 }
                                 case SESSION_BUSY: {

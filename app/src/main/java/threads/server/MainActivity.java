@@ -88,6 +88,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         EditPeerDialogFragment.ActionListener,
         PeersFragment.ActionListener,
         NameDialogFragment.ActionListener {
+    public static final String INCOMING_CALL_PID = "INCOMING_CALL_PID";
+    public static final String INCOMING_CALL_NOTIFICATION_ID = "INCOMING_CALL_NOTIFICATION_ID";
+    public static final String ACTION_INCOMING_CALL = "ACTION_INCOMING_CALL";
     private static final Gson gson = new Gson();
     private static final int SELECT_FILES = 1;
     private static final int DOWNLOAD_EXTERNAL_STORAGE = 2;
@@ -96,16 +99,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private final AtomicReference<Long> storedThread = new AtomicReference<>(null);
     private final AtomicReference<String> storedUser = new AtomicReference<>(null);
     private final AtomicBoolean idScan = new AtomicBoolean(false);
+    boolean isReceiverRegistered = false;
     private DrawerLayout drawer_layout;
     private FloatingActionButton fab_daemon;
     private long mLastClickTime = 0;
-
     private ViewPager viewPager;
-    public static final String INCOMING_CALL_PID = "INCOMING_CALL_PID";
-    public static final String INCOMING_CALL_NOTIFICATION_ID = "INCOMING_CALL_NOTIFICATION_ID";
-    public static final String ACTION_INCOMING_CALL = "ACTION_INCOMING_CALL";
-    boolean isReceiverRegistered = false;
     private CallBroadcastReceiver callBroadcastReceiver;
+
+    public static AlertDialog createIncomingCallDialog(
+            Context context,
+            String pid,
+            DialogInterface.OnClickListener answerCallClickListener,
+            DialogInterface.OnClickListener cancelClickListener) {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
+        alertDialogBuilder.setIcon(R.drawable.ic_call_black_24dp);
+        alertDialogBuilder.setTitle("Incoming Call");
+        alertDialogBuilder.setPositiveButton("Accept", answerCallClickListener);
+        alertDialogBuilder.setNegativeButton("Reject", cancelClickListener);
+        alertDialogBuilder.setMessage(pid + " is calling.");
+        return alertDialogBuilder.create();
+    }
+
     @Override
     public void onRequestPermissionsResult
             (int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
@@ -229,20 +243,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-    }
-
-    public static AlertDialog createIncomingCallDialog(
-            Context context,
-            String pid,
-            DialogInterface.OnClickListener answerCallClickListener,
-            DialogInterface.OnClickListener cancelClickListener) {
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
-        alertDialogBuilder.setIcon(R.drawable.ic_call_black_24dp);
-        alertDialogBuilder.setTitle("Incoming Call");
-        alertDialogBuilder.setPositiveButton("Accept", answerCallClickListener);
-        alertDialogBuilder.setNegativeButton("Reject", cancelClickListener);
-        alertDialogBuilder.setMessage(pid + " is calling.");
-        return alertDialogBuilder.create();
     }
 
     @Override
@@ -549,8 +549,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickUserConnect(@NonNull String multihash) {
-        checkNotNull(multihash);
+    public void clickUserConnect(@NonNull String pid) {
+        checkNotNull(pid);
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
@@ -570,10 +570,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 executor.submit(() -> {
                     try {
 
-                        PID pid = PID.create(multihash);
-
                         THREADS threadsAPI = Singleton.getInstance().getThreads();
-                        User user = threadsAPI.getUserByPID(pid);
+                        User user = threadsAPI.getUserByPID(PID.create(pid));
                         checkNotNull(user);
 
                         if (user.getStatus() == UserStatus.BLOCKED) {
@@ -586,7 +584,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 long timeout = ConnectService.getConnectionTimeout(
                                         getApplicationContext());
 
-                                boolean value = ConnectService.connectUser(pid, timeout);
+                                boolean value = ConnectService.connectUser(PID.create(pid), timeout);
                                 if (value) {
                                     threadsAPI.setStatus(user, UserStatus.ONLINE);
                                 } else {
@@ -689,31 +687,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
 
-
-        eventViewModel.getEvent(Message.SESSION_CALL.name()).observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    receiveUserCall(event.getContent());
-                    eventViewModel.removeEvent(event);
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-
-        });
-
-
-        eventViewModel.getEvent(Message.SESSION_ACCEPT.name()).observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    acceptUserCall(event.getContent());
-                    eventViewModel.removeEvent(event);
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-
-        });
 
         eventViewModel.getIPFSInstallFailure().observe(this, (event) -> {
             try {
@@ -836,6 +809,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickUserCall(@NonNull String pid) {
 
+        checkNotNull(pid);
 
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.RECORD_AUDIO)
@@ -858,34 +832,69 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
+        // CHECKED
+        if (!Network.isConnected(getApplicationContext())) {
+            Preferences.error(getString(R.string.offline_mode));
+            return;
+        }
+        // CHECKED
+        if (!Preferences.isDaemonRunning(getApplicationContext())) {
+            Preferences.error(getString(R.string.daemon_not_running));
+            return;
+        }
+
+
         try {
-            Service.clearSessionEvents();
-            Service.emitSessionCall(PID.create(pid));
+            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            if (ipfs != null) {
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(() -> {
+                    try {
+
+                        THREADS threadsAPI = Singleton.getInstance().getThreads();
+                        User user = threadsAPI.getUserByPID(PID.create(pid));
+                        checkNotNull(user);
+
+                        if (user.getStatus() == UserStatus.BLOCKED) {
+                            Preferences.warning(getString(R.string.peer_is_blocked));
+                        } else {
+
+                            long timeout = ConnectService.getConnectionTimeout(
+                                    getApplicationContext());
+
+                            boolean value = ConnectService.connectUser(PID.create(pid), timeout);
+                            if (value) {
+                                Service.clearSessionEvents();
+                                Service.emitSessionCall(PID.create(pid));
+
+                                try {
+                                    Intent intent = new Intent(MainActivity.this, VideoActivity.class);
+                                    intent.putExtra(Content.USER, pid);
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    startActivity(intent);
+                                } catch (Throwable e) {
+                                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                                }
+                            } else {
+                                Preferences.warning(getString(R.string.peer_is_offline));
+                            }
+
+                        }
+                    } catch (Throwable e) {
+                        Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    }
+                });
+            }
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
-        // TODO open dialog with timer
-
     }
 
-    public void acceptUserCall(@NonNull String pid) {
-        try {
-            Intent intent = new Intent(MainActivity.this, VideoActivity.class);
-            intent.putExtra(Content.USER, pid);
-            intent.putExtra(Content.INITIATOR, true);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
-    }
 
     public void receiveUserCall(@NonNull String pid) {
 
-
-        // TODO open dialog with accept or reject option
 
         try {
             Service.clearSessionEvents();
@@ -928,7 +937,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         try {
                             Intent intent = new Intent(MainActivity.this, VideoActivity.class);
                             intent.putExtra(Content.USER, pid);
-                            intent.putExtra(Content.INITIATOR, false);
                             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                             startActivity(intent);
@@ -957,20 +965,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         alertDialog.show();
 
 
-
     }
-
-    private class CallBroadcastReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (action != null && action.equals(ACTION_INCOMING_CALL)) {
-                handleIncomingCallIntent(intent);
-            }
-        }
-    }
-
 
     @Override
     public void clickConnectPeer(@NonNull String multihash) {
@@ -1228,7 +1223,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-
     @Override
     public void clickThreadShare(long idx) {
 
@@ -1368,6 +1362,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    private class CallBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action != null && action.equals(ACTION_INCOMING_CALL)) {
+                handleIncomingCallIntent(intent);
+            }
+        }
+    }
 
     private class PagerAdapter extends FragmentStatePagerAdapter {
         final int mNumOfTabs;
