@@ -37,11 +37,16 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProviders;
 import threads.core.Preferences;
+import threads.core.Singleton;
+import threads.core.THREADS;
+import threads.core.api.Addresses;
 import threads.core.api.Content;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.api.PID;
@@ -85,7 +90,15 @@ public class VideoActivity extends AppCompatActivity {
         String pid = intent.getStringExtra(Content.USER);
         user = PID.create(pid);
 
+
+        PeerConnection.IceServer peerIceServer = PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer();
+        peerIceServers.add(peerIceServer);
+
+        //peerIceServers.add(PeerConnection.IceServer.builder("turn:turn01.hubl.in?transport=udp").createIceServer());
+        //getIceServers();
+
         start();
+
 
         createPeerConnection();
 
@@ -131,6 +144,18 @@ public class VideoActivity extends AppCompatActivity {
 
 
         eventViewModel.getEvent(Message.SESSION_CLOSE.name()).observe(this, (event) -> {
+            try {
+                if (event != null) {
+                    hangup(false);
+                    eventViewModel.removeEvent(event);
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+
+        });
+
+        eventViewModel.getEvent(Message.SESSION_REJECT.name()).observe(this, (event) -> {
             try {
                 if (event != null) {
                     hangup(false);
@@ -238,6 +263,43 @@ public class VideoActivity extends AppCompatActivity {
         gotUserMedia = true;
 
 
+    }
+
+    public String getHost(String address) {
+        String[] parts = address.substring(1).split("/");
+        return parts[1];
+    }
+
+    public String getPort(String address) {
+        String[] parts = address.substring(1).split("/");
+        return parts[3];
+    }
+
+    public String getProtocol(String address) {
+        String[] parts = address.substring(1).split("/");
+        return parts[2];
+    }
+
+    private void getIceServers() {
+        final THREADS threads = Singleton.getInstance().getThreads();
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+
+                threads.core.api.Peer peer = threads.getPeerByPID(user);
+                if (peer != null) {
+                    Addresses addresses = peer.getAddresses();
+                    for (String relay : addresses.values()) {
+                        String url = getProtocol(relay) + "://" + getHost(relay) + ":" + getPort(relay);
+                        PeerConnection.IceServer peerIceServer = PeerConnection.IceServer.builder(url).createIceServer();
+                        peerIceServers.add(peerIceServer);
+                    }
+                }
+
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+        });
     }
 
 

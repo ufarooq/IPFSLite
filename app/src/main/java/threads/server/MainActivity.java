@@ -962,6 +962,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         dialog.dismiss();
                     }
                 });
+        alertDialog.setCancelable(false);
+        alertDialog.setCanceledOnTouchOutside(false);
         alertDialog.show();
 
 
