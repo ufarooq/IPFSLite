@@ -50,7 +50,7 @@ public class Application extends android.app.Application {
                 Preferences.setPubsubEnabled(getApplicationContext(), true);
 
                 // Experimental Features
-                Preferences.setQUICEnabled(getApplicationContext(), false);
+                Preferences.setQUICEnabled(getApplicationContext(), true);
                 Preferences.setFilestoreEnabled(getApplicationContext(), false);
 
                 Preferences.setApiPort(getApplicationContext(), 5001);
@@ -94,9 +94,6 @@ public class Application extends android.app.Application {
 
         NotificationSender.createChannel(getApplicationContext());
 
-
-        Preferences.setAutoRelayEnabled(getApplicationContext(), false);
-        ConnectService.setAutoConnectRelay(getApplicationContext(), true);
 
         try {
             // TODO remove policy

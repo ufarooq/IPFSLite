@@ -2,6 +2,8 @@ package threads.server;
 
 import android.Manifest;
 import android.content.ClipData;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -94,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private DrawerLayout drawer_layout;
     private FloatingActionButton fab_daemon;
     private long mLastClickTime = 0;
-
+    private SoundPoolManager soundPoolManager;
     private ViewPager viewPager;
 
     @Override
@@ -222,188 +224,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    public static AlertDialog createIncomingCallDialog(
+            Context context,
+            String pid,
+            DialogInterface.OnClickListener answerCallClickListener,
+            DialogInterface.OnClickListener cancelClickListener) {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
+        alertDialogBuilder.setIcon(R.drawable.ic_call_black_24dp);
+        alertDialogBuilder.setTitle("Incoming Call");
+        alertDialogBuilder.setPositiveButton("Accept", answerCallClickListener);
+        alertDialogBuilder.setNegativeButton("Reject", cancelClickListener);
+        alertDialogBuilder.setMessage(pid + " is calling.");
+        return alertDialogBuilder.create();
+    }
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-
-        TabLayout tabLayout = findViewById(R.id.tabLayout);
-
-
-        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
-
-
-        viewPager = findViewById(R.id.viewPager);
-        PagerAdapter adapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
-        viewPager.setAdapter(adapter);
-        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                viewPager.setCurrentItem(tab.getPosition());
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
-            }
-        });
-
-
-        drawer_layout = findViewById(R.id.drawer_layout);
-        NavigationView navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer_layout.addDrawerListener(toggle);
-        toggle.syncState();
-
-        fab_daemon = findViewById(R.id.fab_daemon);
-        fab_daemon.setOnClickListener((view) -> {
-
-
-            // mis-clicking prevention, using threshold of 1000 ms
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                return;
-            }
-            mLastClickTime = SystemClock.elapsedRealtime();
-
-            if (DaemonService.DAEMON_RUNNING.get()) {
-                DaemonService.DAEMON_RUNNING.set(false);
-            } else {
-                DaemonService.DAEMON_RUNNING.set(true);
-            }
-            DaemonService.invoke(getApplicationContext());
-            serverStatus();
-
-        });
-        serverStatus();
-
-
-        EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
-
-
-        eventViewModel.getEvent(Message.SESSION_START.name()).observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    receiveUserCall(event.getContent());
-                    eventViewModel.removeEvent(event);
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-
-        });
-
-
-        eventViewModel.getEvent(Message.SESSION_ACCEPT.name()).observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    acceptUserCall(event.getContent());
-                    eventViewModel.removeEvent(event);
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-
-        });
-
-        eventViewModel.getIPFSInstallFailure().observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    Snackbar snackbar = Snackbar.make(drawer_layout,
-                            R.string.ipfs_daemon_install_failure,
-                            Snackbar.LENGTH_INDEFINITE);
-                    snackbar.setAction(R.string.info, (view) -> {
-
-                        AlertDialog alertDialog = new AlertDialog.Builder(
-                                MainActivity.this).create();
-                        alertDialog.setMessage(event.getContent().concat("\n\n") +
-                                getString(R.string.ipfs_no_data));
-                        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL,
-                                getString(android.R.string.ok),
-                                (dialog, which) -> dialog.dismiss());
-                        alertDialog.show();
-                        eventViewModel.removeEvent(event);
-                        snackbar.dismiss();
-
-                    });
-                    snackbar.show();
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-
-        });
-        eventViewModel.getIPFSStartFailure().observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    Snackbar snackbar = Snackbar.make(drawer_layout,
-                            R.string.ipfs_daemon_start_failure,
-                            Snackbar.LENGTH_INDEFINITE);
-                    snackbar.setAction(R.string.info, (view) -> {
-
-                        AlertDialog alertDialog = new AlertDialog.Builder(
-                                MainActivity.this).create();
-                        alertDialog.setMessage(event.getContent().concat("\n\n") +
-                                getString(R.string.ipfs_no_data));
-                        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL,
-                                getString(android.R.string.ok),
-                                (dialog, which) -> dialog.dismiss());
-                        alertDialog.show();
-                        eventViewModel.removeEvent(event);
-                        snackbar.dismiss();
-
-                    });
-                    snackbar.show();
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-
-        });
-        eventViewModel.getException().observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    Snackbar snackbar = Snackbar.make(drawer_layout, event.getContent(),
-                            Snackbar.LENGTH_INDEFINITE);
-                    snackbar.setAction(android.R.string.ok, (view) -> {
-                        eventViewModel.removeEvent(event);
-                        snackbar.dismiss();
-
-                    });
-                    snackbar.show();
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-
-        });
-
-        eventViewModel.getWarning().observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    Toast.makeText(
-                            getApplicationContext(), event.getContent(), Toast.LENGTH_LONG).show();
-                    eventViewModel.removeEvent(event);
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-
-        });
-
+    public void onDestroy() {
+        soundPoolManager.release();
+        super.onDestroy();
     }
 
 
@@ -763,15 +601,206 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickUserCall(@NonNull String pid) {
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
 
+        soundPoolManager = SoundPoolManager.getInstance(this);
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+
+        TabLayout tabLayout = findViewById(R.id.tabLayout);
+
+
+        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+
+
+        viewPager = findViewById(R.id.viewPager);
+        PagerAdapter adapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
+        viewPager.setAdapter(adapter);
+        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                viewPager.setCurrentItem(tab.getPosition());
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
+
+
+        drawer_layout = findViewById(R.id.drawer_layout);
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer_layout.addDrawerListener(toggle);
+        toggle.syncState();
+
+        fab_daemon = findViewById(R.id.fab_daemon);
+        fab_daemon.setOnClickListener((view) -> {
+
+
+            // mis-clicking prevention, using threshold of 1000 ms
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            if (DaemonService.DAEMON_RUNNING.get()) {
+                DaemonService.DAEMON_RUNNING.set(false);
+            } else {
+                DaemonService.DAEMON_RUNNING.set(true);
+            }
+            DaemonService.invoke(getApplicationContext());
+            serverStatus();
+
+        });
+        serverStatus();
+
+
+        EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
+
+
+        eventViewModel.getEvent(Message.SESSION_START.name()).observe(this, (event) -> {
+            try {
+                if (event != null) {
+                    receiveUserCall(event.getContent());
+                    eventViewModel.removeEvent(event);
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+
+        });
+
+
+        eventViewModel.getEvent(Message.SESSION_ACCEPT.name()).observe(this, (event) -> {
+            try {
+                if (event != null) {
+                    acceptUserCall(event.getContent());
+                    eventViewModel.removeEvent(event);
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+
+        });
+
+        eventViewModel.getIPFSInstallFailure().observe(this, (event) -> {
+            try {
+                if (event != null) {
+                    Snackbar snackbar = Snackbar.make(drawer_layout,
+                            R.string.ipfs_daemon_install_failure,
+                            Snackbar.LENGTH_INDEFINITE);
+                    snackbar.setAction(R.string.info, (view) -> {
+
+                        AlertDialog alertDialog = new AlertDialog.Builder(
+                                MainActivity.this).create();
+                        alertDialog.setMessage(event.getContent().concat("\n\n") +
+                                getString(R.string.ipfs_no_data));
+                        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL,
+                                getString(android.R.string.ok),
+                                (dialog, which) -> dialog.dismiss());
+                        alertDialog.show();
+                        eventViewModel.removeEvent(event);
+                        snackbar.dismiss();
+
+                    });
+                    snackbar.show();
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+
+        });
+        eventViewModel.getIPFSStartFailure().observe(this, (event) -> {
+            try {
+                if (event != null) {
+                    Snackbar snackbar = Snackbar.make(drawer_layout,
+                            R.string.ipfs_daemon_start_failure,
+                            Snackbar.LENGTH_INDEFINITE);
+                    snackbar.setAction(R.string.info, (view) -> {
+
+                        AlertDialog alertDialog = new AlertDialog.Builder(
+                                MainActivity.this).create();
+                        alertDialog.setMessage(event.getContent().concat("\n\n") +
+                                getString(R.string.ipfs_no_data));
+                        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL,
+                                getString(android.R.string.ok),
+                                (dialog, which) -> dialog.dismiss());
+                        alertDialog.show();
+                        eventViewModel.removeEvent(event);
+                        snackbar.dismiss();
+
+                    });
+                    snackbar.show();
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+
+        });
+        eventViewModel.getException().observe(this, (event) -> {
+            try {
+                if (event != null) {
+                    Snackbar snackbar = Snackbar.make(drawer_layout, event.getContent(),
+                            Snackbar.LENGTH_INDEFINITE);
+                    snackbar.setAction(android.R.string.ok, (view) -> {
+                        eventViewModel.removeEvent(event);
+                        snackbar.dismiss();
+
+                    });
+                    snackbar.show();
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+
+        });
+
+        eventViewModel.getWarning().observe(this, (event) -> {
+            try {
+                if (event != null) {
+                    Toast.makeText(
+                            getApplicationContext(), event.getContent(), Toast.LENGTH_LONG).show();
+                    eventViewModel.removeEvent(event);
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+
+        });
+
+    }
+
+    public void acceptUserCall(@NonNull String pid) {
         try {
-            Service.clearSessionEvents();
-            Service.emitSessionStart(PID.create(pid));
+            Intent intent = new Intent(MainActivity.this, VideoActivity.class);
+            intent.putExtra(Content.USER, pid);
+            intent.putExtra(Content.INITIATOR, true);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
+    }
+
+    @Override
+    public void clickUserCall(@NonNull String pid) {
 
 
         if (ContextCompat.checkSelfPermission(this,
@@ -794,21 +823,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        // TODO open dialog with timer
 
-    }
-
-    public void acceptUserCall(@NonNull String pid) {
         try {
-            Intent intent = new Intent(MainActivity.this, VideoActivity.class);
-            intent.putExtra(Content.USER, pid);
-            intent.putExtra(Content.INITIATOR, true);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+            Service.clearSessionEvents();
+            Service.emitSessionStart(PID.create(pid));
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
+
+        // TODO open dialog with timer
+
     }
 
     public void receiveUserCall(@NonNull String pid) {
@@ -843,18 +867,47 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-        try {
-            Intent intent = new Intent(MainActivity.this, VideoActivity.class);
-            intent.putExtra(Content.USER, pid);
-            intent.putExtra(Content.INITIATOR, false);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
+        soundPoolManager.playRinging();
+        AlertDialog alertDialog = createIncomingCallDialog(MainActivity.this,
+                pid,
+                new DialogInterface.OnClickListener() {
 
-        Service.emitSessionAccept(PID.create(pid));
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        soundPoolManager.stopRinging();
+                        try {
+                            Intent intent = new Intent(MainActivity.this, VideoActivity.class);
+                            intent.putExtra(Content.USER, pid);
+                            intent.putExtra(Content.INITIATOR, false);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                        } catch (Throwable e) {
+                            Preferences.evaluateException(Preferences.EXCEPTION, e);
+                        }
+
+                        Service.emitSessionAccept(PID.create(pid));
+                        dialog.dismiss();
+                    }
+                },
+                new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        soundPoolManager.stopRinging();
+                        Service.emitSessionReject(PID.create(pid));
+                        /**
+                         if (activeCallInvite != null) {
+                         activeCallInvite.reject(VoiceActivity.this);
+                         notificationManager.cancel(activeCallNotificationId);
+                         }*/
+                        dialog.dismiss();
+                    }
+                });
+        alertDialog.show();
+
+
+
     }
 
 
