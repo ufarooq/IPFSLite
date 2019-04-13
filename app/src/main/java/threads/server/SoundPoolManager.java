@@ -22,9 +22,7 @@ public class SoundPoolManager {
     private int disconnectSoundId;
 
     private SoundPoolManager(@NonNull Context context) {
-
         Preconditions.checkNotNull(context);
-
 
 
         // AudioManager audio settings for adjusting the volume

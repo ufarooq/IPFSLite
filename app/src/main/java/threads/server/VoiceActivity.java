@@ -38,7 +38,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 public class VoiceActivity extends AppCompatActivity {
 
-    public static final String INCOMING_CALL_INVITE = "INCOMING_CALL_INVITE";
+    public static final String INCOMING_CALL_INVITE = "INCOMING_CALL_PID";
     public static final String INCOMING_CALL_NOTIFICATION_ID = "INCOMING_CALL_NOTIFICATION_ID";
     public static final String ACTION_INCOMING_CALL = "ACTION_INCOMING_CALL";
     public static final String ACTION_FCM_TOKEN = "ACTION_FCM_TOKEN";
@@ -62,7 +62,7 @@ public class VoiceActivity extends AppCompatActivity {
     private AudioManager audioManager;
     private int savedAudioMode = AudioManager.MODE_INVALID;
     private boolean isReceiverRegistered = false;
-    private VoiceBroadcastReceiver voiceBroadcastReceiver;
+    private CallBroadcastReceiver voiceBroadcastReceiver;
     private CoordinatorLayout coordinatorLayout;
     private FloatingActionButton callActionFab;
     private FloatingActionButton hangupActionFab;
@@ -125,7 +125,7 @@ public class VoiceActivity extends AppCompatActivity {
          * Setup the broadcast receiver to be notified of FCM Token updates
          * or incoming call invite in this Activity.
          */
-        voiceBroadcastReceiver = new VoiceBroadcastReceiver();
+        voiceBroadcastReceiver = new CallBroadcastReceiver();
         registerReceiver();
 
         /*
@@ -255,7 +255,7 @@ public class VoiceActivity extends AppCompatActivity {
     private void handleIncomingCallIntent(Intent intent) {
         if (intent != null && intent.getAction() != null) {
             if (intent.getAction().equals(ACTION_INCOMING_CALL)) {
-                activeCallInvite = intent.getParcelableExtra(INCOMING_CALL_INVITE);
+                activeCallInvite = intent.getParcelableExtra(INCOMING_CALL_PID);
                 if (activeCallInvite != null && (activeCallInvite.getState() == CallInvite.State.PENDING)) {
                     soundPoolManager.playRinging();
                     alertDialog = createIncomingCallDialog(VoiceActivity.this,
@@ -500,7 +500,7 @@ public class VoiceActivity extends AppCompatActivity {
         return true;
     }*/
 
-    private class VoiceBroadcastReceiver extends BroadcastReceiver {
+    private class CallBroadcastReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {

@@ -1,10 +1,12 @@
 package threads.server;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -48,6 +50,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.lifecycle.ViewModelProviders;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.viewpager.widget.ViewPager;
 import de.psdev.licensesdialog.LicensesDialogFragment;
 import threads.core.Preferences;
@@ -96,9 +99,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private DrawerLayout drawer_layout;
     private FloatingActionButton fab_daemon;
     private long mLastClickTime = 0;
-    private SoundPoolManager soundPoolManager;
-    private ViewPager viewPager;
 
+    private ViewPager viewPager;
+    public static final String INCOMING_CALL_PID = "INCOMING_CALL_PID";
+    public static final String INCOMING_CALL_NOTIFICATION_ID = "INCOMING_CALL_NOTIFICATION_ID";
+    public static final String ACTION_INCOMING_CALL = "ACTION_INCOMING_CALL";
+    boolean isReceiverRegistered = false;
+    private CallBroadcastReceiver callBroadcastReceiver;
     @Override
     public void onRequestPermissionsResult
             (int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
@@ -240,8 +247,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onDestroy() {
-        soundPoolManager.release();
         super.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver();
     }
 
 
@@ -606,8 +624,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.activity_main);
 
 
-        soundPoolManager = SoundPoolManager.getInstance(this);
-
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -674,7 +690,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
 
 
-        eventViewModel.getEvent(Message.SESSION_START.name()).observe(this, (event) -> {
+        eventViewModel.getEvent(Message.SESSION_CALL.name()).observe(this, (event) -> {
             try {
                 if (event != null) {
                     receiveUserCall(event.getContent());
@@ -784,18 +800,36 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         });
 
+        callBroadcastReceiver = new CallBroadcastReceiver();
+        registerReceiver();
+
+        handleIncomingCallIntent(getIntent());
     }
 
-    public void acceptUserCall(@NonNull String pid) {
-        try {
-            Intent intent = new Intent(MainActivity.this, VideoActivity.class);
-            intent.putExtra(Content.USER, pid);
-            intent.putExtra(Content.INITIATOR, true);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+    private void registerReceiver() {
+        if (!isReceiverRegistered) {
+            IntentFilter intentFilter = new IntentFilter();
+            intentFilter.addAction(ACTION_INCOMING_CALL);
+
+            LocalBroadcastManager.getInstance(this).registerReceiver(
+                    callBroadcastReceiver, intentFilter);
+            isReceiverRegistered = true;
+        }
+    }
+
+    private void unregisterReceiver() {
+        if (isReceiverRegistered) {
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(callBroadcastReceiver);
+            isReceiverRegistered = false;
+        }
+    }
+
+    private void handleIncomingCallIntent(Intent intent) {
+        if (intent != null && intent.getAction() != null) {
+            if (intent.getAction().equals(ACTION_INCOMING_CALL)) {
+                String pid = intent.getStringExtra(INCOMING_CALL_PID);
+                receiveUserCall(pid);
+            }
         }
     }
 
@@ -826,13 +860,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         try {
             Service.clearSessionEvents();
-            Service.emitSessionStart(PID.create(pid));
+            Service.emitSessionCall(PID.create(pid));
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
         // TODO open dialog with timer
 
+    }
+
+    public void acceptUserCall(@NonNull String pid) {
+        try {
+            Intent intent = new Intent(MainActivity.this, VideoActivity.class);
+            intent.putExtra(Content.USER, pid);
+            intent.putExtra(Content.INITIATOR, true);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
     }
 
     public void receiveUserCall(@NonNull String pid) {
@@ -866,7 +913,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-
+        final SoundPoolManager soundPoolManager = SoundPoolManager.getInstance(this);
         soundPoolManager.playRinging();
         AlertDialog alertDialog = createIncomingCallDialog(MainActivity.this,
                 pid,
@@ -875,6 +922,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         soundPoolManager.stopRinging();
+
+                        Service.emitSessionAccept(PID.create(pid));
+
                         try {
                             Intent intent = new Intent(MainActivity.this, VideoActivity.class);
                             intent.putExtra(Content.USER, pid);
@@ -885,8 +935,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         } catch (Throwable e) {
                             Preferences.evaluateException(Preferences.EXCEPTION, e);
                         }
-
-                        Service.emitSessionAccept(PID.create(pid));
+                        soundPoolManager.release();
                         dialog.dismiss();
                     }
                 },
@@ -901,6 +950,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                          activeCallInvite.reject(VoiceActivity.this);
                          notificationManager.cancel(activeCallNotificationId);
                          }*/
+                        soundPoolManager.release();
                         dialog.dismiss();
                     }
                 });
@@ -908,6 +958,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
 
+    }
+
+    private class CallBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action != null && action.equals(ACTION_INCOMING_CALL)) {
+                handleIncomingCallIntent(intent);
+            }
+        }
     }
 
 

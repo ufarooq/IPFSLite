@@ -4,6 +4,7 @@ import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -156,10 +157,18 @@ public class Service {
                             String est = map.get(Content.EST);
                             Message type = Message.valueOf(est);
                             switch (type) {
-                                case SESSION_START: {
+                                case SESSION_CALL: {
 
+                                    Intent intent = new Intent(context, MainActivity.class);
+                                    intent.setAction(MainActivity.ACTION_INCOMING_CALL);
+                                    intent.putExtra(MainActivity.INCOMING_CALL_PID, senderPid.getPid());
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    context.startActivity(intent);
+
+                                    /*
                                     Singleton.getInstance().getThreads().invokeEvent(
-                                            type.name(), senderPid.getPid());
+                                            type.name(), senderPid.getPid());*/
                                     break;
                                 }
                                 case SESSION_BUSY: {
@@ -395,13 +404,13 @@ public class Service {
         }
     }
 
-    public static void emitSessionStart(@NonNull PID user) {
+    public static void emitSessionCall(@NonNull PID user) {
         checkNotNull(user);
         try {
             IPFS ipfs = Singleton.getInstance().getIpfs();
             Preconditions.checkNotNull(ipfs);
             HashMap<String, String> map = new HashMap<>();
-            map.put(Content.EST, Message.SESSION_START.name());
+            map.put(Content.EST, Message.SESSION_CALL.name());
             ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
         } catch (Exception e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
