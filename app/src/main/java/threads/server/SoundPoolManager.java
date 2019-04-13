@@ -4,6 +4,9 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.media.SoundPool;
 
+import androidx.annotation.NonNull;
+import androidx.core.util.Preconditions;
+
 import static android.content.Context.AUDIO_SERVICE;
 
 public class SoundPoolManager {
@@ -12,27 +15,33 @@ public class SoundPoolManager {
     private boolean playing = false;
     private boolean loaded = false;
     private boolean playingCalled = false;
-    private float actualVolume;
-    private float maxVolume;
-    private float volume;
-    private AudioManager audioManager;
+    private float volume = 0f;
     private SoundPool soundPool;
     private int ringingSoundId;
     private int ringingStreamId;
     private int disconnectSoundId;
 
-    private SoundPoolManager(Context context) {
+    private SoundPoolManager(@NonNull Context context) {
+
+        Preconditions.checkNotNull(context);
+
+
+
         // AudioManager audio settings for adjusting the volume
-        audioManager = (AudioManager) context.getSystemService(AUDIO_SERVICE);
-        actualVolume = (float) audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-        maxVolume = (float) audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-        volume = actualVolume / maxVolume;
+        AudioManager audioManager = (AudioManager) context.getSystemService(AUDIO_SERVICE);
+        float actualVolume = 0f;
+        float maxVolume = 0f;
+        if (audioManager != null) {
+            actualVolume = (float) audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+            maxVolume = (float) audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+            volume = actualVolume / maxVolume;
+        }
+
 
         // Load the sounds
         int maxStreams = 1;
 
         soundPool = new SoundPool.Builder().setMaxStreams(maxStreams).build();
-
 
         soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
             @Override
