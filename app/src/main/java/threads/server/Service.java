@@ -190,7 +190,9 @@ public class Service {
                                 case SESSION_ANSWER: {
                                     String sdp = map.get(Content.SDP);
                                     checkNotNull(sdp);
-                                    session.answer(senderPid, sdp);
+                                    String esk = map.get(Content.ESK); // TODO ESK TO TYPE
+                                    checkNotNull(esk);
+                                    session.answer(senderPid, sdp, esk);
                                     break;
                                 }
                                 case SESSION_CANDIDATE: {
@@ -563,6 +565,7 @@ public class Service {
                         HashMap<String, String> map = new HashMap<>();
                         map.put(Content.EST, Message.SESSION_ANSWER.name());
                         map.put(Content.SDP, message.description);
+                        map.put(Content.ESK, message.type.name());
 
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
                     }

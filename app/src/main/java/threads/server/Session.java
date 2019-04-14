@@ -50,9 +50,9 @@ public class Session {
         }
     }
 
-    public void answer(PID pid, String sdp) {
+    public void answer(PID pid, String sdp, String type) {
         if (listener != null) {
-            listener.answer(pid, sdp);
+            listener.answer(pid, sdp, type);
         }
     }
 
@@ -71,7 +71,7 @@ public class Session {
 
         void offer(PID pid, String sdp);
 
-        void answer(PID pid, String sdp);
+        void answer(PID pid, String sdp, String type);
 
         void candidate(PID pid, String sdp, String mid, String index);
 

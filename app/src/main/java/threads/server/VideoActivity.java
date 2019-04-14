@@ -6,6 +6,7 @@ import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -444,11 +445,12 @@ public class VideoActivity extends AppCompatActivity implements Session.Listener
     }
 
 
-    public void onAnswerReceived(String sdp) {
+    public void onAnswerReceived(String sdp, String type) {
         showToast("Received Answer");
         try {
+            Log.e(TAG, type + " : " + sdp);
             localPeer.setRemoteDescription(new CustomSdpObserver("localSetRemote"),
-                    new SessionDescription(SessionDescription.Type.ANSWER, sdp));
+                    new SessionDescription(SessionDescription.Type.valueOf(type), sdp));
             //updateVideoViews(true);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -537,8 +539,8 @@ public class VideoActivity extends AppCompatActivity implements Session.Listener
     }
 
     @Override
-    public void answer(PID pid, String sdp) {
-        onAnswerReceived(sdp);
+    public void answer(PID pid, String sdp, String type) {
+        onAnswerReceived(sdp, type);
     }
 
     @Override
