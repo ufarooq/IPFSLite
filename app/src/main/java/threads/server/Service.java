@@ -109,7 +109,7 @@ public class Service {
                     checkNotNull(pid);
                     checkArgument(!pid.getPid().isEmpty());
                     try {
-                        pubsubDaemon(context, ipfs, pid);
+                        pubsubDaemon(context, ipfs, pid, Session.getInstance());
                     } catch (Throwable e) {
                         // IGNORE exception occurs when daemon is shutdown
                     }
@@ -120,7 +120,8 @@ public class Service {
 
     private static void pubsubDaemon(@NonNull Context context,
                                      @NonNull IPFS ipfs,
-                                     @NonNull PID pid) throws Exception {
+                                     @NonNull PID pid,
+                                     @NonNull Session session) throws Exception {
         checkNotNull(context);
         checkNotNull(ipfs);
         checkNotNull(pid);
@@ -169,37 +170,27 @@ public class Service {
                                     break;
                                 }
                                 case SESSION_BUSY: {
-
-                                    Singleton.getInstance().getThreads().invokeEvent(
-                                            type.name(), senderPid.getPid());
+                                    session.busy(senderPid);
                                     break;
                                 }
                                 case SESSION_ACCEPT: {
-
-                                    Singleton.getInstance().getThreads().invokeEvent(
-                                            type.name(), senderPid.getPid());
+                                    session.accept(senderPid);
                                     break;
                                 }
                                 case SESSION_REJECT: {
-
-                                    Singleton.getInstance().getThreads().invokeEvent(
-                                            type.name(), senderPid.getPid());
+                                    session.reject(senderPid);
                                     break;
                                 }
                                 case SESSION_OFFER: {
                                     String sdp = map.get(Content.SDP);
                                     checkNotNull(sdp);
-
-                                    Singleton.getInstance().getThreads().invokeEvent(
-                                            type.name(), sdp);
+                                    session.offer(senderPid, sdp);
                                     break;
                                 }
                                 case SESSION_ANSWER: {
                                     String sdp = map.get(Content.SDP);
                                     checkNotNull(sdp);
-
-                                    Singleton.getInstance().getThreads().invokeEvent(
-                                            type.name(), sdp);
+                                    session.answer(senderPid, sdp);
                                     break;
                                 }
                                 case SESSION_CANDIDATE: {
@@ -209,17 +200,11 @@ public class Service {
                                     checkNotNull(mid);
                                     String index = map.get(Content.INDEX);
                                     checkNotNull(index);
-                                    Map<String, String> content = new HashMap<>();
-                                    content.put(Content.SDP, sdp);
-                                    content.put(Content.MID, mid);
-                                    content.put(Content.INDEX, index);
-                                    Singleton.getInstance().getThreads().invokeEvent(
-                                            type.name(), gson.toJson(content));
+                                    session.candidate(senderPid, sdp, mid, index);
                                     break;
                                 }
                                 case SESSION_CLOSE: {
-                                    Singleton.getInstance().getThreads().invokeEvent(
-                                            type.name(), "");
+                                    session.close(senderPid);
                                     break;
                                 }
                                 case CONNECT: {

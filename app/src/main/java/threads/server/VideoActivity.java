@@ -14,8 +14,6 @@ import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
@@ -38,26 +36,22 @@ import org.webrtc.VideoCapturer;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProviders;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.Addresses;
 import threads.core.api.Content;
-import threads.core.mdl.EventViewModel;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
 
-public class VideoActivity extends AppCompatActivity {
+public class VideoActivity extends AppCompatActivity implements Session.Listener {
     private static final String TAG = VideoActivity.class.getSimpleName();
 
     public static final int VIDEO_RESOLUTION_WIDTH = 1280;
@@ -122,6 +116,9 @@ public class VideoActivity extends AppCompatActivity {
         //peerIceServers.add(PeerConnection.IceServer.builder("turn:turn01.hubl.in?transport=udp").createIceServer());
         //getIceServers();
 
+        Session.getInstance().setListener(this);
+
+
         start();
 
         // Create peer connection client.
@@ -142,82 +139,6 @@ public class VideoActivity extends AppCompatActivity {
 
         createPeerConnection();
 
-
-        EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
-
-        eventViewModel.getEvent(Message.SESSION_OFFER.name()).observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    onOfferReceived(event.getContent());
-                    eventViewModel.removeEvent(event);
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-
-        });
-
-
-        eventViewModel.getEvent(Message.SESSION_ANSWER.name()).observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    onAnswerReceived(event.getContent());
-                    eventViewModel.removeEvent(event);
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-
-        });
-
-        eventViewModel.getEvent(Message.SESSION_CANDIDATE.name()).observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    onIceCandidateReceived(event.getContent());
-                    eventViewModel.removeEvent(event);
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-
-        });
-
-
-        eventViewModel.getEvent(Message.SESSION_CLOSE.name()).observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    hangup(false);
-                    eventViewModel.removeEvent(event);
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-
-        });
-
-        eventViewModel.getEvent(Message.SESSION_REJECT.name()).observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    hangup(false);
-                    eventViewModel.removeEvent(event);
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-
-        });
-
-        eventViewModel.getEvent(Message.SESSION_ACCEPT.name()).observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    doCall(PID.create(event.getContent()));
-                    eventViewModel.removeEvent(event);
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-
-        });
 
 
 
@@ -488,7 +409,6 @@ public class VideoActivity extends AppCompatActivity {
         final VideoTrack videoTrack = stream.videoTracks.get(0);
         runOnUiThread(() -> {
             try {
-                //remoteVideoView.setVisibility(View.VISIBLE);
                 videoTrack.addSink(remoteVideoView);
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -536,16 +456,12 @@ public class VideoActivity extends AppCompatActivity {
     }
 
 
-    public void onIceCandidateReceived(String data) {
+    public void onIceCandidateReceived(String sdp, String mid, String index) {
         try {
-            Gson gson = new Gson();
-            Type type = new TypeToken<Map<String, String>>() {
-            }.getType();
-            Map<String, String> map = gson.fromJson(data, type);
             localPeer.addIceCandidate(new IceCandidate(
-                    map.get(Content.MID),
-                    Integer.valueOf(map.get(Content.INDEX)),
-                    map.get(Content.SDP)));
+                    mid,
+                    Integer.valueOf(index),
+                    sdp));
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
@@ -584,6 +500,7 @@ public class VideoActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Session.getInstance().setListener(null);
     }
 
     /**
@@ -599,4 +516,38 @@ public class VideoActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void busy(PID pid) {
+        hangup(false);
+    }
+
+    @Override
+    public void accept(PID pid) {
+        doCall(pid);
+    }
+
+    @Override
+    public void reject(PID pid) {
+        hangup(false);
+    }
+
+    @Override
+    public void offer(PID pid, String sdp) {
+        onOfferReceived(sdp);
+    }
+
+    @Override
+    public void answer(PID pid, String sdp) {
+        onAnswerReceived(sdp);
+    }
+
+    @Override
+    public void candidate(PID pid, String sdp, String mid, String index) {
+        onIceCandidateReceived(sdp, mid, index);
+    }
+
+    @Override
+    public void close(PID pid) {
+        hangup(false);
+    }
 }
