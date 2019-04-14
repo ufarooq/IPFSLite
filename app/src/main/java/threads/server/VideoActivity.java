@@ -552,4 +552,9 @@ public class VideoActivity extends AppCompatActivity implements Session.Listener
     public void close(PID pid) {
         hangup(false);
     }
+
+    @Override
+    public void timeout(PID pid) {
+        hangup(false);
+    }
 }

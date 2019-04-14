@@ -169,6 +169,10 @@ public class Service {
 
                                     break;
                                 }
+                                case SESSION_TIMEOUT: {
+                                    session.timeout(senderPid);
+                                    break;
+                                }
                                 case SESSION_BUSY: {
                                     session.busy(senderPid);
                                     break;
@@ -402,19 +406,6 @@ public class Service {
 
     }
 
-    public static void clearSessionEvents() {
-        final THREADS threads = Singleton.getInstance().getThreads();
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            threads.removeEvent(Message.SESSION_ANSWER.name());
-            threads.removeEvent(Message.SESSION_CANDIDATE.name());
-            threads.removeEvent(Message.SESSION_CLOSE.name());
-            threads.removeEvent(Message.SESSION_OFFER.name());
-            threads.removeEvent(Message.SESSION_ACCEPT.name());
-            threads.removeEvent(Message.SESSION_BUSY.name());
-            threads.removeEvent(Message.SESSION_REJECT.name());
-        });
-    }
 
     public static void emitSessionBusy(@NonNull PID user, long timeout) {
         checkNotNull(user);
@@ -437,6 +428,26 @@ public class Service {
         }
     }
 
+    public static void emitSessionTimeout(@NonNull PID user, long timeout) {
+        checkNotNull(user);
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    boolean value = ConnectService.connectUser(user, timeout);
+                    if (value) {
+                        HashMap<String, String> map = new HashMap<>();
+                        map.put(Content.EST, Message.SESSION_TIMEOUT.name());
+                        ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                    }
+                } catch (Exception e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        }
+
+    }
     public static void emitSessionReject(@NonNull PID user, long timeout) {
         checkNotNull(user);
         final IPFS ipfs = Singleton.getInstance().getIpfs();

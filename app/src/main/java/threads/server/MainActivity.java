@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -87,7 +86,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         EditMultihashDialogFragment.ActionListener,
         EditPeerDialogFragment.ActionListener,
         PeersFragment.ActionListener,
-        NameDialogFragment.ActionListener {
+        NameDialogFragment.ActionListener,
+        CallingDialogFragment.ActionListener {
     public static final String INCOMING_CALL_PID = "INCOMING_CALL_PID";
     public static final String INCOMING_CALL_NOTIFICATION_ID = "INCOMING_CALL_NOTIFICATION_ID";
     public static final String ACTION_INCOMING_CALL = "ACTION_INCOMING_CALL";
@@ -105,20 +105,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private long mLastClickTime = 0;
     private ViewPager viewPager;
     private CallBroadcastReceiver callBroadcastReceiver;
-
-    public static AlertDialog createIncomingCallDialog(
-            Context context,
-            String pid,
-            DialogInterface.OnClickListener answerCallClickListener,
-            DialogInterface.OnClickListener cancelClickListener) {
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
-        alertDialogBuilder.setIcon(R.drawable.ic_call_black_24dp);
-        alertDialogBuilder.setTitle("Incoming Call");
-        alertDialogBuilder.setPositiveButton("Accept", answerCallClickListener);
-        alertDialogBuilder.setNegativeButton("Reject", cancelClickListener);
-        alertDialogBuilder.setMessage(pid + " is calling.");
-        return alertDialogBuilder.create();
-    }
 
     @Override
     public void onRequestPermissionsResult
@@ -848,9 +834,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         try {
-            Service.clearSessionEvents();
-
-
             final IPFS ipfs = Singleton.getInstance().getIpfs();
             final THREADS threads = Singleton.getInstance().getThreads();
             if (ipfs != null) {
@@ -900,13 +883,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void receiveUserCall(@NonNull String pid) {
 
-
-        try {
-            Service.clearSessionEvents();
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
-
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -926,51 +902,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             storedUser.set(pid);
             return;
         }
-        final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
-        final SoundPoolManager soundPoolManager = SoundPoolManager.getInstance(this);
-        soundPoolManager.playRinging();
-        AlertDialog alertDialog = createIncomingCallDialog(MainActivity.this,
-                pid,
-                new DialogInterface.OnClickListener() {
 
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        soundPoolManager.stopRinging();
 
-                        Service.emitSessionAccept(PID.create(pid), timeout);
-
-                        try {
-                            Intent intent = new Intent(MainActivity.this, VideoActivity.class);
-                            intent.putExtra(Content.USER, pid);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
-                        } catch (Throwable e) {
-                            Preferences.evaluateException(Preferences.EXCEPTION, e);
-                        }
-                        soundPoolManager.release();
-                        dialog.dismiss();
-                    }
-                },
-                new DialogInterface.OnClickListener() {
-
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        soundPoolManager.stopRinging();
-                        Service.emitSessionReject(PID.create(pid), timeout);
-                        /**
-                         if (activeCallInvite != null) {
-                         activeCallInvite.reject(VoiceDialogFragment.this);
-                         notificationManager.cancel(activeCallNotificationId);
-                         }*/
-                        soundPoolManager.release();
-                        dialog.dismiss();
-                    }
-                });
-        alertDialog.setCancelable(false);
-        alertDialog.setCanceledOnTouchOutside(false);
-        alertDialog.show();
-
+        CallingDialogFragment.newInstance(pid)
+                .show(getSupportFragmentManager(), CallingDialogFragment.TAG);
 
     }
 
@@ -1363,6 +1298,60 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             PID pid = Preferences.getPID(getApplicationContext());
             checkNotNull(pid);
             clickUserInfo(pid.getPid());
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+
+    }
+
+    @Override
+    public void acceptCall(@NonNull String pid) {
+
+        try {
+            final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
+            Service.emitSessionAccept(PID.create(pid), timeout);
+
+
+            Intent intent = new Intent(MainActivity.this, VideoActivity.class);
+            intent.putExtra(Content.USER, pid);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+    }
+
+    @Override
+    public void rejectCall(@NonNull String pid) {
+        try {
+            final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
+            Service.emitSessionReject(PID.create(pid), timeout);
+
+            /**
+             if (activeCallInvite != null) {
+             activeCallInvite.reject(VoiceDialogFragment.this);
+             notificationManager.cancel(activeCallNotificationId);
+             }*/
+
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+
+    }
+
+    @Override
+    public void timeoutCall(@NonNull String pid) {
+        try {
+            final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
+            Service.emitSessionTimeout(PID.create(pid), timeout);
+
+            /**
+             if (activeCallInvite != null) {
+             activeCallInvite.reject(VoiceDialogFragment.this);
+             notificationManager.cancel(activeCallNotificationId);
+             }*/
+
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }

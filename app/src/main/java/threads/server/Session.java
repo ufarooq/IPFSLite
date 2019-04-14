@@ -62,6 +62,12 @@ public class Session {
         }
     }
 
+    public void timeout(PID pid) {
+        if (listener != null) {
+            listener.timeout(pid);
+        }
+    }
+
     public interface Listener {
         void busy(PID pid);
 
@@ -76,5 +82,7 @@ public class Session {
         void candidate(PID pid, String sdp, String mid, String index);
 
         void close(PID pid);
+
+        void timeout(PID pid);
     }
 }
