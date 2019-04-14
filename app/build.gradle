@@ -73,7 +73,7 @@ dependencies {
     // UI (for showing licences file) (LICENSE done)
     implementation 'de.psdev.licensesdialog:licensesdialog:2.0.0'
 
-    implementation 'org.webrtc:google-webrtc:1.0.22672'
+    implementation 'org.webrtc:google-webrtc:1.0.27485'
 
     // API (LICENSE done)
     implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0-alpha04'

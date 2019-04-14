@@ -801,7 +801,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (intent != null && intent.getAction() != null) {
             if (intent.getAction().equals(ACTION_INCOMING_CALL)) {
                 String pid = intent.getStringExtra(INCOMING_CALL_PID);
-                receiveUserCall(pid);
+                if (pid != null && !pid.isEmpty()) {
+                    receiveUserCall(pid);
+                    intent.removeExtra(INCOMING_CALL_PID);
+                }
             }
         }
     }
@@ -845,14 +848,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         try {
+            Service.clearSessionEvents();
+
+
             final IPFS ipfs = Singleton.getInstance().getIpfs();
+            final THREADS threads = Singleton.getInstance().getThreads();
             if (ipfs != null) {
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() -> {
                     try {
-
-                        THREADS threadsAPI = Singleton.getInstance().getThreads();
-                        User user = threadsAPI.getUserByPID(PID.create(pid));
+                        User user = threads.getUserByPID(PID.create(pid));
                         checkNotNull(user);
 
                         if (user.getStatus() == UserStatus.BLOCKED) {
@@ -864,7 +869,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             boolean value = ConnectService.connectUser(PID.create(pid), timeout);
                             if (value) {
-                                Service.clearSessionEvents();
+
                                 Service.emitSessionCall(PID.create(pid));
 
                                 try {
@@ -921,7 +926,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             storedUser.set(pid);
             return;
         }
-
+        final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
         final SoundPoolManager soundPoolManager = SoundPoolManager.getInstance(this);
         soundPoolManager.playRinging();
         AlertDialog alertDialog = createIncomingCallDialog(MainActivity.this,
@@ -932,7 +937,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     public void onClick(DialogInterface dialog, int which) {
                         soundPoolManager.stopRinging();
 
-                        Service.emitSessionAccept(PID.create(pid));
+                        Service.emitSessionAccept(PID.create(pid), timeout);
 
                         try {
                             Intent intent = new Intent(MainActivity.this, VideoActivity.class);
@@ -952,10 +957,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         soundPoolManager.stopRinging();
-                        Service.emitSessionReject(PID.create(pid));
+                        Service.emitSessionReject(PID.create(pid), timeout);
                         /**
                          if (activeCallInvite != null) {
-                         activeCallInvite.reject(VoiceActivity.this);
+                         activeCallInvite.reject(VoiceDialogFragment.this);
                          notificationManager.cancel(activeCallNotificationId);
                          }*/
                         soundPoolManager.release();

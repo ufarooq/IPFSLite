@@ -429,112 +429,162 @@ public class Service {
         });
     }
 
-    public static void emitSessionBusy(@NonNull PID user) {
+    public static void emitSessionBusy(@NonNull PID user, long timeout) {
         checkNotNull(user);
-        try {
-            IPFS ipfs = Singleton.getInstance().getIpfs();
-            Preconditions.checkNotNull(ipfs);
-            HashMap<String, String> map = new HashMap<>();
-            map.put(Content.EST, Message.SESSION_BUSY.name());
-            ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
-        } catch (Exception e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    boolean value = ConnectService.connectUser(user, timeout);
+                    if (value) {
+                        HashMap<String, String> map = new HashMap<>();
+                        map.put(Content.EST, Message.SESSION_BUSY.name());
+                        ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                    }
+                    // TODO else
+                } catch (Exception e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        }
+    }
+
+    public static void emitSessionReject(@NonNull PID user, long timeout) {
+        checkNotNull(user);
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    boolean value = ConnectService.connectUser(user, timeout);
+                    if (value) {
+                        HashMap<String, String> map = new HashMap<>();
+                        map.put(Content.EST, Message.SESSION_REJECT.name());
+                        ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                    }
+                } catch (Exception e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
         }
 
     }
 
-    public static void emitSessionReject(@NonNull PID user) {
+    public static void emitSessionAccept(@NonNull PID user, long timeout) {
         checkNotNull(user);
-        try {
-            IPFS ipfs = Singleton.getInstance().getIpfs();
-            Preconditions.checkNotNull(ipfs);
-            HashMap<String, String> map = new HashMap<>();
-            map.put(Content.EST, Message.SESSION_REJECT.name());
-            ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
-        } catch (Exception e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    boolean value = ConnectService.connectUser(user, timeout);
+                    if (value) {
+                        HashMap<String, String> map = new HashMap<>();
+                        map.put(Content.EST, Message.SESSION_ACCEPT.name());
+                        ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                    }
+                } catch (Exception e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+
+            });
         }
+
 
     }
 
-    public static void emitSessionAccept(@NonNull PID user) {
+    public static void emitSessionClose(@NonNull PID user, long timeout) {
         checkNotNull(user);
-        try {
-            IPFS ipfs = Singleton.getInstance().getIpfs();
-            Preconditions.checkNotNull(ipfs);
-            HashMap<String, String> map = new HashMap<>();
-            map.put(Content.EST, Message.SESSION_ACCEPT.name());
-            ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
-        } catch (Exception e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    boolean value = ConnectService.connectUser(user, timeout);
+                    if (value) {
+                        HashMap<String, String> map = new HashMap<>();
+                        map.put(Content.EST, Message.SESSION_CLOSE.name());
+                        ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                    }
+                } catch (Exception e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
         }
-
     }
 
-    public static void emitSessionClose(@NonNull PID user) {
-        checkNotNull(user);
-        try {
-            IPFS ipfs = Singleton.getInstance().getIpfs();
-            Preconditions.checkNotNull(ipfs);
-            HashMap<String, String> map = new HashMap<>();
-            map.put(Content.EST, Message.SESSION_CLOSE.name());
-            ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
-        } catch (Exception e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
-
-    }
-
-    public static void emitIceCandidate(@NonNull PID user, @NonNull IceCandidate candidate) {
+    public static void emitIceCandidate(@NonNull PID user, @NonNull IceCandidate candidate, long timeout) {
         checkNotNull(user);
         checkNotNull(candidate);
-        try {
-            IPFS ipfs = Singleton.getInstance().getIpfs();
-            Preconditions.checkNotNull(ipfs);
-            HashMap<String, String> map = new HashMap<>();
-            map.put(Content.EST, Message.SESSION_CANDIDATE.name());
-            map.put(Content.SDP, candidate.sdp);
-            map.put(Content.MID, candidate.sdpMid);
-            map.put(Content.INDEX, String.valueOf(candidate.sdpMLineIndex));
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    boolean value = ConnectService.connectUser(user, timeout);
+                    if (value) {
+                        HashMap<String, String> map = new HashMap<>();
+                        map.put(Content.EST, Message.SESSION_CANDIDATE.name());
+                        map.put(Content.SDP, candidate.sdp);
+                        map.put(Content.MID, candidate.sdpMid);
+                        map.put(Content.INDEX, String.valueOf(candidate.sdpMLineIndex));
 
-            ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+                        ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                    }
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
         }
 
     }
 
-    public static void emitSessionOffer(@NonNull PID user, @NonNull SessionDescription message) {
+    public static void emitSessionOffer(@NonNull PID user, @NonNull SessionDescription message, long timeout) {
         checkNotNull(user);
         checkNotNull(message);
-        try {
-            IPFS ipfs = Singleton.getInstance().getIpfs();
-            Preconditions.checkNotNull(ipfs);
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    boolean value = ConnectService.connectUser(user, timeout);
+                    if (value) {
 
-            HashMap<String, String> map = new HashMap<>();
-            map.put(Content.EST, Message.SESSION_OFFER.name());
-            map.put(Content.SDP, message.description);
+                        HashMap<String, String> map = new HashMap<>();
+                        map.put(Content.EST, Message.SESSION_OFFER.name());
+                        map.put(Content.SDP, message.description);
 
-            ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+                        ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                    }
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
         }
     }
 
-    public static void emitSessionAnswer(@NonNull PID user, @NonNull SessionDescription message) {
+    public static void emitSessionAnswer(@NonNull PID user, @NonNull SessionDescription message, long timeout) {
         checkNotNull(user);
         checkNotNull(message);
-        try {
-            IPFS ipfs = Singleton.getInstance().getIpfs();
-            Preconditions.checkNotNull(ipfs);
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    boolean value = ConnectService.connectUser(user, timeout);
+                    if (value) {
 
-            HashMap<String, String> map = new HashMap<>();
-            map.put(Content.EST, Message.SESSION_ANSWER.name());
-            map.put(Content.SDP, message.description);
+                        HashMap<String, String> map = new HashMap<>();
+                        map.put(Content.EST, Message.SESSION_ANSWER.name());
+                        map.put(Content.SDP, message.description);
 
-            ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+                        ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                    }
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
         }
     }
 
