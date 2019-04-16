@@ -253,4 +253,5 @@
     <string name="pref_use_legacy_audio_device_key">use_legacy_audio_device_key</string>
     <string name="pref_use_legacy_audio_device_title">Use legacy audio device.</string>
     <string name="pref_use_legacy_audio_device_default">false</string>
+    <string name="incoming_call">Incoming Call</string>
 </resources>

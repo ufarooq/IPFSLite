@@ -55,6 +55,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="threads.server.MainActivity" />
         </activity>
+
+
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
             android:screenOrientation="fullSensor"
@@ -64,7 +66,7 @@
             android:name="CallActivity"
             android:configChanges="orientation|smallestScreenSize|screenSize|screenLayout"
             android:screenOrientation="fullUser"
-            android:theme="@style/ThreadsServerTheme"></activity>
+            android:theme="@style/ThreadsServerTheme" />
 
         <service
             android:name="threads.server.DaemonService"

@@ -9,6 +9,7 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import threads.core.Preferences;
+import threads.ipfs.api.PID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -62,5 +63,29 @@ class NotificationSender {
         return builder;
     }
 
+
+    static NotificationCompat.Builder createCallNotification(@NonNull Context context,
+                                                             @NonNull PID senderPid) {
+        checkNotNull(context);
+        checkNotNull(senderPid);
+
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.setAction(MainActivity.ACTION_INCOMING_CALL);
+        intent.putExtra(MainActivity.CALL_PID, senderPid.getPid());
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+        int requestID = (int) System.currentTimeMillis();
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, requestID,
+                intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID);
+        builder.setContentIntent(pendingIntent);
+        builder.setContentTitle(context.getString(R.string.incoming_call));
+        builder.setContentText(senderPid.getPid());
+        builder.setPriority(NotificationManager.IMPORTANCE_HIGH);
+        builder.setSmallIcon(R.drawable.ic_call_black_24dp);
+        return builder;
+    }
 
 }

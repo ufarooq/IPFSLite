@@ -11,7 +11,6 @@ import static android.content.Context.AUDIO_SERVICE;
 
 public class SoundPoolManager {
 
-    private static SoundPoolManager instance;
     private boolean playing = false;
     private boolean loaded = false;
     private boolean playingCalled = false;
@@ -56,11 +55,8 @@ public class SoundPoolManager {
         disconnectSoundId = soundPool.load(context, R.raw.disconnect, 1);
     }
 
-    public static SoundPoolManager getInstance(Context context) {
-        if (instance == null) {
-            instance = new SoundPoolManager(context);
-        }
-        return instance;
+    public static SoundPoolManager create(Context context) {
+        return new SoundPoolManager(context);
     }
 
     public void playRinging() {
@@ -91,9 +87,7 @@ public class SoundPoolManager {
             soundPool.unload(ringingSoundId);
             soundPool.unload(disconnectSoundId);
             soundPool.release();
-            soundPool = null;
         }
-        instance = null;
     }
 
 }

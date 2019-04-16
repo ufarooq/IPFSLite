@@ -41,6 +41,7 @@ public class CallingDialogFragment extends DialogFragment {
     public void onDetach() {
         super.onDetach();
         mContext = null;
+        soundPoolManager.release();
     }
 
     @Override
@@ -52,6 +53,7 @@ public class CallingDialogFragment extends DialogFragment {
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
+        soundPoolManager = SoundPoolManager.create(mContext);
     }
 
     @Override
@@ -61,7 +63,7 @@ public class CallingDialogFragment extends DialogFragment {
         Activity activity = getActivity();
         checkNotNull(activity);
 
-        soundPoolManager = SoundPoolManager.getInstance(mContext);
+
         Bundle args = getArguments();
         checkNotNull(args);
         final String pid = args.getString(PID);
@@ -70,7 +72,7 @@ public class CallingDialogFragment extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
         AtomicBoolean triggerTimeoutCall = new AtomicBoolean(true);
         builder.setIcon(R.drawable.ic_call_black_24dp);
-        builder.setTitle("Incoming Call");
+        builder.setTitle(getString(R.string.incoming_call));
         builder.setPositiveButton("Accept", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -113,7 +115,6 @@ public class CallingDialogFragment extends DialogFragment {
     @Override
     public void onDismiss(@NonNull DialogInterface dialog) {
         super.onDismiss(dialog);
-        soundPoolManager.release();
     }
 
 

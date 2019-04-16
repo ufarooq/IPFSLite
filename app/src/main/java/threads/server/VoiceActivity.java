@@ -38,7 +38,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 public class VoiceActivity extends AppCompatActivity {
 
-    public static final String INCOMING_CALL_INVITE = "INCOMING_CALL_PID";
+    public static final String INCOMING_CALL_INVITE = "CALL_PID";
     public static final String INCOMING_CALL_NOTIFICATION_ID = "INCOMING_CALL_NOTIFICATION_ID";
     public static final String ACTION_INCOMING_CALL = "ACTION_INCOMING_CALL";
     public static final String ACTION_FCM_TOKEN = "ACTION_FCM_TOKEN";
@@ -119,7 +119,7 @@ public class VoiceActivity extends AppCompatActivity {
 
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        soundPoolManager = SoundPoolManager.getInstance(this);
+        soundPoolManager = SoundPoolManager.create(this);
 
         /*
          * Setup the broadcast receiver to be notified of FCM Token updates
@@ -255,7 +255,7 @@ public class VoiceActivity extends AppCompatActivity {
     private void handleIncomingCallIntent(Intent intent) {
         if (intent != null && intent.getAction() != null) {
             if (intent.getAction().equals(ACTION_INCOMING_CALL)) {
-                activeCallInvite = intent.getParcelableExtra(INCOMING_CALL_PID);
+                activeCallInvite = intent.getParcelableExtra(CALL_PID);
                 if (activeCallInvite != null && (activeCallInvite.getState() == CallInvite.State.PENDING)) {
                     soundPoolManager.playRinging();
                     alertDialog = createIncomingCallDialog(VoiceActivity.this,

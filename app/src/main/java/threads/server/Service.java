@@ -160,9 +160,21 @@ public class Service {
                             switch (type) {
                                 case SESSION_CALL: {
 
+                                    NotificationCompat.Builder builder =
+                                            NotificationSender.createCallNotification(
+                                                    context, senderPid);
+
+                                    final NotificationManager notificationManager = (NotificationManager)
+                                            context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                                    int notifyID = senderPid.getPid().hashCode();
+                                    Notification notification = builder.build();
+                                    if (notificationManager != null) {
+                                        notificationManager.notify(notifyID, notification);
+                                    }
+
                                     Intent intent = new Intent(context, MainActivity.class);
                                     intent.setAction(MainActivity.ACTION_INCOMING_CALL);
-                                    intent.putExtra(MainActivity.INCOMING_CALL_PID, senderPid.getPid());
+                                    intent.putExtra(MainActivity.CALL_PID, senderPid.getPid());
                                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                     context.startActivity(intent);

@@ -1,6 +1,7 @@
 package threads.server;
 
 import android.Manifest;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.Context;
@@ -90,8 +91,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         PeersFragment.ActionListener,
         NameDialogFragment.ActionListener,
         CallingDialogFragment.ActionListener {
-    public static final String INCOMING_CALL_PID = "INCOMING_CALL_PID";
-    public static final String INCOMING_CALL_NOTIFICATION_ID = "INCOMING_CALL_NOTIFICATION_ID";
+    public static final String CALL_PID = "CALL_PID";
     public static final String ACTION_INCOMING_CALL = "ACTION_INCOMING_CALL";
     private static final Gson gson = new Gson();
     private static final int SELECT_FILES = 1;
@@ -811,10 +811,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void handleIncomingCallIntent(Intent intent) {
         if (intent != null && intent.getAction() != null) {
             if (intent.getAction().equals(ACTION_INCOMING_CALL)) {
-                String pid = intent.getStringExtra(INCOMING_CALL_PID);
+                String pid = intent.getStringExtra(CALL_PID);
                 if (pid != null && !pid.isEmpty()) {
                     receiveUserCall(pid);
-                    intent.removeExtra(INCOMING_CALL_PID);
+                    intent.removeExtra(CALL_PID);
                 }
             }
         }
@@ -1339,6 +1339,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
             Service.emitSessionAccept(PID.create(pid), timeout);
 
+            final NotificationManager notificationManager = (NotificationManager)
+                    getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+            int notifyID = pid.hashCode();
+            if (notificationManager != null) {
+                notificationManager.cancel(notifyID);
+            }
+
             call(pid, false);
 
             /*
@@ -1354,20 +1361,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void rejectCall(@NonNull String pid) {
+        checkNotNull(pid);
         try {
             final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
             Service.emitSessionReject(PID.create(pid), timeout);
 
-            /**
-             if (activeCallInvite != null) {
-             activeCallInvite.reject(VoiceDialogFragment.this);
-             notificationManager.cancel(activeCallNotificationId);
-             }*/
+            final NotificationManager notificationManager = (NotificationManager)
+                    getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+            int notifyID = pid.hashCode();
+            if (notificationManager != null) {
+                notificationManager.cancel(notifyID);
+            }
+
 
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-
     }
 
     @Override
