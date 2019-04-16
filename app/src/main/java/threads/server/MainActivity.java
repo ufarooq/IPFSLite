@@ -114,9 +114,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private String keyprefVideoBitrateValue;
     private String keyprefAudioBitrateType;
     private String keyprefAudioBitrateValue;
-    private String keyprefRoomServerUrl;
-    private String keyprefRoom;
-    private String keyprefRoomList;
 
 
     @Override
@@ -628,9 +625,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         keyprefVideoBitrateValue = getString(R.string.pref_maxvideobitratevalue_key);
         keyprefAudioBitrateType = getString(R.string.pref_startaudiobitrate_key);
         keyprefAudioBitrateValue = getString(R.string.pref_startaudiobitratevalue_key);
-        keyprefRoomServerUrl = getString(R.string.pref_room_server_url_key);
-        keyprefRoom = getString(R.string.pref_room_key);
-        keyprefRoomList = getString(R.string.pref_room_list_key);
 
 
         Toolbar toolbar = findViewById(R.id.toolbar);

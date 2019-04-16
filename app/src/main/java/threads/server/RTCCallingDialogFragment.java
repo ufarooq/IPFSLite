@@ -23,11 +23,10 @@ public class RTCCallingDialogFragment extends DialogFragment {
     public static final String TAG = RTCCallingDialogFragment.class.getSimpleName();
     private static final String PID = "PID";
     private static final String NAME = "NAME";
-
+    private final AtomicBoolean triggerTimeoutCall = new AtomicBoolean(true);
     private RTCCallingDialogFragment.ActionListener mListener;
     private Context mContext;
     private RTCSoundPool soundPoolManager;
-    private final AtomicBoolean triggerTimeoutCall = new AtomicBoolean(true);
 
     static RTCCallingDialogFragment newInstance(@NonNull String pid, @NonNull String name) {
         checkNotNull(pid);

@@ -18,7 +18,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
-import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -412,9 +411,7 @@ public class RTCAudioManager {
      */
     @Deprecated
     private boolean hasWiredHeadset() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            return audioManager.isWiredHeadsetOn();
-        } else {
+        if (audioManager != null) {
             final AudioDeviceInfo[] devices = audioManager.getDevices(AudioManager.GET_DEVICES_ALL);
             for (AudioDeviceInfo device : devices) {
                 final int type = device.getType();
@@ -426,8 +423,8 @@ public class RTCAudioManager {
                     return true;
                 }
             }
-            return false;
         }
+        return false;
     }
 
     /**
