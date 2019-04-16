@@ -448,6 +448,7 @@ public class Service {
         }
 
     }
+
     public static void emitSessionReject(@NonNull PID user, long timeout) {
         checkNotNull(user);
         final IPFS ipfs = Singleton.getInstance().getIpfs();

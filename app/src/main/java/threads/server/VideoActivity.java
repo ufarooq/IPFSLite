@@ -53,11 +53,11 @@ import threads.ipfs.api.PID;
 import threads.share.ConnectService;
 
 public class VideoActivity extends AppCompatActivity implements Session.Listener {
-    private static final String TAG = VideoActivity.class.getSimpleName();
-
     public static final int VIDEO_RESOLUTION_WIDTH = 1280;
     public static final int VIDEO_RESOLUTION_HEIGHT = 720;
     public static final int FPS = 30;
+    private static final String TAG = VideoActivity.class.getSimpleName();
+    private static final int CAPTURE_PERMISSION_REQUEST_CODE = 1;
     PID user;
     PeerConnectionFactory peerConnectionFactory;
     MediaConstraints audioConstraints;
@@ -69,14 +69,11 @@ public class VideoActivity extends AppCompatActivity implements Session.Listener
     AudioTrack localAudioTrack;
     SurfaceViewRenderer localVideoView;
     SurfaceViewRenderer remoteVideoView;
-
     PeerConnection localPeer;
     EglBase rootEglBase;
-
     boolean gotUserMedia;
     List<PeerConnection.IceServer> peerIceServers = new ArrayList<>();
     private long mLastClickTime = 0;
-    private static final int CAPTURE_PERMISSION_REQUEST_CODE = 1;
 
     private static int getSystemUiVisibility() {
         int flags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN;
@@ -127,7 +124,7 @@ public class VideoActivity extends AppCompatActivity implements Session.Listener
         final EglBase eglBase = EglBase.create();
 
 
-        PeerConnectionClient peerConnectionClient = new PeerConnectionClient(
+        RTCPeerConnection peerConnectionClient = new RTCPeerConnection(
                 getApplicationContext(), eglBase, peerConnectionParameters, VideoActivity.this);
         PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
         if (loopback) {
@@ -136,11 +133,7 @@ public class VideoActivity extends AppCompatActivity implements Session.Listener
         peerConnectionClient.createPeerConnectionFactory(options);*/
 
 
-
-
         createPeerConnection();
-
-
 
 
         FloatingActionButton fab_hangup = findViewById(R.id.fab_hangup);
@@ -230,7 +223,7 @@ public class VideoActivity extends AppCompatActivity implements Session.Listener
 
         // Create peer connection client.
         /*
-        peerConnectionClient = new PeerConnectionClient(
+        peerConnectionClient = new RTCPeerConnection(
                 getApplicationContext(), eglBase, peerConnectionParameters, CallActivity.this);
         PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
         if (loopback) {
