@@ -349,7 +349,7 @@ public class VideoActivity extends AppCompatActivity implements Session.Listener
             public void onIceCandidate(IceCandidate iceCandidate) {
                 super.onIceCandidate(iceCandidate);
                 int timeout = ConnectService.getConnectionTimeout(getApplicationContext());
-                Service.emitIceCandidate(user, iceCandidate, timeout);
+                Session.getInstance().emitIceCandidate(user, iceCandidate, timeout);
             }
 
             @Override
@@ -390,7 +390,7 @@ public class VideoActivity extends AppCompatActivity implements Session.Listener
                 super.onCreateSuccess(sessionDescription);
                 localPeer.setLocalDescription(new CustomSdpObserver("localSetLocalDesc"), sessionDescription);
                 long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
-                Service.emitSessionOffer(user, sessionDescription, timeout);
+                Session.getInstance().emitSessionOffer(user, sessionDescription, timeout);
             }
         }, sdpConstraints);
     }
@@ -432,7 +432,7 @@ public class VideoActivity extends AppCompatActivity implements Session.Listener
                 super.onCreateSuccess(sessionDescription);
                 localPeer.setLocalDescription(new CustomSdpObserver("localSetLocal"), sessionDescription);
                 long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
-                Service.emitSessionAnswer(user, sessionDescription, timeout);
+                Session.getInstance().emitSessionAnswer(user, sessionDescription, timeout);
             }
         }, new MediaConstraints());
     }
@@ -483,7 +483,7 @@ public class VideoActivity extends AppCompatActivity implements Session.Listener
             localPeer.close();
             if (emitSessionClose) {
                 long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
-                Service.emitSessionClose(user, timeout);
+                Session.getInstance().emitSessionClose(user, timeout);
             }
             finish();
         } catch (Throwable e) {

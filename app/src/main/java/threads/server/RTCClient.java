@@ -145,24 +145,24 @@ public class RTCClient implements Session.Listener {
 
     public void sendOfferSdp(@NonNull final SessionDescription sdp) {
         checkNotNull(sdp);
-        Service.emitSessionOffer(user, sdp, timeout);
+        Session.getInstance().emitSessionOffer(user, sdp, timeout);
     }
 
 
     public void sendAnswerSdp(@NonNull final SessionDescription sdp) {
         checkNotNull(sdp);
-        Service.emitSessionAnswer(user, sdp, timeout);
+        Session.getInstance().emitSessionAnswer(user, sdp, timeout);
     }
 
 
     public void sendLocalIceCandidate(@NonNull final IceCandidate candidate) {
         checkNotNull(candidate);
-        Service.emitIceCandidate(user, candidate, timeout);
+        Session.getInstance().emitIceCandidate(user, candidate, timeout);
     }
 
     public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates) {
         if (candidates != null) {
-            Service.emitIceCandidatesRemove(user, candidates, timeout);
+            Session.getInstance().emitIceCandidatesRemove(user, candidates, timeout);
         }
     }
 

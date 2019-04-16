@@ -872,7 +872,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             boolean value = ConnectService.connectUser(PID.create(pid), timeout);
                             if (value) {
 
-                                Service.emitSessionCall(PID.create(pid));
+                                Session.getInstance().emitSessionCall(PID.create(pid));
 
                                 try {
                                     call(pid, false);
@@ -1344,7 +1344,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         try {
             final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
-            Service.emitSessionAccept(PID.create(pid), timeout);
+            Session.getInstance().emitSessionAccept(PID.create(pid), timeout);
 
             final NotificationManager notificationManager = (NotificationManager)
                     getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
@@ -1371,7 +1371,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(pid);
         try {
             final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
-            Service.emitSessionReject(PID.create(pid), timeout);
+            Session.getInstance().emitSessionReject(PID.create(pid), timeout);
 
             final NotificationManager notificationManager = (NotificationManager)
                     getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
@@ -1390,14 +1390,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void timeoutCall(@NonNull String pid) {
         try {
             final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
-            Service.emitSessionTimeout(PID.create(pid), timeout);
+            Session.getInstance().emitSessionTimeout(PID.create(pid), timeout);
 
-            /**
-             if (activeCallInvite != null) {
-             activeCallInvite.reject(VoiceDialogFragment.this);
-             notificationManager.cancel(activeCallNotificationId);
-             }*/
-
+            final NotificationManager notificationManager = (NotificationManager)
+                    getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+            int notifyID = pid.hashCode();
+            if (notificationManager != null) {
+                notificationManager.cancel(notifyID);
+            }
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
