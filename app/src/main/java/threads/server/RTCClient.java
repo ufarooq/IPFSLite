@@ -10,101 +10,70 @@
 
 package threads.server;
 
-import android.util.Log;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.webrtc.IceCandidate;
 import org.webrtc.PeerConnection;
 import org.webrtc.SessionDescription;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
+import androidx.annotation.NonNull;
 import threads.ipfs.api.PID;
 
-/**
- * Implementation of RTCClient that uses direct TCP connection as the signaling channel.
- * This eliminates the need for an external server. This class does not support loopback
- * connections.
- */
+import static androidx.core.util.Preconditions.checkNotNull;
+
+
 public class RTCClient implements Session.Listener {
 
-    private static final String TAG = "RTCClient";
-    private final ExecutorService executor;
     private final SignalingEvents events;
     private final PID user;
     private final int timeout;
 
-    // All alterations of the room state should be done from inside the looper thread.
-    private ConnectionState roomState;
 
-    public RTCClient(PID user, SignalingEvents events, int timeout) {
+    public RTCClient(@NonNull PID user, @NonNull SignalingEvents events, int timeout) {
+        checkNotNull(user);
+        checkNotNull(events);
+
+
         this.events = events;
         this.user = user;
         this.timeout = timeout;
 
+
         Session.getInstance().setListener(this);
-        executor = Executors.newSingleThreadExecutor();
-        roomState = ConnectionState.NEW;
-    }
-
-    // Put a |key|->|value| mapping in |json|.
-    private static void jsonPut(JSONObject json, String key, Object value) {
-        try {
-            json.put(key, value);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    // Converts a Java candidate to a JSONObject.
-    private static JSONObject toJsonCandidate(final IceCandidate candidate) {
-        JSONObject json = new JSONObject();
-        jsonPut(json, "label", candidate.sdpMLineIndex);
-        jsonPut(json, "id", candidate.sdpMid);
-        jsonPut(json, "candidate", candidate.sdp);
-        return json;
-    }
-
-    // Converts a JSON candidate to a Java object.
-    private static IceCandidate toJavaCandidate(JSONObject json) throws JSONException {
-        return new IceCandidate(
-                json.getString("id"), json.getInt("label"), json.getString("candidate"));
     }
 
     @Override
-    public void busy(PID pid) {
-
-    }
-
-    @Override
-    public void accept(PID pid) {
-        roomState = ConnectionState.CONNECTED;
-
-        SignalingParameters parameters = new SignalingParameters(
-                // Ice servers are not needed for direct connections.
-                new ArrayList<>(),
-                true, // Server side acts as the initiator on direct connections.
-                null, // clientId
-                null, // wssUrl
-                null, // wwsPostUrl
-                null, // offerSdp
-                null // iceCandidates
-        );
-        events.onConnectedToRoom(parameters);
-    }
-
-    @Override
-    public void reject(PID pid) {
+    public void busy(@NonNull PID pid) {
+        checkNotNull(pid);
+        // TODO better handling
         events.onChannelClose();
     }
 
     @Override
-    public void offer(PID pid, String sdp) {
+    public void accept(@NonNull PID pid) {
+        checkNotNull(pid);
+        SignalingParameters parameters = new SignalingParameters(
+                // Ice servers are not needed for direct connections.
+                new ArrayList<>(),
+                true,
+                null
+        );
+
+        events.onConnectedToRoom(parameters);
+    }
+
+    @Override
+    public void reject(@NonNull PID pid) {
+        checkNotNull(pid);
+        // TODO better handling
+        events.onChannelClose();
+    }
+
+    @Override
+    public void offer(@NonNull PID pid, @NonNull String sdp) {
+        checkNotNull(pid);
+        checkNotNull(sdp);
         SessionDescription sdpe = new SessionDescription(
                 SessionDescription.Type.OFFER, sdp);
 
@@ -112,27 +81,32 @@ public class RTCClient implements Session.Listener {
                 // Ice servers are not needed for direct connections.
                 new ArrayList<>(),
                 false, // This code will only be run on the client side. So, we are not the initiator.
-                null, // clientId
-                null, // wssUrl
-                null, // wssPostUrl
-                sdpe, // offerSdp
-                null // iceCandidates
+                sdpe
         );
-        roomState = ConnectionState.CONNECTED;
+
         events.onConnectedToRoom(parameters);
     }
 
     @Override
-    public void answer(PID pid, String sdp, String type) {
-        SessionDescription sdpe = new SessionDescription(
-                SessionDescription.Type.fromCanonicalForm(type), sdp);
-        events.onRemoteDescription(sdpe);
+    public void answer(@NonNull PID pid,
+                       @NonNull String sdp,
+                       @NonNull String type) {
+        checkNotNull(pid);
+        checkNotNull(sdp);
+        checkNotNull(type);
+        events.onRemoteDescription(new SessionDescription(
+                SessionDescription.Type.fromCanonicalForm(type), sdp));
     }
 
     @Override
-    public void candidate(PID pid, String sdp, String mid, String index) {
-
-
+    public void candidate(@NonNull PID pid,
+                          @NonNull String sdp,
+                          @NonNull String mid,
+                          @NonNull String index) {
+        checkNotNull(pid);
+        checkNotNull(sdp);
+        checkNotNull(mid);
+        checkNotNull(index);
         events.onRemoteIceCandidate(new IceCandidate(
                 mid,
                 Integer.valueOf(index),
@@ -140,7 +114,14 @@ public class RTCClient implements Session.Listener {
     }
 
     @Override
-    public void candidate_remove(PID pid, String sdp, String mid, String index) {
+    public void candidate_remove(@NonNull PID pid,
+                                 @NonNull String sdp,
+                                 @NonNull String mid,
+                                 @NonNull String index) {
+        checkNotNull(pid);
+        checkNotNull(sdp);
+        checkNotNull(mid);
+        checkNotNull(index);
         events.onRemoteIceCandidateRemoved(new IceCandidate(
                 mid,
                 Integer.valueOf(index),
@@ -148,238 +129,42 @@ public class RTCClient implements Session.Listener {
     }
 
     @Override
-    public void close(PID pid) {
+    public void close(@NonNull PID pid) {
+        checkNotNull(pid);
+        // TODO better handling
         events.onChannelClose();
     }
 
     @Override
-    public void timeout(PID pid) {
+    public void timeout(@NonNull PID pid) {
+        checkNotNull(pid);
+        // TODO better handling
         events.onChannelClose();
     }
 
-    /**
-     * Connects to the room, roomId in connectionsParameters is required. roomId must be a valid
-     * IP address matching IP_PATTERN.
-     */
 
-    public void connectToRoom() {
-        this.roomState = ConnectionState.NEW;
-    }
-
-
-    public void disconnectFromRoom() {
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                disconnectFromRoomInternal();
-            }
-        });
-    }
-
-
-    /**
-     * Disconnects from the room.
-     * <p>
-     * Runs on the looper thread.
-     */
-    private void disconnectFromRoomInternal() {
-        roomState = ConnectionState.CLOSED;
-
-        executor.shutdown();
-    }
-
-
-    public void sendOfferSdp(final SessionDescription sdp) {
-
-
+    public void sendOfferSdp(@NonNull final SessionDescription sdp) {
+        checkNotNull(sdp);
         Service.emitSessionOffer(user, sdp, timeout);
-
-      /*
-    executor.execute(new Runnable() {
-      @Override
-      public void run() {
-        if (roomState != ConnectionState.CONNECTED) {
-          reportError("Sending offer SDP in non connected state.");
-          return;
-        }
-        JSONObject json = new JSONObject();
-        jsonPut(json, "sdp", sdp.description);
-        jsonPut(json, "type", "offer");
-        sendMessage(json.toString());
-      }
-    });*/
     }
 
 
-    public void sendAnswerSdp(final SessionDescription sdp) {
-
+    public void sendAnswerSdp(@NonNull final SessionDescription sdp) {
+        checkNotNull(sdp);
         Service.emitSessionAnswer(user, sdp, timeout);
-      /*
-    executor.execute(new Runnable() {
-      @Override
-      public void run() {
-        JSONObject json = new JSONObject();
-        jsonPut(json, "sdp", sdp.description);
-        jsonPut(json, "type", "answer");
-        sendMessage(json.toString());
-      }
-    });*/
     }
 
-    // -------------------------------------------------------------------
-    // TCPChannelClient event handlers
 
-
-    public void sendLocalIceCandidate(final IceCandidate candidate) {
+    public void sendLocalIceCandidate(@NonNull final IceCandidate candidate) {
+        checkNotNull(candidate);
         Service.emitIceCandidate(user, candidate, timeout);
-      /*
-    executor.execute(new Runnable() {
-      @Override
-      public void run() {
-        JSONObject json = new JSONObject();
-        jsonPut(json, "type", "candidate");
-        jsonPut(json, "label", candidate.sdpMLineIndex);
-        jsonPut(json, "id", candidate.sdpMid);
-        jsonPut(json, "candidate", candidate.sdp);
-
-        if (roomState != ConnectionState.CONNECTED) {
-          reportError("Sending ICE candidate in non connected state.");
-          return;
-        }
-        sendMessage(json.toString());
-      }
-    });*/
     }
-
-    /**
-     * Send removed Ice candidates to the other participant.
-     */
 
     public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates) {
         if (candidates != null) {
             Service.emitIceCandidatesRemove(user, candidates, timeout);
         }
-        // TODO
-      /*
-    executor.execute(new Runnable() {
-      @Override
-      public void run() {
-        JSONObject json = new JSONObject();
-        jsonPut(json, "type", "remove-candidates");
-        JSONArray jsonArray = new JSONArray();
-        for (final IceCandidate candidate : candidates) {
-          jsonArray.put(toJsonCandidate(candidate));
-        }
-        jsonPut(json, "candidates", jsonArray);
-
-        if (roomState != ConnectionState.CONNECTED) {
-          reportError("Sending ICE candidate removals in non connected state.");
-          return;
-        }
-        sendMessage(json.toString());
-      }
-    });*/
     }
-
-    /**
-     * If the client is the server side, this will trigger onConnectedToRoom.
-     */
-
-    public void onTCPConnected(boolean isServer) {
-        if (isServer) {
-            roomState = ConnectionState.CONNECTED;
-
-            SignalingParameters parameters = new SignalingParameters(
-                    // Ice servers are not needed for direct connections.
-                    new ArrayList<>(),
-                    isServer, // Server side acts as the initiator on direct connections.
-                    null, // clientId
-                    null, // wssUrl
-                    null, // wwsPostUrl
-                    null, // offerSdp
-                    null // iceCandidates
-            );
-            events.onConnectedToRoom(parameters);
-        }
-    }
-
-    //@Override
-    public void onTCPMessage(String msg) {
-        try {
-            JSONObject json = new JSONObject(msg);
-            String type = json.optString("type");
-            if (type.equals("candidate")) {
-                events.onRemoteIceCandidate(toJavaCandidate(json));
-            } else if (type.equals("remove-candidates")) {
-                JSONArray candidateArray = json.getJSONArray("candidates");
-                IceCandidate[] candidates = new IceCandidate[candidateArray.length()];
-                for (int i = 0; i < candidateArray.length(); ++i) {
-                    candidates[i] = toJavaCandidate(candidateArray.getJSONObject(i));
-                }
-                //events.onRemoteIceCandidatesRemoved(candidates);
-            } else if (type.equals("answer")) {
-                SessionDescription sdp = new SessionDescription(
-                        SessionDescription.Type.fromCanonicalForm(type), json.getString("sdp"));
-                events.onRemoteDescription(sdp);
-            } else if (type.equals("offer")) {
-                SessionDescription sdp = new SessionDescription(
-                        SessionDescription.Type.fromCanonicalForm(type), json.getString("sdp"));
-
-                SignalingParameters parameters = new SignalingParameters(
-                        // Ice servers are not needed for direct connections.
-                        new ArrayList<>(),
-                        false, // This code will only be run on the client side. So, we are not the initiator.
-                        null, // clientId
-                        null, // wssUrl
-                        null, // wssPostUrl
-                        sdp, // offerSdp
-                        null // iceCandidates
-                );
-                roomState = ConnectionState.CONNECTED;
-                events.onConnectedToRoom(parameters);
-            } else {
-                reportError("Unexpected TCP message: " + msg);
-            }
-        } catch (JSONException e) {
-            reportError("TCP message JSON parsing error: " + e.toString());
-        }
-    }
-
-    public void onTCPError(String description) {
-        reportError("TCP connection error: " + description);
-    }
-
-    public void onTCPClose() {
-        events.onChannelClose();
-    }
-
-    // --------------------------------------------------------------------
-    // Helper functions.
-    private void reportError(final String errorMessage) {
-        Log.e(TAG, errorMessage);
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                if (roomState != ConnectionState.ERROR) {
-                    roomState = ConnectionState.ERROR;
-                    events.onChannelError(errorMessage);
-                }
-            }
-        });
-    }
-
-    private void sendMessage(final String message) {
-        // TODO
-      /*
-    executor.execute(new Runnable() {
-      @Override
-      public void run() {
-        tcpClient.send(message);
-      }
-    });*/
-    }
-
-    private enum ConnectionState {NEW, CONNECTED, CLOSED, ERROR}
 
 
     /**
@@ -388,6 +173,8 @@ public class RTCClient implements Session.Listener {
      * <p>Methods are guaranteed to be invoked on the UI thread of |activity|.
      */
     public interface SignalingEvents {
+
+
         /**
          * Callback fired once the room's signaling parameters
          * SignalingParameters are extracted.
@@ -426,22 +213,13 @@ public class RTCClient implements Session.Listener {
     class SignalingParameters {
         public final List<PeerConnection.IceServer> iceServers;
         public final boolean initiator;
-        public final String clientId;
-        public final String wssUrl;
-        public final String wssPostUrl;
         public final SessionDescription offerSdp;
-        public final List<IceCandidate> iceCandidates;
 
         public SignalingParameters(List<PeerConnection.IceServer> iceServers, boolean initiator,
-                                   String clientId, String wssUrl, String wssPostUrl, SessionDescription offerSdp,
-                                   List<IceCandidate> iceCandidates) {
+                                   SessionDescription offerSdp) {
             this.iceServers = iceServers;
             this.initiator = initiator;
-            this.clientId = clientId;
-            this.wssUrl = wssUrl;
-            this.wssPostUrl = wssPostUrl;
             this.offerSdp = offerSdp;
-            this.iceCandidates = iceCandidates;
         }
     }
 }

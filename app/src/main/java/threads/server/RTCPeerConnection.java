@@ -447,7 +447,6 @@ public class RTCPeerConnection {
                 && peerConnectionParameters.audioCodec.equals(AUDIO_CODEC_ISAC);
 
 
-
         final AudioDeviceModule adm = peerConnectionParameters.useLegacyAudioDevice
                 ? createLegacyAudioDevice()
                 : createJavaAudioDevice();

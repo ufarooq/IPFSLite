@@ -552,9 +552,6 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         }
         callStartedTimeMs = System.currentTimeMillis();
 
-        // Start room connection.
-        //logAndToast(getString(R.string.connecting_to, roomConnectionParameters.roomUrl));
-        appRtcClient.connectToRoom();
 
         // Create and audio manager that will take care of audio routing,
         // audio modes, audio device enumeration etc.
@@ -603,7 +600,6 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         remoteProxyRenderer.setTarget(null);
         localProxyVideoSink.setTarget(null);
         if (appRtcClient != null) {
-            appRtcClient.disconnectFromRoom();
             appRtcClient = null;
         }
         if (pipRenderer != null) {
@@ -744,12 +740,6 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
                 // Create answer. Answer SDP will be sent to offering client in
                 // PeerConnectionEvents.onLocalDescription event.
                 peerConnectionClient.createAnswer();
-            }
-            if (params.iceCandidates != null) {
-                // Add remote ICE candidates from room.
-                for (IceCandidate iceCandidate : params.iceCandidates) {
-                    peerConnectionClient.addRemoteIceCandidate(iceCandidate);
-                }
             }
         }
     }
