@@ -817,10 +817,6 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         });
     }
 
-    @Override
-    public void onChannelError(final String description) {
-        reportError(description);
-    }
 
     // -----Implementation of RTCPeerConnection.PeerConnectionEvents.---------
     // Send local peer connection SDP and ICE candidates to remote party.

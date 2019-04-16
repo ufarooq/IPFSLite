@@ -201,10 +201,6 @@ public class RTCClient implements Session.Listener {
          */
         void onChannelClose();
 
-        /**
-         * Callback fired once channel error happened.
-         */
-        void onChannelError(final String description);
     }
 
     /**
