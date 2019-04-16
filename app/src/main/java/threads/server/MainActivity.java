@@ -910,7 +910,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     public void receiveUserCall(@NonNull String pid) {
-
+        checkNotNull(pid);
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -932,8 +932,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-        CallingDialogFragment.newInstance(pid)
-                .show(getSupportFragmentManager(), CallingDialogFragment.TAG);
+        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+
+
+            User user = threadsAPI.getUserByPID(PID.create(pid));
+            String name = pid;
+            if (user != null) {
+                name = user.getAlias();
+            }
+
+            CallingDialogFragment.newInstance(pid, name)
+                    .show(getSupportFragmentManager(), CallingDialogFragment.TAG);
+        });
 
     }
 

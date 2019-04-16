@@ -138,7 +138,8 @@ public class Service {
             try {
 
 
-                PID senderPid = PID.create(message.getSenderPid());
+                String sender = message.getSenderPid();
+                PID senderPid = PID.create(sender);
 
 
                 if (!threadsAPI.isAccountBlocked(senderPid)) {
@@ -160,9 +161,14 @@ public class Service {
                             switch (type) {
                                 case SESSION_CALL: {
 
+                                    User user = threadsAPI.getUserByPID(senderPid);
+                                    String name = sender;
+                                    if (user != null) {
+                                        name = user.getAlias();
+                                    }
                                     NotificationCompat.Builder builder =
                                             NotificationSender.createCallNotification(
-                                                    context, senderPid);
+                                                    context, sender, name);
 
                                     final NotificationManager notificationManager = (NotificationManager)
                                             context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
@@ -174,7 +180,7 @@ public class Service {
 
                                     Intent intent = new Intent(context, MainActivity.class);
                                     intent.setAction(MainActivity.ACTION_INCOMING_CALL);
-                                    intent.putExtra(MainActivity.CALL_PID, senderPid.getPid());
+                                    intent.putExtra(MainActivity.CALL_PID, sender);
                                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                     context.startActivity(intent);

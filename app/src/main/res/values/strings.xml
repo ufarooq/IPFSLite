@@ -45,7 +45,7 @@
     <string name="same_pid_like_host">Same Peer ID like the hosts Peer ID</string>
     <string name="peer_name">New Peer Name</string>
     <string name="peer_is_blocked">Peer is blocked. Unblock first.</string>
-    <string name="user_connect_try">Peer \"%1$s\" connection request</string>
+    <string name="user_connect_try">Peer \"%1$s\" connection request.</string>
     <string name="action_download">Download</string>
     <string name="no_peers_connected">Currently no peers are defined to share the data.</string>
     <string name="data_shared_with_peers">\"%1$s\" peers were notify to download the data.</string>
@@ -254,4 +254,5 @@
     <string name="pref_use_legacy_audio_device_title">Use legacy audio device.</string>
     <string name="pref_use_legacy_audio_device_default">false</string>
     <string name="incoming_call">Incoming Call</string>
+    <string name="is_calling">Peer \"%1$s\" is calling.</string>
 </resources>

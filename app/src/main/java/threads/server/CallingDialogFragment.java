@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Window;
+import android.widget.Button;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -21,17 +22,18 @@ public class CallingDialogFragment extends DialogFragment {
 
     public static final String TAG = CallingDialogFragment.class.getSimpleName();
     private static final String PID = "PID";
-
+    private static final String NAME = "NAME";
 
     private CallingDialogFragment.ActionListener mListener;
     private Context mContext;
     private SoundPoolManager soundPoolManager;
 
-    static CallingDialogFragment newInstance(@NonNull String pid) {
+    static CallingDialogFragment newInstance(@NonNull String pid, @NonNull String name) {
         checkNotNull(pid);
+        checkNotNull(name);
         Bundle bundle = new Bundle();
         bundle.putString(PID, pid);
-
+        bundle.putString(NAME, name);
         CallingDialogFragment fragment = new CallingDialogFragment();
         fragment.setArguments(bundle);
         return fragment;
@@ -68,36 +70,49 @@ public class CallingDialogFragment extends DialogFragment {
         checkNotNull(args);
         final String pid = args.getString(PID);
         checkNotNull(pid);
-
+        final String name = args.getString(NAME);
+        checkNotNull(name);
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
         AtomicBoolean triggerTimeoutCall = new AtomicBoolean(true);
         builder.setIcon(R.drawable.ic_call_black_24dp);
         builder.setTitle(getString(R.string.incoming_call));
-        builder.setPositiveButton("Accept", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                soundPoolManager.stopRinging();
-                triggerTimeoutCall.set(false);
-                mListener.acceptCall(pid);
-                dialog.dismiss();
-            }
-        });
-        builder.setNegativeButton("Reject", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                soundPoolManager.stopRinging();
-                triggerTimeoutCall.set(false);
-                mListener.rejectCall(pid);
-                dialog.dismiss();
-            }
-        });
-        builder.setMessage(pid + " is calling.");
+        builder.setPositiveButton(getString(R.string.accept), (dialog, which) -> {
 
-        Dialog dialog = builder.create();
+            soundPoolManager.stopRinging();
+            triggerTimeoutCall.set(false);
+            mListener.acceptCall(pid);
+            dialog.dismiss();
+
+        });
+        builder.setNegativeButton(getString(R.string.reject), (dialog, which) -> {
+
+            soundPoolManager.stopRinging();
+            triggerTimeoutCall.set(false);
+            mListener.rejectCall(pid);
+            dialog.dismiss();
+
+        });
+        builder.setMessage(getString(R.string.is_calling, name));
+
+        AlertDialog dialog = builder.create();
         dialog.setCancelable(false);
         dialog.setCanceledOnTouchOutside(false);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setOnShowListener((dialogInterface) -> {
 
+            Button positive = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            Button negative = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+
+            positive.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                    R.drawable.phone_in_talk, 0, 0, 0);
+            positive.setCompoundDrawablePadding(16);
+
+            negative.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                    R.drawable.phone_reject, 0, 0, 0);
+            negative.setCompoundDrawablePadding(16);
+
+
+        });
 
         new Handler().postDelayed(() -> {
 
