@@ -27,6 +27,7 @@ public class RTCCallingDialogFragment extends DialogFragment {
     private RTCCallingDialogFragment.ActionListener mListener;
     private Context mContext;
     private RTCSoundPool soundPoolManager;
+    private final AtomicBoolean triggerTimeoutCall = new AtomicBoolean(true);
 
     static RTCCallingDialogFragment newInstance(@NonNull String pid, @NonNull String name) {
         checkNotNull(pid);
@@ -44,6 +45,7 @@ public class RTCCallingDialogFragment extends DialogFragment {
         super.onDetach();
         mContext = null;
         soundPoolManager.release();
+        triggerTimeoutCall.set(false);
     }
 
     @Override
@@ -73,7 +75,7 @@ public class RTCCallingDialogFragment extends DialogFragment {
         final String name = args.getString(NAME);
         checkNotNull(name);
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-        AtomicBoolean triggerTimeoutCall = new AtomicBoolean(true);
+
         builder.setIcon(R.drawable.ic_call_black_24dp);
         builder.setTitle(getString(R.string.incoming_call));
         builder.setPositiveButton(getString(R.string.accept), (dialog, which) -> {
@@ -115,11 +117,14 @@ public class RTCCallingDialogFragment extends DialogFragment {
         });
 
         new Handler().postDelayed(() -> {
-
-            if (triggerTimeoutCall.get()) {
-                mListener.timeoutCall(pid);
+            try {
+                if (triggerTimeoutCall.get()) {
+                    mListener.timeoutCall(pid);
+                }
+                dialog.dismiss();
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
-            dialog.dismiss();
 
         }, 30000);
         soundPoolManager.play();

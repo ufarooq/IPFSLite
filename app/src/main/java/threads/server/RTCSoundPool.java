@@ -25,11 +25,9 @@ public class RTCSoundPool {
 
         // AudioManager audio settings for adjusting the volume
         AudioManager audioManager = (AudioManager) context.getSystemService(AUDIO_SERVICE);
-        float actualVolume = 0f;
-        float maxVolume = 0f;
         if (audioManager != null) {
-            actualVolume = (float) audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-            maxVolume = (float) audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+            float actualVolume = (float) audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+            float maxVolume = (float) audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
             volume = actualVolume / maxVolume;
         }
 
@@ -39,16 +37,12 @@ public class RTCSoundPool {
 
         soundPool = new SoundPool.Builder().setMaxStreams(maxStreams).build();
 
-        soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
-            @Override
-            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
-                loaded = true;
-                if (playingCalled) {
-                    play();
-                    playingCalled = false;
-                }
+        soundPool.setOnLoadCompleteListener((soundPool, sampleId, status) -> {
+            loaded = true;
+            if (playingCalled) {
+                play();
+                playingCalled = false;
             }
-
         });
         ringingSoundId = soundPool.load(context, resId, 1);
     }
