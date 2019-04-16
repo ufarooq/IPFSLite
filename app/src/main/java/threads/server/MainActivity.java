@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         EditPeerDialogFragment.ActionListener,
         PeersFragment.ActionListener,
         NameDialogFragment.ActionListener,
-        CallingDialogFragment.ActionListener {
+        RTCCallingDialogFragment.ActionListener {
     public static final String CALL_PID = "CALL_PID";
     public static final String ACTION_INCOMING_CALL = "ACTION_INCOMING_CALL";
     private static final Gson gson = new Gson();
@@ -944,8 +944,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 name = user.getAlias();
             }
 
-            CallingDialogFragment.newInstance(pid, name)
-                    .show(getSupportFragmentManager(), CallingDialogFragment.TAG);
+            RTCCallingDialogFragment.newInstance(pid, name)
+                    .show(getSupportFragmentManager(), RTCCallingDialogFragment.TAG);
         });
 
     }
@@ -1416,75 +1416,75 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // Video call enabled flag.
         boolean videoCallEnabled = sharedPrefGetBoolean(R.string.pref_videocall_key,
-                CallActivity.EXTRA_VIDEO_CALL, R.string.pref_videocall_default, useValuesFromIntent);
+                RTCCallActivity.EXTRA_VIDEO_CALL, R.string.pref_videocall_default, useValuesFromIntent);
 
 
         // Use Camera2 option.
-        boolean useCamera2 = sharedPrefGetBoolean(R.string.pref_camera2_key, CallActivity.EXTRA_CAMERA2,
+        boolean useCamera2 = sharedPrefGetBoolean(R.string.pref_camera2_key, RTCCallActivity.EXTRA_CAMERA2,
                 R.string.pref_camera2_default, useValuesFromIntent);
 
         // Get default codecs.
         String videoCodec = sharedPrefGetString(R.string.pref_videocodec_key,
-                CallActivity.EXTRA_VIDEOCODEC, R.string.pref_videocodec_default, useValuesFromIntent);
+                RTCCallActivity.EXTRA_VIDEOCODEC, R.string.pref_videocodec_default, useValuesFromIntent);
         String audioCodec = sharedPrefGetString(R.string.pref_audiocodec_key,
-                CallActivity.EXTRA_AUDIOCODEC, R.string.pref_audiocodec_default, useValuesFromIntent);
+                RTCCallActivity.EXTRA_AUDIOCODEC, R.string.pref_audiocodec_default, useValuesFromIntent);
 
         // Check HW codec flag.
         boolean hwCodec = sharedPrefGetBoolean(R.string.pref_hwcodec_key,
-                CallActivity.EXTRA_HWCODEC_ENABLED, R.string.pref_hwcodec_default, useValuesFromIntent);
+                RTCCallActivity.EXTRA_HWCODEC_ENABLED, R.string.pref_hwcodec_default, useValuesFromIntent);
 
         // Check Capture to texture.
         boolean captureToTexture = sharedPrefGetBoolean(R.string.pref_capturetotexture_key,
-                CallActivity.EXTRA_CAPTURETOTEXTURE_ENABLED, R.string.pref_capturetotexture_default,
+                RTCCallActivity.EXTRA_CAPTURETOTEXTURE_ENABLED, R.string.pref_capturetotexture_default,
                 useValuesFromIntent);
 
         // Check FlexFEC.
         boolean flexfecEnabled = sharedPrefGetBoolean(R.string.pref_flexfec_key,
-                CallActivity.EXTRA_FLEXFEC_ENABLED, R.string.pref_flexfec_default, useValuesFromIntent);
+                RTCCallActivity.EXTRA_FLEXFEC_ENABLED, R.string.pref_flexfec_default, useValuesFromIntent);
 
         // Check Disable Audio Processing flag.
         boolean noAudioProcessing = sharedPrefGetBoolean(R.string.pref_noaudioprocessing_key,
-                CallActivity.EXTRA_NOAUDIOPROCESSING_ENABLED, R.string.pref_noaudioprocessing_default,
+                RTCCallActivity.EXTRA_NOAUDIOPROCESSING_ENABLED, R.string.pref_noaudioprocessing_default,
                 useValuesFromIntent);
 
         boolean aecDump = sharedPrefGetBoolean(R.string.pref_aecdump_key,
-                CallActivity.EXTRA_AECDUMP_ENABLED, R.string.pref_aecdump_default, useValuesFromIntent);
+                RTCCallActivity.EXTRA_AECDUMP_ENABLED, R.string.pref_aecdump_default, useValuesFromIntent);
 
         boolean saveInputAudioToFile =
                 sharedPrefGetBoolean(R.string.pref_enable_save_input_audio_to_file_key,
-                        CallActivity.EXTRA_SAVE_INPUT_AUDIO_TO_FILE_ENABLED,
+                        RTCCallActivity.EXTRA_SAVE_INPUT_AUDIO_TO_FILE_ENABLED,
                         R.string.pref_enable_save_input_audio_to_file_default, useValuesFromIntent);
 
         // Check OpenSL ES enabled flag.
         boolean useOpenSLES = sharedPrefGetBoolean(R.string.pref_opensles_key,
-                CallActivity.EXTRA_OPENSLES_ENABLED, R.string.pref_opensles_default, useValuesFromIntent);
+                RTCCallActivity.EXTRA_OPENSLES_ENABLED, R.string.pref_opensles_default, useValuesFromIntent);
 
         // Check Disable built-in AEC flag.
         boolean disableBuiltInAEC = sharedPrefGetBoolean(R.string.pref_disable_built_in_aec_key,
-                CallActivity.EXTRA_DISABLE_BUILT_IN_AEC, R.string.pref_disable_built_in_aec_default,
+                RTCCallActivity.EXTRA_DISABLE_BUILT_IN_AEC, R.string.pref_disable_built_in_aec_default,
                 useValuesFromIntent);
 
         // Check Disable built-in AGC flag.
         boolean disableBuiltInAGC = sharedPrefGetBoolean(R.string.pref_disable_built_in_agc_key,
-                CallActivity.EXTRA_DISABLE_BUILT_IN_AGC, R.string.pref_disable_built_in_agc_default,
+                RTCCallActivity.EXTRA_DISABLE_BUILT_IN_AGC, R.string.pref_disable_built_in_agc_default,
                 useValuesFromIntent);
 
         // Check Disable built-in NS flag.
         boolean disableBuiltInNS = sharedPrefGetBoolean(R.string.pref_disable_built_in_ns_key,
-                CallActivity.EXTRA_DISABLE_BUILT_IN_NS, R.string.pref_disable_built_in_ns_default,
+                RTCCallActivity.EXTRA_DISABLE_BUILT_IN_NS, R.string.pref_disable_built_in_ns_default,
                 useValuesFromIntent);
 
         // Check Disable gain control
         boolean disableWebRtcAGCAndHPF = sharedPrefGetBoolean(
-                R.string.pref_disable_webrtc_agc_and_hpf_key, CallActivity.EXTRA_DISABLE_WEBRTC_AGC_AND_HPF,
+                R.string.pref_disable_webrtc_agc_and_hpf_key, RTCCallActivity.EXTRA_DISABLE_WEBRTC_AGC_AND_HPF,
                 R.string.pref_disable_webrtc_agc_and_hpf_key, useValuesFromIntent);
 
         // Get video resolution from settings.
         int videoWidth = 0;
         int videoHeight = 0;
         if (useValuesFromIntent) {
-            videoWidth = getIntent().getIntExtra(CallActivity.EXTRA_VIDEO_WIDTH, 0);
-            videoHeight = getIntent().getIntExtra(CallActivity.EXTRA_VIDEO_HEIGHT, 0);
+            videoWidth = getIntent().getIntExtra(RTCCallActivity.EXTRA_VIDEO_WIDTH, 0);
+            videoHeight = getIntent().getIntExtra(RTCCallActivity.EXTRA_VIDEO_HEIGHT, 0);
         }
         if (videoWidth == 0 && videoHeight == 0) {
             String resolution =
@@ -1505,7 +1505,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // Get camera fps from settings.
         int cameraFps = 0;
         if (useValuesFromIntent) {
-            cameraFps = getIntent().getIntExtra(CallActivity.EXTRA_VIDEO_FPS, 0);
+            cameraFps = getIntent().getIntExtra(RTCCallActivity.EXTRA_VIDEO_FPS, 0);
         }
         if (cameraFps == 0) {
             String fps = sharedPref.getString(keyprefFps, getString(R.string.pref_fps_default));
@@ -1523,7 +1523,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // Get video and audio start bitrate.
         int videoStartBitrate = 0;
         if (useValuesFromIntent) {
-            videoStartBitrate = getIntent().getIntExtra(CallActivity.EXTRA_VIDEO_BITRATE, 0);
+            videoStartBitrate = getIntent().getIntExtra(RTCCallActivity.EXTRA_VIDEO_BITRATE, 0);
         }
         if (videoStartBitrate == 0) {
             String bitrateTypeDefault = getString(R.string.pref_maxvideobitrate_default);
@@ -1537,7 +1537,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         int audioStartBitrate = 0;
         if (useValuesFromIntent) {
-            audioStartBitrate = getIntent().getIntExtra(CallActivity.EXTRA_AUDIO_BITRATE, 0);
+            audioStartBitrate = getIntent().getIntExtra(RTCCallActivity.EXTRA_AUDIO_BITRATE, 0);
         }
         if (audioStartBitrate == 0) {
             String bitrateTypeDefault = getString(R.string.pref_startaudiobitrate_default);
@@ -1550,96 +1550,96 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-        boolean tracing = sharedPrefGetBoolean(R.string.pref_tracing_key, CallActivity.EXTRA_TRACING,
+        boolean tracing = sharedPrefGetBoolean(R.string.pref_tracing_key, RTCCallActivity.EXTRA_TRACING,
                 R.string.pref_tracing_default, useValuesFromIntent);
 
         // Check Enable RTCEventLog.
         boolean rtcEventLogEnabled = sharedPrefGetBoolean(R.string.pref_enable_rtceventlog_key,
-                CallActivity.EXTRA_ENABLE_RTCEVENTLOG, R.string.pref_enable_rtceventlog_default,
+                RTCCallActivity.EXTRA_ENABLE_RTCEVENTLOG, R.string.pref_enable_rtceventlog_default,
                 useValuesFromIntent);
 
         // Get datachannel options
         boolean dataChannelEnabled = sharedPrefGetBoolean(R.string.pref_enable_datachannel_key,
-                CallActivity.EXTRA_DATA_CHANNEL_ENABLED, R.string.pref_enable_datachannel_default,
+                RTCCallActivity.EXTRA_DATA_CHANNEL_ENABLED, R.string.pref_enable_datachannel_default,
                 useValuesFromIntent);
-        boolean ordered = sharedPrefGetBoolean(R.string.pref_ordered_key, CallActivity.EXTRA_ORDERED,
+        boolean ordered = sharedPrefGetBoolean(R.string.pref_ordered_key, RTCCallActivity.EXTRA_ORDERED,
                 R.string.pref_ordered_default, useValuesFromIntent);
         boolean negotiated = sharedPrefGetBoolean(R.string.pref_negotiated_key,
-                CallActivity.EXTRA_NEGOTIATED, R.string.pref_negotiated_default, useValuesFromIntent);
+                RTCCallActivity.EXTRA_NEGOTIATED, R.string.pref_negotiated_default, useValuesFromIntent);
         int maxRetrMs = sharedPrefGetInteger(R.string.pref_max_retransmit_time_ms_key,
-                CallActivity.EXTRA_MAX_RETRANSMITS_MS, R.string.pref_max_retransmit_time_ms_default,
+                RTCCallActivity.EXTRA_MAX_RETRANSMITS_MS, R.string.pref_max_retransmit_time_ms_default,
                 useValuesFromIntent);
         int maxRetr =
-                sharedPrefGetInteger(R.string.pref_max_retransmits_key, CallActivity.EXTRA_MAX_RETRANSMITS,
+                sharedPrefGetInteger(R.string.pref_max_retransmits_key, RTCCallActivity.EXTRA_MAX_RETRANSMITS,
                         R.string.pref_max_retransmits_default, useValuesFromIntent);
-        int id = sharedPrefGetInteger(R.string.pref_data_id_key, CallActivity.EXTRA_ID,
+        int id = sharedPrefGetInteger(R.string.pref_data_id_key, RTCCallActivity.EXTRA_ID,
                 R.string.pref_data_id_default, useValuesFromIntent);
         String protocol = sharedPrefGetString(R.string.pref_data_protocol_key,
-                CallActivity.EXTRA_PROTOCOL, R.string.pref_data_protocol_default, useValuesFromIntent);
+                RTCCallActivity.EXTRA_PROTOCOL, R.string.pref_data_protocol_default, useValuesFromIntent);
 
 
-        Intent intent = new Intent(this, CallActivity.class);
+        Intent intent = new Intent(this, RTCCallActivity.class);
         intent.putExtra(Content.USER, pid);
-        intent.putExtra(CallActivity.EXTRA_ROOMID, "TODO");
+        intent.putExtra(RTCCallActivity.EXTRA_ROOMID, "TODO");
 
-        intent.putExtra(CallActivity.EXTRA_VIDEO_CALL, videoCallEnabled);
-        intent.putExtra(CallActivity.EXTRA_CAMERA2, useCamera2);
-        intent.putExtra(CallActivity.EXTRA_VIDEO_WIDTH, videoWidth);
-        intent.putExtra(CallActivity.EXTRA_VIDEO_HEIGHT, videoHeight);
-        intent.putExtra(CallActivity.EXTRA_VIDEO_FPS, cameraFps);
+        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_CALL, videoCallEnabled);
+        intent.putExtra(RTCCallActivity.EXTRA_CAMERA2, useCamera2);
+        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_WIDTH, videoWidth);
+        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_HEIGHT, videoHeight);
+        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_FPS, cameraFps);
 
         // adds a seek bar with quality
-        intent.putExtra(CallActivity.EXTRA_VIDEO_BITRATE, videoStartBitrate);
-        intent.putExtra(CallActivity.EXTRA_VIDEOCODEC, RTCPeerConnection.VIDEO_CODEC_H264_HIGH);
-        intent.putExtra(CallActivity.EXTRA_HWCODEC_ENABLED, "false");
-        intent.putExtra(CallActivity.EXTRA_CAPTURETOTEXTURE_ENABLED, captureToTexture);
-        intent.putExtra(CallActivity.EXTRA_FLEXFEC_ENABLED, flexfecEnabled);
-        intent.putExtra(CallActivity.EXTRA_NOAUDIOPROCESSING_ENABLED, noAudioProcessing);
-        intent.putExtra(CallActivity.EXTRA_AECDUMP_ENABLED, aecDump);
-        intent.putExtra(CallActivity.EXTRA_SAVE_INPUT_AUDIO_TO_FILE_ENABLED, saveInputAudioToFile);
-        intent.putExtra(CallActivity.EXTRA_OPENSLES_ENABLED, useOpenSLES);
-        intent.putExtra(CallActivity.EXTRA_DISABLE_BUILT_IN_AEC, disableBuiltInAEC);
-        intent.putExtra(CallActivity.EXTRA_DISABLE_BUILT_IN_AGC, disableBuiltInAGC);
-        intent.putExtra(CallActivity.EXTRA_DISABLE_BUILT_IN_NS, disableBuiltInNS);
-        intent.putExtra(CallActivity.EXTRA_DISABLE_WEBRTC_AGC_AND_HPF, disableWebRtcAGCAndHPF);
-        intent.putExtra(CallActivity.EXTRA_AUDIO_BITRATE, audioStartBitrate);
-        intent.putExtra(CallActivity.EXTRA_AUDIOCODEC, RTCPeerConnection.AUDIO_CODEC_OPUS);
-        intent.putExtra(CallActivity.EXTRA_TRACING, tracing);
-        intent.putExtra(CallActivity.EXTRA_ENABLE_RTCEVENTLOG, rtcEventLogEnabled);
-        intent.putExtra(CallActivity.EXTRA_DATA_CHANNEL_ENABLED, dataChannelEnabled);
+        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_BITRATE, videoStartBitrate);
+        intent.putExtra(RTCCallActivity.EXTRA_VIDEOCODEC, RTCPeerConnection.VIDEO_CODEC_H264_HIGH);
+        intent.putExtra(RTCCallActivity.EXTRA_HWCODEC_ENABLED, "false");
+        intent.putExtra(RTCCallActivity.EXTRA_CAPTURETOTEXTURE_ENABLED, captureToTexture);
+        intent.putExtra(RTCCallActivity.EXTRA_FLEXFEC_ENABLED, flexfecEnabled);
+        intent.putExtra(RTCCallActivity.EXTRA_NOAUDIOPROCESSING_ENABLED, noAudioProcessing);
+        intent.putExtra(RTCCallActivity.EXTRA_AECDUMP_ENABLED, aecDump);
+        intent.putExtra(RTCCallActivity.EXTRA_SAVE_INPUT_AUDIO_TO_FILE_ENABLED, saveInputAudioToFile);
+        intent.putExtra(RTCCallActivity.EXTRA_OPENSLES_ENABLED, useOpenSLES);
+        intent.putExtra(RTCCallActivity.EXTRA_DISABLE_BUILT_IN_AEC, disableBuiltInAEC);
+        intent.putExtra(RTCCallActivity.EXTRA_DISABLE_BUILT_IN_AGC, disableBuiltInAGC);
+        intent.putExtra(RTCCallActivity.EXTRA_DISABLE_BUILT_IN_NS, disableBuiltInNS);
+        intent.putExtra(RTCCallActivity.EXTRA_DISABLE_WEBRTC_AGC_AND_HPF, disableWebRtcAGCAndHPF);
+        intent.putExtra(RTCCallActivity.EXTRA_AUDIO_BITRATE, audioStartBitrate);
+        intent.putExtra(RTCCallActivity.EXTRA_AUDIOCODEC, RTCPeerConnection.AUDIO_CODEC_OPUS);
+        intent.putExtra(RTCCallActivity.EXTRA_TRACING, tracing);
+        intent.putExtra(RTCCallActivity.EXTRA_ENABLE_RTCEVENTLOG, rtcEventLogEnabled);
+        intent.putExtra(RTCCallActivity.EXTRA_DATA_CHANNEL_ENABLED, dataChannelEnabled);
 
         if (dataChannelEnabled) {
-            intent.putExtra(CallActivity.EXTRA_ORDERED, ordered);
-            intent.putExtra(CallActivity.EXTRA_MAX_RETRANSMITS_MS, maxRetrMs);
-            intent.putExtra(CallActivity.EXTRA_MAX_RETRANSMITS, maxRetr);
-            intent.putExtra(CallActivity.EXTRA_PROTOCOL, protocol);
-            intent.putExtra(CallActivity.EXTRA_NEGOTIATED, negotiated);
-            intent.putExtra(CallActivity.EXTRA_ID, id);
+            intent.putExtra(RTCCallActivity.EXTRA_ORDERED, ordered);
+            intent.putExtra(RTCCallActivity.EXTRA_MAX_RETRANSMITS_MS, maxRetrMs);
+            intent.putExtra(RTCCallActivity.EXTRA_MAX_RETRANSMITS, maxRetr);
+            intent.putExtra(RTCCallActivity.EXTRA_PROTOCOL, protocol);
+            intent.putExtra(RTCCallActivity.EXTRA_NEGOTIATED, negotiated);
+            intent.putExtra(RTCCallActivity.EXTRA_ID, id);
         }
 
         if (useValuesFromIntent) {
-            if (getIntent().hasExtra(CallActivity.EXTRA_VIDEO_FILE_AS_CAMERA)) {
+            if (getIntent().hasExtra(RTCCallActivity.EXTRA_VIDEO_FILE_AS_CAMERA)) {
                 String videoFileAsCamera =
-                        getIntent().getStringExtra(CallActivity.EXTRA_VIDEO_FILE_AS_CAMERA);
-                intent.putExtra(CallActivity.EXTRA_VIDEO_FILE_AS_CAMERA, videoFileAsCamera);
+                        getIntent().getStringExtra(RTCCallActivity.EXTRA_VIDEO_FILE_AS_CAMERA);
+                intent.putExtra(RTCCallActivity.EXTRA_VIDEO_FILE_AS_CAMERA, videoFileAsCamera);
             }
 
-            if (getIntent().hasExtra(CallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE)) {
+            if (getIntent().hasExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE)) {
                 String saveRemoteVideoToFile =
-                        getIntent().getStringExtra(CallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE);
-                intent.putExtra(CallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE, saveRemoteVideoToFile);
+                        getIntent().getStringExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE);
+                intent.putExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE, saveRemoteVideoToFile);
             }
 
-            if (getIntent().hasExtra(CallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_WIDTH)) {
+            if (getIntent().hasExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_WIDTH)) {
                 int videoOutWidth =
-                        getIntent().getIntExtra(CallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_WIDTH, 0);
-                intent.putExtra(CallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_WIDTH, videoOutWidth);
+                        getIntent().getIntExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_WIDTH, 0);
+                intent.putExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_WIDTH, videoOutWidth);
             }
 
-            if (getIntent().hasExtra(CallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT)) {
+            if (getIntent().hasExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT)) {
                 int videoOutHeight =
-                        getIntent().getIntExtra(CallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT, 0);
-                intent.putExtra(CallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT, videoOutHeight);
+                        getIntent().getIntExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT, 0);
+                intent.putExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT, videoOutHeight);
             }
         }
 

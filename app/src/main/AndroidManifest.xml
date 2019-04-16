@@ -63,7 +63,7 @@
             tools:replace="screenOrientation" />
 
         <activity
-            android:name="CallActivity"
+            android:name=".RTCCallActivity"
             android:configChanges="orientation|smallestScreenSize|screenSize|screenLayout"
             android:screenOrientation="fullUser"
             android:theme="@style/ThreadsServerTheme" />

@@ -68,7 +68,7 @@ public class VoiceActivity extends AppCompatActivity {
     private FloatingActionButton hangupActionFab;
     private FloatingActionButton muteActionFab;
     private Chronometer chronometer;
-    private SoundPoolManager soundPoolManager;
+    private RTCSoundPool soundPoolManager;
     private NotificationManager notificationManager;
     private AlertDialog alertDialog;
 
@@ -119,7 +119,7 @@ public class VoiceActivity extends AppCompatActivity {
 
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        soundPoolManager = SoundPoolManager.create(this);
+        soundPoolManager = RTCSoundPool.create(this);
 
         /*
          * Setup the broadcast receiver to be notified of FCM Token updates

@@ -64,7 +64,7 @@ import threads.server.RTCPeerConnection.PeerConnectionParameters;
  * Activity for peer connection call setup, call waiting
  * and call view.
  */
-public class CallActivity extends Activity implements RTCClient.SignalingEvents,
+public class RTCCallActivity extends Activity implements RTCClient.SignalingEvents,
         RTCPeerConnection.PeerConnectionEvents {
     public static final String EXTRA_ROOMID = "org.appspot.apprtc.ROOMID";
 
@@ -323,7 +323,7 @@ public class CallActivity extends Activity implements RTCClient.SignalingEvents,
 
         // Create peer connection client.
         peerConnectionClient = new RTCPeerConnection(
-                getApplicationContext(), eglBase, peerConnectionParameters, CallActivity.this);
+                getApplicationContext(), eglBase, peerConnectionParameters, RTCCallActivity.this);
         PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
 
         peerConnectionClient.createPeerConnectionFactory(options);

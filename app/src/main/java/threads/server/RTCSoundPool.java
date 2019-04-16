@@ -9,7 +9,7 @@ import androidx.core.util.Preconditions;
 
 import static android.content.Context.AUDIO_SERVICE;
 
-public class SoundPoolManager {
+public class RTCSoundPool {
 
     private boolean playing = false;
     private boolean loaded = false;
@@ -20,7 +20,7 @@ public class SoundPoolManager {
     private int ringingStreamId;
     private int disconnectSoundId;
 
-    private SoundPoolManager(@NonNull Context context) {
+    private RTCSoundPool(@NonNull Context context) {
         Preconditions.checkNotNull(context);
 
 
@@ -55,8 +55,8 @@ public class SoundPoolManager {
         disconnectSoundId = soundPool.load(context, R.raw.disconnect, 1);
     }
 
-    public static SoundPoolManager create(Context context) {
-        return new SoundPoolManager(context);
+    public static RTCSoundPool create(Context context) {
+        return new RTCSoundPool(context);
     }
 
     public void playRinging() {

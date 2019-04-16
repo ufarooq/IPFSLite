@@ -224,7 +224,7 @@ public class VideoActivity extends AppCompatActivity implements Session.Listener
         // Create peer connection client.
         /*
         peerConnectionClient = new RTCPeerConnection(
-                getApplicationContext(), eglBase, peerConnectionParameters, CallActivity.this);
+                getApplicationContext(), eglBase, peerConnectionParameters, RTCCallActivity.this);
         PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
         if (loopback) {
             options.networkIgnoreMask = 0;

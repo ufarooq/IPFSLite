@@ -18,23 +18,23 @@ import threads.core.Preferences;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class CallingDialogFragment extends DialogFragment {
+public class RTCCallingDialogFragment extends DialogFragment {
 
-    public static final String TAG = CallingDialogFragment.class.getSimpleName();
+    public static final String TAG = RTCCallingDialogFragment.class.getSimpleName();
     private static final String PID = "PID";
     private static final String NAME = "NAME";
 
-    private CallingDialogFragment.ActionListener mListener;
+    private RTCCallingDialogFragment.ActionListener mListener;
     private Context mContext;
-    private SoundPoolManager soundPoolManager;
+    private RTCSoundPool soundPoolManager;
 
-    static CallingDialogFragment newInstance(@NonNull String pid, @NonNull String name) {
+    static RTCCallingDialogFragment newInstance(@NonNull String pid, @NonNull String name) {
         checkNotNull(pid);
         checkNotNull(name);
         Bundle bundle = new Bundle();
         bundle.putString(PID, pid);
         bundle.putString(NAME, name);
-        CallingDialogFragment fragment = new CallingDialogFragment();
+        RTCCallingDialogFragment fragment = new RTCCallingDialogFragment();
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -51,11 +51,11 @@ public class CallingDialogFragment extends DialogFragment {
         super.onAttach(context);
         mContext = context;
         try {
-            mListener = (CallingDialogFragment.ActionListener) getActivity();
+            mListener = (RTCCallingDialogFragment.ActionListener) getActivity();
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-        soundPoolManager = SoundPoolManager.create(mContext);
+        soundPoolManager = RTCSoundPool.create(mContext);
     }
 
     @Override
