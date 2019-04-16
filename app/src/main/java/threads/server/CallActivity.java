@@ -13,7 +13,6 @@ package threads.server;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -21,12 +20,15 @@ import android.content.pm.PackageManager;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.webrtc.Camera1Enumerator;
 import org.webrtc.Camera2Enumerator;
@@ -63,8 +65,7 @@ import threads.server.RTCPeerConnection.PeerConnectionParameters;
  * and call view.
  */
 public class CallActivity extends Activity implements RTCClient.SignalingEvents,
-        RTCPeerConnection.PeerConnectionEvents,
-        CallFragment.OnCallEvents {
+        RTCPeerConnection.PeerConnectionEvents {
     public static final String EXTRA_ROOMID = "org.appspot.apprtc.ROOMID";
 
     public static final String EXTRA_VIDEO_CALL = "org.appspot.apprtc.VIDEO_CALL";
@@ -153,10 +154,13 @@ public class CallActivity extends Activity implements RTCClient.SignalingEvents,
     private boolean micEnabled = true;
     // True if local view is in the fullscreen renderer.
     private boolean isSwappedFeeds;
+    private long mLastClickTime = 0;
+
 
     // Controls
-    private CallFragment callFragment;
-
+    private FloatingActionButton fab_hangup;
+    private FloatingActionButton fab_switch_camera;
+    private FloatingActionButton fab_toggle_mic;
 
     private static int getSystemUiVisibility() {
         int flags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN;
@@ -196,13 +200,12 @@ public class CallActivity extends Activity implements RTCClient.SignalingEvents,
         // Create UI controls.
         pipRenderer = findViewById(R.id.pip_video_view);
         fullscreenRenderer = findViewById(R.id.fullscreen_video_view);
-        callFragment = new CallFragment();
 
         // Show/hide call control fragment on view click.
         View.OnClickListener listener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                toggleCallControlFragmentVisibility();
+                toggleCallControls();
             }
         };
 
@@ -318,16 +321,6 @@ public class CallActivity extends Activity implements RTCClient.SignalingEvents,
         appRtcClient = new RTCClient(user, this);
 
 
-
-        // Send intent arguments to fragments.
-        callFragment.setArguments(intent.getExtras());
-
-        // Activate call and HUD fragments and start the call.
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        ft.add(R.id.call_fragment_container, callFragment);
-        ft.commit();
-
-
         // Create peer connection client.
         peerConnectionClient = new RTCPeerConnection(
                 getApplicationContext(), eglBase, peerConnectionParameters, CallActivity.this);
@@ -337,6 +330,56 @@ public class CallActivity extends Activity implements RTCClient.SignalingEvents,
 
         startCall();
 
+
+        fab_hangup = findViewById(R.id.fab_hangup);
+        fab_hangup.setOnClickListener((view) -> {
+
+
+            // mis-clicking prevention, using threshold of 1000 ms
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            onCallHangUp();
+
+        });
+
+
+        fab_switch_camera = findViewById(R.id.fab_switch_camera);
+        fab_switch_camera.setOnClickListener((view) -> {
+
+
+            // mis-clicking prevention, using threshold of 1000 ms
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            onCameraSwitch();
+
+        });
+
+
+        fab_toggle_mic = findViewById(R.id.fab_toggle_mic);
+        fab_toggle_mic.setOnClickListener((view) -> {
+
+
+            // mis-clicking prevention, using threshold of 1000 ms
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            boolean enabled = onToggleMic();
+            if (enabled) {
+                fab_toggle_mic.setImageResource(R.drawable.microphone);
+            } else {
+                fab_toggle_mic.setImageResource(R.drawable.microphone_off);
+            }
+
+
+        });
     }
 
     @TargetApi(17)
@@ -458,31 +501,25 @@ public class CallActivity extends Activity implements RTCClient.SignalingEvents,
     }
 
     // CallFragment.OnCallEvents interface implementation.
-    @Override
+
     public void onCallHangUp() {
         disconnect();
     }
 
-    @Override
+
     public void onCameraSwitch() {
         if (peerConnectionClient != null) {
             peerConnectionClient.switchCamera();
         }
     }
 
-    @Override
-    public void onVideoScalingSwitch(ScalingType scalingType) {
-        fullscreenRenderer.setScalingType(scalingType);
-    }
 
-    @Override
     public void onCaptureFormatChange(int width, int height, int framerate) {
         if (peerConnectionClient != null) {
             peerConnectionClient.changeCaptureFormat(width, height, framerate);
         }
     }
 
-    @Override
     public boolean onToggleMic() {
         if (peerConnectionClient != null) {
             micEnabled = !micEnabled;
@@ -491,21 +528,22 @@ public class CallActivity extends Activity implements RTCClient.SignalingEvents,
         return micEnabled;
     }
 
-    // Helper functions.
-    private void toggleCallControlFragmentVisibility() {
-        if (!connected || !callFragment.isAdded()) {
+    private void toggleCallControls() {
+        if (!connected) {
             return;
         }
         // Show/hide call control fragment
         callControlFragmentVisible = !callControlFragmentVisible;
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
+
         if (callControlFragmentVisible) {
-            ft.show(callFragment);
+            fab_hangup.setVisibility(View.VISIBLE);
+            fab_switch_camera.setVisibility(View.VISIBLE);
+            fab_toggle_mic.setVisibility(View.VISIBLE);
         } else {
-            ft.hide(callFragment);
+            fab_hangup.setVisibility(View.INVISIBLE);
+            fab_switch_camera.setVisibility(View.INVISIBLE);
+            fab_toggle_mic.setVisibility(View.INVISIBLE);
         }
-        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-        ft.commit();
     }
 
     public void startCall() {
