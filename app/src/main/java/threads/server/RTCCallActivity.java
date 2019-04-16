@@ -59,6 +59,7 @@ import threads.core.api.Content;
 import threads.ipfs.api.PID;
 import threads.server.RTCAudioManager.AudioDevice;
 import threads.server.RTCPeerConnection.PeerConnectionParameters;
+import threads.share.ConnectService;
 
 /**
  * Activity for peer connection call setup, call waiting
@@ -315,7 +316,8 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
 
         // Create connection client. Use RTCClient if room name is an IP otherwise use the
         // standard WebSocketRTCClient.
-        appRtcClient = new RTCClient(user, this);
+        int timeout = ConnectService.getConnectionTimeout(this);
+        appRtcClient = new RTCClient(user, this, timeout);
 
 
         // Create peer connection client.
@@ -800,7 +802,7 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
     }
 
     @Override
-    public void onRemoteIceCandidatesRemoved(final IceCandidate[] candidates) {
+    public void onRemoteIceCandidateRemoved(final IceCandidate candidate) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -808,6 +810,7 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
                     Log.e(TAG, "Received ICE candidate removals for a non-initialized peer connection.");
                     return;
                 }
+                IceCandidate[] candidates = {candidate};
                 peerConnectionClient.removeRemoteIceCandidates(candidates);
             }
         });

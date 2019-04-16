@@ -37,13 +37,15 @@ public class RTCClient implements Session.Listener {
     private final ExecutorService executor;
     private final SignalingEvents events;
     private final PID user;
+    private final int timeout;
 
     // All alterations of the room state should be done from inside the looper thread.
     private ConnectionState roomState;
 
-    public RTCClient(PID user, SignalingEvents events) {
+    public RTCClient(PID user, SignalingEvents events, int timeout) {
         this.events = events;
         this.user = user;
+        this.timeout = timeout;
 
         Session.getInstance().setListener(this);
         executor = Executors.newSingleThreadExecutor();
@@ -138,6 +140,14 @@ public class RTCClient implements Session.Listener {
     }
 
     @Override
+    public void candidate_remove(PID pid, String sdp, String mid, String index) {
+        events.onRemoteIceCandidateRemoved(new IceCandidate(
+                mid,
+                Integer.valueOf(index),
+                sdp));
+    }
+
+    @Override
     public void close(PID pid) {
         events.onChannelClose();
     }
@@ -182,7 +192,7 @@ public class RTCClient implements Session.Listener {
     public void sendOfferSdp(final SessionDescription sdp) {
 
 
-        Service.emitSessionOffer(user, sdp, 30);
+        Service.emitSessionOffer(user, sdp, timeout);
 
       /*
     executor.execute(new Runnable() {
@@ -203,7 +213,7 @@ public class RTCClient implements Session.Listener {
 
     public void sendAnswerSdp(final SessionDescription sdp) {
 
-        Service.emitSessionAnswer(user, sdp, 30);
+        Service.emitSessionAnswer(user, sdp, timeout);
       /*
     executor.execute(new Runnable() {
       @Override
@@ -221,7 +231,7 @@ public class RTCClient implements Session.Listener {
 
 
     public void sendLocalIceCandidate(final IceCandidate candidate) {
-        Service.emitIceCandidate(user, candidate, 30);
+        Service.emitIceCandidate(user, candidate, timeout);
       /*
     executor.execute(new Runnable() {
       @Override
@@ -246,7 +256,9 @@ public class RTCClient implements Session.Listener {
      */
 
     public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates) {
-
+        if (candidates != null) {
+            Service.emitIceCandidatesRemove(user, candidates, timeout);
+        }
         // TODO
       /*
     executor.execute(new Runnable() {
@@ -304,7 +316,7 @@ public class RTCClient implements Session.Listener {
                 for (int i = 0; i < candidateArray.length(); ++i) {
                     candidates[i] = toJavaCandidate(candidateArray.getJSONObject(i));
                 }
-                events.onRemoteIceCandidatesRemoved(candidates);
+                //events.onRemoteIceCandidatesRemoved(candidates);
             } else if (type.equals("answer")) {
                 SessionDescription sdp = new SessionDescription(
                         SessionDescription.Type.fromCanonicalForm(type), json.getString("sdp"));
@@ -395,7 +407,7 @@ public class RTCClient implements Session.Listener {
         /**
          * Callback fired once remote Ice candidate removals are received.
          */
-        void onRemoteIceCandidatesRemoved(final IceCandidate[] candidates);
+        void onRemoteIceCandidateRemoved(final IceCandidate candidate);
 
         /**
          * Callback fired once channel is closed.

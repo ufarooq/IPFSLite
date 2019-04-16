@@ -348,7 +348,7 @@ public class VideoActivity extends AppCompatActivity implements Session.Listener
             @Override
             public void onIceCandidate(IceCandidate iceCandidate) {
                 super.onIceCandidate(iceCandidate);
-                long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
+                int timeout = ConnectService.getConnectionTimeout(getApplicationContext());
                 Service.emitIceCandidate(user, iceCandidate, timeout);
             }
 
@@ -539,6 +539,11 @@ public class VideoActivity extends AppCompatActivity implements Session.Listener
     @Override
     public void candidate(PID pid, String sdp, String mid, String index) {
         onIceCandidateReceived(sdp, mid, index);
+    }
+
+    @Override
+    public void candidate_remove(PID pid, String sdp, String mid, String index) {
+
     }
 
     @Override

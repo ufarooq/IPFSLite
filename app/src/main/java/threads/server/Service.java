@@ -217,6 +217,16 @@ public class Service {
                                     session.answer(senderPid, sdp, esk);
                                     break;
                                 }
+                                case SESSION_CANDIDATE_REMOVE: {
+                                    String sdp = map.get(Content.SDP);
+                                    checkNotNull(sdp);
+                                    String mid = map.get(Content.MID);
+                                    checkNotNull(mid);
+                                    String index = map.get(Content.INDEX);
+                                    checkNotNull(index);
+                                    session.candidate_remove(senderPid, sdp, mid, index);
+                                    break;
+                                }
                                 case SESSION_CANDIDATE: {
                                     String sdp = map.get(Content.SDP);
                                     checkNotNull(sdp);
@@ -531,7 +541,37 @@ public class Service {
         }
     }
 
-    public static void emitIceCandidate(@NonNull PID user, @NonNull IceCandidate candidate, long timeout) {
+    public static void emitIceCandidatesRemove(@NonNull PID user,
+                                               @NonNull IceCandidate[] candidates,
+                                               int timeout) {
+        checkNotNull(user);
+        checkNotNull(candidates);
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    boolean value = ConnectService.connectUser(user, timeout);
+                    if (value) {
+                        for (IceCandidate candidate : candidates) {
+                            HashMap<String, String> map = new HashMap<>();
+                            map.put(Content.EST, Message.SESSION_CANDIDATE_REMOVE.name());
+                            map.put(Content.SDP, candidate.sdp);
+                            map.put(Content.MID, candidate.sdpMid);
+                            map.put(Content.INDEX, String.valueOf(candidate.sdpMLineIndex));
+
+                            ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                        }
+                    }
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+        }
+
+    }
+
+    public static void emitIceCandidate(@NonNull PID user, @NonNull IceCandidate candidate, int timeout) {
         checkNotNull(user);
         checkNotNull(candidate);
         final IPFS ipfs = Singleton.getInstance().getIpfs();

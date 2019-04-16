@@ -62,6 +62,13 @@ public class Session {
         }
     }
 
+
+    public void candidate_remove(PID pid, String sdp, String mid, String index) {
+        if (listener != null) {
+            listener.candidate(pid, sdp, mid, index);
+        }
+    }
+
     public void timeout(PID pid) {
         if (listener != null) {
             listener.timeout(pid);
@@ -80,6 +87,8 @@ public class Session {
         void answer(PID pid, String sdp, String type);
 
         void candidate(PID pid, String sdp, String mid, String index);
+
+        void candidate_remove(PID pid, String sdp, String mid, String index);
 
         void close(PID pid);
 
