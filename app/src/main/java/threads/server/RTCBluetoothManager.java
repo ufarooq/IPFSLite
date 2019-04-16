@@ -85,7 +85,7 @@ public class RTCBluetoothManager {
      * Construction.
      */
     static RTCBluetoothManager create(Context context, RTCAudioManager audioManager) {
-        Log.d(TAG, "create" + RTCUtils.getThreadInfo());
+        Log.d(TAG, "create");
         return new RTCBluetoothManager(context, audioManager);
     }
 

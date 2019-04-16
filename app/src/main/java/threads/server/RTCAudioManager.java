@@ -30,6 +30,8 @@ import java.util.Set;
 
 import androidx.annotation.Nullable;
 
+import static androidx.core.util.Preconditions.checkArgument;
+
 /**
  * RTCAudioManager manages all audio related parts of the AppRTC demo.
  */
@@ -110,7 +112,7 @@ public class RTCAudioManager {
                 this::onProximitySensorChangedState);
 
         Log.d(TAG, "defaultAudioDevice: " + defaultAudioDevice);
-        RTCUtils.logDeviceInfo(TAG);
+
     }
 
     /**
@@ -283,7 +285,7 @@ public class RTCAudioManager {
      */
     private void setAudioDeviceInternal(AudioDevice device) {
         Log.d(TAG, "setAudioDeviceInternal(device=" + device + ")");
-        RTCUtils.assertIsTrue(audioDevices.contains(device));
+        checkArgument(audioDevices.contains(device));
 
         switch (device) {
             case SPEAKER_PHONE:
@@ -602,7 +604,7 @@ public class RTCAudioManager {
             int state = intent.getIntExtra("state", STATE_UNPLUGGED);
             int microphone = intent.getIntExtra("microphone", HAS_NO_MIC);
             String name = intent.getStringExtra("name");
-            Log.d(TAG, "WiredHeadsetReceiver.onReceive" + RTCUtils.getThreadInfo() + ": "
+            Log.d(TAG, "WiredHeadsetReceiver.onReceive " + ": "
                     + "a=" + intent.getAction() + ", s="
                     + (state == STATE_UNPLUGGED ? "unplugged" : "plugged") + ", m="
                     + (microphone == HAS_MIC ? "mic" : "no mic") + ", n=" + name + ", sb="

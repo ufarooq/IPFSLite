@@ -22,6 +22,8 @@ import org.webrtc.ThreadUtils;
 
 import androidx.annotation.Nullable;
 
+import static androidx.core.util.Preconditions.checkArgument;
+
 /**
  * RTCProximitySensor manages functions related to the proximity sensor in
  * the AppRTC demo.
@@ -46,7 +48,7 @@ public class RTCProximitySensor implements SensorEventListener {
     private boolean lastStateReportIsNear;
 
     private RTCProximitySensor(Context context, Runnable sensorStateListener) {
-        Log.d(TAG, "RTCProximitySensor" + RTCUtils.getThreadInfo());
+        Log.d(TAG, "RTCProximitySensor");
         onSensorStateListener = sensorStateListener;
         sensorManager = ((SensorManager) context.getSystemService(Context.SENSOR_SERVICE));
     }
@@ -64,7 +66,7 @@ public class RTCProximitySensor implements SensorEventListener {
      */
     public boolean start() {
         threadChecker.checkIsOnValidThread();
-        Log.d(TAG, "start" + RTCUtils.getThreadInfo());
+        Log.d(TAG, "start");
         if (!initDefaultSensor()) {
             // Proximity sensor is not supported on this device.
             return false;
@@ -78,7 +80,7 @@ public class RTCProximitySensor implements SensorEventListener {
      */
     public void stop() {
         threadChecker.checkIsOnValidThread();
-        Log.d(TAG, "stop" + RTCUtils.getThreadInfo());
+        Log.d(TAG, "stop");
         if (proximitySensor == null) {
             return;
         }
@@ -96,7 +98,7 @@ public class RTCProximitySensor implements SensorEventListener {
     @Override
     public final void onAccuracyChanged(Sensor sensor, int accuracy) {
         threadChecker.checkIsOnValidThread();
-        RTCUtils.assertIsTrue(sensor.getType() == Sensor.TYPE_PROXIMITY);
+        checkArgument(sensor.getType() == Sensor.TYPE_PROXIMITY);
         if (accuracy == SensorManager.SENSOR_STATUS_UNRELIABLE) {
             Log.e(TAG, "The values returned by this sensor cannot be trusted");
         }
@@ -105,7 +107,7 @@ public class RTCProximitySensor implements SensorEventListener {
     @Override
     public final void onSensorChanged(SensorEvent event) {
         threadChecker.checkIsOnValidThread();
-        RTCUtils.assertIsTrue(event.sensor.getType() == Sensor.TYPE_PROXIMITY);
+        checkArgument(event.sensor.getType() == Sensor.TYPE_PROXIMITY);
         // As a best practice; do as little as possible within this method and
         // avoid blocking.
         float distanceInCentimeters = event.values[0];
@@ -123,7 +125,7 @@ public class RTCProximitySensor implements SensorEventListener {
             onSensorStateListener.run();
         }
 
-        Log.d(TAG, "onSensorChanged" + RTCUtils.getThreadInfo() + ": "
+        Log.d(TAG, "onSensorChanged" + ": "
                 + "accuracy=" + event.accuracy + ", timestamp=" + event.timestamp + ", distance="
                 + event.values[0]);
     }
