@@ -183,8 +183,6 @@ public class RTCPeerConnection {
     private RTCEventLog rtcEventLog;
     // Implements the WebRtcAudioRecordSamplesReadyCallback interface and writes
     // recorded audio samples to an output file.
-    @Nullable
-    private RecordedAudioToFileController saveRecordedAudioToFile;
 
     /**
      * Create a RTCPeerConnection with the specified parameters. RTCPeerConnection takes
@@ -448,21 +446,7 @@ public class RTCPeerConnection {
         preferIsac = peerConnectionParameters.audioCodec != null
                 && peerConnectionParameters.audioCodec.equals(AUDIO_CODEC_ISAC);
 
-        // It is possible to save a copy in raw PCM format on a file by checking
-        // the "Save input audio to file" checkbox in the Settings UI. A callback
-        // interface is set when this flag is enabled. As a result, a copy of recorded
-        // audio samples are provided to this client directly from the native audio
-        // layer in Java.
-        if (peerConnectionParameters.saveInputAudioToFile) {
-            if (!peerConnectionParameters.useOpenSLES) {
-                Log.d(TAG, "Enable recording of microphone input audio to file");
-                saveRecordedAudioToFile = new RecordedAudioToFileController(executor);
-            } else {
-                // TODO(henrika): ensure that the UI reflects that if OpenSL ES is selected,
-                // then the "Save inut audio to file" option shall be grayed out.
-                Log.e(TAG, "Recording of input audio is not supported for OpenSL ES");
-            }
-        }
+
 
         final AudioDeviceModule adm = peerConnectionParameters.useLegacyAudioDevice
                 ? createLegacyAudioDevice()
@@ -522,7 +506,6 @@ public class RTCPeerConnection {
             WebRtcAudioUtils.setWebRtcBasedNoiseSuppressor(false);
         }
 
-        WebRtcAudioRecord.setOnAudioSamplesReady(saveRecordedAudioToFile);
 
         // Set audio record error callbacks.
         WebRtcAudioRecord.setErrorCallback(new WebRtcAudioRecordErrorCallback() {
@@ -621,7 +604,6 @@ public class RTCPeerConnection {
         };
 
         return JavaAudioDeviceModule.builder(appContext)
-                .setSamplesReadyCallback(saveRecordedAudioToFile)
                 .setUseHardwareAcousticEchoCanceler(!peerConnectionParameters.disableBuiltInAEC)
                 .setUseHardwareNoiseSuppressor(!peerConnectionParameters.disableBuiltInNS)
                 .setAudioRecordErrorCallback(audioRecordErrorCallback)
@@ -741,11 +723,6 @@ public class RTCPeerConnection {
             }
         }
 
-        if (saveRecordedAudioToFile != null) {
-            if (saveRecordedAudioToFile.start()) {
-                Log.d(TAG, "Recording input audio to file is activated");
-            }
-        }
         Log.d(TAG, "Peer connection created.");
     }
 
@@ -813,11 +790,7 @@ public class RTCPeerConnection {
             surfaceTextureHelper.dispose();
             surfaceTextureHelper = null;
         }
-        if (saveRecordedAudioToFile != null) {
-            Log.d(TAG, "Closing audio file for recorded input audio.");
-            saveRecordedAudioToFile.stop();
-            saveRecordedAudioToFile = null;
-        }
+
         localRender = null;
         remoteSinks = null;
         Log.d(TAG, "Closing peer connection factory.");
@@ -1207,7 +1180,6 @@ public class RTCPeerConnection {
         public final String audioCodec;
         public final boolean noAudioProcessing;
         public final boolean aecDump;
-        public final boolean saveInputAudioToFile;
         public final boolean useOpenSLES;
         public final boolean disableBuiltInAEC;
         public final boolean disableBuiltInAGC;
@@ -1220,7 +1192,7 @@ public class RTCPeerConnection {
         public PeerConnectionParameters(boolean videoCallEnabled, boolean loopback, boolean tracing,
                                         int videoWidth, int videoHeight, int videoFps, int videoMaxBitrate, String videoCodec,
                                         boolean videoCodecHwAcceleration, boolean videoFlexfecEnabled, int audioStartBitrate,
-                                        String audioCodec, boolean noAudioProcessing, boolean aecDump, boolean saveInputAudioToFile,
+                                        String audioCodec, boolean noAudioProcessing, boolean aecDump,
                                         boolean useOpenSLES, boolean disableBuiltInAEC, boolean disableBuiltInAGC,
                                         boolean disableBuiltInNS, boolean disableWebRtcAGCAndHPF, boolean enableRtcEventLog,
                                         boolean useLegacyAudioDevice, DataChannelParameters dataChannelParameters) {
@@ -1238,7 +1210,6 @@ public class RTCPeerConnection {
             this.audioCodec = audioCodec;
             this.noAudioProcessing = noAudioProcessing;
             this.aecDump = aecDump;
-            this.saveInputAudioToFile = saveInputAudioToFile;
             this.useOpenSLES = useOpenSLES;
             this.disableBuiltInAEC = disableBuiltInAEC;
             this.disableBuiltInAGC = disableBuiltInAGC;

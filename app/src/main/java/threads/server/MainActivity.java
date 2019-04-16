@@ -1450,10 +1450,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         boolean aecDump = sharedPrefGetBoolean(R.string.pref_aecdump_key,
                 RTCCallActivity.EXTRA_AECDUMP_ENABLED, R.string.pref_aecdump_default, useValuesFromIntent);
 
-        boolean saveInputAudioToFile =
-                sharedPrefGetBoolean(R.string.pref_enable_save_input_audio_to_file_key,
-                        RTCCallActivity.EXTRA_SAVE_INPUT_AUDIO_TO_FILE_ENABLED,
-                        R.string.pref_enable_save_input_audio_to_file_default, useValuesFromIntent);
 
         // Check OpenSL ES enabled flag.
         boolean useOpenSLES = sharedPrefGetBoolean(R.string.pref_opensles_key,
@@ -1596,7 +1592,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         intent.putExtra(RTCCallActivity.EXTRA_FLEXFEC_ENABLED, flexfecEnabled);
         intent.putExtra(RTCCallActivity.EXTRA_NOAUDIOPROCESSING_ENABLED, noAudioProcessing);
         intent.putExtra(RTCCallActivity.EXTRA_AECDUMP_ENABLED, aecDump);
-        intent.putExtra(RTCCallActivity.EXTRA_SAVE_INPUT_AUDIO_TO_FILE_ENABLED, saveInputAudioToFile);
         intent.putExtra(RTCCallActivity.EXTRA_OPENSLES_ENABLED, useOpenSLES);
         intent.putExtra(RTCCallActivity.EXTRA_DISABLE_BUILT_IN_AEC, disableBuiltInAEC);
         intent.putExtra(RTCCallActivity.EXTRA_DISABLE_BUILT_IN_AGC, disableBuiltInAGC);
