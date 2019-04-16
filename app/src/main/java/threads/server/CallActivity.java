@@ -56,8 +56,6 @@ import androidx.annotation.Nullable;
 import threads.core.api.Content;
 import threads.ipfs.api.PID;
 import threads.server.RTCAudioManager.AudioDevice;
-import threads.server.RTCClient.RoomConnectionParameters;
-import threads.server.RTCClient.SignalingParameters;
 import threads.server.RTCPeerConnection.PeerConnectionParameters;
 
 /**
@@ -68,7 +66,6 @@ public class CallActivity extends Activity implements RTCClient.SignalingEvents,
         RTCPeerConnection.PeerConnectionEvents,
         CallFragment.OnCallEvents {
     public static final String EXTRA_ROOMID = "org.appspot.apprtc.ROOMID";
-    public static final String EXTRA_URLPARAMETERS = "org.appspot.apprtc.URLPARAMETERS";
 
     public static final String EXTRA_VIDEO_CALL = "org.appspot.apprtc.VIDEO_CALL";
     public static final String EXTRA_CAMERA2 = "org.appspot.apprtc.CAMERA2";
@@ -135,7 +132,7 @@ public class CallActivity extends Activity implements RTCClient.SignalingEvents,
     @Nullable
     private RTCClient appRtcClient;
     @Nullable
-    private SignalingParameters signalingParameters;
+    private RTCClient.SignalingParameters signalingParameters;
     @Nullable
     private RTCAudioManager audioManager;
     @Nullable
@@ -147,7 +144,7 @@ public class CallActivity extends Activity implements RTCClient.SignalingEvents,
     private Toast logToast;
 
     private boolean activityRunning;
-    private RoomConnectionParameters roomConnectionParameters;
+
     private PeerConnectionParameters peerConnectionParameters;
     private boolean connected;
     private boolean isError;
@@ -316,14 +313,10 @@ public class CallActivity extends Activity implements RTCClient.SignalingEvents,
 
         Log.d(TAG, "VIDEO_FILE: '" + intent.getStringExtra(EXTRA_VIDEO_FILE_AS_CAMERA) + "'");
 
-        // Create connection client. Use IPFSRTCClient if room name is an IP otherwise use the
+        // Create connection client. Use RTCClient if room name is an IP otherwise use the
         // standard WebSocketRTCClient.
-        appRtcClient = new IPFSRTCClient(user, this);
+        appRtcClient = new RTCClient(user, this);
 
-        // Create connection parameters.
-        String urlParameters = intent.getStringExtra(EXTRA_URLPARAMETERS);
-        roomConnectionParameters =
-                new RoomConnectionParameters("", "", false, urlParameters);
 
 
         // Send intent arguments to fragments.
@@ -524,7 +517,7 @@ public class CallActivity extends Activity implements RTCClient.SignalingEvents,
 
         // Start room connection.
         //logAndToast(getString(R.string.connecting_to, roomConnectionParameters.roomUrl));
-        appRtcClient.connectToRoom(roomConnectionParameters);
+        appRtcClient.connectToRoom();
 
         // Create and audio manager that will take care of audio routing,
         // audio modes, audio device enumeration etc.
@@ -690,7 +683,7 @@ public class CallActivity extends Activity implements RTCClient.SignalingEvents,
     // -----Implementation of RTCClient.AppRTCSignalingEvents ---------------
     // All callbacks are invoked from websocket signaling looper thread and
     // are routed to UI thread.
-    private void onConnectedToRoomInternal(final SignalingParameters params) {
+    private void onConnectedToRoomInternal(final RTCClient.SignalingParameters params) {
         final long delta = System.currentTimeMillis() - callStartedTimeMs;
 
         signalingParameters = params;
@@ -724,8 +717,9 @@ public class CallActivity extends Activity implements RTCClient.SignalingEvents,
         }
     }
 
+
     @Override
-    public void onConnectedToRoom(final SignalingParameters params) {
+    public void onConnectedToRoom(RTCClient.SignalingParameters params) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
