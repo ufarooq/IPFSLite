@@ -119,7 +119,7 @@ public class VoiceActivity extends AppCompatActivity {
 
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        soundPoolManager = RTCSoundPool.create(this);
+        soundPoolManager = RTCSoundPool.create(this, R.raw.incoming);
 
         /*
          * Setup the broadcast receiver to be notified of FCM Token updates
@@ -257,7 +257,7 @@ public class VoiceActivity extends AppCompatActivity {
             if (intent.getAction().equals(ACTION_INCOMING_CALL)) {
                 activeCallInvite = intent.getParcelableExtra(CALL_PID);
                 if (activeCallInvite != null && (activeCallInvite.getState() == CallInvite.State.PENDING)) {
-                    soundPoolManager.playRinging();
+                    soundPoolManager.play();
                     alertDialog = createIncomingCallDialog(VoiceActivity.this,
                             activeCallInvite,
                             answerCallClickListener(),
@@ -266,7 +266,7 @@ public class VoiceActivity extends AppCompatActivity {
                     activeCallNotificationId = intent.getIntExtra(INCOMING_CALL_NOTIFICATION_ID, 0);
                 } else {
                     if (alertDialog != null && alertDialog.isShowing()) {
-                        soundPoolManager.stopRinging();
+                        soundPoolManager.stop();
                         alertDialog.cancel();
                     }
                 }
@@ -305,7 +305,7 @@ public class VoiceActivity extends AppCompatActivity {
 
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                soundPoolManager.stopRinging();
+                soundPoolManager.stop();
                 answer();
                 setCallUI();
                 alertDialog.dismiss();
@@ -333,7 +333,7 @@ public class VoiceActivity extends AppCompatActivity {
 
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                soundPoolManager.stopRinging();
+                soundPoolManager.stop();
                 if (activeCallInvite != null) {
                     activeCallInvite.reject(VoiceActivity.this);
                     notificationManager.cancel(activeCallNotificationId);

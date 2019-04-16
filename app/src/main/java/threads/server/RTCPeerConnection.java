@@ -178,11 +178,6 @@ public class RTCPeerConnection {
     private AudioTrack localAudioTrack;
     @Nullable
     private DataChannel dataChannel;
-    // Enable RTCEventLog.
-    @Nullable
-    private RTCEventLog rtcEventLog;
-    // Implements the WebRtcAudioRecordSamplesReadyCallback interface and writes
-    // recorded audio samples to an output file.
 
     /**
      * Create a RTCPeerConnection with the specified parameters. RTCPeerConnection takes
@@ -417,7 +412,6 @@ public class RTCPeerConnection {
             try {
                 createMediaConstraintsInternal();
                 createPeerConnectionInternal();
-                maybeCreateAndStartRtcEventLog();
             } catch (Exception e) {
                 reportError("Failed to create peer connection: " + e.getMessage());
                 throw e;
@@ -733,17 +727,6 @@ public class RTCPeerConnection {
                 appContext.getDir(RTCEVENTLOG_OUTPUT_DIR_NAME, Context.MODE_PRIVATE), outputFileName);
     }
 
-    private void maybeCreateAndStartRtcEventLog() {
-        if (appContext == null || peerConnection == null) {
-            return;
-        }
-        if (!peerConnectionParameters.enableRtcEventLog) {
-            Log.d(TAG, "RTCEventLog is disabled.");
-            return;
-        }
-        rtcEventLog = new RTCEventLog(peerConnection);
-        rtcEventLog.start(createRtcEventLogOutputFile());
-    }
 
     private void closeInternal() {
         if (factory != null && peerConnectionParameters.aecDump) {
@@ -754,11 +737,6 @@ public class RTCPeerConnection {
         if (dataChannel != null) {
             dataChannel.dispose();
             dataChannel = null;
-        }
-        if (rtcEventLog != null) {
-            // RTCEventLog should stop before the peer connection is disposed.
-            rtcEventLog.stop();
-            rtcEventLog = null;
         }
         if (peerConnection != null) {
             peerConnection.dispose();
@@ -1184,7 +1162,7 @@ public class RTCPeerConnection {
         public final boolean disableBuiltInAGC;
         public final boolean disableBuiltInNS;
         public final boolean disableWebRtcAGCAndHPF;
-        public final boolean enableRtcEventLog;
+
         public final boolean useLegacyAudioDevice;
         private final DataChannelParameters dataChannelParameters;
 
@@ -1193,7 +1171,7 @@ public class RTCPeerConnection {
                                         boolean videoCodecHwAcceleration, boolean videoFlexfecEnabled, int audioStartBitrate,
                                         String audioCodec, boolean noAudioProcessing, boolean aecDump,
                                         boolean useOpenSLES, boolean disableBuiltInAEC, boolean disableBuiltInAGC,
-                                        boolean disableBuiltInNS, boolean disableWebRtcAGCAndHPF, boolean enableRtcEventLog,
+                                        boolean disableBuiltInNS, boolean disableWebRtcAGCAndHPF,
                                         boolean useLegacyAudioDevice, DataChannelParameters dataChannelParameters) {
             this.videoCallEnabled = videoCallEnabled;
             this.loopback = loopback;
@@ -1214,7 +1192,6 @@ public class RTCPeerConnection {
             this.disableBuiltInAGC = disableBuiltInAGC;
             this.disableBuiltInNS = disableBuiltInNS;
             this.disableWebRtcAGCAndHPF = disableWebRtcAGCAndHPF;
-            this.enableRtcEventLog = enableRtcEventLog;
             this.useLegacyAudioDevice = useLegacyAudioDevice;
             this.dataChannelParameters = dataChannelParameters;
         }

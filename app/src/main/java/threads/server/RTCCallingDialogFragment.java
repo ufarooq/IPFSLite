@@ -55,7 +55,7 @@ public class RTCCallingDialogFragment extends DialogFragment {
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-        soundPoolManager = RTCSoundPool.create(mContext);
+        soundPoolManager = RTCSoundPool.create(mContext, R.raw.incoming);
     }
 
     @Override
@@ -78,7 +78,7 @@ public class RTCCallingDialogFragment extends DialogFragment {
         builder.setTitle(getString(R.string.incoming_call));
         builder.setPositiveButton(getString(R.string.accept), (dialog, which) -> {
 
-            soundPoolManager.stopRinging();
+            soundPoolManager.stop();
             triggerTimeoutCall.set(false);
             mListener.acceptCall(pid);
             dialog.dismiss();
@@ -86,7 +86,7 @@ public class RTCCallingDialogFragment extends DialogFragment {
         });
         builder.setNegativeButton(getString(R.string.reject), (dialog, which) -> {
 
-            soundPoolManager.stopRinging();
+            soundPoolManager.stop();
             triggerTimeoutCall.set(false);
             mListener.rejectCall(pid);
             dialog.dismiss();
@@ -122,7 +122,7 @@ public class RTCCallingDialogFragment extends DialogFragment {
             dialog.dismiss();
 
         }, 30000);
-        soundPoolManager.playRinging();
+        soundPoolManager.play();
 
         return dialog;
     }

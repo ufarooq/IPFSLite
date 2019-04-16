@@ -1549,10 +1549,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         boolean tracing = sharedPrefGetBoolean(R.string.pref_tracing_key, RTCCallActivity.EXTRA_TRACING,
                 R.string.pref_tracing_default, useValuesFromIntent);
 
-        // Check Enable RTCEventLog.
-        boolean rtcEventLogEnabled = sharedPrefGetBoolean(R.string.pref_enable_rtceventlog_key,
-                RTCCallActivity.EXTRA_ENABLE_RTCEVENTLOG, R.string.pref_enable_rtceventlog_default,
-                useValuesFromIntent);
 
         // Get datachannel options
         boolean dataChannelEnabled = sharedPrefGetBoolean(R.string.pref_enable_datachannel_key,
@@ -1576,7 +1572,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         Intent intent = new Intent(this, RTCCallActivity.class);
         intent.putExtra(Content.USER, pid);
-        intent.putExtra(RTCCallActivity.EXTRA_ROOMID, "TODO");
 
         intent.putExtra(RTCCallActivity.EXTRA_VIDEO_CALL, videoCallEnabled);
         intent.putExtra(RTCCallActivity.EXTRA_CAMERA2, useCamera2);
@@ -1600,7 +1595,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         intent.putExtra(RTCCallActivity.EXTRA_AUDIO_BITRATE, audioStartBitrate);
         intent.putExtra(RTCCallActivity.EXTRA_AUDIOCODEC, RTCPeerConnection.AUDIO_CODEC_OPUS);
         intent.putExtra(RTCCallActivity.EXTRA_TRACING, tracing);
-        intent.putExtra(RTCCallActivity.EXTRA_ENABLE_RTCEVENTLOG, rtcEventLogEnabled);
         intent.putExtra(RTCCallActivity.EXTRA_DATA_CHANNEL_ENABLED, dataChannelEnabled);
 
         if (dataChannelEnabled) {

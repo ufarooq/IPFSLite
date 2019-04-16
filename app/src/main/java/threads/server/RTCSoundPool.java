@@ -18,9 +18,8 @@ public class RTCSoundPool {
     private SoundPool soundPool;
     private int ringingSoundId;
     private int ringingStreamId;
-    private int disconnectSoundId;
 
-    private RTCSoundPool(@NonNull Context context) {
+    private RTCSoundPool(@NonNull Context context, int resId) {
         Preconditions.checkNotNull(context);
 
 
@@ -45,21 +44,20 @@ public class RTCSoundPool {
             public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
                 loaded = true;
                 if (playingCalled) {
-                    playRinging();
+                    play();
                     playingCalled = false;
                 }
             }
 
         });
-        ringingSoundId = soundPool.load(context, R.raw.incoming, 1);
-        disconnectSoundId = soundPool.load(context, R.raw.disconnect, 1);
+        ringingSoundId = soundPool.load(context, resId, 1);
     }
 
-    public static RTCSoundPool create(Context context) {
-        return new RTCSoundPool(context);
+    public static RTCSoundPool create(Context context, int resId) {
+        return new RTCSoundPool(context, resId);
     }
 
-    public void playRinging() {
+    public void play() {
         if (loaded && !playing) {
             ringingStreamId = soundPool.play(ringingSoundId, volume, volume, 1, -1, 1f);
             playing = true;
@@ -68,16 +66,9 @@ public class RTCSoundPool {
         }
     }
 
-    public void stopRinging() {
+    public void stop() {
         if (playing) {
             soundPool.stop(ringingStreamId);
-            playing = false;
-        }
-    }
-
-    public void playDisconnect() {
-        if (loaded && !playing) {
-            soundPool.play(disconnectSoundId, volume, volume, 1, 0, 1f);
             playing = false;
         }
     }
@@ -85,7 +76,6 @@ public class RTCSoundPool {
     public void release() {
         if (soundPool != null) {
             soundPool.unload(ringingSoundId);
-            soundPool.unload(disconnectSoundId);
             soundPool.release();
         }
     }

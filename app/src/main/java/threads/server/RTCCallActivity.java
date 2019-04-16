@@ -67,7 +67,6 @@ import threads.share.ConnectService;
  */
 public class RTCCallActivity extends Activity implements RTCClient.SignalingEvents,
         RTCPeerConnection.PeerConnectionEvents {
-    public static final String EXTRA_ROOMID = "org.appspot.apprtc.ROOMID";
 
     public static final String EXTRA_VIDEO_CALL = "org.appspot.apprtc.VIDEO_CALL";
     public static final String EXTRA_CAMERA2 = "org.appspot.apprtc.CAMERA2";
@@ -110,7 +109,6 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
     public static final String EXTRA_PROTOCOL = "org.appspot.apprtc.PROTOCOL";
     public static final String EXTRA_NEGOTIATED = "org.appspot.apprtc.NEGOTIATED";
     public static final String EXTRA_ID = "org.appspot.apprtc.ID";
-    public static final String EXTRA_ENABLE_RTCEVENTLOG = "org.appspot.apprtc.ENABLE_RTCEVENTLOG";
 
     private static final String TAG = "CallRTCClient";
     private static final int CAPTURE_PERMISSION_REQUEST_CODE = 1;
@@ -258,28 +256,6 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
             }
         }
 
-    /*
-    Uri roomUri = intent.getData();
-    if (roomUri == null) {
-      logAndToast(getString(R.string.missing_url));
-      Log.e(TAG, "Didn't get any URL in intent!");
-      setResult(RESULT_CANCELED);
-      finish();
-      return;
-    }*/
-
-        // Get Intent parameters.
-      /*
-    String roomId = intent.getStringExtra(EXTRA_ROOMID);
-    Log.d(TAG, "Room ID: " + roomId);
-    if (roomId == null || roomId.length() == 0) {
-      logAndToast(getString(R.string.missing_url));
-      Log.e(TAG, "Incorrect room ID in intent!");
-      setResult(RESULT_CANCELED);
-      finish();
-      return;
-    }*/
-
 
         boolean tracing = intent.getBooleanExtra(EXTRA_TRACING, false);
 
@@ -309,7 +285,6 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
                         intent.getBooleanExtra(EXTRA_DISABLE_BUILT_IN_AGC, false),
                         intent.getBooleanExtra(EXTRA_DISABLE_BUILT_IN_NS, false),
                         intent.getBooleanExtra(EXTRA_DISABLE_WEBRTC_AGC_AND_HPF, false),
-                        intent.getBooleanExtra(EXTRA_ENABLE_RTCEVENTLOG, false),
                         false, dataChannelParameters);
 
         Log.d(TAG, "VIDEO_FILE: '" + intent.getStringExtra(EXTRA_VIDEO_FILE_AS_CAMERA) + "'");
