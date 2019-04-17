@@ -1606,35 +1606,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             intent.putExtra(RTCCallActivity.EXTRA_ID, id);
         }
 
-        if (useValuesFromIntent) {
-            if (getIntent().hasExtra(RTCCallActivity.EXTRA_VIDEO_FILE_AS_CAMERA)) {
-                String videoFileAsCamera =
-                        getIntent().getStringExtra(RTCCallActivity.EXTRA_VIDEO_FILE_AS_CAMERA);
-                intent.putExtra(RTCCallActivity.EXTRA_VIDEO_FILE_AS_CAMERA, videoFileAsCamera);
-            }
-
-            if (getIntent().hasExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE)) {
-                String saveRemoteVideoToFile =
-                        getIntent().getStringExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE);
-                intent.putExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE, saveRemoteVideoToFile);
-            }
-
-            if (getIntent().hasExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_WIDTH)) {
-                int videoOutWidth =
-                        getIntent().getIntExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_WIDTH, 0);
-                intent.putExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_WIDTH, videoOutWidth);
-            }
-
-            if (getIntent().hasExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT)) {
-                int videoOutHeight =
-                        getIntent().getIntExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT, 0);
-                intent.putExtra(RTCCallActivity.EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT, videoOutHeight);
-            }
-        }
-
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
         startActivity(intent);
 
     }

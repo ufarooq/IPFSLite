@@ -13,15 +13,12 @@ package threads.server;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.media.projection.MediaProjection;
-import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -34,7 +31,6 @@ import org.webrtc.Camera1Enumerator;
 import org.webrtc.Camera2Enumerator;
 import org.webrtc.CameraEnumerator;
 import org.webrtc.EglBase;
-import org.webrtc.FileVideoCapturer;
 import org.webrtc.IceCandidate;
 import org.webrtc.Logging;
 import org.webrtc.PeerConnection;
@@ -48,7 +44,6 @@ import org.webrtc.VideoFileRenderer;
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -92,15 +87,6 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
     public static final String EXTRA_TRACING = "org.appspot.apprtc.TRACING";
 
 
-    public static final String EXTRA_VIDEO_FILE_AS_CAMERA = "org.appspot.apprtc.VIDEO_FILE_AS_CAMERA";
-    public static final String EXTRA_SAVE_REMOTE_VIDEO_TO_FILE =
-            "org.appspot.apprtc.SAVE_REMOTE_VIDEO_TO_FILE";
-    public static final String EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_WIDTH =
-            "org.appspot.apprtc.SAVE_REMOTE_VIDEO_TO_FILE_WIDTH";
-    public static final String EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT =
-            "org.appspot.apprtc.SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT";
-    public static final String EXTRA_USE_VALUES_FROM_INTENT =
-            "org.appspot.apprtc.USE_VALUES_FROM_INTENT";
     public static final String EXTRA_DATA_CHANNEL_ENABLED = "org.appspot.apprtc.DATA_CHANNEL_ENABLED";
     public static final String EXTRA_ORDERED = "org.appspot.apprtc.ORDERED";
     public static final String EXTRA_MAX_RETRANSMITS_MS = "org.appspot.apprtc.MAX_RETRANSMITS_MS";
@@ -132,6 +118,7 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
     private RTCClient.SignalingParameters signalingParameters;
     @Nullable
     private RTCAudioManager audioManager;
+
     @Nullable
     private SurfaceViewRenderer pipRenderer;
     @Nullable
@@ -221,21 +208,7 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         // Create video renderers.
         pipRenderer.init(eglBase.getEglBaseContext(), null);
         pipRenderer.setScalingType(ScalingType.SCALE_ASPECT_FIT);
-        String saveRemoteVideoToFile = intent.getStringExtra(EXTRA_SAVE_REMOTE_VIDEO_TO_FILE);
 
-        // When saveRemoteVideoToFile is set we save the video from the remote to a file.
-        if (saveRemoteVideoToFile != null) {
-            int videoOutWidth = intent.getIntExtra(EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_WIDTH, 0);
-            int videoOutHeight = intent.getIntExtra(EXTRA_SAVE_REMOTE_VIDEO_TO_FILE_HEIGHT, 0);
-            try {
-                videoFileRenderer = new VideoFileRenderer(
-                        saveRemoteVideoToFile, videoOutWidth, videoOutHeight, eglBase.getEglBaseContext());
-                remoteSinks.add(videoFileRenderer);
-            } catch (IOException e) {
-                throw new RuntimeException(
-                        "Failed to open video file for output: " + saveRemoteVideoToFile, e);
-            }
-        }
         fullscreenRenderer.init(eglBase.getEglBaseContext(), null);
         fullscreenRenderer.setScalingType(ScalingType.SCALE_ASPECT_FILL);
 
@@ -286,7 +259,6 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
                         intent.getBooleanExtra(EXTRA_DISABLE_WEBRTC_AGC_AND_HPF, false),
                         false, dataChannelParameters);
 
-        Log.d(TAG, "VIDEO_FILE: '" + intent.getStringExtra(EXTRA_VIDEO_FILE_AS_CAMERA) + "'");
 
         // Create connection client. Use RTCClient if room name is an IP otherwise use the
         // standard WebSocketRTCClient.
@@ -300,6 +272,7 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         PeerConnectionFactory.Options options = new PeerConnectionFactory.Options();
 
         peerConnectionClient.createPeerConnectionFactory(options);
+
 
         startCall();
 
@@ -355,23 +328,6 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         });
     }
 
-    @TargetApi(17)
-    private DisplayMetrics getDisplayMetrics() {
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        WindowManager windowManager =
-                (WindowManager) getApplication().getSystemService(Context.WINDOW_SERVICE);
-        windowManager.getDefaultDisplay().getRealMetrics(displayMetrics);
-        return displayMetrics;
-    }
-
-    @TargetApi(21)
-    private void startScreenCapture() {
-        MediaProjectionManager mediaProjectionManager =
-                (MediaProjectionManager) getApplication().getSystemService(
-                        Context.MEDIA_PROJECTION_SERVICE);
-        startActivityForResult(
-                mediaProjectionManager.createScreenCaptureIntent(), CAPTURE_PERMISSION_REQUEST_CODE);
-    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -519,6 +475,7 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         }
     }
 
+
     public void startCall() {
         if (appRtcClient == null) {
             Log.e(TAG, "AppRTC client is not allocated for a call.");
@@ -603,6 +560,7 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         finish();
     }
 
+
     private void disconnectWithErrorMessage(final String errorMessage) {
         if (!activityRunning) {
             Log.e(TAG, "Critical error: " + errorMessage);
@@ -650,15 +608,8 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
     private @Nullable
     VideoCapturer createVideoCapturer() {
         final VideoCapturer videoCapturer;
-        String videoFileAsCamera = getIntent().getStringExtra(EXTRA_VIDEO_FILE_AS_CAMERA);
-        if (videoFileAsCamera != null) {
-            try {
-                videoCapturer = new FileVideoCapturer(videoFileAsCamera);
-            } catch (IOException e) {
-                reportError("Failed to open video file for emulated camera");
-                return null;
-            }
-        } else if (useCamera2()) {
+
+        if (useCamera2()) {
             if (!captureToTexture()) {
                 reportError(getString(R.string.camera2_texture_only_error));
                 return null;
@@ -891,7 +842,6 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
     public void onPeerConnectionClosed() {
         // TODO
     }
-
 
 
     @Override

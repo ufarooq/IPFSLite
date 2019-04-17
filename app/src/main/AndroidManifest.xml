@@ -23,6 +23,9 @@
     <uses-feature
         android:name="android.hardware.microphone"
         android:required="false" />
+    <uses-feature
+        android:name="android.hardware.bluetooth"
+        android:required="false" />
 
     <application
         android:allowBackup="false"
@@ -56,8 +59,11 @@
             android:name=".RTCCallActivity"
             android:configChanges="orientation|smallestScreenSize|screenSize|screenLayout"
             android:screenOrientation="fullUser"
-            android:theme="@style/ThreadsServerTheme" />
-
+            android:theme="@style/ThreadsServerTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
         <service
             android:name="threads.server.DaemonService"
             android:enabled="true"
