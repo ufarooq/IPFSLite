@@ -1387,11 +1387,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         intent.putExtra(RTCCallActivity.EXTRA_VIDEO_CALL, true);
         intent.putExtra(RTCCallActivity.EXTRA_CAMERA2, true);
-        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_WIDTH, 0);
-        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_HEIGHT, 0);
-        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_FPS, 0);
-
-        // adds a seek bar with quality
+        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_WIDTH, 1024);
+        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_HEIGHT, 720);
+        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_FPS, 30);
         intent.putExtra(RTCCallActivity.EXTRA_VIDEO_BITRATE, 0);
         intent.putExtra(RTCCallActivity.EXTRA_VIDEOCODEC, RTCPeerConnection.VIDEO_CODEC_H264_HIGH);
         intent.putExtra(RTCCallActivity.EXTRA_HWCODEC_ENABLED, true);
@@ -1407,7 +1405,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         intent.putExtra(RTCCallActivity.EXTRA_AUDIO_BITRATE, 0);
         intent.putExtra(RTCCallActivity.EXTRA_AUDIOCODEC, RTCPeerConnection.AUDIO_CODEC_OPUS);
         intent.putExtra(RTCCallActivity.EXTRA_TRACING, false);
-
 
         startActivity(intent);
 
