@@ -17,25 +17,30 @@ import threads.core.Singleton;
 import threads.core.api.Content;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
+import threads.server.RTCClient.ConnectionEvents;
 import threads.share.ConnectService;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class Session {
+public class RTCSession {
     private static final Gson gson = new Gson();
-    private static Session INSTANCE = new Session();
+    private static RTCSession INSTANCE = new RTCSession();
     @Nullable
     private Listener listener = null;
 
-    private Session() {
+    private RTCSession() {
     }
 
-    public static Session getInstance() {
+    public static RTCSession getInstance() {
         return INSTANCE;
     }
 
-    public void emitSessionAnswer(@NonNull PID user, @NonNull SessionDescription message, long timeout) {
+    public void emitSessionAnswer(@NonNull PID user,
+                                  @NonNull ConnectionEvents events,
+                                  @NonNull SessionDescription message,
+                                  long timeout) {
         checkNotNull(user);
+        checkNotNull(events);
         checkNotNull(message);
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
@@ -51,6 +56,8 @@ public class Session {
                         map.put(Content.ESK, message.type.name());
 
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                    } else {
+                        events.onFailure();
                     }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -59,19 +66,19 @@ public class Session {
         }
     }
 
-    public void busy(PID pid) {
+    public void busy(@NonNull PID pid) {
         if (listener != null) {
             listener.busy(pid);
         }
     }
 
-    public void accept(PID pid) {
+    public void accept(@NonNull PID pid) {
         if (listener != null) {
             listener.accept(pid);
         }
     }
 
-    public void close(PID pid) {
+    public void close(@NonNull PID pid) {
         if (listener != null) {
             listener.close(pid);
         }
@@ -81,33 +88,35 @@ public class Session {
         this.listener = listener;
     }
 
-    public void reject(PID pid) {
+    public void reject(@NonNull PID pid) {
         if (listener != null) {
             listener.reject(pid);
         }
     }
 
-    public void offer(PID pid, String sdp) {
+    public void offer(@NonNull PID pid, @NonNull String sdp) {
         if (listener != null) {
             listener.offer(pid, sdp);
         }
     }
 
-    public void answer(PID pid, String sdp, String type) {
+    public void answer(@NonNull PID pid, @NonNull String sdp, @NonNull String type) {
         if (listener != null) {
             listener.answer(pid, sdp, type);
         }
     }
 
-    public void candidate(PID pid, String sdp, String mid, String index) {
+    public void candidate(@NonNull PID pid, @NonNull String sdp,
+                          @NonNull String mid, @NonNull String index) {
         if (listener != null) {
             listener.candidate(pid, sdp, mid, index);
         }
     }
 
-    public void candidate_remove(PID pid, String sdp, String mid, String index) {
+    public void candidate_remove(@NonNull PID pid, @NonNull String sdp,
+                                 @NonNull String mid, @NonNull String index) {
         if (listener != null) {
-            listener.candidate(pid, sdp, mid, index);
+            listener.candidate_remove(pid, sdp, mid, index);
         }
     }
 
@@ -117,8 +126,12 @@ public class Session {
         }
     }
 
-    public void emitSessionOffer(@NonNull PID user, @NonNull SessionDescription message, long timeout) {
+    public void emitSessionOffer(@NonNull PID user,
+                                 @NonNull ConnectionEvents events,
+                                 @NonNull SessionDescription message,
+                                 long timeout) {
         checkNotNull(user);
+        checkNotNull(events);
         checkNotNull(message);
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
@@ -133,6 +146,8 @@ public class Session {
                         map.put(Content.SDP, message.description);
 
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                    } else {
+                        events.onFailure();
                     }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -149,15 +164,16 @@ public class Session {
             HashMap<String, String> map = new HashMap<>();
             map.put(Content.EST, Message.SESSION_CALL.name());
             ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
-        } catch (Exception e) {
+        } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
     }
 
 
-    public void emitSessionBusy(@NonNull PID user, long timeout) {
+    public void emitSessionBusy(@NonNull PID user, @NonNull ConnectionEvents events, long timeout) {
         checkNotNull(user);
+        checkNotNull(events);
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -168,17 +184,19 @@ public class Session {
                         HashMap<String, String> map = new HashMap<>();
                         map.put(Content.EST, Message.SESSION_BUSY.name());
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                    } else {
+                        events.onFailure();
                     }
-                    // TODO else
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
             });
         }
     }
 
-    public void emitSessionTimeout(@NonNull PID user, long timeout) {
+    public void emitSessionTimeout(@NonNull PID user, @NonNull ConnectionEvents events, long timeout) {
         checkNotNull(user);
+        checkNotNull(events);
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -189,8 +207,10 @@ public class Session {
                         HashMap<String, String> map = new HashMap<>();
                         map.put(Content.EST, Message.SESSION_TIMEOUT.name());
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                    } else {
+                        events.onFailure();
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
             });
@@ -198,8 +218,9 @@ public class Session {
 
     }
 
-    public void emitSessionReject(@NonNull PID user, long timeout) {
+    public void emitSessionReject(@NonNull PID user, @NonNull ConnectionEvents events, long timeout) {
         checkNotNull(user);
+        checkNotNull(events);
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -210,8 +231,10 @@ public class Session {
                         HashMap<String, String> map = new HashMap<>();
                         map.put(Content.EST, Message.SESSION_REJECT.name());
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                    } else {
+                        events.onFailure();
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
             });
@@ -219,8 +242,9 @@ public class Session {
 
     }
 
-    public void emitSessionAccept(@NonNull PID user, long timeout) {
+    public void emitSessionAccept(@NonNull PID user, @NonNull ConnectionEvents events, long timeout) {
         checkNotNull(user);
+        checkNotNull(events);
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -231,8 +255,10 @@ public class Session {
                         HashMap<String, String> map = new HashMap<>();
                         map.put(Content.EST, Message.SESSION_ACCEPT.name());
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                    } else {
+                        events.onFailure();
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
 
@@ -242,8 +268,9 @@ public class Session {
 
     }
 
-    public void emitSessionClose(@NonNull PID user, long timeout) {
+    public void emitSessionClose(@NonNull PID user, @NonNull ConnectionEvents events, long timeout) {
         checkNotNull(user);
+        checkNotNull(events);
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -254,8 +281,10 @@ public class Session {
                         HashMap<String, String> map = new HashMap<>();
                         map.put(Content.EST, Message.SESSION_CLOSE.name());
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                    } else {
+                        events.onFailure();
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
             });
@@ -263,9 +292,11 @@ public class Session {
     }
 
     public void emitIceCandidatesRemove(@NonNull PID user,
+                                        @NonNull ConnectionEvents events,
                                         @NonNull IceCandidate[] candidates,
                                         int timeout) {
         checkNotNull(user);
+        checkNotNull(events);
         checkNotNull(candidates);
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
@@ -283,6 +314,8 @@ public class Session {
 
                             ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
                         }
+                    } else {
+                        events.onFailure();
                     }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -292,8 +325,11 @@ public class Session {
 
     }
 
-    public void emitIceCandidate(@NonNull PID user, @NonNull IceCandidate candidate, int timeout) {
+    public void emitIceCandidate(@NonNull PID user,
+                                 @NonNull ConnectionEvents events,
+                                 @NonNull IceCandidate candidate, int timeout) {
         checkNotNull(user);
+        checkNotNull(events);
         checkNotNull(candidate);
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
@@ -309,6 +345,8 @@ public class Session {
                         map.put(Content.INDEX, String.valueOf(candidate.sdpMLineIndex));
 
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
+                    } else {
+                        events.onFailure();
                     }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -320,22 +358,24 @@ public class Session {
 
 
     public interface Listener {
-        void busy(PID pid);
+        void busy(@NonNull PID pid);
 
-        void accept(PID pid);
+        void accept(@NonNull PID pid);
 
-        void reject(PID pid);
+        void reject(@NonNull PID pid);
 
-        void offer(PID pid, String sdp);
+        void offer(@NonNull PID pid, @NonNull String sdp);
 
-        void answer(PID pid, String sdp, String type);
+        void answer(@NonNull PID pid, @NonNull String sdp, @NonNull String type);
 
-        void candidate(PID pid, String sdp, String mid, String index);
+        void candidate(@NonNull PID pid, @NonNull String sdp,
+                       @NonNull String mid, @NonNull String index);
 
-        void candidate_remove(PID pid, String sdp, String mid, String index);
+        void candidate_remove(@NonNull PID pid, @NonNull String sdp,
+                              @NonNull String mid, @NonNull String index);
 
-        void close(PID pid);
+        void close(@NonNull PID pid);
 
-        void timeout(PID pid);
+        void timeout(@NonNull PID pid);
     }
 }

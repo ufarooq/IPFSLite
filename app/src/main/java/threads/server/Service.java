@@ -106,7 +106,7 @@ public class Service {
                     checkNotNull(pid);
                     checkArgument(!pid.getPid().isEmpty());
                     try {
-                        pubsubDaemon(context, ipfs, pid, Session.getInstance());
+                        pubsubDaemon(context, ipfs, pid, RTCSession.getInstance());
                     } catch (Throwable e) {
                         // IGNORE exception occurs when daemon is shutdown
                     }
@@ -118,7 +118,7 @@ public class Service {
     private static void pubsubDaemon(@NonNull Context context,
                                      @NonNull IPFS ipfs,
                                      @NonNull PID pid,
-                                     @NonNull Session session) throws Exception {
+                                     @NonNull RTCSession session) throws Exception {
         checkNotNull(context);
         checkNotNull(ipfs);
         checkNotNull(pid);

@@ -255,4 +255,5 @@
     <string name="pref_use_legacy_audio_device_default">false</string>
     <string name="incoming_call">Incoming Call</string>
     <string name="is_calling">Peer \"%1$s\" is calling.</string>
+    <string name="connection_failed">Connection to peer failed</string>
 </resources>

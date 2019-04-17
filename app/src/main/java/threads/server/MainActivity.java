@@ -872,7 +872,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             boolean value = ConnectService.connectUser(PID.create(pid), timeout);
                             if (value) {
 
-                                Session.getInstance().emitSessionCall(PID.create(pid));
+                                RTCSession.getInstance().emitSessionCall(PID.create(pid));
 
                                 try {
                                     call(pid, false);
@@ -1344,7 +1344,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         try {
             final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
-            Session.getInstance().emitSessionAccept(PID.create(pid), timeout);
+            RTCSession.getInstance().emitSessionAccept(PID.create(pid), () ->
+                            Preferences.warning(getString(R.string.connection_failed))
+                    , timeout);
 
             final NotificationManager notificationManager = (NotificationManager)
                     getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
@@ -1371,7 +1373,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(pid);
         try {
             final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
-            Session.getInstance().emitSessionReject(PID.create(pid), timeout);
+            RTCSession.getInstance().emitSessionReject(PID.create(pid), () ->
+                            Preferences.warning(getString(R.string.connection_failed))
+                    , timeout);
 
             final NotificationManager notificationManager = (NotificationManager)
                     getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
@@ -1390,7 +1394,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void timeoutCall(@NonNull String pid) {
         try {
             final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
-            Session.getInstance().emitSessionTimeout(PID.create(pid), timeout);
+            RTCSession.getInstance().emitSessionTimeout(PID.create(pid), () ->
+                            Preferences.warning(getString(R.string.connection_failed))
+                    , timeout);
 
             final NotificationManager notificationManager = (NotificationManager)
                     getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);

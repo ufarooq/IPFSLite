@@ -65,7 +65,7 @@ dependencies {
     implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
 
     // UI+API (LICENSE done)
-    implementation 'threads.share:share:2.9.9'
+    implementation 'threads.share:share:3.0.0'
 
     // QR Scanner (LICENSE done)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'
@@ -73,6 +73,7 @@ dependencies {
     // UI (for showing licences file) (LICENSE done)
     implementation 'de.psdev.licensesdialog:licensesdialog:2.0.0'
 
+    // API (LICENSE done)
     implementation 'org.webrtc:google-webrtc:1.0.27485'
 
     // API (LICENSE done)

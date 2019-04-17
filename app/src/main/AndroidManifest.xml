@@ -46,16 +46,6 @@
 
         </activity>
 
-        <activity
-            android:name="threads.server.VideoActivity"
-            android:parentActivityName=".MainActivity"
-            android:theme="@style/ThreadsServerTheme"
-            android:windowSoftInputMode="stateHidden">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="threads.server.MainActivity" />
-        </activity>
-
 
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"

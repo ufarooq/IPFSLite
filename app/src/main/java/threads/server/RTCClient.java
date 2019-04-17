@@ -23,7 +23,7 @@ import threads.ipfs.api.PID;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 
-public class RTCClient implements Session.Listener {
+public class RTCClient implements RTCSession.Listener {
 
     private final SignalingEvents events;
     private final PID user;
@@ -40,7 +40,7 @@ public class RTCClient implements Session.Listener {
         this.timeout = timeout;
 
 
-        Session.getInstance().setListener(this);
+        RTCSession.getInstance().setListener(this);
     }
 
     @Override
@@ -145,24 +145,24 @@ public class RTCClient implements Session.Listener {
 
     public void sendOfferSdp(@NonNull final SessionDescription sdp) {
         checkNotNull(sdp);
-        Session.getInstance().emitSessionOffer(user, sdp, timeout);
+        RTCSession.getInstance().emitSessionOffer(user, events, sdp, timeout);
     }
 
 
     public void sendAnswerSdp(@NonNull final SessionDescription sdp) {
         checkNotNull(sdp);
-        Session.getInstance().emitSessionAnswer(user, sdp, timeout);
+        RTCSession.getInstance().emitSessionAnswer(user, events, sdp, timeout);
     }
 
 
     public void sendLocalIceCandidate(@NonNull final IceCandidate candidate) {
         checkNotNull(candidate);
-        Session.getInstance().emitIceCandidate(user, candidate, timeout);
+        RTCSession.getInstance().emitIceCandidate(user, events, candidate, timeout);
     }
 
     public void sendLocalIceCandidateRemovals(final IceCandidate[] candidates) {
         if (candidates != null) {
-            Session.getInstance().emitIceCandidatesRemove(user, candidates, timeout);
+            RTCSession.getInstance().emitIceCandidatesRemove(user, events, candidates, timeout);
         }
     }
 
@@ -172,7 +172,7 @@ public class RTCClient implements Session.Listener {
      *
      * <p>Methods are guaranteed to be invoked on the UI thread of |activity|.
      */
-    public interface SignalingEvents {
+    public interface SignalingEvents extends ConnectionEvents {
 
 
         /**
@@ -201,6 +201,10 @@ public class RTCClient implements Session.Listener {
          */
         void onChannelClose();
 
+    }
+
+    public interface ConnectionEvents {
+        void onFailure();
     }
 
     /**

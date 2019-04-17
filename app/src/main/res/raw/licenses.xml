@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <notices>
+
+    <notice>
+        <name>WebRtc</name>
+        <url>https://code.immersaview.com/remotes/webrtc</url>
+        <copyright />
+        <license>BSD 3-Clause License</license>
+    </notice>
     <notice>
         <name>Android Support Library</name>
         <url>http://developer.android.com/tools/support-library/index.html</url>
