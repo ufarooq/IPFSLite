@@ -42,7 +42,6 @@ import org.webrtc.PeerConnectionFactory;
 import org.webrtc.RendererCommon.ScalingType;
 import org.webrtc.ScreenCapturerAndroid;
 import org.webrtc.SessionDescription;
-import org.webrtc.StatsReport;
 import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoFileRenderer;
@@ -555,8 +554,7 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
             Log.w(TAG, "Call is connected in closed or error state");
             return;
         }
-        // Enable statistics callback.
-        peerConnectionClient.enableStatsEvents(true, STAT_CALLBACK_PERIOD);
+
         setSwappedFeeds(false /* isSwappedFeeds */);
     }
 
@@ -894,10 +892,7 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         // TODO
     }
 
-    @Override
-    public void onPeerConnectionStatsReady(final StatsReport[] reports) {
 
-    }
 
     @Override
     public void onPeerConnectionError(final String description) {

@@ -39,8 +39,6 @@ import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
 import org.webrtc.SoftwareVideoDecoderFactory;
 import org.webrtc.SoftwareVideoEncoderFactory;
-import org.webrtc.StatsObserver;
-import org.webrtc.StatsReport;
 import org.webrtc.SurfaceTextureHelper;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoDecoderFactory;
@@ -74,7 +72,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -786,38 +783,6 @@ public class RTCPeerConnection {
         return isVideoCallEnabled() && videoWidth * videoHeight >= 1280 * 720;
     }
 
-    @SuppressWarnings("deprecation") // TODO(sakal): getStats is deprecated.
-    private void getStats() {
-        if (peerConnection == null || isError) {
-            return;
-        }
-        boolean success = peerConnection.getStats(new StatsObserver() {
-            @Override
-            public void onComplete(final StatsReport[] reports) {
-                events.onPeerConnectionStatsReady(reports);
-            }
-        }, null);
-        if (!success) {
-            Log.e(TAG, "getStats() returns false!");
-        }
-    }
-
-    public void enableStatsEvents(boolean enable, int periodMs) {
-        if (enable) {
-            try {
-                statsTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        executor.execute(() -> getStats());
-                    }
-                }, 0, periodMs);
-            } catch (Exception e) {
-                Log.e(TAG, "Can not schedule statistics timer", e);
-            }
-        } else {
-            statsTimer.cancel();
-        }
-    }
 
     public void setAudioEnabled(final boolean enable) {
         executor.execute(() -> {
@@ -1105,11 +1070,6 @@ public class RTCPeerConnection {
          * Callback fired once peer connection is closed.
          */
         void onPeerConnectionClosed();
-
-        /**
-         * Callback fired once peer connection statistics is ready.
-         */
-        void onPeerConnectionStatsReady(final StatsReport[] reports);
 
         /**
          * Callback fired once peer connection error happened.
