@@ -4,11 +4,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
-import android.preference.PreferenceManager;
 import android.util.Log;
 
 import org.webrtc.ThreadUtils;
@@ -78,10 +76,8 @@ public class RTCAudioManager {
         wiredHeadsetReceiver = new WiredHeadsetReceiver();
         amState = AudioManagerState.UNINITIALIZED;
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
-        useSpeakerphone = sharedPreferences.getString(context.getString(R.string.pref_speakerphone_key),
-                context.getString(R.string.pref_speakerphone_default));
-        Log.d(TAG, "useSpeakerphone: " + useSpeakerphone);
+        useSpeakerphone = SPEAKERPHONE_AUTO; // TODO
+
         if (useSpeakerphone.equals(SPEAKERPHONE_FALSE)) {
             defaultAudioDevice = AudioDevice.EARPIECE;
         } else {

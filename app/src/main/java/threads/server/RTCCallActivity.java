@@ -1,6 +1,5 @@
 package threads.server;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -46,42 +45,30 @@ import threads.share.ConnectService;
 public class RTCCallActivity extends AppCompatActivity implements RTCClient.SignalingEvents,
         RTCPeerConnection.PeerConnectionEvents {
 
-    public static final String EXTRA_VIDEO_CALL = "org.appspot.apprtc.VIDEO_CALL";
-    public static final String EXTRA_CAMERA2 = "org.appspot.apprtc.CAMERA2";
-    public static final String EXTRA_VIDEO_WIDTH = "org.appspot.apprtc.VIDEO_WIDTH";
-    public static final String EXTRA_VIDEO_HEIGHT = "org.appspot.apprtc.VIDEO_HEIGHT";
-    public static final String EXTRA_VIDEO_FPS = "org.appspot.apprtc.VIDEO_FPS";
+    public static final String EXTRA_VIDEO_CALL = "VIDEO_CALL";
+    public static final String EXTRA_CAMERA2 = "CAMERA2";
+    public static final String EXTRA_VIDEO_WIDTH = "VIDEO_WIDTH";
+    public static final String EXTRA_VIDEO_HEIGHT = "VIDEO_HEIGHT";
+    public static final String EXTRA_VIDEO_FPS = "VIDEO_FPS";
 
-    public static final String EXTRA_VIDEO_BITRATE = "org.appspot.apprtc.VIDEO_BITRATE";
-    public static final String EXTRA_VIDEOCODEC = "org.appspot.apprtc.VIDEOCODEC";
-    public static final String EXTRA_HWCODEC_ENABLED = "org.appspot.apprtc.HWCODEC";
-    public static final String EXTRA_CAPTURETOTEXTURE_ENABLED = "org.appspot.apprtc.CAPTURETOTEXTURE";
-    public static final String EXTRA_FLEXFEC_ENABLED = "org.appspot.apprtc.FLEXFEC";
-    public static final String EXTRA_AUDIO_BITRATE = "org.appspot.apprtc.AUDIO_BITRATE";
-    public static final String EXTRA_AUDIOCODEC = "org.appspot.apprtc.AUDIOCODEC";
-    public static final String EXTRA_NOAUDIOPROCESSING_ENABLED =
-            "org.appspot.apprtc.NOAUDIOPROCESSING";
-    public static final String EXTRA_AECDUMP_ENABLED = "org.appspot.apprtc.AECDUMP";
-    public static final String EXTRA_OPENSLES_ENABLED = "org.appspot.apprtc.OPENSLES";
-    public static final String EXTRA_DISABLE_BUILT_IN_AEC = "org.appspot.apprtc.DISABLE_BUILT_IN_AEC";
-    public static final String EXTRA_DISABLE_BUILT_IN_AGC = "org.appspot.apprtc.DISABLE_BUILT_IN_AGC";
-    public static final String EXTRA_DISABLE_BUILT_IN_NS = "org.appspot.apprtc.DISABLE_BUILT_IN_NS";
-    public static final String EXTRA_DISABLE_WEBRTC_AGC_AND_HPF =
-            "org.appspot.apprtc.DISABLE_WEBRTC_GAIN_CONTROL";
-    public static final String EXTRA_TRACING = "org.appspot.apprtc.TRACING";
-
-
-    public static final String EXTRA_DATA_CHANNEL_ENABLED = "org.appspot.apprtc.DATA_CHANNEL_ENABLED";
-    public static final String EXTRA_ORDERED = "org.appspot.apprtc.ORDERED";
-    public static final String EXTRA_MAX_RETRANSMITS_MS = "org.appspot.apprtc.MAX_RETRANSMITS_MS";
-    public static final String EXTRA_MAX_RETRANSMITS = "org.appspot.apprtc.MAX_RETRANSMITS";
-    public static final String EXTRA_PROTOCOL = "org.appspot.apprtc.PROTOCOL";
-    public static final String EXTRA_NEGOTIATED = "org.appspot.apprtc.NEGOTIATED";
-    public static final String EXTRA_ID = "org.appspot.apprtc.ID";
+    public static final String EXTRA_VIDEO_BITRATE = "VIDEO_BITRATE";
+    public static final String EXTRA_VIDEOCODEC = "VIDEOCODEC";
+    public static final String EXTRA_HWCODEC_ENABLED = "HWCODEC";
+    public static final String EXTRA_CAPTURETOTEXTURE_ENABLED = "CAPTURETOTEXTURE";
+    public static final String EXTRA_FLEXFEC_ENABLED = "FLEXFEC";
+    public static final String EXTRA_AUDIO_BITRATE = "AUDIO_BITRATE";
+    public static final String EXTRA_AUDIOCODEC = "AUDIOCODEC";
+    public static final String EXTRA_NOAUDIOPROCESSING_ENABLED = "NOAUDIOPROCESSING";
+    public static final String EXTRA_AECDUMP_ENABLED = "AECDUMP";
+    public static final String EXTRA_OPENSLES_ENABLED = "OPENSLES";
+    public static final String EXTRA_DISABLE_BUILT_IN_AEC = "DISABLE_BUILT_IN_AEC";
+    public static final String EXTRA_DISABLE_BUILT_IN_AGC = "DISABLE_BUILT_IN_AGC";
+    public static final String EXTRA_DISABLE_BUILT_IN_NS = "DISABLE_BUILT_IN_NS";
+    public static final String EXTRA_DISABLE_WEBRTC_AGC_AND_HPF = "DISABLE_WEBRTC_GAIN_CONTROL";
+    public static final String EXTRA_TRACING = "TRACING";
 
     private static final String TAG = "CallRTCClient";
 
-    // List of mandatory application permissions.
     private static final String[] MANDATORY_PERMISSIONS = {"android.permission.MODIFY_AUDIO_SETTINGS",
             "android.permission.RECORD_AUDIO", "android.permission.INTERNET"};
 
@@ -113,6 +100,7 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
     private boolean callControlFragmentVisible = true;
     private long callStartedTimeMs;
     private boolean micEnabled = true;
+
     // True if local view is in the fullscreen renderer.
     private boolean isSwappedFeeds;
     private long mLastClickTime = 0;
@@ -120,6 +108,7 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
 
     // Controls
     private LinearLayout fab_layout;
+
     private static int getSystemUiVisibility() {
         int flags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN;
         flags |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
@@ -127,19 +116,14 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
     }
 
     @Override
-    // TODO(bugs.webrtc.org/8580): LayoutParams.FLAG_TURN_SCREEN_ON and
-    // LayoutParams.FLAG_SHOW_WHEN_LOCKED are deprecated.
-    @SuppressWarnings("deprecation")
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Set window styles for fullscreen-window size. Needs to be done before
-        // adding content.
+
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
                 | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
         getWindow().getDecorView().setSystemUiVisibility(getSystemUiVisibility());
-
 
         setContentView(R.layout.activity_call);
 
@@ -194,27 +178,24 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
         }
 
 
-        boolean tracing = intent.getBooleanExtra(EXTRA_TRACING, false);
-
         int videoWidth = intent.getIntExtra(EXTRA_VIDEO_WIDTH, 0);
         int videoHeight = intent.getIntExtra(EXTRA_VIDEO_HEIGHT, 0);
 
 
-        RTCPeerConnection.DataChannelParameters dataChannelParameters = null;
-        if (intent.getBooleanExtra(EXTRA_DATA_CHANNEL_ENABLED, false)) {
-            dataChannelParameters = new RTCPeerConnection.DataChannelParameters(intent.getBooleanExtra(EXTRA_ORDERED, true),
-                    intent.getIntExtra(EXTRA_MAX_RETRANSMITS_MS, -1),
-                    intent.getIntExtra(EXTRA_MAX_RETRANSMITS, -1), intent.getStringExtra(EXTRA_PROTOCOL),
-                    intent.getBooleanExtra(EXTRA_NEGOTIATED, false), intent.getIntExtra(EXTRA_ID, -1));
-        }
         peerConnectionParameters =
-                new PeerConnectionParameters(intent.getBooleanExtra(EXTRA_VIDEO_CALL, true), false,
-                        tracing, videoWidth, videoHeight, intent.getIntExtra(EXTRA_VIDEO_FPS, 0),
+                new PeerConnectionParameters(
+                        intent.getBooleanExtra(EXTRA_VIDEO_CALL, true),
+                        false,
+                        intent.getBooleanExtra(EXTRA_TRACING, false),
+                        videoWidth,
+                        videoHeight,
+                        intent.getIntExtra(EXTRA_VIDEO_FPS, 0),
                         intent.getIntExtra(EXTRA_VIDEO_BITRATE, 0),
                         intent.getStringExtra(EXTRA_VIDEOCODEC),
                         intent.getBooleanExtra(EXTRA_HWCODEC_ENABLED, true),
                         intent.getBooleanExtra(EXTRA_FLEXFEC_ENABLED, false),
-                        intent.getIntExtra(EXTRA_AUDIO_BITRATE, 0), intent.getStringExtra(EXTRA_AUDIOCODEC),
+                        intent.getIntExtra(EXTRA_AUDIO_BITRATE, 0),
+                        intent.getStringExtra(EXTRA_AUDIOCODEC),
                         intent.getBooleanExtra(EXTRA_NOAUDIOPROCESSING_ENABLED, false),
                         intent.getBooleanExtra(EXTRA_AECDUMP_ENABLED, false),
                         intent.getBooleanExtra(EXTRA_OPENSLES_ENABLED, false),
@@ -222,7 +203,7 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
                         intent.getBooleanExtra(EXTRA_DISABLE_BUILT_IN_AGC, false),
                         intent.getBooleanExtra(EXTRA_DISABLE_BUILT_IN_NS, false),
                         intent.getBooleanExtra(EXTRA_DISABLE_WEBRTC_AGC_AND_HPF, false),
-                        false, dataChannelParameters);
+                        false, null);
 
 
         int timeout = ConnectService.getConnectionTimeout(this);
@@ -493,12 +474,9 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
                     .setMessage(errorMessage)
                     .setCancelable(false)
                     .setNeutralButton(R.string.ok,
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int id) {
-                                    dialog.cancel();
-                                    disconnect();
-                                }
+                            (dialog, id) -> {
+                                dialog.cancel();
+                                disconnect();
                             })
                     .create()
                     .show();
@@ -516,13 +494,10 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
     }
 
     private void reportError(final String description) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (!isError) {
-                    isError = true;
-                    disconnectWithErrorMessage(description);
-                }
+        runOnUiThread(() -> {
+            if (!isError) {
+                isError = true;
+                disconnectWithErrorMessage(description);
             }
         });
     }
@@ -674,18 +649,18 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
         final long delta = System.currentTimeMillis() - callStartedTimeMs;
         runOnUiThread(() -> {
 
-                if (appRtcClient != null) {
-                    logAndToast("Sending " + sdp.type + ", delay=" + delta + "ms");
-                    if (signalingParameters.initiator) {
-                        appRtcClient.sendOfferSdp(sdp);
-                    } else {
-                        appRtcClient.sendAnswerSdp(sdp);
-                    }
+            if (appRtcClient != null) {
+                logAndToast("Sending " + sdp.type + ", delay=" + delta + "ms");
+                if (signalingParameters.initiator) {
+                    appRtcClient.sendOfferSdp(sdp);
+                } else {
+                    appRtcClient.sendAnswerSdp(sdp);
                 }
-                if (peerConnectionParameters.videoMaxBitrate > 0) {
-                    Log.d(TAG, "Set video maximum bitrate: " + peerConnectionParameters.videoMaxBitrate);
-                    peerConnectionClient.setVideoMaxBitrate(peerConnectionParameters.videoMaxBitrate);
-                }
+            }
+            if (peerConnectionParameters.videoMaxBitrate > 0) {
+                Log.d(TAG, "Set video maximum bitrate: " + peerConnectionParameters.videoMaxBitrate);
+                peerConnectionClient.setVideoMaxBitrate(peerConnectionParameters.videoMaxBitrate);
+            }
 
         });
     }
@@ -738,25 +713,21 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
     @Override
     public void onConnected() {
         final long delta = System.currentTimeMillis() - callStartedTimeMs;
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                logAndToast("DTLS connected, delay=" + delta + "ms");
-                connected = true;
-                callConnected();
-            }
+        runOnUiThread(() -> {
+
+            logAndToast("DTLS connected, delay=" + delta + "ms");
+            connected = true;
+            callConnected();
+
         });
     }
 
     @Override
     public void onDisconnected() {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                logAndToast("DTLS disconnected");
-                connected = false;
-                disconnect();
-            }
+        runOnUiThread(() -> {
+            logAndToast("DTLS disconnected");
+            connected = false;
+            disconnect();
         });
     }
 
@@ -764,13 +735,10 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
     public void onPeerConnectionClosed() {
         // TODO
         // check implementation
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                logAndToast("Peer connection closed");
-                connected = false;
-                disconnect();
-            }
+        runOnUiThread(() -> {
+            logAndToast("Peer connection closed");
+            connected = false;
+            disconnect();
         });
     }
 
@@ -782,13 +750,7 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
 
     @Override
     public void onConnectionFailure() {
-
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                logAndToast("Connecting to peer failed");
-            }
-        });
+        runOnUiThread(() -> logAndToast("Connecting to peer failed"));
     }
 
     private static class ProxyVideoSink implements VideoSink {
@@ -800,11 +762,10 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
                 Logging.d(TAG, "Dropping frame in proxy because target is null.");
                 return;
             }
-
             target.onFrame(frame);
         }
 
-        synchronized public void setTarget(VideoSink target) {
+        synchronized void setTarget(VideoSink target) {
             this.target = target;
         }
     }
