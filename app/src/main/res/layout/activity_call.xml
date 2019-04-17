@@ -44,6 +44,15 @@
             app:srcCompat="@drawable/microphone" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fab_toggle_speaker"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            app:backgroundTint="@color/lightGray"
+            app:srcCompat="@drawable/volume_medium" />
+
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab_switch_camera"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
