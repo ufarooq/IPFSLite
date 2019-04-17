@@ -75,7 +75,7 @@ public class RTCCallingDialogFragment extends DialogFragment {
         checkNotNull(name);
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
 
-        builder.setIcon(R.drawable.ic_call_black_24dp);
+        builder.setIcon(R.drawable.phone_black);
         builder.setTitle(getString(R.string.incoming_call));
         builder.setPositiveButton(getString(R.string.accept), (dialog, which) -> {
 

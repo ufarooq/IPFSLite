@@ -86,7 +86,7 @@ class NotificationSender {
         builder.setContentTitle(context.getString(R.string.incoming_call));
         builder.setContentText(context.getString(R.string.is_calling, name));
         builder.setPriority(NotificationManager.IMPORTANCE_HIGH);
-        builder.setSmallIcon(R.drawable.ic_call_black_24dp);
+        builder.setSmallIcon(R.drawable.phone_black);
         return builder;
     }
 
