@@ -17,7 +17,7 @@ import static androidx.core.util.Preconditions.checkArgument;
  * RTCProximitySensor manages functions related to the proximity sensor in
  * the AppRTC demo.
  * On most device, the proximity sensor is implemented as a boolean-sensor.
- * It returns just two values "NEAR" or "FAR". Thresholding is done on the LUX
+ * It returns just two values "NEAR" or "FAR". Threshold is done on the LUX
  * value i.e. the LUX value of the light sensor is compared with a threshold.
  * A LUX-value more than the threshold means the proximity sensor returns "FAR".
  * Anything less than the threshold value and the sensor  returns "NEAR".

@@ -103,8 +103,6 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
     private long callStartedTimeMs;
     private boolean micEnabled = true;
     private boolean speakerEnabled = false;
-    // True if local view is in the fullscreen renderer.
-    private boolean isSwappedFeeds;
     private boolean initiator;
     private long mLastClickTime = 0;
     // Controls
@@ -592,7 +590,6 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
 
     private void setSwappedFeeds(boolean isSwappedFeeds) {
         Logging.d(TAG, "setSwappedFeeds: " + isSwappedFeeds);
-        this.isSwappedFeeds = isSwappedFeeds;
         localProxyVideoSink.setTarget(isSwappedFeeds ? fullscreenRenderer : pipRenderer);
         remoteProxyRenderer.setTarget(isSwappedFeeds ? pipRenderer : fullscreenRenderer);
         fullscreenRenderer.setMirror(isSwappedFeeds);

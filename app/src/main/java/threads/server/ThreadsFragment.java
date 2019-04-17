@@ -301,10 +301,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     }
 
-    private void update(@NonNull long thread) {
-        checkNotNull(thread);
+    private void update(long thread) {
         try {
-
             topLevel.set(thread == 0L);
 
             directory.set(thread);
