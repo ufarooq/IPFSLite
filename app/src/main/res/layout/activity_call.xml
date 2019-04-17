@@ -17,15 +17,11 @@
         android:id="@+id/pip_video_view"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:layout_gravity="top|start"
+        android:layout_gravity="top|end"
         android:layout_margin="16dp" />
 
-    <FrameLayout
-        android:id="@+id/call_fragment_container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
     <LinearLayout
+        android:id="@+id/fab_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center"
@@ -56,6 +52,5 @@
             app:srcCompat="@drawable/camera_retake_outline" />
 
     </LinearLayout>
-
-
 </FrameLayout>
+

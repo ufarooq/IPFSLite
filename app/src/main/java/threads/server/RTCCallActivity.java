@@ -1,18 +1,15 @@
 package threads.server;
 
-import android.annotation.TargetApi;
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.media.projection.MediaProjection;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -26,7 +23,6 @@ import org.webrtc.Logging;
 import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.RendererCommon.ScalingType;
-import org.webrtc.ScreenCapturerAndroid;
 import org.webrtc.SessionDescription;
 import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoCapturer;
@@ -39,13 +35,15 @@ import java.util.List;
 import java.util.Set;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import threads.core.api.Content;
 import threads.ipfs.api.PID;
 import threads.server.RTCAudioManager.AudioDevice;
 import threads.server.RTCPeerConnection.PeerConnectionParameters;
 import threads.share.ConnectService;
 
-public class RTCCallActivity extends Activity implements RTCClient.SignalingEvents,
+public class RTCCallActivity extends AppCompatActivity implements RTCClient.SignalingEvents,
         RTCPeerConnection.PeerConnectionEvents {
 
     public static final String EXTRA_VIDEO_CALL = "org.appspot.apprtc.VIDEO_CALL";
@@ -82,20 +80,15 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
     public static final String EXTRA_ID = "org.appspot.apprtc.ID";
 
     private static final String TAG = "CallRTCClient";
-    private static final int CAPTURE_PERMISSION_REQUEST_CODE = 1;
 
     // List of mandatory application permissions.
     private static final String[] MANDATORY_PERMISSIONS = {"android.permission.MODIFY_AUDIO_SETTINGS",
             "android.permission.RECORD_AUDIO", "android.permission.INTERNET"};
 
-    // Peer connection statistics callback period in ms.
-    private static final int STAT_CALLBACK_PERIOD = 1000;
-    private static Intent mediaProjectionPermissionResultData;
-    private static int mediaProjectionPermissionResultCode;
     private final ProxyVideoSink remoteProxyRenderer = new ProxyVideoSink();
     private final ProxyVideoSink localProxyVideoSink = new ProxyVideoSink();
     private final List<VideoSink> remoteSinks = new ArrayList<>();
-    List<PeerConnection.IceServer> peerIceServers = new ArrayList<>();
+    private final List<PeerConnection.IceServer> peerIceServers = new ArrayList<>();
     @Nullable
     private RTCPeerConnection peerConnectionClient;
     @Nullable
@@ -105,10 +98,9 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
     @Nullable
     private RTCAudioManager audioManager;
 
-    @Nullable
     private SurfaceViewRenderer pipRenderer;
-    @Nullable
     private SurfaceViewRenderer fullscreenRenderer;
+
     @Nullable
     private VideoFileRenderer videoFileRenderer;
     private Toast logToast;
@@ -127,10 +119,7 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
 
 
     // Controls
-    private FloatingActionButton fab_hangup;
-    private FloatingActionButton fab_switch_camera;
-    private FloatingActionButton fab_toggle_mic;
-
+    private LinearLayout fab_layout;
     private static int getSystemUiVisibility() {
         int flags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN;
         flags |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
@@ -168,25 +157,15 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
 
         // Create UI controls.
         pipRenderer = findViewById(R.id.pip_video_view);
+
         fullscreenRenderer = findViewById(R.id.fullscreen_video_view);
 
-        // Show/hide call control fragment on view click.
-        View.OnClickListener listener = new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                toggleCallControls();
-            }
-        };
 
         // Swap feeds on pip view click.
-        pipRenderer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                setSwappedFeeds(!isSwappedFeeds);
-            }
-        });
+        // TODO pipRenderer.setOnClickListener((view) -> setSwappedFeeds(!isSwappedFeeds));
+        // Show/hide call control fragment on view click.
+        fullscreenRenderer.setOnClickListener((view) -> toggleCallControls());
 
-        fullscreenRenderer.setOnClickListener(listener);
         remoteSinks.add(remoteProxyRenderer);
 
         final EglBase eglBase = EglBase.create();
@@ -246,8 +225,6 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
                         false, dataChannelParameters);
 
 
-        // Create connection client. Use RTCClient if room name is an IP otherwise use the
-        // standard WebSocketRTCClient.
         int timeout = ConnectService.getConnectionTimeout(this);
         appRtcClient = new RTCClient(user, this, timeout);
 
@@ -263,7 +240,8 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         startCall();
 
 
-        fab_hangup = findViewById(R.id.fab_hangup);
+        fab_layout = findViewById(R.id.fab_layout);
+        FloatingActionButton fab_hangup = findViewById(R.id.fab_hangup);
         fab_hangup.setOnClickListener((view) -> {
 
 
@@ -278,7 +256,7 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         });
 
 
-        fab_switch_camera = findViewById(R.id.fab_switch_camera);
+        FloatingActionButton fab_switch_camera = findViewById(R.id.fab_switch_camera);
         fab_switch_camera.setOnClickListener((view) -> {
 
 
@@ -293,7 +271,7 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         });
 
 
-        fab_toggle_mic = findViewById(R.id.fab_toggle_mic);
+        FloatingActionButton fab_toggle_mic = findViewById(R.id.fab_toggle_mic);
         fab_toggle_mic.setOnClickListener((view) -> {
 
 
@@ -314,15 +292,6 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         });
     }
 
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode != CAPTURE_PERMISSION_REQUEST_CODE)
-            return;
-        mediaProjectionPermissionResultCode = resultCode;
-        mediaProjectionPermissionResultData = data;
-        startCall();
-    }
 
     private boolean useCamera2() {
         return Camera2Enumerator.isSupported(this) && getIntent().getBooleanExtra(EXTRA_CAMERA2, true);
@@ -365,23 +334,7 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         return null;
     }
 
-    @TargetApi(21)
-    private @Nullable
-    VideoCapturer createScreenCapturer() {
-        if (mediaProjectionPermissionResultCode != Activity.RESULT_OK) {
-            reportError("User didn't give permission to capture the screen.");
-            return null;
-        }
-        return new ScreenCapturerAndroid(
-                mediaProjectionPermissionResultData, new MediaProjection.Callback() {
-            @Override
-            public void onStop() {
-                reportError("User revoked permission to capture the screen.");
-            }
-        });
-    }
 
-    // Activity interfaces
     @Override
     public void onStop() {
         super.onStop();
@@ -415,7 +368,6 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         super.onDestroy();
     }
 
-    // CallFragment.OnCallEvents interface implementation.
 
     public void onCallHangUp() {
         disconnect();
@@ -429,12 +381,6 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
     }
 
 
-    public void onCaptureFormatChange(int width, int height, int framerate) {
-        if (peerConnectionClient != null) {
-            peerConnectionClient.changeCaptureFormat(width, height, framerate);
-        }
-    }
-
     public boolean onToggleMic() {
         if (peerConnectionClient != null) {
             micEnabled = !micEnabled;
@@ -444,20 +390,14 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
     }
 
     private void toggleCallControls() {
-        if (!connected) {
-            return;
-        }
+
         // Show/hide call control fragment
         callControlFragmentVisible = !callControlFragmentVisible;
 
         if (callControlFragmentVisible) {
-            fab_hangup.setVisibility(View.VISIBLE);
-            fab_switch_camera.setVisibility(View.VISIBLE);
-            fab_toggle_mic.setVisibility(View.VISIBLE);
+            fab_layout.setVisibility(View.VISIBLE);
         } else {
-            fab_hangup.setVisibility(View.INVISIBLE);
-            fab_switch_camera.setVisibility(View.INVISIBLE);
-            fab_toggle_mic.setVisibility(View.INVISIBLE);
+            fab_layout.setVisibility(View.GONE);
         }
     }
 
@@ -473,10 +413,6 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         // Create and audio manager that will take care of audio routing,
         // audio modes, audio device enumeration etc.
         audioManager = RTCAudioManager.create(getApplicationContext());
-        // Store existing audio settings and change audio mode to
-        // MODE_IN_COMMUNICATION for best possible VoIP performance.
-        Log.d(TAG, "Starting the audio manager...");
-
 
         audioManager.start(new RTCAudioManager.AudioManagerEvents() {
             // This method will be called each time the number of available audio
@@ -621,6 +557,7 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
         remoteProxyRenderer.setTarget(isSwappedFeeds ? pipRenderer : fullscreenRenderer);
         fullscreenRenderer.setMirror(isSwappedFeeds);
         pipRenderer.setMirror(!isSwappedFeeds);
+
     }
 
     // -----Implementation of RTCClient.AppRTCSignalingEvents ---------------
@@ -735,9 +672,8 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
     @Override
     public void onLocalDescription(final SessionDescription sdp) {
         final long delta = System.currentTimeMillis() - callStartedTimeMs;
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
+        runOnUiThread(() -> {
+
                 if (appRtcClient != null) {
                     logAndToast("Sending " + sdp.type + ", delay=" + delta + "ms");
                     if (signalingParameters.initiator) {
@@ -750,7 +686,7 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
                     Log.d(TAG, "Set video maximum bitrate: " + peerConnectionParameters.videoMaxBitrate);
                     peerConnectionClient.setVideoMaxBitrate(peerConnectionParameters.videoMaxBitrate);
                 }
-            }
+
         });
     }
 
@@ -827,6 +763,15 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
     @Override
     public void onPeerConnectionClosed() {
         // TODO
+        // check implementation
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                logAndToast("Peer connection closed");
+                connected = false;
+                disconnect();
+            }
+        });
     }
 
 
