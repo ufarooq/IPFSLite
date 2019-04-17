@@ -14,10 +14,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
+
 import threads.core.Preferences;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import static androidx.core.util.Preconditions.checkNotNull;
 public class PeersDialogFragment extends DialogFragment {
     static final String TAG = PeersDialogFragment.class.getSimpleName();
     private static final String EDIT_PEER_ACTIVE = "EDIT_PEER_ACTIVE";

@@ -17,18 +17,18 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 
+import androidx.annotation.NonNull;
+import androidx.fragment.app.DialogFragment;
+
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.DialogFragment;
 import threads.core.Preferences;
 import threads.ipfs.api.Multihash;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import static androidx.core.util.Preconditions.checkNotNull;
 public class EditPeerDialogFragment extends DialogFragment {
     public static final String TAG = EditPeerDialogFragment.class.getSimpleName();
     private static final int MULTIHASH_SIZE = 128;

@@ -5,14 +5,14 @@ import android.content.SharedPreferences;
 import android.os.StrictMode;
 
 import androidx.annotation.NonNull;
+
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.ipfs.api.ConnMgrConfig;
 import threads.ipfs.api.Profile;
 import threads.share.ConnectService;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import static androidx.core.util.Preconditions.checkNotNull;
 public class Application extends android.app.Application {
 
     public static final String THREAD_KIND = "THREAD_KIND";

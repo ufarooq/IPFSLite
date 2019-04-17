@@ -61,6 +61,9 @@ dependencies {
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
+    // Android (LICENSE done)
+    implementation 'com.google.android.material:material:1.1.0-alpha05'
+
     // API (LICENSE done)
     implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
 
@@ -77,11 +80,28 @@ dependencies {
     implementation 'org.webrtc:google-webrtc:1.0.27485'
 
     // API (LICENSE done)
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0-alpha04'
+    implementation "androidx.lifecycle:lifecycle-extensions:2.1.0-alpha04"
 
     // API (LICENSE done)
     //implementation 'threads.pow:pow:1.0.9'
 
+    // API (LICENSE done)
+    implementation 'threads.core:threads:6.6.1'
+
+    // API (LICENSE done)
+    implementation 'threads.iota:threads:2.7.1'
+
+    // API (LICENSE done)
+    implementation 'threads.ipfs:threads:1.2.7'
+
+    // API (LICENSE done)
+    implementation 'com.google.code.gson:gson:2.8.2'
+
+    // JOTA API (LICENSE done)
+    implementation 'com.github.iotaledger:iota-java:1.0.0-beta5'
+
+    // ANDROID (LICENSE done)
+    implementation 'com.google.api-client:google-api-client:1.23.0'
 }
 
 // Place it at the end of the file

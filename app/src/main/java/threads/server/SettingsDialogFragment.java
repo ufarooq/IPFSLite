@@ -13,18 +13,19 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.DialogFragment;
+
 import com.google.common.collect.Lists;
 
 import java.util.List;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.DialogFragment;
 import threads.core.Preferences;
 import threads.ipfs.api.Profile;
 import threads.share.ConnectService;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static androidx.core.util.Preconditions.checkNotNull;
 
 public class SettingsDialogFragment extends DialogFragment {
 

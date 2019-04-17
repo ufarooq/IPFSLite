@@ -10,13 +10,14 @@ import android.os.Handler;
 import android.view.Window;
 import android.widget.Button;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import threads.core.Preferences;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static androidx.core.util.Preconditions.checkNotNull;
 
 public class RTCCallingDialogFragment extends DialogFragment {
 

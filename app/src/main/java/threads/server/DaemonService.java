@@ -10,15 +10,16 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import threads.core.Preferences;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static androidx.core.util.Preconditions.checkNotNull;
 
 
 public class DaemonService extends Service {

@@ -18,6 +18,23 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentStatePagerAdapter;
+import androidx.lifecycle.ViewModelProviders;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+import androidx.viewpager.widget.ViewPager;
+
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
@@ -36,22 +53,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
-import androidx.core.view.GravityCompat;
-import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentStatePagerAdapter;
-import androidx.lifecycle.ViewModelProviders;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import androidx.viewpager.widget.ViewPager;
 import de.psdev.licensesdialog.LicensesDialogFragment;
 import threads.core.Preferences;
 import threads.core.Singleton;
@@ -76,8 +77,7 @@ import threads.share.ThreadActionDialogFragment;
 import threads.share.UserActionDialogFragment;
 import threads.share.WebViewDialogFragment;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import static androidx.core.util.Preconditions.checkNotNull;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
         PeersDialogFragment.ActionListener,
@@ -108,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void onRequestPermissionsResult
-            (int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+            (int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case DOWNLOAD_EXTERNAL_STORAGE: {
                 for (int i = 0, len = permissions.length; i < len; i++) {
@@ -852,13 +852,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             boolean value = ConnectService.connectUser(PID.create(pid), timeout);
                             if (value) {
 
+                                RTCSession.getInstance().setBusy(true);
                                 RTCSession.getInstance().emitSessionCall(PID.create(pid));
 
-                                try {
-                                    RTCCallActivity.call(MainActivity.this, pid, true);
-                                } catch (Throwable e) {
-                                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                                }
+                                RTCCallActivity.call(MainActivity.this, pid, true);
                             } else {
                                 Preferences.warning(getString(R.string.peer_is_offline));
                             }

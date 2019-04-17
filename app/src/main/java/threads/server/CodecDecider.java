@@ -2,6 +2,8 @@ package threads.server;
 
 import android.webkit.URLUtil;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -9,10 +11,10 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Map;
 
-import androidx.annotation.NonNull;
 import threads.ipfs.api.Multihash;
 
-import static com.google.common.base.Preconditions.checkNotNull;
+import static androidx.core.util.Preconditions.checkNotNull;
+
 
 public class CodecDecider {
 

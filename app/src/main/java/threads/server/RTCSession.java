@@ -1,5 +1,9 @@
 package threads.server;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.Preconditions;
+
 import com.google.gson.Gson;
 
 import org.webrtc.IceCandidate;
@@ -8,10 +12,8 @@ import org.webrtc.SessionDescription;
 import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.util.Preconditions;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.api.Content;
@@ -20,13 +22,15 @@ import threads.ipfs.api.PID;
 import threads.server.RTCClient.ConnectionEvents;
 import threads.share.ConnectService;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import static androidx.core.util.Preconditions.checkNotNull;
 public class RTCSession {
     private static final Gson gson = new Gson();
     private static RTCSession INSTANCE = new RTCSession();
     @Nullable
     private Listener listener = null;
+
+    private final AtomicBoolean busy = new AtomicBoolean(false);
+
 
     private RTCSession() {
     }
@@ -354,6 +358,14 @@ public class RTCSession {
             });
         }
 
+    }
+
+    public boolean isBusy() {
+        return busy.get();
+    }
+
+    public void setBusy(boolean flag) {
+        busy.set(flag);
     }
 
 

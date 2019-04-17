@@ -13,6 +13,10 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+
 import com.google.gson.Gson;
 
 import org.iota.jota.pow.pearldiver.PearlDiverLocalPoW;
@@ -29,10 +33,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.annotation.Nullable;
-
-import androidx.annotation.NonNull;
-import androidx.core.app.NotificationCompat;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -52,8 +52,8 @@ import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
+import static androidx.core.util.Preconditions.checkArgument;
+import static androidx.core.util.Preconditions.checkNotNull;
 
 
 public class Service {
@@ -156,30 +156,34 @@ public class Service {
                             switch (type) {
                                 case SESSION_CALL: {
 
-                                    User user = threadsAPI.getUserByPID(senderPid);
-                                    String name = sender;
-                                    if (user != null) {
-                                        name = user.getAlias();
+                                    if (RTCSession.getInstance().isBusy()) {
+                                        //RTCSession.getInstance().emitSessionBusy(senderPid,);
+                                    } else {
+
+                                        User user = threadsAPI.getUserByPID(senderPid);
+                                        String name = sender;
+                                        if (user != null) {
+                                            name = user.getAlias();
+                                        }
+                                        NotificationCompat.Builder builder =
+                                                NotificationSender.createCallNotification(
+                                                        context, sender, name);
+
+                                        final NotificationManager notificationManager = (NotificationManager)
+                                                context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                                        int notifyID = senderPid.getPid().hashCode();
+                                        Notification notification = builder.build();
+                                        if (notificationManager != null) {
+                                            notificationManager.notify(notifyID, notification);
+                                        }
+
+                                        Intent intent = new Intent(context, MainActivity.class);
+                                        intent.setAction(RTCCallActivity.ACTION_INCOMING_CALL);
+                                        intent.putExtra(RTCCallActivity.CALL_PID, sender);
+                                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                        context.startActivity(intent);
                                     }
-                                    NotificationCompat.Builder builder =
-                                            NotificationSender.createCallNotification(
-                                                    context, sender, name);
-
-                                    final NotificationManager notificationManager = (NotificationManager)
-                                            context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-                                    int notifyID = senderPid.getPid().hashCode();
-                                    Notification notification = builder.build();
-                                    if (notificationManager != null) {
-                                        notificationManager.notify(notifyID, notification);
-                                    }
-
-                                    Intent intent = new Intent(context, MainActivity.class);
-                                    intent.setAction(RTCCallActivity.ACTION_INCOMING_CALL);
-                                    intent.putExtra(RTCCallActivity.CALL_PID, sender);
-                                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                    context.startActivity(intent);
-
                                     break;
                                 }
                                 case SESSION_TIMEOUT: {

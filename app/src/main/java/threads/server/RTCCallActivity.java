@@ -12,6 +12,11 @@ import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.webrtc.Camera1Enumerator;
@@ -34,17 +39,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import threads.ipfs.api.PID;
 import threads.server.RTCAudioManager.AudioDevice;
 import threads.server.RTCPeerConnection.PeerConnectionParameters;
 import threads.share.ConnectService;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
+import static androidx.core.util.Preconditions.checkNotNull;
 public class RTCCallActivity extends AppCompatActivity implements RTCClient.SignalingEvents,
         RTCPeerConnection.PeerConnectionEvents {
 
