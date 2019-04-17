@@ -1,13 +1,3 @@
-/*
- *  Copyright 2015 The WebRTC Project Authors. All rights reserved.
- *
- *  Use of this source code is governed by a BSD-style license
- *  that can be found in the LICENSE file in the root of the source
- *  tree. An additional intellectual property rights grant can be found
- *  in the file PATENTS.  All contributing project authors may
- *  be found in the AUTHORS file in the root of the source tree.
- */
-
 package threads.server;
 
 import android.annotation.TargetApi;
@@ -55,10 +45,6 @@ import threads.server.RTCAudioManager.AudioDevice;
 import threads.server.RTCPeerConnection.PeerConnectionParameters;
 import threads.share.ConnectService;
 
-/**
- * Activity for peer connection call setup, call waiting
- * and call view.
- */
 public class RTCCallActivity extends Activity implements RTCClient.SignalingEvents,
         RTCPeerConnection.PeerConnectionEvents {
 
