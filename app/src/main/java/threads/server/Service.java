@@ -106,7 +106,7 @@ public class Service {
                     checkNotNull(pid);
                     checkArgument(!pid.getPid().isEmpty());
                     try {
-                        pubsubDaemon(context, ipfs, pid, RTCSession.getInstance());
+                        pubsubDaemon(context, ipfs, pid);
                     } catch (Throwable e) {
                         // IGNORE exception occurs when daemon is shutdown
                     }
@@ -117,8 +117,7 @@ public class Service {
 
     private static void pubsubDaemon(@NonNull Context context,
                                      @NonNull IPFS ipfs,
-                                     @NonNull PID pid,
-                                     @NonNull RTCSession session) throws Exception {
+                                     @NonNull PID pid) throws Exception {
         checkNotNull(context);
         checkNotNull(ipfs);
         checkNotNull(pid);
@@ -133,7 +132,6 @@ public class Service {
         ipfs.pubsub_sub(pid.getPid(), false, (message) -> {
 
             try {
-
 
                 String sender = message.getSenderPid();
                 PID senderPid = PID.create(sender);
@@ -176,8 +174,8 @@ public class Service {
                                     }
 
                                     Intent intent = new Intent(context, MainActivity.class);
-                                    intent.setAction(MainActivity.ACTION_INCOMING_CALL);
-                                    intent.putExtra(MainActivity.CALL_PID, sender);
+                                    intent.setAction(RTCCallActivity.ACTION_INCOMING_CALL);
+                                    intent.putExtra(RTCCallActivity.CALL_PID, sender);
                                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                     context.startActivity(intent);
@@ -185,25 +183,25 @@ public class Service {
                                     break;
                                 }
                                 case SESSION_TIMEOUT: {
-                                    session.timeout(senderPid);
+                                    RTCSession.getInstance().timeout(senderPid);
                                     break;
                                 }
                                 case SESSION_BUSY: {
-                                    session.busy(senderPid);
+                                    RTCSession.getInstance().busy(senderPid);
                                     break;
                                 }
                                 case SESSION_ACCEPT: {
-                                    session.accept(senderPid);
+                                    RTCSession.getInstance().accept(senderPid);
                                     break;
                                 }
                                 case SESSION_REJECT: {
-                                    session.reject(senderPid);
+                                    RTCSession.getInstance().reject(senderPid);
                                     break;
                                 }
                                 case SESSION_OFFER: {
                                     String sdp = map.get(Content.SDP);
                                     checkNotNull(sdp);
-                                    session.offer(senderPid, sdp);
+                                    RTCSession.getInstance().offer(senderPid, sdp);
                                     break;
                                 }
                                 case SESSION_ANSWER: {
@@ -211,7 +209,7 @@ public class Service {
                                     checkNotNull(sdp);
                                     String esk = map.get(Content.ESK); // TODO ESK TO TYPE
                                     checkNotNull(esk);
-                                    session.answer(senderPid, sdp, esk);
+                                    RTCSession.getInstance().answer(senderPid, sdp, esk);
                                     break;
                                 }
                                 case SESSION_CANDIDATE_REMOVE: {
@@ -221,7 +219,8 @@ public class Service {
                                     checkNotNull(mid);
                                     String index = map.get(Content.INDEX);
                                     checkNotNull(index);
-                                    session.candidate_remove(senderPid, sdp, mid, index);
+                                    RTCSession.getInstance().candidate_remove(
+                                            senderPid, sdp, mid, index);
                                     break;
                                 }
                                 case SESSION_CANDIDATE: {
@@ -231,11 +230,11 @@ public class Service {
                                     checkNotNull(mid);
                                     String index = map.get(Content.INDEX);
                                     checkNotNull(index);
-                                    session.candidate(senderPid, sdp, mid, index);
+                                    RTCSession.getInstance().candidate(senderPid, sdp, mid, index);
                                     break;
                                 }
                                 case SESSION_CLOSE: {
-                                    session.close(senderPid);
+                                    RTCSession.getInstance().close(senderPid);
                                     break;
                                 }
                                 case CONNECT: {

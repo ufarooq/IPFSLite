@@ -72,8 +72,8 @@ class NotificationSender {
 
 
         Intent intent = new Intent(context, MainActivity.class);
-        intent.setAction(MainActivity.ACTION_INCOMING_CALL);
-        intent.putExtra(MainActivity.CALL_PID, pid);
+        intent.setAction(RTCCallActivity.ACTION_INCOMING_CALL);
+        intent.putExtra(RTCCallActivity.CALL_PID, pid);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                 | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 

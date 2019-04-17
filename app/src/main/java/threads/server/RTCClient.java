@@ -4,7 +4,6 @@ import org.webrtc.IceCandidate;
 import org.webrtc.PeerConnection;
 import org.webrtc.SessionDescription;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import androidx.annotation.NonNull;
@@ -43,14 +42,7 @@ public class RTCClient implements RTCSession.Listener {
     @Override
     public void accept(@NonNull PID pid) {
         checkNotNull(pid);
-        SignalingParameters parameters = new SignalingParameters(
-                // Ice servers are not needed for direct connections.
-                new ArrayList<>(),
-                true,
-                null
-        );
-
-        events.onConnectedToRoom(parameters);
+        events.onAcceptedToRoom();
     }
 
     @Override
@@ -64,17 +56,9 @@ public class RTCClient implements RTCSession.Listener {
     public void offer(@NonNull PID pid, @NonNull String sdp) {
         checkNotNull(pid);
         checkNotNull(sdp);
-        SessionDescription sdpe = new SessionDescription(
-                SessionDescription.Type.OFFER, sdp);
 
-        SignalingParameters parameters = new SignalingParameters(
-                // Ice servers are not needed for direct connections.
-                new ArrayList<>(),
-                false, // This code will only be run on the client side. So, we are not the initiator.
-                sdpe
-        );
-
-        events.onConnectedToRoom(parameters);
+        events.onConnectedToRoom(new SessionDescription(
+                SessionDescription.Type.OFFER, sdp));
     }
 
     @Override
@@ -169,7 +153,7 @@ public class RTCClient implements RTCSession.Listener {
          * Callback fired once the room's signaling parameters
          * SignalingParameters are extracted.
          */
-        void onConnectedToRoom(final SignalingParameters params);
+        void onConnectedToRoom(final SessionDescription sdp);
 
         /**
          * Callback fired once remote SDP is received.
@@ -191,6 +175,7 @@ public class RTCClient implements RTCSession.Listener {
          */
         void onChannelClose();
 
+        void onAcceptedToRoom();
     }
 
     public interface ConnectionEvents {

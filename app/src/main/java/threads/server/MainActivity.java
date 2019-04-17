@@ -89,8 +89,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         PeersFragment.ActionListener,
         NameDialogFragment.ActionListener,
         RTCCallingDialogFragment.ActionListener {
-    public static final String CALL_PID = "CALL_PID";
-    public static final String ACTION_INCOMING_CALL = "ACTION_INCOMING_CALL";
+
     private static final Gson gson = new Gson();
     private static final int SELECT_FILES = 1;
     private static final int DOWNLOAD_EXTERNAL_STORAGE = 2;
@@ -768,7 +767,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private void registerReceiver() {
         if (!isReceiverRegistered) {
             IntentFilter intentFilter = new IntentFilter();
-            intentFilter.addAction(ACTION_INCOMING_CALL);
+            intentFilter.addAction(RTCCallActivity.ACTION_INCOMING_CALL);
 
             LocalBroadcastManager.getInstance(this).registerReceiver(
                     callBroadcastReceiver, intentFilter);
@@ -785,11 +784,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private void handleIncomingCallIntent(Intent intent) {
         if (intent != null && intent.getAction() != null) {
-            if (intent.getAction().equals(ACTION_INCOMING_CALL)) {
-                String pid = intent.getStringExtra(CALL_PID);
+            if (intent.getAction().equals(RTCCallActivity.ACTION_INCOMING_CALL)) {
+                String pid = intent.getStringExtra(RTCCallActivity.CALL_PID);
                 if (pid != null && !pid.isEmpty()) {
                     receiveUserCall(pid);
-                    intent.removeExtra(CALL_PID);
+                    intent.removeExtra(RTCCallActivity.CALL_PID);
                 }
             }
         }
@@ -856,7 +855,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 RTCSession.getInstance().emitSessionCall(PID.create(pid));
 
                                 try {
-                                    call(pid);
+                                    RTCCallActivity.call(MainActivity.this, pid, true);
                                 } catch (Throwable e) {
                                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                                 }
@@ -1329,7 +1328,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 notificationManager.cancel(notifyID);
             }
 
-            call(pid);
+            RTCCallActivity.call(MainActivity.this, pid, false);
 
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -1379,44 +1378,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-    private void call(String pid) {
-        checkNotNull(pid);
-
-        Intent intent = new Intent(this, RTCCallActivity.class);
-        intent.putExtra(Content.USER, pid);
-
-        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_CALL, true);
-        intent.putExtra(RTCCallActivity.EXTRA_CAMERA2, true);
-        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_WIDTH, 1024);
-        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_HEIGHT, 720);
-        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_FPS, 30);
-        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_BITRATE, 0);
-        intent.putExtra(RTCCallActivity.EXTRA_VIDEOCODEC, RTCPeerConnection.VIDEO_CODEC_H264_HIGH);
-        intent.putExtra(RTCCallActivity.EXTRA_HWCODEC_ENABLED, true);
-        intent.putExtra(RTCCallActivity.EXTRA_CAPTURETOTEXTURE_ENABLED, false);
-        intent.putExtra(RTCCallActivity.EXTRA_FLEXFEC_ENABLED, false);
-        intent.putExtra(RTCCallActivity.EXTRA_NOAUDIOPROCESSING_ENABLED, false);
-        intent.putExtra(RTCCallActivity.EXTRA_AECDUMP_ENABLED, false);
-        intent.putExtra(RTCCallActivity.EXTRA_OPENSLES_ENABLED, false);
-        intent.putExtra(RTCCallActivity.EXTRA_DISABLE_BUILT_IN_AEC, false);
-        intent.putExtra(RTCCallActivity.EXTRA_DISABLE_BUILT_IN_AGC, false);
-        intent.putExtra(RTCCallActivity.EXTRA_DISABLE_BUILT_IN_NS, false);
-        intent.putExtra(RTCCallActivity.EXTRA_DISABLE_WEBRTC_AGC_AND_HPF, false);
-        intent.putExtra(RTCCallActivity.EXTRA_AUDIO_BITRATE, 0);
-        intent.putExtra(RTCCallActivity.EXTRA_AUDIOCODEC, RTCPeerConnection.AUDIO_CODEC_OPUS);
-        intent.putExtra(RTCCallActivity.EXTRA_TRACING, false);
-
-        startActivity(intent);
-
-    }
-
-
     private class CallBroadcastReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (action != null && action.equals(ACTION_INCOMING_CALL)) {
+            if (action != null && action.equals(RTCCallActivity.ACTION_INCOMING_CALL)) {
                 handleIncomingCallIntent(intent);
             }
         }

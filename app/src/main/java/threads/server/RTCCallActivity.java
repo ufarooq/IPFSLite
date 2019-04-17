@@ -1,5 +1,6 @@
 package threads.server;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -33,24 +34,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import threads.core.api.Content;
 import threads.ipfs.api.PID;
 import threads.server.RTCAudioManager.AudioDevice;
 import threads.server.RTCPeerConnection.PeerConnectionParameters;
 import threads.share.ConnectService;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class RTCCallActivity extends AppCompatActivity implements RTCClient.SignalingEvents,
         RTCPeerConnection.PeerConnectionEvents {
+
+    public static final String CALL_PID = "CALL_PID";
+    public static final String INITIATOR = "INITIATOR";
+    public static final String ACTION_INCOMING_CALL = "ACTION_INCOMING_CALL";
 
     public static final String EXTRA_VIDEO_CALL = "VIDEO_CALL";
     public static final String EXTRA_CAMERA2 = "CAMERA2";
     public static final String EXTRA_VIDEO_WIDTH = "VIDEO_WIDTH";
     public static final String EXTRA_VIDEO_HEIGHT = "VIDEO_HEIGHT";
     public static final String EXTRA_VIDEO_FPS = "VIDEO_FPS";
-
     public static final String EXTRA_VIDEO_BITRATE = "VIDEO_BITRATE";
     public static final String EXTRA_VIDEOCODEC = "VIDEOCODEC";
     public static final String EXTRA_HWCODEC_ENABLED = "HWCODEC";
@@ -80,20 +86,16 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
     private RTCPeerConnection peerConnectionClient;
     @Nullable
     private RTCClient appRtcClient;
-    @Nullable
-    private RTCClient.SignalingParameters signalingParameters;
+    //@Nullable
+    //private RTCClient.SignalingParameters signalingParameters;
     @Nullable
     private RTCAudioManager audioManager;
-
     private SurfaceViewRenderer pipRenderer;
     private SurfaceViewRenderer fullscreenRenderer;
-
     @Nullable
     private VideoFileRenderer videoFileRenderer;
     private Toast logToast;
-
     private boolean activityRunning;
-
     private PeerConnectionParameters peerConnectionParameters;
     private boolean connected;
     private boolean isError;
@@ -103,11 +105,42 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
     private boolean speakerEnabled = false;
     // True if local view is in the fullscreen renderer.
     private boolean isSwappedFeeds;
+    private boolean initiator;
     private long mLastClickTime = 0;
-
-
     // Controls
     private LinearLayout fab_layout;
+
+    public static void call(@NonNull Context context, @NonNull String pid, boolean initiator) {
+        checkNotNull(context);
+        checkNotNull(pid);
+
+        Intent intent = new Intent(context, RTCCallActivity.class);
+        intent.putExtra(RTCCallActivity.CALL_PID, pid);
+        intent.putExtra(RTCCallActivity.INITIATOR, initiator);
+        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_CALL, true);
+        intent.putExtra(RTCCallActivity.EXTRA_CAMERA2, true);
+        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_WIDTH, 1024);
+        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_HEIGHT, 720);
+        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_FPS, 30);
+        intent.putExtra(RTCCallActivity.EXTRA_VIDEO_BITRATE, 0);
+        intent.putExtra(RTCCallActivity.EXTRA_VIDEOCODEC, RTCPeerConnection.VIDEO_CODEC_H264_HIGH);
+        intent.putExtra(RTCCallActivity.EXTRA_HWCODEC_ENABLED, true);
+        intent.putExtra(RTCCallActivity.EXTRA_CAPTURETOTEXTURE_ENABLED, false);
+        intent.putExtra(RTCCallActivity.EXTRA_FLEXFEC_ENABLED, false);
+        intent.putExtra(RTCCallActivity.EXTRA_NOAUDIOPROCESSING_ENABLED, false);
+        intent.putExtra(RTCCallActivity.EXTRA_AECDUMP_ENABLED, false);
+        intent.putExtra(RTCCallActivity.EXTRA_OPENSLES_ENABLED, false);
+        intent.putExtra(RTCCallActivity.EXTRA_DISABLE_BUILT_IN_AEC, false);
+        intent.putExtra(RTCCallActivity.EXTRA_DISABLE_BUILT_IN_AGC, false);
+        intent.putExtra(RTCCallActivity.EXTRA_DISABLE_BUILT_IN_NS, false);
+        intent.putExtra(RTCCallActivity.EXTRA_DISABLE_WEBRTC_AGC_AND_HPF, false);
+        intent.putExtra(RTCCallActivity.EXTRA_AUDIO_BITRATE, 0);
+        intent.putExtra(RTCCallActivity.EXTRA_AUDIOCODEC, RTCPeerConnection.AUDIO_CODEC_OPUS);
+        intent.putExtra(RTCCallActivity.EXTRA_TRACING, false);
+
+        context.startActivity(intent);
+
+    }
 
     private static int getSystemUiVisibility() {
         int flags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN;
@@ -128,8 +161,10 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
         setContentView(R.layout.activity_call);
 
         final Intent intent = getIntent();
-        String pid = intent.getStringExtra(Content.USER);
+        String pid = intent.getStringExtra(CALL_PID);
         PID user = PID.create(pid);
+
+        initiator = intent.getBooleanExtra(INITIATOR, true);
 
         PeerConnection.IceServer peerIceServer =
                 PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer();
@@ -137,7 +172,6 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
 
 
         connected = false;
-        signalingParameters = null;
 
         // Create UI controls.
         pipRenderer = findViewById(R.id.pip_video_view);
@@ -400,6 +434,7 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
         }
         return speakerEnabled;
     }
+
     private void toggleCallControls() {
 
         // Show/hide call control fragment
@@ -565,44 +600,28 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
 
     }
 
-    // -----Implementation of RTCClient.AppRTCSignalingEvents ---------------
-    // All callbacks are invoked from websocket signaling looper thread and
-    // are routed to UI thread.
-    private void onConnectedToRoomInternal(final RTCClient.SignalingParameters params) {
-        final long delta = System.currentTimeMillis() - callStartedTimeMs;
 
-        signalingParameters = params;
-        logAndToast("Creating peer connection, delay=" + delta + "ms");
-        VideoCapturer videoCapturer = null;
-        if (peerConnectionParameters.videoCallEnabled) {
-            videoCapturer = createVideoCapturer();
-        }
-        peerConnectionClient.createPeerConnection(
-                localProxyVideoSink, remoteSinks, videoCapturer, peerIceServers);
+    @Override
+    public void onConnectedToRoom(final SessionDescription offerSdp) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                final long delta = System.currentTimeMillis() - callStartedTimeMs;
 
-        if (signalingParameters.initiator) {
-            logAndToast("Creating OFFER...");
-            // Create offer. Offer SDP will be sent to answering client in
-            // PeerConnectionEvents.onLocalDescription event.
-            peerConnectionClient.createOffer();
-        } else {
-            if (params.offerSdp != null) {
-                peerConnectionClient.setRemoteDescription(params.offerSdp);
+                logAndToast("Creating peer connection, delay=" + delta + "ms");
+                VideoCapturer videoCapturer = null;
+                if (peerConnectionParameters.videoCallEnabled) {
+                    videoCapturer = createVideoCapturer();
+                }
+                peerConnectionClient.createPeerConnection(
+                        localProxyVideoSink, remoteSinks, videoCapturer, peerIceServers);
+
+                peerConnectionClient.setRemoteDescription(offerSdp);
                 logAndToast("Creating ANSWER...");
                 // Create answer. Answer SDP will be sent to offering client in
                 // PeerConnectionEvents.onLocalDescription event.
                 peerConnectionClient.createAnswer();
-            }
-        }
-    }
 
-
-    @Override
-    public void onConnectedToRoom(RTCClient.SignalingParameters params) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                onConnectedToRoomInternal(params);
             }
         });
     }
@@ -619,7 +638,7 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
                 }
                 logAndToast("Received remote " + sdp.type + ", delay=" + delta + "ms");
                 peerConnectionClient.setRemoteDescription(sdp);
-                if (!signalingParameters.initiator) {
+                if (!initiator) {
                     logAndToast("Creating ANSWER...");
                     // Create answer. Answer SDP will be sent to offering client in
                     // PeerConnectionEvents.onLocalDescription event.
@@ -669,6 +688,28 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
         });
     }
 
+    @Override
+    public void onAcceptedToRoom() {
+        runOnUiThread(() -> {
+
+            final long delta = System.currentTimeMillis() - callStartedTimeMs;
+
+            logAndToast("Creating peer connection, delay=" + delta + "ms");
+            VideoCapturer videoCapturer = null;
+            if (peerConnectionParameters.videoCallEnabled) {
+                videoCapturer = createVideoCapturer();
+            }
+            peerConnectionClient.createPeerConnection(
+                    localProxyVideoSink, remoteSinks, videoCapturer, peerIceServers);
+
+            logAndToast("Creating OFFER...");
+            // Create offer. Offer SDP will be sent to answering client in
+            // PeerConnectionEvents.onLocalDescription event.
+            peerConnectionClient.createOffer();
+
+        });
+    }
+
 
     // -----Implementation of RTCPeerConnection.PeerConnectionEvents.---------
     // Send local peer connection SDP and ICE candidates to remote party.
@@ -681,7 +722,7 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
 
             if (appRtcClient != null) {
                 logAndToast("Sending " + sdp.type + ", delay=" + delta + "ms");
-                if (signalingParameters.initiator) {
+                if (initiator) {
                     appRtcClient.sendOfferSdp(sdp);
                 } else {
                     appRtcClient.sendAnswerSdp(sdp);
