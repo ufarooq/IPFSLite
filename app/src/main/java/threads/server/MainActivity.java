@@ -1378,10 +1378,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    @SuppressWarnings("StringSplitter")
+
     private void call(String pid) {
-
-
+        checkNotNull(pid);
 
         Intent intent = new Intent(this, RTCCallActivity.class);
         intent.putExtra(Content.USER, pid);
@@ -1395,7 +1394,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // adds a seek bar with quality
         intent.putExtra(RTCCallActivity.EXTRA_VIDEO_BITRATE, 0);
         intent.putExtra(RTCCallActivity.EXTRA_VIDEOCODEC, RTCPeerConnection.VIDEO_CODEC_H264_HIGH);
-        intent.putExtra(RTCCallActivity.EXTRA_HWCODEC_ENABLED, false);
+        intent.putExtra(RTCCallActivity.EXTRA_HWCODEC_ENABLED, true);
         intent.putExtra(RTCCallActivity.EXTRA_CAPTURETOTEXTURE_ENABLED, false);
         intent.putExtra(RTCCallActivity.EXTRA_FLEXFEC_ENABLED, false);
         intent.putExtra(RTCCallActivity.EXTRA_NOAUDIOPROCESSING_ENABLED, false);

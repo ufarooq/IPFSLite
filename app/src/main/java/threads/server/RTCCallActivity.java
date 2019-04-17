@@ -100,7 +100,7 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
     private boolean callControlFragmentVisible = true;
     private long callStartedTimeMs;
     private boolean micEnabled = true;
-
+    private boolean speakerEnabled = false;
     // True if local view is in the fullscreen renderer.
     private boolean isSwappedFeeds;
     private long mLastClickTime = 0;
@@ -251,6 +251,25 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
 
         });
 
+        FloatingActionButton fab_toggle_speaker = findViewById(R.id.fab_toggle_speaker);
+        fab_toggle_speaker.setOnClickListener((view) -> {
+
+
+            // mis-clicking prevention, using threshold of 1000 ms
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            boolean enabled = onToggleSpeaker();
+            if (enabled) {
+                fab_toggle_speaker.setImageResource(R.drawable.volume_high);
+            } else {
+                fab_toggle_speaker.setImageResource(R.drawable.volume_medium);
+            }
+
+
+        });
 
         FloatingActionButton fab_toggle_mic = findViewById(R.id.fab_toggle_mic);
         fab_toggle_mic.setOnClickListener((view) -> {
@@ -370,6 +389,17 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
         return micEnabled;
     }
 
+    public boolean onToggleSpeaker() {
+        if (audioManager != null) {
+            speakerEnabled = !speakerEnabled;
+            if (speakerEnabled) {
+                audioManager.setDefaultAudioDevice(AudioDevice.SPEAKER_PHONE);
+            } else {
+                audioManager.setDefaultAudioDevice(AudioDevice.EARPIECE);
+            }
+        }
+        return speakerEnabled;
+    }
     private void toggleCallControls() {
 
         // Show/hide call control fragment
@@ -393,7 +423,7 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
 
         // Create and audio manager that will take care of audio routing,
         // audio modes, audio device enumeration etc.
-        audioManager = RTCAudioManager.create(getApplicationContext());
+        audioManager = RTCAudioManager.create(getApplicationContext(), AudioDevice.EARPIECE);
 
         audioManager.start(new RTCAudioManager.AudioManagerEvents() {
             // This method will be called each time the number of available audio

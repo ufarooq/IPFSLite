@@ -21,12 +21,9 @@ import static androidx.core.util.Preconditions.checkArgument;
 
 public class RTCAudioManager {
     private static final String TAG = "RTCAudioManager";
-    private static final String SPEAKERPHONE_AUTO = "auto";
-    private static final String SPEAKERPHONE_TRUE = "true";
-    private static final String SPEAKERPHONE_FALSE = "false";
+
     private final Context apprtcContext;
-    // Contains speakerphone setting: auto, true or false
-    private final String useSpeakerphone;
+
     // Handles all tasks related to Bluetooth headset devices.
     private final RTCBluetoothManager bluetoothManager;
     @Nullable
@@ -67,7 +64,7 @@ public class RTCAudioManager {
     @Nullable
     private AudioManager.OnAudioFocusChangeListener audioFocusChangeListener;
 
-    private RTCAudioManager(Context context) {
+    private RTCAudioManager(Context context, AudioDevice device) {
         Log.d(TAG, "ctor");
         ThreadUtils.checkIsOnMainThread();
         apprtcContext = context;
@@ -75,14 +72,7 @@ public class RTCAudioManager {
         bluetoothManager = RTCBluetoothManager.create(context, this);
         wiredHeadsetReceiver = new WiredHeadsetReceiver();
         amState = AudioManagerState.UNINITIALIZED;
-
-        useSpeakerphone = SPEAKERPHONE_AUTO; // TODO
-
-        if (useSpeakerphone.equals(SPEAKERPHONE_FALSE)) {
-            defaultAudioDevice = AudioDevice.EARPIECE;
-        } else {
-            defaultAudioDevice = AudioDevice.SPEAKER_PHONE;
-        }
+        defaultAudioDevice = device;
 
         // Create and initialize the proximity sensor.
         // Tablet devices (e.g. Nexus 7) does not support proximity sensors.
@@ -100,8 +90,8 @@ public class RTCAudioManager {
     /**
      * Construction.
      */
-    static RTCAudioManager create(Context context) {
-        return new RTCAudioManager(context);
+    static RTCAudioManager create(Context context, AudioDevice device) {
+        return new RTCAudioManager(context, device);
     }
 
     /**
@@ -109,7 +99,7 @@ public class RTCAudioManager {
      * e.g. from "NEAR to FAR" or from "FAR to NEAR".
      */
     private void onProximitySensorChangedState() {
-        if (!useSpeakerphone.equals(SPEAKERPHONE_AUTO)) {
+        if (defaultAudioDevice == AudioDevice.SPEAKER_PHONE) {
             return;
         }
 

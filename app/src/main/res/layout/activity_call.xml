@@ -31,7 +31,7 @@
             android:id="@+id/fab_hangup"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
+            android:layout_margin="8dp"
             app:backgroundTint="@android:color/holo_red_light"
             app:srcCompat="@drawable/phone_hangup" />
 
@@ -39,7 +39,7 @@
             android:id="@+id/fab_toggle_mic"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
+            android:layout_margin="8dp"
             app:backgroundTint="@color/lightGray"
             app:srcCompat="@drawable/microphone" />
 
@@ -47,7 +47,7 @@
             android:id="@+id/fab_toggle_speaker"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
+            android:layout_margin="8dp"
             app:backgroundTint="@color/lightGray"
             app:srcCompat="@drawable/volume_medium" />
 
@@ -56,7 +56,7 @@
             android:id="@+id/fab_switch_camera"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
+            android:layout_margin="8dp"
             app:backgroundTint="@color/lightGray"
             app:srcCompat="@drawable/camera_retake_outline" />
 
