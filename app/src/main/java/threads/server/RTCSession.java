@@ -57,7 +57,7 @@ public class RTCSession {
 
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
                     } else {
-                        events.onFailure();
+                        events.onConnectionFailure();
                     }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -147,7 +147,7 @@ public class RTCSession {
 
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
                     } else {
-                        events.onFailure();
+                        events.onConnectionFailure();
                     }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -185,7 +185,7 @@ public class RTCSession {
                         map.put(Content.EST, Message.SESSION_BUSY.name());
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
                     } else {
-                        events.onFailure();
+                        events.onConnectionFailure();
                     }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -208,7 +208,7 @@ public class RTCSession {
                         map.put(Content.EST, Message.SESSION_TIMEOUT.name());
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
                     } else {
-                        events.onFailure();
+                        events.onConnectionFailure();
                     }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -232,7 +232,7 @@ public class RTCSession {
                         map.put(Content.EST, Message.SESSION_REJECT.name());
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
                     } else {
-                        events.onFailure();
+                        events.onConnectionFailure();
                     }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -256,7 +256,7 @@ public class RTCSession {
                         map.put(Content.EST, Message.SESSION_ACCEPT.name());
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
                     } else {
-                        events.onFailure();
+                        events.onConnectionFailure();
                     }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -282,7 +282,7 @@ public class RTCSession {
                         map.put(Content.EST, Message.SESSION_CLOSE.name());
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
                     } else {
-                        events.onFailure();
+                        events.onConnectionFailure();
                     }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -315,7 +315,7 @@ public class RTCSession {
                             ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
                         }
                     } else {
-                        events.onFailure();
+                        events.onConnectionFailure();
                     }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -346,7 +346,7 @@ public class RTCSession {
 
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
                     } else {
-                        events.onFailure();
+                        events.onConnectionFailure();
                     }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);

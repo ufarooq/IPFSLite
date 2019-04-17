@@ -900,8 +900,14 @@ public class RTCCallActivity extends Activity implements RTCClient.SignalingEven
     }
 
     @Override
-    public void onFailure() {
-        logAndToast("Connecting to peer failed");
+    public void onConnectionFailure() {
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                logAndToast("Connecting to peer failed");
+            }
+        });
     }
 
     private static class ProxyVideoSink implements VideoSink {

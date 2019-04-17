@@ -204,7 +204,7 @@ public class RTCClient implements RTCSession.Listener {
     }
 
     public interface ConnectionEvents {
-        void onFailure();
+        void onConnectionFailure();
     }
 
     /**
