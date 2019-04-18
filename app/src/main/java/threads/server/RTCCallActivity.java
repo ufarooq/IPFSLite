@@ -45,6 +45,7 @@ import threads.server.RTCPeerConnection.PeerConnectionParameters;
 import threads.share.ConnectService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
+
 public class RTCCallActivity extends AppCompatActivity implements RTCClient.SignalingEvents,
         RTCPeerConnection.PeerConnectionEvents {
 

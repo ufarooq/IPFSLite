@@ -39,6 +39,7 @@ import threads.share.UsersViewAdapter;
 import threads.share.WebViewDialogFragment;
 
 import static androidx.core.util.Preconditions.checkNotNull;
+
 public class PeersFragment extends Fragment implements UsersViewAdapter.UsersViewAdapterListener {
 
     private long mLastClickTime = 0;

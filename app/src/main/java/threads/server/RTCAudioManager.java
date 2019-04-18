@@ -9,13 +9,13 @@ import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import org.webrtc.ThreadUtils;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
-import androidx.annotation.Nullable;
 
 import static androidx.core.util.Preconditions.checkArgument;
 

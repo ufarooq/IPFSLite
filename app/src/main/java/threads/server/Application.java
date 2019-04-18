@@ -13,6 +13,7 @@ import threads.ipfs.api.Profile;
 import threads.share.ConnectService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
+
 public class Application extends android.app.Application {
 
     public static final String THREAD_KIND = "THREAD_KIND";

@@ -18,6 +18,7 @@ import androidx.fragment.app.DialogFragment;
 import threads.core.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
+
 public class PeersDialogFragment extends DialogFragment {
     static final String TAG = PeersDialogFragment.class.getSimpleName();
     private static final String EDIT_PEER_ACTIVE = "EDIT_PEER_ACTIVE";

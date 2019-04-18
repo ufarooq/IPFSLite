@@ -29,6 +29,7 @@ import threads.core.Preferences;
 import threads.ipfs.api.Multihash;
 
 import static androidx.core.util.Preconditions.checkNotNull;
+
 public class EditPeerDialogFragment extends DialogFragment {
     public static final String TAG = EditPeerDialogFragment.class.getSimpleName();
     private static final int MULTIHASH_SIZE = 128;

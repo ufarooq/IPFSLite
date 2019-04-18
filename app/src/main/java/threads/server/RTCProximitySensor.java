@@ -7,9 +7,9 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
 
-import org.webrtc.ThreadUtils;
-
 import androidx.annotation.Nullable;
+
+import org.webrtc.ThreadUtils;
 
 import static androidx.core.util.Preconditions.checkArgument;
 

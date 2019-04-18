@@ -646,8 +646,9 @@ public class Service {
 
 
     private static boolean shareUser(@NonNull User user, int timeout,
-                                     @NonNull Long... idxs) {
+                                     @NonNull List<Long> idxs) {
         checkNotNull(user);
+        checkNotNull(idxs);
         final THREADS threads = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         boolean success = false;
@@ -682,7 +683,7 @@ public class Service {
     }
 
     static void sendThreads(@NonNull Context context,
-                            @NonNull Long... idxs) {
+                            @NonNull List<Long> idxs) {
         checkNotNull(context);
 
         final PID host = Preferences.getPID(context.getApplicationContext());
@@ -739,7 +740,8 @@ public class Service {
         }
     }
 
-    static void deleteThreads(Long... idxs) {
+    static void deleteThreads(List<Long> idxs) {
+        checkNotNull(idxs);
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
 
         final IPFS ipfs = Singleton.getInstance().getIpfs();

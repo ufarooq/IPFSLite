@@ -16,12 +16,12 @@ import android.os.Looper;
 import android.os.Process;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import org.webrtc.ThreadUtils;
 
 import java.util.List;
 import java.util.Set;
-
-import androidx.annotation.Nullable;
 
 public class RTCBluetoothManager {
     private static final String TAG = "RTCBluetoothManager";

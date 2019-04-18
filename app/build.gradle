@@ -95,13 +95,11 @@ dependencies {
     implementation 'threads.ipfs:threads:1.2.7'
 
     // API (LICENSE done)
-    implementation 'com.google.code.gson:gson:2.8.2'
+    implementation 'com.google.code.gson:gson:2.8.5'
 
     // JOTA API (LICENSE done)
     implementation 'com.github.iotaledger:iota-java:1.0.0-beta5'
 
-    // ANDROID (LICENSE done)
-    implementation 'com.google.api-client:google-api-client:1.23.0'
 }
 
 // Place it at the end of the file

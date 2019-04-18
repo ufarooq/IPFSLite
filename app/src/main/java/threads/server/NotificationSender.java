@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat;
 import threads.core.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
+
 class NotificationSender {
     private static final String CHANNEL_ID = "CHANNEL_ID";
 

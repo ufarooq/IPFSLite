@@ -1,12 +1,13 @@
 package threads.server;
 
+import androidx.annotation.NonNull;
+
 import org.webrtc.IceCandidate;
 import org.webrtc.PeerConnection;
 import org.webrtc.SessionDescription;
 
 import java.util.List;
 
-import androidx.annotation.NonNull;
 import threads.ipfs.api.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;

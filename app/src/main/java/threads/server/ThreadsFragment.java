@@ -20,7 +20,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.common.collect.Iterables;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -377,7 +376,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 return;
             }
 
-            Service.sendThreads(mContext, Iterables.toArray(threads, Long.class));
+            Service.sendThreads(mContext, threads);
 
 
             unmarkThreads();
@@ -447,7 +446,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     private void deleteAction() {
 
-        Service.deleteThreads(Iterables.toArray(threads, Long.class));
+        Service.deleteThreads(threads);
         try {
             if (threads.contains(threadIdx)) {
                 threadIdx = -1;

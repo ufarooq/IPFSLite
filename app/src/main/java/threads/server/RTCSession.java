@@ -23,13 +23,13 @@ import threads.server.RTCClient.ConnectionEvents;
 import threads.share.ConnectService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
+
 public class RTCSession {
     private static final Gson gson = new Gson();
     private static RTCSession INSTANCE = new RTCSession();
+    private final AtomicBoolean busy = new AtomicBoolean(false);
     @Nullable
     private Listener listener = null;
-
-    private final AtomicBoolean busy = new AtomicBoolean(false);
 
 
     private RTCSession() {
