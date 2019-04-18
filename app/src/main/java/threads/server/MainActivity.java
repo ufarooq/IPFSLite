@@ -1352,6 +1352,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
+        } finally {
+            RTCSession.getInstance().setBusy(false);
         }
     }
 

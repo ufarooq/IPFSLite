@@ -392,7 +392,7 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
 
     @Override
     protected void onDestroy() {
-        Thread.setDefaultUncaughtExceptionHandler(null);
+
         disconnect();
         if (logToast != null) {
             logToast.cancel();
@@ -524,6 +524,7 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
         } else {
             setResult(RESULT_CANCELED);
         }
+        RTCSession.getInstance().setBusy(false);
         finish();
     }
 
