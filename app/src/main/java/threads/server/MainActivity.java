@@ -1314,8 +1314,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void acceptCall(@NonNull String pid) {
 
         try {
+            PID host = Preferences.getPID(getApplicationContext());
+            checkNotNull(host);
             final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
-            RTCSession.getInstance().emitSessionAccept(PID.create(pid), () ->
+            RTCSession.getInstance().emitSessionAccept(host, PID.create(pid), () ->
                             Preferences.warning(getString(R.string.connection_failed))
                     , timeout);
 

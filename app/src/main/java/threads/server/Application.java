@@ -93,6 +93,7 @@ public class Application extends android.app.Application {
         Preferences.setDaemonRunning(getApplicationContext(), false);
 
 
+        ConnectService.setAutoConnectRelay(getApplicationContext(), true); // TODO remove later
         NotificationSender.createChannel(getApplicationContext());
 
 

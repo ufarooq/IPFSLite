@@ -1,6 +1,7 @@
 package threads.server;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import org.webrtc.IceCandidate;
 import org.webrtc.PeerConnection;
@@ -8,6 +9,7 @@ import org.webrtc.SessionDescription;
 
 import java.util.List;
 
+import threads.core.api.Addresses;
 import threads.ipfs.api.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -41,9 +43,9 @@ public class RTCClient implements RTCSession.Listener {
     }
 
     @Override
-    public void accept(@NonNull PID pid) {
+    public void accept(@NonNull PID pid, @Nullable Addresses addresses) {
         checkNotNull(pid);
-        events.onAcceptedToRoom();
+        events.onAcceptedToRoom(addresses);
     }
 
     @Override
@@ -176,7 +178,7 @@ public class RTCClient implements RTCSession.Listener {
          */
         void onChannelClose();
 
-        void onAcceptedToRoom();
+        void onAcceptedToRoom(@Nullable Addresses addresses);
     }
 
     public interface ConnectionEvents {

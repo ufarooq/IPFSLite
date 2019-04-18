@@ -39,6 +39,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import threads.core.Preferences;
+import threads.core.api.Addresses;
 import threads.ipfs.api.PID;
 import threads.server.RTCAudioManager.AudioDevice;
 import threads.server.RTCPeerConnection.PeerConnectionParameters;
@@ -82,7 +84,7 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
     private final ProxyVideoSink remoteProxyRenderer = new ProxyVideoSink();
     private final ProxyVideoSink localProxyVideoSink = new ProxyVideoSink();
     private final List<VideoSink> remoteSinks = new ArrayList<>();
-    private final List<PeerConnection.IceServer> peerIceServers = new ArrayList<>();
+
     @Nullable
     private RTCPeerConnection peerConnectionClient;
     @Nullable
@@ -164,10 +166,6 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
         PID user = PID.create(pid);
 
         initiator = intent.getBooleanExtra(INITIATOR, true);
-
-        PeerConnection.IceServer peerIceServer =
-                PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer();
-        peerIceServers.add(peerIceServer);
 
 
         connected = false;
@@ -602,9 +600,8 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
 
     @Override
     public void onConnectedToRoom(final SessionDescription offerSdp) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
+        runOnUiThread(() -> {
+            try {
                 final long delta = System.currentTimeMillis() - callStartedTimeMs;
 
                 logAndToast("Creating peer connection, delay=" + delta + "ms");
@@ -612,6 +609,12 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
                 if (peerConnectionParameters.videoCallEnabled) {
                     videoCapturer = createVideoCapturer();
                 }
+
+                List<PeerConnection.IceServer> peerIceServers = new ArrayList<>();
+                PeerConnection.IceServer peerIceServer =
+                        PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer();
+                peerIceServers.add(peerIceServer);
+
                 peerConnectionClient.createPeerConnection(
                         localProxyVideoSink, remoteSinks, videoCapturer, peerIceServers);
 
@@ -620,8 +623,10 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
                 // Create answer. Answer SDP will be sent to offering client in
                 // PeerConnectionEvents.onLocalDescription event.
                 peerConnectionClient.createAnswer();
-
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
+
         });
     }
 
@@ -688,24 +693,38 @@ public class RTCCallActivity extends AppCompatActivity implements RTCClient.Sign
     }
 
     @Override
-    public void onAcceptedToRoom() {
+    public void onAcceptedToRoom(@Nullable Addresses addresses) {
         runOnUiThread(() -> {
+            try {
+                List<PeerConnection.IceServer> peerIceServers = new ArrayList<>();
+                PeerConnection.IceServer peerIceServer =
+                        PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer();
+                peerIceServers.add(peerIceServer);
+                if (addresses != null) {
+                    for (String address : addresses.values()) {
+                        Log.e(TAG, "Turn address : " + address);
+                        // TODO transform to turn
+                    }
+                }
 
-            final long delta = System.currentTimeMillis() - callStartedTimeMs;
 
-            logAndToast("Creating peer connection, delay=" + delta + "ms");
-            VideoCapturer videoCapturer = null;
-            if (peerConnectionParameters.videoCallEnabled) {
-                videoCapturer = createVideoCapturer();
+                final long delta = System.currentTimeMillis() - callStartedTimeMs;
+
+                logAndToast("Creating peer connection, delay=" + delta + "ms");
+                VideoCapturer videoCapturer = null;
+                if (peerConnectionParameters.videoCallEnabled) {
+                    videoCapturer = createVideoCapturer();
+                }
+                peerConnectionClient.createPeerConnection(
+                        localProxyVideoSink, remoteSinks, videoCapturer, peerIceServers);
+
+                logAndToast("Creating OFFER...");
+                // Create offer. Offer SDP will be sent to answering client in
+                // PeerConnectionEvents.onLocalDescription event.
+                peerConnectionClient.createOffer();
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
-            peerConnectionClient.createPeerConnection(
-                    localProxyVideoSink, remoteSinks, videoCapturer, peerIceServers);
-
-            logAndToast("Creating OFFER...");
-            // Create offer. Offer SDP will be sent to answering client in
-            // PeerConnectionEvents.onLocalDescription event.
-            peerConnectionClient.createOffer();
-
         });
     }
 

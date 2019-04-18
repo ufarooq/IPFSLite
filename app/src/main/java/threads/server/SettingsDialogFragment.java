@@ -17,6 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -46,7 +47,7 @@ public class SettingsDialogFragment extends DialogFragment {
         View view = inflater.inflate(R.layout.settings_view, null);
 
         Spinner spinner_profile = view.findViewById(R.id.spinner_profile);
-        List<Profile> profiles = Arrays.asList(Profile.values());
+        List<Profile> profiles = new ArrayList<>(Arrays.asList(Profile.values()));
         profiles.remove(Profile.RANDOMPORTS);
         ArrayAdapter<Profile> adapter = new ArrayAdapter<>(activity,
                 android.R.layout.simple_spinner_item, profiles);

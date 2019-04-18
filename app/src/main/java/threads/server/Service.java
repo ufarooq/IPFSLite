@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
+import threads.core.api.Addresses;
 import threads.core.api.Content;
 import threads.core.api.Kind;
 import threads.core.api.Thread;
@@ -199,7 +200,12 @@ public class Service {
                                     break;
                                 }
                                 case SESSION_ACCEPT: {
-                                    RTCSession.getInstance().accept(senderPid);
+                                    String adds = map.get(Content.ADDS); // TODO ICES
+                                    Addresses addresses = null;
+                                    if (adds != null) {
+                                        addresses = Addresses.toAddresses(adds);
+                                    }
+                                    RTCSession.getInstance().accept(senderPid, addresses);
                                     break;
                                 }
                                 case SESSION_REJECT: {

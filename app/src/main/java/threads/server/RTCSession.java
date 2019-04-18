@@ -16,6 +16,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
+import threads.core.THREADS;
+import threads.core.api.Addresses;
 import threads.core.api.Content;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
@@ -57,7 +59,7 @@ public class RTCSession {
                         HashMap<String, String> map = new HashMap<>();
                         map.put(Content.EST, Message.SESSION_ANSWER.name());
                         map.put(Content.SDP, message.description);
-                        map.put(Content.ESK, message.type.name());
+                        map.put(Content.ESK, message.type.name());  // TODO TYPE
 
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
                     } else {
@@ -76,9 +78,9 @@ public class RTCSession {
         }
     }
 
-    public void accept(@NonNull PID pid) {
+    public void accept(@NonNull PID pid, @Nullable Addresses addresses) {
         if (listener != null) {
-            listener.accept(pid);
+            listener.accept(pid, addresses);
         }
     }
 
@@ -246,10 +248,15 @@ public class RTCSession {
 
     }
 
-    public void emitSessionAccept(@NonNull PID user, @NonNull ConnectionEvents events, long timeout) {
+    public void emitSessionAccept(@NonNull PID host,
+                                  @NonNull PID user,
+                                  @NonNull ConnectionEvents events,
+                                  long timeout) {
+        checkNotNull(host);
         checkNotNull(user);
         checkNotNull(events);
         final IPFS ipfs = Singleton.getInstance().getIpfs();
+        final THREADS threads = Singleton.getInstance().getThreads();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
@@ -258,6 +265,13 @@ public class RTCSession {
                     if (value) {
                         HashMap<String, String> map = new HashMap<>();
                         map.put(Content.EST, Message.SESSION_ACCEPT.name());
+
+                        threads.core.api.Peer peer = threads.getPeerByPID(host);
+                        if (peer != null) {
+                            String addresses = Addresses.toString(peer.getAddresses());
+                            map.put(Content.ADDS, addresses); // TODO ICES
+                        }
+
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
                     } else {
                         events.onConnectionFailure();
@@ -372,7 +386,7 @@ public class RTCSession {
     public interface Listener {
         void busy(@NonNull PID pid);
 
-        void accept(@NonNull PID pid);
+        void accept(@NonNull PID pid, @Nullable Addresses addresses);
 
         void reject(@NonNull PID pid);
 
