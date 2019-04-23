@@ -52,6 +52,8 @@ import threads.ipfs.api.Link;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
+import threads.share.RTCCallActivity;
+import threads.share.RTCSession;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;

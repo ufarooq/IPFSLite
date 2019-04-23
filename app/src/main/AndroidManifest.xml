@@ -59,7 +59,7 @@
             tools:replace="screenOrientation" />
 
         <activity
-            android:name=".RTCCallActivity"
+            android:name="threads.share.RTCCallActivity"
             android:configChanges="orientation|smallestScreenSize|screenSize|screenLayout"
             android:screenOrientation="fullUser"
             android:theme="@style/ThreadsServerTheme">
@@ -67,6 +67,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
+
+
         <service
             android:name="threads.server.DaemonService"
             android:enabled="true"
