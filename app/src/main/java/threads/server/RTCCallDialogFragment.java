@@ -98,7 +98,7 @@ public class RTCCallDialogFragment extends DialogFragment {
 
 
         // hide the status bar and enter full screen mode
-
+        checkNotNull(dialog.getWindow());
         dialog.getWindow().setFlags(
                 WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN
