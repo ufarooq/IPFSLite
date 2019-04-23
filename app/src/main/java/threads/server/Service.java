@@ -178,18 +178,6 @@ public class Service {
                                             ices = RTCSession.getInstance().turnUris(addresses);
                                         }
 
-                                        NotificationCompat.Builder builder =
-                                                NotificationSender.createCallNotification(
-                                                        context, sender, name, ices);
-
-                                        final NotificationManager notificationManager = (NotificationManager)
-                                                context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-                                        int notifyID = senderPid.getPid().hashCode();
-                                        Notification notification = builder.build();
-                                        if (notificationManager != null) {
-                                            notificationManager.notify(notifyID, notification);
-                                        }
-
 
                                         Intent intent = RTCCallActivity.createIntent(
                                                 context, sender, name, ices, false);

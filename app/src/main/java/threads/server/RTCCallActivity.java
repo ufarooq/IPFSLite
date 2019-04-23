@@ -1,7 +1,6 @@
 package threads.server;
 
 import android.Manifest;
-import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -933,13 +932,6 @@ public class RTCCallActivity extends AppCompatActivity implements
                             Preferences.warning(getString(R.string.connection_failed))
                     , timeout);
 
-            final NotificationManager notificationManager = (NotificationManager)
-                    getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-            int notifyID = pid.hashCode();
-            if (notificationManager != null) {
-                notificationManager.cancel(notifyID);
-            }
-
             if (!initiator) {
                 onToggleSpeaker();
             }
@@ -957,13 +949,6 @@ public class RTCCallActivity extends AppCompatActivity implements
             RTCSession.getInstance().emitSessionReject(PID.create(pid), () ->
                             Preferences.warning(getString(R.string.connection_failed))
                     , timeout);
-
-            final NotificationManager notificationManager = (NotificationManager)
-                    getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-            int notifyID = pid.hashCode();
-            if (notificationManager != null) {
-                notificationManager.cancel(notifyID);
-            }
 
             disconnect();
         } catch (Throwable e) {
@@ -998,13 +983,6 @@ public class RTCCallActivity extends AppCompatActivity implements
             RTCSession.getInstance().emitSessionTimeout(PID.create(pid), () ->
                             Preferences.warning(getString(R.string.connection_failed))
                     , timeout);
-
-            final NotificationManager notificationManager = (NotificationManager)
-                    getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-            int notifyID = pid.hashCode();
-            if (notificationManager != null) {
-                notificationManager.cancel(notifyID);
-            }
 
             disconnect();
         } catch (Throwable e) {
