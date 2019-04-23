@@ -171,7 +171,7 @@ public class Service {
                                             name = user.getAlias();
                                         }
 
-                                        String adds = map.get(Content.ADDS); // TODO ICES
+                                        String adds = map.get(Content.ICES);
                                         String[] ices = null;
                                         if (adds != null) {
                                             Addresses addresses = Addresses.toAddresses(adds);
@@ -197,7 +197,7 @@ public class Service {
                                 }
                                 case SESSION_ACCEPT: {
                                     String[] ices = null;
-                                    String adds = map.get(Content.ADDS); // TODO ICES
+                                    String adds = map.get(Content.ICES);
                                     if (adds != null) {
                                         Addresses addresses = Addresses.toAddresses(adds);
                                         ices = RTCSession.getInstance().turnUris(addresses);
@@ -218,7 +218,7 @@ public class Service {
                                 case SESSION_ANSWER: {
                                     String sdp = map.get(Content.SDP);
                                     checkNotNull(sdp);
-                                    String esk = map.get(Content.ESK); // TODO ESK TO TYPE
+                                    String esk = map.get(Content.TYPE);
                                     checkNotNull(esk);
                                     RTCSession.getInstance().answer(senderPid, sdp, esk);
                                     break;

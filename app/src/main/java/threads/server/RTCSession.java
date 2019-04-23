@@ -90,7 +90,7 @@ public class RTCSession {
                         HashMap<String, String> map = new HashMap<>();
                         map.put(Content.EST, Message.SESSION_ANSWER.name());
                         map.put(Content.SDP, message.description);
-                        map.put(Content.ESK, message.type.name());  // TODO TYPE
+                        map.put(Content.TYPE, message.type.name());
 
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
                     } else {
@@ -205,7 +205,7 @@ public class RTCSession {
             threads.core.api.Peer peer = threads.getPeerByPID(host);
             if (peer != null) {
                 String addresses = Addresses.toString(peer.getAddresses());
-                map.put(Content.ADDS, addresses); // TODO ICES
+                map.put(Content.ICES, addresses);
             }
             ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
         } catch (Throwable e) {
@@ -307,7 +307,7 @@ public class RTCSession {
                         threads.core.api.Peer peer = threads.getPeerByPID(host);
                         if (peer != null) {
                             String addresses = Addresses.toString(peer.getAddresses());
-                            map.put(Content.ADDS, addresses); // TODO ICES
+                            map.put(Content.ICES, addresses);
                         }
 
                         ipfs.pubsub_pub(user.getPid(), gson.toJson(map));

@@ -127,7 +127,6 @@ public class RTCCallDialogFragment extends DialogFragment {
         dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
 
 
-
         dialog.setOnShowListener((dialogInterface) -> {
 
             Button positive = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
