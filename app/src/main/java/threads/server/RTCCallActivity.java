@@ -304,7 +304,11 @@ public class RTCCallActivity extends AppCompatActivity implements
             }
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            disconnect();
+            if (soundPoolManager != null) {
+                soundPoolManager.play();
+            }
+
+            disconnect(2500);
 
         });
 
@@ -618,7 +622,6 @@ public class RTCCallActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
-        disconnect();
         super.onDestroy();
     }
 
@@ -664,13 +667,10 @@ public class RTCCallActivity extends AppCompatActivity implements
 
 
     // Disconnect from remote resources, dispose of local resources, and exit.
-    private void disconnect() {
+    private void disconnect(long timeout) {
 
         closeCallDialog();
 
-        if (soundPoolManager != null) {
-            soundPoolManager.play();
-        }
 
         remoteProxyRenderer.setTarget(null);
         localProxyVideoSink.setTarget(null);
@@ -707,7 +707,7 @@ public class RTCCallActivity extends AppCompatActivity implements
                 finish();
             }
 
-        }, 2000);
+        }, timeout);
 
 
     }
@@ -742,7 +742,7 @@ public class RTCCallActivity extends AppCompatActivity implements
         if (useCamera2()) {
             if (!captureToTexture()) {
                 Preferences.error(getString(R.string.camera2_texture_only_error));
-                disconnect();
+                disconnect(2500);
                 return null;
             }
 
@@ -752,7 +752,7 @@ public class RTCCallActivity extends AppCompatActivity implements
         }
         if (videoCapturer == null) {
             Preferences.error("Failed to open camera");
-            disconnect();
+            disconnect(2500);
             return null;
         }
         return videoCapturer;
@@ -838,7 +838,7 @@ public class RTCCallActivity extends AppCompatActivity implements
     @Override
     public void onChannelClose() {
         Preferences.warning("Remote end hung up; dropping PeerConnection");
-        runOnUiThread(this::disconnect);
+        runOnUiThread(() -> disconnect(1000));
     }
 
     @Override
@@ -945,13 +945,13 @@ public class RTCCallActivity extends AppCompatActivity implements
     @Override
     public void onDisconnected() {
         Preferences.warning("DTLS disconnected");
-        runOnUiThread(this::disconnect);
+        runOnUiThread(() -> disconnect(1000));
     }
 
     @Override
     public void onPeerConnectionClosed() {
         Preferences.warning("Peer connection closed");
-        runOnUiThread(this::disconnect);
+        runOnUiThread(() -> disconnect(1000));
     }
 
     @Override
@@ -993,7 +993,11 @@ public class RTCCallActivity extends AppCompatActivity implements
                             Preferences.warning(getString(R.string.connection_failed))
                     , timeout);
 
-            disconnect();
+            if (soundPoolManager != null) {
+                soundPoolManager.play();
+            }
+
+            disconnect(2500);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         } finally {
@@ -1011,7 +1015,11 @@ public class RTCCallActivity extends AppCompatActivity implements
                             Preferences.warning(getString(R.string.connection_failed))
                     , timeout);
 
-            disconnect();
+            if (soundPoolManager != null) {
+                soundPoolManager.play();
+            }
+
+            disconnect(2500);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         } finally {
@@ -1027,7 +1035,11 @@ public class RTCCallActivity extends AppCompatActivity implements
                             Preferences.warning(getString(R.string.connection_failed))
                     , timeout);
 
-            disconnect();
+            if (soundPoolManager != null) {
+                soundPoolManager.play();
+            }
+
+            disconnect(2500);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
