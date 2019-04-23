@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import threads.core.Preferences;
@@ -66,17 +67,14 @@ class NotificationSender {
 
     static NotificationCompat.Builder createCallNotification(@NonNull Context context,
                                                              @NonNull String pid,
-                                                             @NonNull String name) {
+                                                             @NonNull String name,
+                                                             @Nullable String[] ices) {
         checkNotNull(context);
         checkNotNull(pid);
         checkNotNull(name);
-
-
-        Intent intent = new Intent(context, MainActivity.class);
+        Intent intent = RTCCallActivity.createIntent(context, pid, ices, false);
         intent.setAction(RTCCallActivity.ACTION_INCOMING_CALL);
-        intent.putExtra(RTCCallActivity.CALL_PID, pid);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         int requestID = (int) System.currentTimeMillis();
         PendingIntent pendingIntent = PendingIntent.getActivity(context, requestID,

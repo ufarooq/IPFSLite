@@ -54,15 +54,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -77,13 +73,13 @@ import java.util.regex.Pattern;
  * This class is a singleton.
  */
 public class RTCPeerConnection {
-    public static final String VIDEO_TRACK_ID = "ARDAMSv0";
-    public static final String AUDIO_TRACK_ID = "ARDAMSa0";
-    public static final String VIDEO_TRACK_TYPE = "video";
-    public static final String VIDEO_CODEC_H264_HIGH = "H264 High";
-    public static final String AUDIO_CODEC_OPUS = "opus";
-    public static final String AUDIO_CODEC_ISAC = "ISAC";
-    private static final String TAG = "PCRTCClient";
+    static final String VIDEO_CODEC_H264_HIGH = "H264 High";
+    static final String AUDIO_CODEC_OPUS = "opus";
+    private static final String VIDEO_TRACK_ID = "ARDAMSv0";
+    private static final String AUDIO_TRACK_ID = "ARDAMSa0";
+    private static final String VIDEO_TRACK_TYPE = "video";
+    private static final String AUDIO_CODEC_ISAC = "ISAC";
+    private static final String TAG = RTCPeerConnection.class.getSimpleName();
     private static final String VIDEO_CODEC_VP8 = "VP8";
     private static final String VIDEO_CODEC_VP9 = "VP9";
     private static final String VIDEO_CODEC_H264 = "H264";
@@ -99,11 +95,9 @@ public class RTCPeerConnection {
     private static final String AUDIO_AUTO_GAIN_CONTROL_CONSTRAINT = "googAutoGainControl";
     private static final String AUDIO_HIGH_PASS_FILTER_CONSTRAINT = "googHighpassFilter";
     private static final String AUDIO_NOISE_SUPPRESSION_CONSTRAINT = "googNoiseSuppression";
-    private static final String DTLS_SRTP_KEY_AGREEMENT_CONSTRAINT = "DtlsSrtpKeyAgreement";
     private static final int HD_VIDEO_WIDTH = 1280;
     private static final int HD_VIDEO_HEIGHT = 720;
     private static final int BPS_IN_KBPS = 1000;
-    private static final String RTCEVENTLOG_OUTPUT_DIR_NAME = "rtc_event_log";
 
     // Executor thread is started once in private ctor and is used for all
     // peer connection API calls to ensure new peer connection factory is
@@ -704,14 +698,6 @@ public class RTCPeerConnection {
         }
 
         Log.d(TAG, "Peer connection created.");
-    }
-
-    private File createRtcEventLogOutputFile() {
-        DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_hhmm_ss", Locale.getDefault());
-        Date date = new Date();
-        final String outputFileName = "event_log_" + dateFormat.format(date) + ".log";
-        return new File(
-                appContext.getDir(RTCEVENTLOG_OUTPUT_DIR_NAME, Context.MODE_PRIVATE), outputFileName);
     }
 
 

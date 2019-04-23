@@ -170,9 +170,17 @@ public class Service {
                                         if (user != null) {
                                             name = user.getAlias();
                                         }
+
+                                        String adds = map.get(Content.ADDS); // TODO ICES
+                                        String[] ices = null;
+                                        if (adds != null) {
+                                            Addresses addresses = Addresses.toAddresses(adds);
+                                            ices = RTCSession.getInstance().turnUris(addresses);
+                                        }
+
                                         NotificationCompat.Builder builder =
                                                 NotificationSender.createCallNotification(
-                                                        context, sender, name);
+                                                        context, sender, name, ices);
 
                                         final NotificationManager notificationManager = (NotificationManager)
                                                 context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
@@ -182,11 +190,11 @@ public class Service {
                                             notificationManager.notify(notifyID, notification);
                                         }
 
-                                        Intent intent = new Intent(context, MainActivity.class);
+
+                                        Intent intent = RTCCallActivity.createIntent(
+                                                context, sender, ices, false);
                                         intent.setAction(RTCCallActivity.ACTION_INCOMING_CALL);
-                                        intent.putExtra(RTCCallActivity.CALL_PID, sender);
-                                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                         context.startActivity(intent);
                                     }
                                     break;
@@ -200,12 +208,13 @@ public class Service {
                                     break;
                                 }
                                 case SESSION_ACCEPT: {
+                                    String[] ices = null;
                                     String adds = map.get(Content.ADDS); // TODO ICES
-                                    Addresses addresses = null;
                                     if (adds != null) {
-                                        addresses = Addresses.toAddresses(adds);
+                                        Addresses addresses = Addresses.toAddresses(adds);
+                                        ices = RTCSession.getInstance().turnUris(addresses);
                                     }
-                                    RTCSession.getInstance().accept(senderPid, addresses);
+                                    RTCSession.getInstance().accept(senderPid, ices);
                                     break;
                                 }
                                 case SESSION_REJECT: {

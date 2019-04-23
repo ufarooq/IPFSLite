@@ -1,5 +1,7 @@
 package threads.server;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.Preconditions;
@@ -9,7 +11,10 @@ import com.google.gson.Gson;
 import org.webrtc.IceCandidate;
 import org.webrtc.SessionDescription;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -27,6 +32,7 @@ import threads.share.ConnectService;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class RTCSession {
+    private static final String TAG = RTCSession.class.getSimpleName();
     private static final Gson gson = new Gson();
     private static RTCSession INSTANCE = new RTCSession();
     private final AtomicBoolean busy = new AtomicBoolean(false);
@@ -39,6 +45,31 @@ public class RTCSession {
 
     public static RTCSession getInstance() {
         return INSTANCE;
+    }
+
+    @Nullable
+    public String[] turnUris(@Nullable Addresses addresses) {
+        if (addresses == null) {
+            return null;
+        }
+        Collection<String> addrs = addresses.values();
+        List<String> uris = new ArrayList<>();
+        for (String address : addrs) {
+            try {
+
+                String[] parts = address.split("/");
+                String protocol = parts[3];
+                if (protocol.equals("udp")) { // TODO "turn" not working
+                    uris.add("stun:" + parts[2] + ":" + parts[4] + "?transport=udp");
+                } else {
+                    uris.add("stun:" + parts[2] + ":" + parts[4]);
+                }
+
+            } catch (Throwable e) {
+                Log.e(TAG, e.getLocalizedMessage());
+            }
+        }
+        return uris.toArray(new String[uris.size()]);
     }
 
     public void emitSessionAnswer(@NonNull PID user,
@@ -78,9 +109,9 @@ public class RTCSession {
         }
     }
 
-    public void accept(@NonNull PID pid, @Nullable Addresses addresses) {
+    public void accept(@NonNull PID pid, @Nullable String[] ices) {
         if (listener != null) {
-            listener.accept(pid, addresses);
+            listener.accept(pid, ices);
         }
     }
 
@@ -162,13 +193,20 @@ public class RTCSession {
         }
     }
 
-    public void emitSessionCall(@NonNull PID user) {
+    public void emitSessionCall(@NonNull PID host, @NonNull PID user) {
+        checkNotNull(host);
         checkNotNull(user);
         try {
             IPFS ipfs = Singleton.getInstance().getIpfs();
+            THREADS threads = Singleton.getInstance().getThreads();
             Preconditions.checkNotNull(ipfs);
             HashMap<String, String> map = new HashMap<>();
             map.put(Content.EST, Message.SESSION_CALL.name());
+            threads.core.api.Peer peer = threads.getPeerByPID(host);
+            if (peer != null) {
+                String addresses = Addresses.toString(peer.getAddresses());
+                map.put(Content.ADDS, addresses); // TODO ICES
+            }
             ipfs.pubsub_pub(user.getPid(), gson.toJson(map));
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -386,7 +424,7 @@ public class RTCSession {
     public interface Listener {
         void busy(@NonNull PID pid);
 
-        void accept(@NonNull PID pid, @Nullable Addresses addresses);
+        void accept(@NonNull PID pid, @Nullable String[] ices);
 
         void reject(@NonNull PID pid);
 

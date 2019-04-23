@@ -1,12 +1,8 @@
 package threads.server;
 
 import android.Manifest;
-import android.app.NotificationManager;
-import android.content.BroadcastReceiver;
 import android.content.ClipData;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -32,7 +28,6 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.lifecycle.ViewModelProviders;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -88,30 +83,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         EditMultihashDialogFragment.ActionListener,
         EditPeerDialogFragment.ActionListener,
         PeersFragment.ActionListener,
-        NameDialogFragment.ActionListener,
-        RTCCallingDialogFragment.ActionListener {
+        NameDialogFragment.ActionListener {
 
     private static final Gson gson = new Gson();
-    private static final int SELECT_FILES = 1;
-    private static final int DOWNLOAD_EXTERNAL_STORAGE = 2;
-    private static final int REQUEST_VIDEO_CAPTURE = 3;
-    private static final int REQUEST_AUDIO_CAPTURE = 4;
+    private static final int REQUEST_VIDEO_CAPTURE = 1;
+    private static final int REQUEST_AUDIO_CAPTURE = 2;
+    private static final int REQUEST_MODIFY_AUDIO_SETTINGS = 3;
+    private static final int REQUEST_SELECT_FILES = 4;
+    private static final int REQUEST_EXTERNAL_STORAGE = 5;
+
     private final AtomicReference<Long> storedThread = new AtomicReference<>(null);
     private final AtomicReference<String> storedUser = new AtomicReference<>(null);
     private final AtomicBoolean idScan = new AtomicBoolean(false);
-    boolean isReceiverRegistered = false;
+
     private DrawerLayout drawer_layout;
     private FloatingActionButton fab_daemon;
     private long mLastClickTime = 0;
     private ViewPager viewPager;
-    private CallBroadcastReceiver callBroadcastReceiver;
 
 
     @Override
     public void onRequestPermissionsResult
             (int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
-            case DOWNLOAD_EXTERNAL_STORAGE: {
+            case REQUEST_EXTERNAL_STORAGE: {
                 for (int i = 0, len = permissions.length; i < len; i++) {
 
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
@@ -126,6 +121,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
                         Snackbar.make(drawer_layout,
                                 getString(R.string.permission_audio_denied),
+                                Snackbar.LENGTH_LONG)
+                                .setAction(R.string.app_settings, new PermissionAction()).show();
+                    }
+                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                        clickUserCall(storedUser.get());
+                    }
+                }
+
+                break;
+            }
+            case REQUEST_MODIFY_AUDIO_SETTINGS: {
+                for (int i = 0, len = permissions.length; i < len; i++) {
+                    if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                        Snackbar.make(drawer_layout,
+                                getString(R.string.permission_audio_settings_denied),
                                 Snackbar.LENGTH_LONG)
                                 .setAction(R.string.app_settings, new PermissionAction()).show();
                     }
@@ -157,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         try {
-            if (requestCode == SELECT_FILES && resultCode == RESULT_OK && data != null) {
+            if (requestCode == REQUEST_SELECT_FILES && resultCode == RESULT_OK && data != null) {
 
                 if (data.getData() != null) {
                     Uri uri = data.getData();
@@ -235,18 +245,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void onDestroy() {
         super.onDestroy();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        registerReceiver();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        unregisterReceiver();
     }
 
 
@@ -460,7 +458,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             intent.setAction(Intent.ACTION_GET_CONTENT);
             startActivityForResult(Intent.createChooser(intent,
-                    getString(R.string.select_files)), SELECT_FILES);
+                    getString(R.string.select_files)), REQUEST_SELECT_FILES);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
@@ -759,46 +757,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         });
 
-        callBroadcastReceiver = new CallBroadcastReceiver();
-        registerReceiver();
-
-        handleIncomingCallIntent(getIntent());
     }
 
-    private void registerReceiver() {
-        if (!isReceiverRegistered) {
-            IntentFilter intentFilter = new IntentFilter();
-            intentFilter.addAction(RTCCallActivity.ACTION_INCOMING_CALL);
-
-            LocalBroadcastManager.getInstance(this).registerReceiver(
-                    callBroadcastReceiver, intentFilter);
-            isReceiverRegistered = true;
-        }
-    }
-
-    private void unregisterReceiver() {
-        if (isReceiverRegistered) {
-            LocalBroadcastManager.getInstance(this).unregisterReceiver(callBroadcastReceiver);
-            isReceiverRegistered = false;
-        }
-    }
-
-    private void handleIncomingCallIntent(Intent intent) {
-        if (intent != null && intent.getAction() != null) {
-            if (intent.getAction().equals(RTCCallActivity.ACTION_INCOMING_CALL)) {
-                String pid = intent.getStringExtra(RTCCallActivity.CALL_PID);
-                if (pid != null && !pid.isEmpty()) {
-                    receiveUserCall(pid);
-                    intent.removeExtra(RTCCallActivity.CALL_PID);
-                }
-            }
-        }
-    }
 
     @Override
     public void clickUserCall(@NonNull String pid) {
 
         checkNotNull(pid);
+
+
+        // CHECKED
+        if (!Network.isConnected(getApplicationContext())) {
+            Preferences.error(getString(R.string.offline_mode));
+            return;
+        }
+        // CHECKED
+        if (!Preferences.isDaemonRunning(getApplicationContext())) {
+            Preferences.error(getString(R.string.daemon_not_running));
+            return;
+        }
+
 
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.RECORD_AUDIO)
@@ -820,22 +798,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-
-        // CHECKED
-        if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(getString(R.string.offline_mode));
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.MODIFY_AUDIO_SETTINGS)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.MODIFY_AUDIO_SETTINGS},
+                    REQUEST_MODIFY_AUDIO_SETTINGS);
+            storedUser.set(pid);
             return;
         }
-        // CHECKED
-        if (!Preferences.isDaemonRunning(getApplicationContext())) {
-            Preferences.error(getString(R.string.daemon_not_running));
-            return;
-        }
-
-
         try {
             final IPFS ipfs = Singleton.getInstance().getIpfs();
             final THREADS threads = Singleton.getInstance().getThreads();
+            final PID host = Preferences.getPID(getApplicationContext());
+            checkNotNull(host);
             if (ipfs != null) {
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() -> {
@@ -854,9 +830,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             if (value) {
 
                                 RTCSession.getInstance().setBusy(true);
-                                RTCSession.getInstance().emitSessionCall(PID.create(pid));
+                                RTCSession.getInstance().emitSessionCall(host, PID.create(pid));
 
-                                RTCCallActivity.call(MainActivity.this, pid, true);
+                                Intent intent = RTCCallActivity.createIntent(MainActivity.this,
+                                        pid, null, true);
+
+                                MainActivity.this.startActivity(intent);
                             } else {
                                 Preferences.warning(getString(R.string.peer_is_offline));
                             }
@@ -873,47 +852,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-
-    public void receiveUserCall(@NonNull String pid) {
-        checkNotNull(pid);
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.RECORD_AUDIO},
-                    REQUEST_AUDIO_CAPTURE);
-            storedUser.set(pid);
-            return;
-        }
-
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CAMERA},
-                    REQUEST_VIDEO_CAPTURE);
-            storedUser.set(pid);
-            return;
-        }
-
-
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-
-
-            User user = threadsAPI.getUserByPID(PID.create(pid));
-            String name = pid;
-            if (user != null) {
-                name = user.getAlias();
-            }
-
-            RTCCallingDialogFragment.newInstance(pid, name)
-                    .show(getSupportFragmentManager(), RTCCallingDialogFragment.TAG);
-        });
-
-    }
 
     @Override
     public void clickConnectPeer(@NonNull String multihash) {
@@ -1253,7 +1191,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        DOWNLOAD_EXTERNAL_STORAGE);
+                        REQUEST_EXTERNAL_STORAGE);
 
             } else {
                 Service.localDownloadThread(getApplicationContext(), idx);
@@ -1308,87 +1246,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
-    }
-
-    @Override
-    public void acceptCall(@NonNull String pid) {
-
-        try {
-            PID host = Preferences.getPID(getApplicationContext());
-            checkNotNull(host);
-            final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
-            RTCSession.getInstance().emitSessionAccept(host, PID.create(pid), () ->
-                            Preferences.warning(getString(R.string.connection_failed))
-                    , timeout);
-
-            final NotificationManager notificationManager = (NotificationManager)
-                    getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-            int notifyID = pid.hashCode();
-            if (notificationManager != null) {
-                notificationManager.cancel(notifyID);
-            }
-
-            RTCCallActivity.call(MainActivity.this, pid, false);
-
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
-    }
-
-    @Override
-    public void rejectCall(@NonNull String pid) {
-        checkNotNull(pid);
-        try {
-            final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
-            RTCSession.getInstance().emitSessionReject(PID.create(pid), () ->
-                            Preferences.warning(getString(R.string.connection_failed))
-                    , timeout);
-
-            final NotificationManager notificationManager = (NotificationManager)
-                    getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-            int notifyID = pid.hashCode();
-            if (notificationManager != null) {
-                notificationManager.cancel(notifyID);
-            }
-
-
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        } finally {
-            RTCSession.getInstance().setBusy(false);
-        }
-    }
-
-    @Override
-    public void timeoutCall(@NonNull String pid) {
-        try {
-            final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
-            RTCSession.getInstance().emitSessionTimeout(PID.create(pid), () ->
-                            Preferences.warning(getString(R.string.connection_failed))
-                    , timeout);
-
-            final NotificationManager notificationManager = (NotificationManager)
-                    getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-            int notifyID = pid.hashCode();
-            if (notificationManager != null) {
-                notificationManager.cancel(notifyID);
-            }
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
-
-    }
-
-
-    private class CallBroadcastReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (action != null && action.equals(RTCCallActivity.ACTION_INCOMING_CALL)) {
-                handleIncomingCallIntent(intent);
-            }
-        }
     }
 
     private class PagerAdapter extends FragmentStatePagerAdapter {
