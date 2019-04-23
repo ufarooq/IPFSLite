@@ -833,7 +833,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 RTCSession.getInstance().emitSessionCall(host, PID.create(pid));
 
                                 Intent intent = RTCCallActivity.createIntent(MainActivity.this,
-                                        pid, null, true);
+                                        pid, user.getAlias(), null, true);
 
                                 MainActivity.this.startActivity(intent);
                             } else {

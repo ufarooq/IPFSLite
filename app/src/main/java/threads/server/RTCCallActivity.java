@@ -43,13 +43,8 @@ import org.webrtc.VideoSink;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.User;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.api.PID;
 import threads.server.RTCAudioManager.AudioDevice;
@@ -61,7 +56,9 @@ import static androidx.core.util.Preconditions.checkNotNull;
 public class RTCCallActivity extends AppCompatActivity implements
         RTCClient.SignalingEvents,
         RTCPeerConnection.PeerConnectionEvents,
-        RTCCallingDialogFragment.ActionListener {
+        RTCCallingDialogFragment.ActionListener,
+        RTCCallDialogFragment.ActionListener {
+    public static final String CALL_NAME = "CALL_NAME";
     public static final String CALL_PID = "CALL_PID";
     public static final String CALL_ICES = "CALL_ICES";
     public static final String INITIATOR = "INITIATOR";
@@ -111,23 +108,27 @@ public class RTCCallActivity extends AppCompatActivity implements
     private boolean callControlFragmentVisible = true;
     private long callStartedTimeMs;
     private boolean micEnabled = true;
-    private boolean speakerEnabled = false;
+    private boolean speakerEnabled = true;
     private boolean initiator;
     private long mLastClickTime = 0;
     private String callee;
+    private String calleeName;
     private List<PeerConnection.IceServer> peerIceServers = new ArrayList<>();
     // Controls
     private LinearLayout fab_layout;
+    private RTCCallDialogFragment callDialog;
 
 
     public static Intent createIntent(@NonNull Context context,
                                       @NonNull String pid,
+                                      @NonNull String name,
                                       @Nullable String[] ices,
                                       boolean initiator) {
         checkNotNull(context);
         checkNotNull(pid);
         Intent intent = new Intent(context, RTCCallActivity.class);
         intent.putExtra(RTCCallActivity.CALL_PID, pid);
+        intent.putExtra(RTCCallActivity.CALL_NAME, name);
         intent.putExtra(RTCCallActivity.INITIATOR, initiator);
         intent.putExtra(RTCCallActivity.CALL_ICES, ices);
         intent.putExtra(RTCCallActivity.EXTRA_VIDEO_CALL, true);
@@ -186,6 +187,7 @@ public class RTCCallActivity extends AppCompatActivity implements
 
         final Intent intent = getIntent();
         callee = intent.getStringExtra(CALL_PID);
+        calleeName = intent.getStringExtra(CALL_NAME);
         PID user = PID.create(callee);
         String[] ices = intent.getStringArrayExtra(CALL_ICES);
 
@@ -276,7 +278,12 @@ public class RTCCallActivity extends AppCompatActivity implements
 
         // Create and audio manager that will take care of audio routing,
         // audio modes, audio device enumeration etc.
-        audioManager = RTCAudioManager.create(getApplicationContext(), AudioDevice.EARPIECE);
+        AudioDevice defaultAudioDevice = AudioDevice.EARPIECE;
+        if (speakerEnabled) {
+            defaultAudioDevice = AudioDevice.SPEAKER_PHONE;
+        }
+
+        audioManager = RTCAudioManager.create(getApplicationContext(), defaultAudioDevice);
 
         audioManager.start((audioDevice, availableAudioDevices) -> {
             // This method will be called each time the number of available audio
@@ -319,6 +326,7 @@ public class RTCCallActivity extends AppCompatActivity implements
 
         });
 
+
         FloatingActionButton fab_toggle_speaker = findViewById(R.id.fab_toggle_speaker);
         fab_toggle_speaker.setOnClickListener((view) -> {
 
@@ -338,6 +346,12 @@ public class RTCCallActivity extends AppCompatActivity implements
 
 
         });
+
+        if (speakerEnabled) {
+            fab_toggle_speaker.setImageResource(R.drawable.volume_high);
+        } else {
+            fab_toggle_speaker.setImageResource(R.drawable.volume_medium);
+        }
 
         FloatingActionButton fab_toggle_mic = findViewById(R.id.fab_toggle_mic);
         fab_toggle_mic.setOnClickListener((view) -> {
@@ -399,10 +413,10 @@ public class RTCCallActivity extends AppCompatActivity implements
         handleIncomingCallIntent(getIntent());
 
 
-        if (!initiator) {
-            onToggleSpeaker();
+        if (initiator) {
+            callDialog = RTCCallDialogFragment.newInstance(callee, calleeName);
+            callDialog.show(getSupportFragmentManager(), RTCCallDialogFragment.TAG);
         }
-
     }
 
     private void handleIncomingCallIntent(Intent intent) {
@@ -498,21 +512,9 @@ public class RTCCallActivity extends AppCompatActivity implements
             return;
         }
 
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-
-
-            User user = threadsAPI.getUserByPID(PID.create(callee));
-            String name = callee;
-            if (user != null) {
-                name = user.getAlias();
-            }
-
-            RTCCallingDialogFragment.newInstance(callee, name)
-                    .show(getSupportFragmentManager(), RTCCallingDialogFragment.TAG);
-        });
+        RTCCallingDialogFragment.newInstance(callee, calleeName)
+                .show(getSupportFragmentManager(), RTCCallingDialogFragment.TAG);
 
     }
 
@@ -670,9 +672,22 @@ public class RTCCallActivity extends AppCompatActivity implements
             audioManager = null;
         }
 
+        closeCallDialog();
+
         RTCSession.getInstance().setBusy(false);
 
         finish();
+    }
+
+    private void closeCallDialog() {
+        try {
+            if (callDialog != null) {
+                callDialog.dismiss();
+                callDialog = null;
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, e.getLocalizedMessage(), e);
+        }
     }
 
 
@@ -881,7 +896,7 @@ public class RTCCallActivity extends AppCompatActivity implements
     public void onConnected() {
         final long delta = System.currentTimeMillis() - callStartedTimeMs;
         Preferences.warning("DTLS connected, delay=" + delta + "ms");
-
+        closeCallDialog();
         runOnUiThread(() -> setSwappedFeeds(false));
     }
 
@@ -949,6 +964,24 @@ public class RTCCallActivity extends AppCompatActivity implements
             if (notificationManager != null) {
                 notificationManager.cancel(notifyID);
             }
+
+            disconnect();
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        } finally {
+            RTCSession.getInstance().setBusy(false);
+        }
+    }
+
+    @Override
+    public void abortCall(@NonNull String pid) {
+        checkNotNull(pid);
+        try {
+
+            final long timeout = ConnectService.getConnectionTimeout(getApplicationContext());
+            RTCSession.getInstance().emitSessionClose(PID.create(pid), () ->
+                            Preferences.warning(getString(R.string.connection_failed))
+                    , timeout);
 
             disconnect();
         } catch (Throwable e) {

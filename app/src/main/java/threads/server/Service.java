@@ -192,7 +192,7 @@ public class Service {
 
 
                                         Intent intent = RTCCallActivity.createIntent(
-                                                context, sender, ices, false);
+                                                context, sender, name, ices, false);
                                         intent.setAction(RTCCallActivity.ACTION_INCOMING_CALL);
                                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                         context.startActivity(intent);

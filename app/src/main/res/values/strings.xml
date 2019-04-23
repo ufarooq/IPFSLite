@@ -78,9 +78,12 @@
 
     <string name="incoming_call">Incoming Call</string>
     <string name="is_calling">Peer \"%1$s\" is calling.</string>
+    <string name="outgoing_call">Outgoing Call</string>
+    <string name="calling">Call peer \"%1$s\"</string>
     <string name="connection_failed">Connection to peer failed</string>
     <string name="ok">OK</string>
     <string name="channel_error_title">Error Message</string>
     <string name="camera2_texture_only_error">Camera error detected</string>
     <string name="permission_audio_settings_denied">Permission modify audio settings denied</string>
+    <string name="abort">Abort</string>
 </resources>

@@ -72,7 +72,7 @@ class NotificationSender {
         checkNotNull(context);
         checkNotNull(pid);
         checkNotNull(name);
-        Intent intent = RTCCallActivity.createIntent(context, pid, ices, false);
+        Intent intent = RTCCallActivity.createIntent(context, pid, name, ices, false);
         intent.setAction(RTCCallActivity.ACTION_INCOMING_CALL);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
