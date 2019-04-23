@@ -193,7 +193,7 @@ public class RTCCallActivity extends AppCompatActivity implements
 
         if (ices != null) {
             for (String turn : ices) {
-                Log.e(TAG, "Turn address : " + turn);
+                Log.e(TAG, "Turn address : " + turn); // TODO remove
                 peerIceServers.add(
                         PeerConnection.IceServer.builder(turn).createIceServer());
             }
