@@ -159,6 +159,7 @@ public class RTCCallActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
+        hideSystemUI();
         registerReceiver();
     }
 
@@ -172,11 +173,10 @@ public class RTCCallActivity extends AppCompatActivity implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
-
         requestWindowFeature(Window.FEATURE_NO_TITLE);
 
         hideSystemUI();
+
 
         setContentView(R.layout.activity_call);
 
@@ -428,9 +428,24 @@ public class RTCCallActivity extends AppCompatActivity implements
         }
     }
 
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        hideSystemUI();
+    }
+
     private void hideSystemUI() {
         getWindow().getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN);
+                View.SYSTEM_UI_FLAG_IMMERSIVE
+                        // Set the content to appear under the system bars so that the
+                        // content doesn't resize when the system bars hide and show.
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        // Hide the nav bar and status bar
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN);
     }
 
     @Override
@@ -651,6 +666,8 @@ public class RTCCallActivity extends AppCompatActivity implements
     // Disconnect from remote resources, dispose of local resources, and exit.
     private void disconnect() {
 
+        closeCallDialog();
+
         if (soundPoolManager != null) {
             soundPoolManager.play();
         }
@@ -678,7 +695,6 @@ public class RTCCallActivity extends AppCompatActivity implements
             audioManager = null;
         }
 
-        closeCallDialog();
 
         RTCSession.getInstance().setBusy(false);
 
@@ -691,7 +707,7 @@ public class RTCCallActivity extends AppCompatActivity implements
                 finish();
             }
 
-        }, 1500);
+        }, 2000);
 
 
     }
@@ -770,7 +786,7 @@ public class RTCCallActivity extends AppCompatActivity implements
                         localProxyVideoSink, remoteSinks, videoCapturer, peerIceServers);
 
                 peerConnectionClient.setRemoteDescription(offerSdp);
-                Preferences.warning("Creating ANSWER...");
+
                 // Create answer. Answer SDP will be sent to offering client in
                 // PeerConnectionEvents.onLocalDescription event.
                 peerConnectionClient.createAnswer();
@@ -787,13 +803,11 @@ public class RTCCallActivity extends AppCompatActivity implements
         runOnUiThread(() -> {
 
             if (peerConnectionClient == null) {
-                Log.e(TAG, "Received remote SDP for non-initilized peer connection.");
                 return;
             }
             Preferences.warning("Received remote " + sdp.type + ", delay=" + delta + "ms");
             peerConnectionClient.setRemoteDescription(sdp);
             if (!initiator) {
-                Preferences.warning("Creating ANSWER...");
                 // Create answer. Answer SDP will be sent to offering client in
                 // PeerConnectionEvents.onLocalDescription event.
                 peerConnectionClient.createAnswer();
