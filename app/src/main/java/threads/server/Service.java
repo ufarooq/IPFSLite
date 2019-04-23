@@ -749,7 +749,7 @@ public class Service {
         }
     }
 
-    static void deleteThreads(List<Long> idxs) {
+    static void deleteThreads(@NonNull List<Long> idxs) {
         checkNotNull(idxs);
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
 

@@ -376,7 +376,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 return;
             }
 
-            Service.sendThreads(mContext, threads);
+            Service.sendThreads(mContext, new ArrayList<>(threads));
 
 
             unmarkThreads();
@@ -446,7 +446,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     private void deleteAction() {
 
-        Service.deleteThreads(threads);
+        Service.deleteThreads(new ArrayList<>(threads));
         try {
             if (threads.contains(threadIdx)) {
                 threadIdx = -1;
