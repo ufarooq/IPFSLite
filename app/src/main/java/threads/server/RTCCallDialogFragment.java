@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 
@@ -29,7 +30,7 @@ public class RTCCallDialogFragment extends DialogFragment {
     private Context mContext;
     private RTCSoundPool soundPoolManager;
 
-    public static RTCCallDialogFragment newInstance(@NonNull String pid, @NonNull String name) {
+    static RTCCallDialogFragment newInstance(@NonNull String pid, @NonNull String name) {
         checkNotNull(pid);
         checkNotNull(name);
         Bundle bundle = new Bundle();
@@ -57,7 +58,7 @@ public class RTCCallDialogFragment extends DialogFragment {
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-        soundPoolManager = RTCSoundPool.create(mContext, R.raw.outgoing);
+        soundPoolManager = RTCSoundPool.create(mContext, R.raw.outgoing, true);
     }
 
     @Override
@@ -93,6 +94,31 @@ public class RTCCallDialogFragment extends DialogFragment {
         dialog.setCancelable(false);
         dialog.setCanceledOnTouchOutside(false);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+
+        // hide the status bar and enter full screen mode
+        /*
+        dialog.getWindow().setFlags(
+                WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN
+        );*/
+
+        // dismiss the keyguard
+        //dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD);
+        //dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+        //dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+
+        // Set the content to appear under the system bars so that the content
+        // doesn't resize when the system bars hide and show.
+        dialog.getWindow().getDecorView().getRootView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN);
+
+        // immersive hack 1: set the dialog to not focusable (makes navigation ignore us adding the window)
+        //dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+
+
+
         dialog.setOnShowListener((dialogInterface) -> {
 
             Button positive = dialog.getButton(AlertDialog.BUTTON_POSITIVE);

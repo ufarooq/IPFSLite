@@ -18,10 +18,15 @@ public class RTCSoundPool {
     private SoundPool soundPool;
     private int ringingSoundId;
     private int ringingStreamId;
+    private int loopValue = -1;
 
-    private RTCSoundPool(@NonNull Context context, int resId) {
+    private RTCSoundPool(@NonNull Context context, int resId, boolean loop) {
         Preconditions.checkNotNull(context);
 
+
+        if (!loop) {
+            loopValue = 0;
+        }
 
         // AudioManager audio settings for adjusting the volume
         AudioManager audioManager = (AudioManager) context.getSystemService(AUDIO_SERVICE);
@@ -47,13 +52,14 @@ public class RTCSoundPool {
         ringingSoundId = soundPool.load(context, resId, 1);
     }
 
-    public static RTCSoundPool create(Context context, int resId) {
-        return new RTCSoundPool(context, resId);
+    public static RTCSoundPool create(Context context, int resId, boolean loop) {
+        return new RTCSoundPool(context, resId, loop);
     }
 
     public void play() {
         if (loaded && !playing) {
-            ringingStreamId = soundPool.play(ringingSoundId, volume, volume, 1, -1, 1f);
+            ringingStreamId = soundPool.play(ringingSoundId, volume,
+                    volume, 1, loopValue, 1f);
             playing = true;
         } else {
             playingCalled = true;

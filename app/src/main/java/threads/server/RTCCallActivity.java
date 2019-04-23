@@ -7,11 +7,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
-import android.view.WindowManager;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
@@ -116,6 +116,7 @@ public class RTCCallActivity extends AppCompatActivity implements
     // Controls
     private LinearLayout fab_layout;
     private RTCCallDialogFragment callDialog;
+    private RTCSoundPool soundPoolManager;
 
 
     public static Intent createIntent(@NonNull Context context,
@@ -154,11 +155,6 @@ public class RTCCallActivity extends AppCompatActivity implements
     }
 
 
-    private static int getSystemUiVisibility() {
-        int flags = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN;
-        flags |= View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-        return flags;
-    }
 
     @Override
     protected void onResume() {
@@ -177,12 +173,13 @@ public class RTCCallActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
 
 
+
         requestWindowFeature(Window.FEATURE_NO_TITLE);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-                | WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
-        getWindow().getDecorView().setSystemUiVisibility(getSystemUiVisibility());
+
+        hideSystemUI();
 
         setContentView(R.layout.activity_call);
+
 
         final Intent intent = getIntent();
         callee = intent.getStringExtra(CALL_PID);
@@ -274,6 +271,7 @@ public class RTCCallActivity extends AppCompatActivity implements
 
         callStartedTimeMs = System.currentTimeMillis();
 
+        soundPoolManager = RTCSoundPool.create(this, R.raw.disconnect, false);
 
         // Create and audio manager that will take care of audio routing,
         // audio modes, audio device enumeration etc.
@@ -428,6 +426,11 @@ public class RTCCallActivity extends AppCompatActivity implements
                 }
             }
         }
+    }
+
+    private void hideSystemUI() {
+        getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN);
     }
 
     @Override
@@ -648,6 +651,10 @@ public class RTCCallActivity extends AppCompatActivity implements
     // Disconnect from remote resources, dispose of local resources, and exit.
     private void disconnect() {
 
+        if (soundPoolManager != null) {
+            soundPoolManager.play();
+        }
+
         remoteProxyRenderer.setTarget(null);
         localProxyVideoSink.setTarget(null);
 
@@ -675,7 +682,29 @@ public class RTCCallActivity extends AppCompatActivity implements
 
         RTCSession.getInstance().setBusy(false);
 
-        finish();
+        new Handler().postDelayed(() -> {
+            try {
+                closeSoundPool();
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            } finally {
+                finish();
+            }
+
+        }, 1500);
+
+
+    }
+
+    private void closeSoundPool() {
+        try {
+            if (soundPoolManager != null) {
+                soundPoolManager.release();
+                soundPoolManager = null;
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, e.getLocalizedMessage(), e);
+        }
     }
 
     private void closeCallDialog() {

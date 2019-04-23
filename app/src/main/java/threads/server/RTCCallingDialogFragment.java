@@ -57,7 +57,7 @@ public class RTCCallingDialogFragment extends DialogFragment {
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-        soundPoolManager = RTCSoundPool.create(mContext, R.raw.incoming);
+        soundPoolManager = RTCSoundPool.create(mContext, R.raw.incoming, true);
     }
 
     @Override
