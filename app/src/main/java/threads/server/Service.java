@@ -23,10 +23,8 @@ import org.iota.jota.pow.pearldiver.PearlDiverLocalPoW;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -153,7 +151,7 @@ public class Service {
                     } else if (result.getCodex() == CodecDecider.Codec.URI) {
                         Service.downloadMultihash(context, senderPid, result.getMultihash(), null);
                     } else if (result.getCodex() == CodecDecider.Codec.JSON_MAP) {
-                        Map<String, String> map = result.getMap();
+                        Content map = result.getContent();
 
                         if (map.containsKey(Content.EST)) {
                             String est = map.get(Content.EST);
@@ -682,7 +680,7 @@ public class Service {
                         CID cid = threadObject.getCid();
                         checkNotNull(cid);
 
-                        Map<String, String> map = new HashMap<>();
+                        Content map = new Content();
                         map.put(Content.EST, Message.SHARE.name());
                         String title = threadObject.getAdditional(Content.TITLE);
                         if (!title.isEmpty()) {
@@ -1263,7 +1261,7 @@ public class Service {
         CID cid = thread.getCid();
         checkNotNull(cid);
 
-        Map<String, String> map = new HashMap<>();
+        Content map = new Content();
         map.put(Content.EST, Message.REPLY.name());
         map.put(Content.CID, cid.getCid());
 

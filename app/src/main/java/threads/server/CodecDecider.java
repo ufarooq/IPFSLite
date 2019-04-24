@@ -3,6 +3,7 @@ package threads.server;
 import android.webkit.URLUtil;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -11,6 +12,7 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.util.Map;
 
+import threads.core.api.Content;
 import threads.ipfs.api.Multihash;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -21,7 +23,7 @@ public class CodecDecider {
     private static final Gson gson = new Gson();
     private String multihash = null;
     private URI uri = null;
-    private Map<String, String> map = null;
+    private Content map = null;
     private Codec codex = Codec.UNKNOWN;
 
     private CodecDecider() {
@@ -69,10 +71,10 @@ public class CodecDecider {
 
             Type type = new TypeToken<Map<String, String>>() {
             }.getType();
-            Map<String, String> map = gson.fromJson(code, type);
+            Content map = gson.fromJson(code, type);
             if (map != null) {
                 codecDecider.setCodex(Codec.JSON_MAP);
-                codecDecider.setMap(map);
+                codecDecider.setContent(map);
                 return codecDecider;
             }
         } catch (Throwable e) {
@@ -108,11 +110,12 @@ public class CodecDecider {
     }
 
 
-    public Map<String, String> getMap() {
+    @Nullable
+    public Content getContent() {
         return map;
     }
 
-    private void setMap(@NonNull Map<String, String> map) {
+    private void setContent(@NonNull Content map) {
         checkNotNull(map);
         this.map = map;
     }

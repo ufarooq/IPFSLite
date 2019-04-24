@@ -41,9 +41,7 @@ import com.google.zxing.integration.android.IntentResult;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -915,7 +913,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     User hostUser = threadsAPI.getUserByPID(host);
                                     checkNotNull(hostUser);
 
-                                    Map<String, String> map = new HashMap<>();
+                                    Content map = new Content();
                                     map.put(Content.EST, Message.CONNECT.name());
                                     map.put(Content.ALIAS, hostUser.getAlias());
                                     map.put(Content.PKEY, hostUser.getPublicKey());
