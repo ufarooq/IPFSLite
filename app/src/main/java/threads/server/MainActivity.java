@@ -69,7 +69,6 @@ import threads.share.InfoDialogFragment;
 import threads.share.NameDialogFragment;
 import threads.share.PermissionAction;
 import threads.share.RTCCallActivity;
-import threads.share.RTCSession;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.UserActionDialogFragment;
 import threads.share.WebViewDialogFragment;
@@ -823,24 +822,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         if (user.getStatus() == UserStatus.BLOCKED) {
                             Preferences.warning(getString(R.string.peer_is_blocked));
                         } else {
-
-                            long timeout = ConnectService.getConnectionTimeout(
-                                    getApplicationContext());
-
-                            boolean value = ConnectService.connectUser(PID.create(pid), timeout);
-                            if (value) {
-
-                                RTCSession.getInstance().setBusy(true);
-                                RTCSession.getInstance().emitSessionCall(host, PID.create(pid));
-
-                                Intent intent = RTCCallActivity.createIntent(MainActivity.this,
-                                        pid, user.getAlias(), null, true);
-
-                                MainActivity.this.startActivity(intent);
-                            } else {
-                                Preferences.warning(getString(R.string.peer_is_offline));
-                            }
-
+                            Intent intent = RTCCallActivity.createIntent(MainActivity.this,
+                                    pid, user.getAlias(), null, true);
+                            intent.setAction(RTCCallActivity.ACTION_OUTGOING_CALL);
+                            MainActivity.this.startActivity(intent);
                         }
                     } catch (Throwable e) {
                         Preferences.evaluateException(Preferences.EXCEPTION, e);

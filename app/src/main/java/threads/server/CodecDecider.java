@@ -6,11 +6,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
-import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.Map;
 
 import threads.core.api.Content;
 import threads.ipfs.api.Multihash;
@@ -68,12 +65,9 @@ public class CodecDecider {
         }
 
         try {
-
-            Type type = new TypeToken<Map<String, String>>() {
-            }.getType();
-            Content map = gson.fromJson(code, type);
+            Content map = gson.fromJson(code, Content.class);
             if (map != null) {
-                codecDecider.setCodex(Codec.JSON_MAP);
+                codecDecider.setCodex(Codec.CONTENT);
                 codecDecider.setContent(map);
                 return codecDecider;
             }
@@ -121,6 +115,6 @@ public class CodecDecider {
     }
 
     public enum Codec {
-        UNKNOWN, MULTIHASH, URI, JSON_MAP
+        UNKNOWN, MULTIHASH, URI, CONTENT
     }
 }

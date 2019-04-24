@@ -66,7 +66,7 @@ public class Application extends android.app.Application {
 
                 Preferences.setConnMgrConfigType(getApplicationContext(), ConnMgrConfig.TypeEnum.basic);
                 Preferences.setLowWater(getApplicationContext(), 30);
-                Preferences.setHighWater(getApplicationContext(), 150);
+                Preferences.setHighWater(getApplicationContext(), 100);
                 Preferences.setGracePeriod(getApplicationContext(), "5s");
 
 

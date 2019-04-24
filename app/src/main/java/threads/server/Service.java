@@ -150,9 +150,9 @@ public class Service {
                         Service.downloadMultihash(context, senderPid, result.getMultihash(), null);
                     } else if (result.getCodex() == CodecDecider.Codec.URI) {
                         Service.downloadMultihash(context, senderPid, result.getMultihash(), null);
-                    } else if (result.getCodex() == CodecDecider.Codec.JSON_MAP) {
+                    } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {
                         Content map = result.getContent();
-
+                        checkNotNull(map);
                         if (map.containsKey(Content.EST)) {
                             String est = map.get(Content.EST);
                             Message type = Message.valueOf(est);
