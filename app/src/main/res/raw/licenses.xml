@@ -2,7 +2,7 @@
 <notices>
 
     <notice>
-        <name>WebRtc</name>
+        <name>WebRTC</name>
         <url>https://code.immersaview.com/remotes/webrtc</url>
         <copyright />
         <license>BSD 3-Clause License</license>

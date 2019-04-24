@@ -69,10 +69,12 @@ public class Service {
     private static void checkTangleServer(@NonNull Context context) {
         checkNotNull(context);
         try {
-            IOTA iota = Singleton.getInstance().getIota();
-            if (iota != null) {
-                if (!IOTA.remotePoW(iota.getNodeInfo())) {
-                    iota.setLocalPoW(new PearlDiverLocalPoW());
+            if (Network.isConnected(context)) {
+                IOTA iota = Singleton.getInstance().getIota();
+                if (iota != null) {
+                    if (!IOTA.remotePoW(iota.getNodeInfo())) {
+                        iota.setLocalPoW(new PearlDiverLocalPoW());
+                    }
                 }
             }
         } catch (Throwable e) {
