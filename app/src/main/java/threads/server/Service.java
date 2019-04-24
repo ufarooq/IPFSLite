@@ -256,7 +256,12 @@ public class Service {
                                     if (map.containsKey(Content.ALIAS)) {
                                         String alias = map.get(Content.ALIAS);
                                         checkNotNull(alias);
-                                        createUser(context, senderPid, alias);
+                                        String pubKey = map.get(Content.PKEY);
+                                        if (pubKey == null) {
+                                            pubKey = "";
+                                        }
+                                        createUser(context, senderPid,
+                                                alias, pubKey, UserType.VERIFIED);
                                     }
                                     break;
                                 }
@@ -281,7 +286,11 @@ public class Service {
                             if (map.containsKey(Content.ALIAS)) {
                                 String alias = map.get(Content.ALIAS);
                                 checkNotNull(alias);
-                                createUser(context, senderPid, alias);
+                                String pubKey = map.get(Content.PKEY);
+                                if (pubKey == null) {
+                                    pubKey = "";
+                                }
+                                createUser(context, senderPid, alias, pubKey, UserType.VERIFIED);
                             } else if (map.containsKey(Content.CID)) {
                                 String cid = map.get(Content.CID);
                                 checkNotNull(cid);
@@ -302,7 +311,7 @@ public class Service {
                             // ignore exception
                         }
 
-                        createUser(context, senderPid, name);
+                        createUser(context, senderPid, name, "", UserType.UNKNOWN);
                     }
 
                 }
@@ -366,11 +375,14 @@ public class Service {
 
     private static void createUser(@NonNull Context context,
                                    @NonNull PID senderPid,
-                                   @NonNull String alias) {
+                                   @NonNull String alias,
+                                   @NonNull String pubKey,
+                                   @NonNull UserType userType) {
         checkNotNull(context);
         checkNotNull(senderPid);
         checkNotNull(alias);
-
+        checkNotNull(pubKey);
+        checkNotNull(userType);
         try {
             final THREADS threadsAPI = Singleton.getInstance().getThreads();
             final IPFS ipfs = Singleton.getInstance().getIpfs();
@@ -382,11 +394,7 @@ public class Service {
                     byte[] data = THREADS.getImage(context, alias, R.drawable.server_network);
                     CID image = ipfs.add(data, true, false);
 
-                    sender = threadsAPI.createUser(senderPid,
-                            senderPid.getPid(), // TODO public key
-                            alias,
-                            UserType.UNKNOWN,
-                            image);
+                    sender = threadsAPI.createUser(senderPid, pubKey, alias, userType, image);
                     sender.setStatus(UserStatus.BLOCKED);
                     threadsAPI.storeUser(sender);
 
@@ -639,7 +647,7 @@ public class Service {
 
                 User user = threads.getUserByPID(pid);
                 if (user == null) {
-                    String publicKey = ipfs.getPublicKey();
+                    String publicKey = Preferences.getPublicKey(context);
                     byte[] data = THREADS.getImage(context, pid.getPid(), R.drawable.server_network);
 
                     CID image = ipfs.add(data, true, false);

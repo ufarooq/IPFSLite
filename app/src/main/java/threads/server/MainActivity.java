@@ -918,6 +918,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     Map<String, String> map = new HashMap<>();
                                     map.put(Content.EST, Message.CONNECT.name());
                                     map.put(Content.ALIAS, hostUser.getAlias());
+                                    map.put(Content.PKEY, hostUser.getPublicKey());
 
                                     ipfs.pubsub_pub(user.getPID().getPid(), gson.toJson(map));
                                 }

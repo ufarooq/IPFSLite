@@ -91,6 +91,7 @@ public class Application extends android.app.Application {
         runUpdatesIfNecessary();
 
         Preferences.setDaemonRunning(getApplicationContext(), false);
+        Preferences.createPublicPrivateKeys(getApplicationContext());
 
         NotificationSender.createChannel(getApplicationContext());
 
