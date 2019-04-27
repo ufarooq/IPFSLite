@@ -609,6 +609,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        Service.getInstance(getApplicationContext());
 
         TabLayout tabLayout = findViewById(R.id.tabLayout);
 

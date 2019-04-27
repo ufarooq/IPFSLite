@@ -42,15 +42,19 @@
         android:usesCleartextTraffic="true"
         android:theme="@style/ThreadsServerTheme">
         <activity
-            android:name="threads.server.MainActivity"
-            android:label="@string/app_name"
+            android:name=".LoginActivity"
             android:theme="@style/ThreadsServerTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
+
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|keyboard"
+            android:label="@string/app_name"
+            android:theme="@style/ThreadsServerTheme" />
 
 
         <activity

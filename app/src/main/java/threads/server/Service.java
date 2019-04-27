@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.os.StrictMode;
 import android.provider.DocumentsContract;
 import android.text.TextUtils;
 import android.util.Log;
@@ -29,6 +30,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import threads.core.Preferences;
@@ -58,11 +60,54 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 
 public class Service {
+    private static final Service SINGLETON = new Service();
+    private final AtomicBoolean initDone = new AtomicBoolean(false);
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(3);
     private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(1);
 
+    private Service() {
+    }
+
+    public static Service getInstance(@NonNull Context context) {
+        if (!SINGLETON.initDone.getAndSet(true)) {
+            try {
+
+                // TODO remove in the future (change JOTA)
+                StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
+                        .permitNetwork().build();
+                StrictMode.setThreadPolicy(policy);
+
+                Singleton.getInstance().init(context, () -> "", true);
+
+
+                Preferences.setConfigChanged(context, false);
+                Preferences.setBinaryUpgrade(context, false);
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.IPFS_INSTALL_FAILURE, e);
+            }
+
+            SINGLETON.startDaemon(context);
+            SINGLETON.init(context);
+        }
+        return SINGLETON;
+    }
+
+    private void init(@NonNull Context context) {
+        checkNotNull(context);
+        new java.lang.Thread(() -> {
+            try {
+
+                Service.cleanStates(context);
+                Service.createHost(context);
+                Service.checkPeers(context);
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+        }).start();
+
+    }
 
     private static void checkTangleServer(@NonNull Context context) {
         checkNotNull(context);
@@ -405,7 +450,7 @@ public class Service {
         }
     }
 
-    static void startDaemon(@NonNull Context context) {
+    private void startDaemon(@NonNull Context context) {
         checkNotNull(context);
         try {
             final IPFS ipfs = Singleton.getInstance().getIpfs();

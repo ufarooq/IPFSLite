@@ -86,4 +86,5 @@
     <string name="camera2_texture_only_error">Camera error detected</string>
     <string name="permission_audio_settings_denied">Permission modify audio settings denied</string>
     <string name="abort">Abort</string>
+    <string name="version_number">%1$s</string>
 </resources>

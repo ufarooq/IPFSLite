@@ -2,17 +2,11 @@ package threads.server;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.StrictMode;
-
-import androidx.annotation.NonNull;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.ipfs.api.ConnMgrConfig;
 import threads.ipfs.api.Profile;
 import threads.share.ConnectService;
-
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class Application extends android.app.Application {
 
@@ -21,20 +15,7 @@ public class Application extends android.app.Application {
     private static final String APP_KEY = "AppKey";
     private static final String UPDATE = "UPDATE";
 
-    private static void init(@NonNull Context context) {
-        checkNotNull(context);
-        new Thread(() -> {
-            try {
 
-                Service.cleanStates(context);
-                Service.createHost(context);
-                Service.checkPeers(context);
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-        }).start();
-
-    }
 
     private void runUpdatesIfNecessary() {
         try {
@@ -94,27 +75,6 @@ public class Application extends android.app.Application {
         Preferences.createPublicPrivateKeys(getApplicationContext());
 
         NotificationSender.createChannel(getApplicationContext());
-
-
-        try {
-            // TODO remove policy
-            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-                    .permitNetwork().build();
-            StrictMode.setThreadPolicy(policy);
-
-            Singleton.getInstance().init(getApplicationContext(), () -> "", true);
-
-            Preferences.setConfigChanged(getApplicationContext(), false);
-            Preferences.setBinaryUpgrade(getApplicationContext(), false);
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.IPFS_INSTALL_FAILURE, e);
-        }
-
-
-        Service.startDaemon(getApplicationContext());
-
-        init(getApplicationContext());
-
 
     }
 
