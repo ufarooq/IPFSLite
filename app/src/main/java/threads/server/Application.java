@@ -52,7 +52,7 @@ public class Application extends android.app.Application {
 
 
                 ConnectService.setConnectionTimeout(getApplicationContext(), 60);
-                ConnectService.setAutoConnectRelay(getApplicationContext(), false);
+                ConnectService.setAutoConnectRelay(getApplicationContext(), true);
 
 
                 SharedPreferences.Editor editor = prefs.edit();
