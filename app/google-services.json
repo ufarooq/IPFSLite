@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "363544860940",
+    "firebase_url": "https://threads-server.firebaseio.com",
+    "project_id": "threads-server",
+    "storage_bucket": "threads-server.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:363544860940:android:82ab89eba2a47770",
+        "android_client_info": {
+          "package_name": "threads.server"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "363544860940-e3emc656em369h24miop5ke0j6s489e9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQAHmck0K6M1jKkObZufN2TZODVWCeTC4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "363544860940-e3emc656em369h24miop5ke0j6s489e9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

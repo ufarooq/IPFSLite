@@ -10,11 +10,11 @@ import threads.share.ConnectService;
 
 public class Application extends android.app.Application {
 
+
     public static final String THREAD_KIND = "THREAD_KIND";
 
     private static final String APP_KEY = "AppKey";
     private static final String UPDATE = "UPDATE";
-
 
 
     private void runUpdatesIfNecessary() {
@@ -34,6 +34,7 @@ public class Application extends android.app.Application {
                 // Experimental Features
                 Preferences.setQUICEnabled(getApplicationContext(), true);
                 Preferences.setFilestoreEnabled(getApplicationContext(), false);
+
 
                 Preferences.setApiPort(getApplicationContext(), 5001);
                 Preferences.setGatewayPort(getApplicationContext(), 8080);
@@ -73,7 +74,7 @@ public class Application extends android.app.Application {
 
         Preferences.setDaemonRunning(getApplicationContext(), false);
         Preferences.createPublicPrivateKeys(getApplicationContext());
-
+        Preferences.setAccessToken(getApplicationContext(), "");
         NotificationSender.createChannel(getApplicationContext());
 
     }

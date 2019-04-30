@@ -61,13 +61,17 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class Service {
     private static final Service SINGLETON = new Service();
-    private final AtomicBoolean initDone = new AtomicBoolean(false);
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(3);
     private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(1);
+    private final AtomicBoolean initDone = new AtomicBoolean(false);
 
     private Service() {
+    }
+
+    public static boolean isInitialized() {
+        return SINGLETON.initDone.get();
     }
 
     public static Service getInstance(@NonNull Context context) {
@@ -92,75 +96,6 @@ public class Service {
             SINGLETON.init(context);
         }
         return SINGLETON;
-    }
-
-    private void init(@NonNull Context context) {
-        checkNotNull(context);
-        new java.lang.Thread(() -> {
-            try {
-
-                Service.cleanStates(context);
-                Service.createHost(context);
-                Service.checkPeers(context);
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-        }).start();
-
-    }
-
-    private static void checkTangleServer(@NonNull Context context) {
-        checkNotNull(context);
-        try {
-            if (Network.isConnected(context)) {
-                IOTA iota = Singleton.getInstance().getIota();
-                if (iota != null) {
-                    if (!IOTA.remotePoW(iota.getNodeInfo())) {
-                        iota.setLocalPoW(new PearlDiverLocalPoW());
-                    }
-                }
-            }
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
-    }
-
-
-    private static void startPeers(@NonNull Context context) {
-        try {
-            while (Preferences.isDaemonRunning(context)) {
-                threads.server.Service.checkPeers(context);
-                if (Network.isConnected(context)) {
-                    java.lang.Thread.sleep(1000);
-                } else {
-                    java.lang.Thread.sleep(30000);
-                }
-            }
-        } catch (Throwable e) {
-            // IGNORE exception occurs when daemon is shutdown
-        } finally {
-            threads.server.Service.checkPeers(context);
-        }
-    }
-
-
-    private static void startPubsub(@NonNull Context context) {
-        checkNotNull(context);
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-        if (ipfs != null) {
-            if (Preferences.isDaemonRunning(context)) {
-                if (Preferences.isPubsubEnabled(context)) {
-                    final PID pid = Preferences.getPID(context);
-                    checkNotNull(pid);
-                    checkArgument(!pid.getPid().isEmpty());
-                    try {
-                        pubsubDaemon(context, ipfs, pid);
-                    } catch (Throwable e) {
-                        // IGNORE exception occurs when daemon is shutdown
-                    }
-                }
-            }
-        }
     }
 
     private static void pubsubDaemon(@NonNull Context context,
@@ -303,8 +238,29 @@ public class Service {
                                         if (pubKey == null) {
                                             pubKey = "";
                                         }
+                                        String token = map.get(Content.FCM);
+                                        if (token == null) {
+                                            token = "";
+                                        }
                                         createUser(context, senderPid,
-                                                alias, pubKey, UserType.VERIFIED);
+                                                alias, pubKey, UserType.VERIFIED, token);
+                                    }
+                                    break;
+                                }
+                                case CONNECT_REPLY: {
+                                    if (map.containsKey(Content.ALIAS)) {
+                                        String alias = map.get(Content.ALIAS);
+                                        checkNotNull(alias);
+                                        String pubKey = map.get(Content.PKEY);
+                                        if (pubKey == null) {
+                                            pubKey = "";
+                                        }
+                                        String token = map.get(Content.FCM);
+                                        if (token == null) {
+                                            token = "";
+                                        }
+                                        adaptUser(context, senderPid,
+                                                alias, pubKey, UserType.VERIFIED, token);
                                     }
                                     break;
                                 }
@@ -333,7 +289,11 @@ public class Service {
                                 if (pubKey == null) {
                                     pubKey = "";
                                 }
-                                createUser(context, senderPid, alias, pubKey, UserType.VERIFIED);
+                                String token = map.get(Content.FCM);
+                                if (token == null) {
+                                    token = "";
+                                }
+                                createUser(context, senderPid, alias, pubKey, UserType.VERIFIED, token);
                             } else if (map.containsKey(Content.CID)) {
                                 String cid = map.get(Content.CID);
                                 checkNotNull(cid);
@@ -354,7 +314,7 @@ public class Service {
                             // ignore exception
                         }
 
-                        createUser(context, senderPid, name, "", UserType.UNKNOWN);
+                        createUser(context, senderPid, name, "", UserType.UNKNOWN, "");
                     }
 
                 }
@@ -371,6 +331,96 @@ public class Service {
 
         });
 
+    }
+
+    private static void checkTangleServer(@NonNull Context context) {
+        checkNotNull(context);
+        try {
+            if (Network.isConnected(context)) {
+                IOTA iota = Singleton.getInstance().getIota();
+                if (iota != null) {
+                    if (!IOTA.remotePoW(iota.getNodeInfo())) {
+                        iota.setLocalPoW(new PearlDiverLocalPoW());
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+    }
+
+    private static void startPeers(@NonNull Context context) {
+        try {
+            while (Preferences.isDaemonRunning(context)) {
+                threads.server.Service.checkPeers(context);
+                if (Network.isConnected(context)) {
+                    java.lang.Thread.sleep(1000);
+                } else {
+                    java.lang.Thread.sleep(30000);
+                }
+            }
+        } catch (Throwable e) {
+            // IGNORE exception occurs when daemon is shutdown
+        } finally {
+            threads.server.Service.checkPeers(context);
+        }
+    }
+
+    private static void startPubsub(@NonNull Context context) {
+        checkNotNull(context);
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            if (Preferences.isDaemonRunning(context)) {
+                if (Preferences.isPubsubEnabled(context)) {
+                    final PID pid = Preferences.getPID(context);
+                    checkNotNull(pid);
+                    checkArgument(!pid.getPid().isEmpty());
+                    try {
+                        pubsubDaemon(context, ipfs, pid);
+                    } catch (Throwable e) {
+                        // IGNORE exception occurs when daemon is shutdown
+                    }
+                }
+            }
+        }
+    }
+
+    private static void adaptUser(@NonNull Context context,
+                                  @NonNull PID senderPid,
+                                  @NonNull String alias,
+                                  @NonNull String pubKey,
+                                  @NonNull UserType userType,
+                                  @NonNull String token) {
+        checkNotNull(context);
+        checkNotNull(senderPid);
+        checkNotNull(alias);
+        checkNotNull(pubKey);
+        checkNotNull(userType);
+        checkNotNull(token);
+        try {
+            final THREADS threadsAPI = Singleton.getInstance().getThreads();
+            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            if (ipfs != null) {
+                User sender = threadsAPI.getUserByPID(senderPid);
+                checkNotNull(sender);
+
+                // create a new user which is blocked (User has to unblock and verified the user)
+                byte[] data = THREADS.getImage(context, alias, R.drawable.server_network);
+                CID image = ipfs.add(data, true, false);
+
+
+                sender.setStatus(UserStatus.ONLINE);
+                sender.setPublicKey(pubKey);
+                sender.setAlias(alias);
+                sender.setImage(image);
+                sender.setType(userType);
+                sender.addAdditional(Content.FCM, token, true);
+                threadsAPI.storeUser(sender);
+
+            }
+        } catch (Throwable e) {
+            // ignore exception
+        }
     }
 
     private static void publishReply(@NonNull Context context,
@@ -420,12 +470,14 @@ public class Service {
                                    @NonNull PID senderPid,
                                    @NonNull String alias,
                                    @NonNull String pubKey,
-                                   @NonNull UserType userType) {
+                                   @NonNull UserType userType,
+                                   @NonNull String token) {
         checkNotNull(context);
         checkNotNull(senderPid);
         checkNotNull(alias);
         checkNotNull(pubKey);
         checkNotNull(userType);
+        checkNotNull(token);
         try {
             final THREADS threadsAPI = Singleton.getInstance().getThreads();
             final IPFS ipfs = Singleton.getInstance().getIpfs();
@@ -439,8 +491,21 @@ public class Service {
 
                     sender = threadsAPI.createUser(senderPid, pubKey, alias, userType, image);
                     sender.setStatus(UserStatus.BLOCKED);
+                    sender.addAdditional(Content.FCM, token, true);
                     threadsAPI.storeUser(sender);
 
+
+                    PID host = Preferences.getPID(context);
+                    checkNotNull(host);
+                    User hostUser = threadsAPI.getUserByPID(host);
+                    checkNotNull(hostUser);
+                    Content map = new Content();
+                    map.put(Content.EST, Message.CONNECT_REPLY.name());
+                    map.put(Content.ALIAS, hostUser.getAlias());
+                    map.put(Content.PKEY, hostUser.getPublicKey());
+                    map.put(Content.FCM, Preferences.getToken(context));
+                    Log.e(TAG, "Send : " + map.toString());
+                    ipfs.pubsub_pub(senderPid.getPid(), gson.toJson(map));
 
                     Preferences.error(context.getString(R.string.user_connect_try, alias));
                 }
@@ -449,39 +514,6 @@ public class Service {
             // ignore exception
         }
     }
-
-    private void startDaemon(@NonNull Context context) {
-        checkNotNull(context);
-        try {
-            final IPFS ipfs = Singleton.getInstance().getIpfs();
-            if (ipfs != null) {
-
-                try {
-                    ipfs.daemon(Preferences.isPubsubEnabled(context));
-                    Preferences.setDaemonRunning(context, true);
-                } catch (Throwable e) {
-                    Preferences.setDaemonRunning(context, false);
-                    Preferences.evaluateException(Preferences.IPFS_START_FAILURE, e);
-                }
-
-                if (Preferences.isDaemonRunning(context)) {
-                    new java.lang.Thread(() -> startPubsub(context)).start();
-                }
-
-                if (Preferences.isDaemonRunning(context)) {
-                    new java.lang.Thread(() -> startPeers(context)).start();
-                }
-
-                if (ConnectService.isAutoConnectRelay(context)) {
-                    new java.lang.Thread(() -> ConnectService.connectRelays(context, 10000)).start();
-                }
-                new java.lang.Thread(() -> checkTangleServer(context)).start();
-            }
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
-    }
-
 
     static void checkPeers(@NonNull Context context) {
         checkNotNull(context);
@@ -505,7 +537,8 @@ public class Service {
                             if (currentStatus != UserStatus.BLOCKED &&
                                     currentStatus != UserStatus.DIALING) {
                                 try {
-                                    boolean value = ipfs.swarm_peer(user.getPID()) != null;
+                                    // TODO what if user is blocked in between
+                                    boolean value = ipfs.pubsub_connected(user.getPID());
                                     if (value) {
                                         if (threads.getStatus(user) != UserStatus.DIALING) {
                                             threads.setStatus(user, UserStatus.ONLINE);
@@ -541,6 +574,22 @@ public class Service {
 
                 }
             }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+    }
+
+    private static void replySender(@NonNull IPFS ipfs, @NonNull PID sender, @NonNull Thread thread) {
+        CID cid = thread.getCid();
+        checkNotNull(cid);
+
+        Content map = new Content();
+        map.put(Content.EST, Message.REPLY.name());
+        map.put(Content.CID, cid.getCid());
+
+        try {
+            Log.e(TAG, "Send : " + map.toString());
+            ipfs.pubsub_pub(sender.getPid(), gson.toJson(map));
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
@@ -628,7 +677,6 @@ public class Service {
         }
     }
 
-
     private static String getDeviceName() {
         try {
             String manufacturer = Build.MANUFACTURER;
@@ -706,9 +754,35 @@ public class Service {
         }
     }
 
+    public void wakeupCall(@NonNull Context context, @NonNull User user) {
+        checkNotNull(context);
+        checkNotNull(user);
+        try {
+            final PID host = Preferences.getPID(context);
+            checkNotNull(host);
+            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            if (ipfs != null) {
+                if (Network.isConnected(context)) {
+                    if (!ipfs.pubsub_connected(user.getPID())) {
+                        String token = user.getAdditional(Content.FCM);
+                        if (!token.isEmpty()) {
+                            NotificationFCMServer.getInstance().sendNotification(
+                                    NotificationFCMServer.getAccessToken(
+                                            context, R.raw.threads_server),
+                                    token, host.getPid());
+                        }
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+    }
 
-    private static boolean shareUser(@NonNull User user, int timeout,
-                                     @NonNull List<Long> idxs) {
+    private boolean shareUser(@NonNull Context context,
+                              @NonNull User user,
+                              int timeout,
+                              @NonNull List<Long> idxs) {
         checkNotNull(user);
         checkNotNull(idxs);
         final THREADS threads = Singleton.getInstance().getThreads();
@@ -716,6 +790,8 @@ public class Service {
         boolean success = false;
         if (ipfs != null) {
             try {
+                wakeupCall(context, user);
+
                 if (ConnectService.connectUser(user.getPID(), timeout)) {
 
                     for (long idx : idxs) {
@@ -732,6 +808,7 @@ public class Service {
                             map.put(Content.TITLE, title);
                         }
                         map.put(Content.CID, cid.getCid());
+                        Log.e(TAG, "Send : " + map.toString());
                         ipfs.pubsub_pub(user.getPID().getPid(), gson.toJson(map));
                     }
 
@@ -742,64 +819,6 @@ public class Service {
             }
         }
         return success;
-    }
-
-    static void sendThreads(@NonNull Context context,
-                            @NonNull List<Long> idxs) {
-        checkNotNull(context);
-
-        final PID host = Preferences.getPID(context.getApplicationContext());
-        final THREADS threads = Singleton.getInstance().getThreads();
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-
-        if (ipfs != null) {
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    // clean-up
-                    for (long idx : idxs) {
-                        threads.resetUnreadNotesNumber(idx);
-                    }
-                    List<User> users = threads.getUsers();
-                    if (users.isEmpty()) {
-                        Preferences.warning(context.getString(R.string.no_peers_connected));
-                    } else {
-                        ExecutorService sharedExecutor = Executors.newFixedThreadPool(5);
-                        int timeout = ConnectService.getConnectionTimeout(context);
-                        LinkedList<Future<Boolean>> futures = new LinkedList<>();
-                        for (User user : users) {
-                            if (user.getStatus() != UserStatus.BLOCKED) {
-                                PID userPID = user.getPID();
-                                if (!userPID.equals(host)) {
-
-                                    Future<Boolean> future = sharedExecutor.submit(() ->
-                                            shareUser(user, timeout, idxs));
-                                    futures.add(future);
-                                }
-                            }
-                        }
-                        int counter = 0;
-                        for (Future<Boolean> future : futures) {
-                            Boolean send = future.get();
-                            if (send) {
-                                counter++;
-                            }
-                        }
-
-                        Preferences.warning(context.getString(R.string.data_shared_with_peers,
-                                String.valueOf(counter)));
-
-
-                    }
-
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
-            });
-
-
-        }
     }
 
     static void deleteThreads(@NonNull List<Long> idxs) {
@@ -1059,7 +1078,6 @@ public class Service {
         }
     }
 
-
     private static boolean downloadUnknown(@NonNull Context context,
                                            @NonNull THREADS threads,
                                            @NonNull IPFS ipfs,
@@ -1302,18 +1320,65 @@ public class Service {
         return successCounter.get() == links.size();
     }
 
-    private static void replySender(@NonNull IPFS ipfs, @NonNull PID sender, @NonNull Thread thread) {
-        CID cid = thread.getCid();
-        checkNotNull(cid);
+    void sendThreads(@NonNull Context context,
+                     @NonNull List<Long> idxs) {
+        checkNotNull(context);
 
-        Content map = new Content();
-        map.put(Content.EST, Message.REPLY.name());
-        map.put(Content.CID, cid.getCid());
+        final PID host = Preferences.getPID(context.getApplicationContext());
 
-        try {
-            ipfs.pubsub_pub(sender.getPid(), gson.toJson(map));
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        final THREADS threads = Singleton.getInstance().getThreads();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+
+        if (ipfs != null) {
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    // clean-up
+                    for (long idx : idxs) {
+                        threads.resetUnreadNotesNumber(idx);
+                    }
+
+                    List<User> users = threads.getUsers();
+                    if (users.isEmpty()) {
+                        Preferences.warning(context.getString(R.string.no_peers_connected));
+                    } else {
+                        checkNotNull(host);
+
+                        ExecutorService sharedExecutor = Executors.newFixedThreadPool(5);
+                        int timeout = ConnectService.getConnectionTimeout(context);
+                        LinkedList<Future<Boolean>> futures = new LinkedList<>();
+                        for (User user : users) {
+                            if (user.getStatus() != UserStatus.BLOCKED) {
+                                PID userPID = user.getPID();
+                                if (!userPID.equals(host)) {
+
+                                    Future<Boolean> future = sharedExecutor.submit(() ->
+                                            shareUser(context, user, timeout, idxs));
+                                    futures.add(future);
+                                }
+                            }
+                        }
+                        int counter = 0;
+                        for (Future<Boolean> future : futures) {
+                            Boolean send = future.get();
+                            if (send) {
+                                counter++;
+                            }
+                        }
+
+                        Preferences.warning(context.getString(R.string.data_shared_with_peers,
+                                String.valueOf(counter)));
+
+
+                    }
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+
+
         }
     }
 
@@ -1387,7 +1452,6 @@ public class Service {
 
     }
 
-
     @NonNull
     static File getCacheFile(@NonNull Context context, @NonNull String name) {
         checkNotNull(context);
@@ -1404,6 +1468,59 @@ public class Service {
             }
         }
         return file;
+    }
+
+    private void init(@NonNull Context context) {
+        checkNotNull(context);
+        new java.lang.Thread(() -> {
+            try {
+
+                Service.cleanStates(context);
+                Service.createHost(context);
+                Service.checkPeers(context);
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+        }).start();
+
+    }
+
+    private void startDaemon(@NonNull Context context) {
+        checkNotNull(context);
+        try {
+            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            if (ipfs != null) {
+
+                try {
+                    if (Preferences.DEBUG_MODE) {
+                        Log.e(TAG, "Start Daemon");
+                    }
+                    ipfs.daemon(Preferences.isPubsubEnabled(context));
+                    if (Preferences.DEBUG_MODE) {
+                        Log.e(TAG, "End Daemon");
+                    }
+                    Preferences.setDaemonRunning(context, true);
+                } catch (Throwable e) {
+                    Preferences.setDaemonRunning(context, false);
+                    Preferences.evaluateException(Preferences.IPFS_START_FAILURE, e);
+                }
+
+                if (Preferences.isDaemonRunning(context)) {
+                    new java.lang.Thread(() -> startPubsub(context)).start();
+                }
+
+                if (Preferences.isDaemonRunning(context)) {
+                    new java.lang.Thread(() -> startPeers(context)).start();
+                }
+
+                if (ConnectService.isAutoConnectRelay(context)) {
+                    new java.lang.Thread(() -> ConnectService.connectRelays(context, 10000)).start();
+                }
+                new java.lang.Thread(() -> checkTangleServer(context)).start();
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
     }
 
 

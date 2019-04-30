@@ -376,7 +376,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 return;
             }
 
-            Service.sendThreads(mContext, new ArrayList<>(threads));
+            Service.getInstance(mContext).sendThreads(mContext, new ArrayList<>(threads));
 
 
             unmarkThreads();

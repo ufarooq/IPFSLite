@@ -550,6 +550,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         try {
             final IPFS ipfs = Singleton.getInstance().getIpfs();
+
             if (ipfs != null) {
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() -> {
@@ -566,10 +567,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             try {
                                 threadsAPI.setStatus(user, UserStatus.DIALING);
 
+                                Service.getInstance(getApplicationContext()).wakeupCall(
+                                        getApplicationContext(), user);
+
                                 long timeout = ConnectService.getConnectionTimeout(
                                         getApplicationContext());
 
-                                boolean value = ConnectService.connectUser(PID.create(pid), timeout);
+                                boolean value = ConnectService.connectUser(user.getPID(), timeout);
                                 if (value) {
                                     threadsAPI.setStatus(user, UserStatus.ONLINE);
                                 } else {
@@ -823,6 +827,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         if (user.getStatus() == UserStatus.BLOCKED) {
                             Preferences.warning(getString(R.string.peer_is_blocked));
                         } else {
+
+                            Service.getInstance(getApplicationContext()).wakeupCall(
+                                    getApplicationContext(), user);
+
                             Intent intent = RTCCallActivity.createIntent(MainActivity.this,
                                     pid, user.getAlias(), null, true);
                             intent.setAction(RTCCallActivity.ACTION_OUTGOING_CALL);
@@ -873,8 +881,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             byte[] data = THREADS.getImage(getApplicationContext(),
                                     pid.getPid(), R.drawable.server_network);
                             CID image = ipfs.add(data, true, false);
-                            user = threadsAPI.createUser(pid,
-                                    pid.getPid(),
+                            user = threadsAPI.createUser(pid, "", // not yet known
                                     pid.getPid(), UserType.VERIFIED, image);
                             user.setStatus(UserStatus.OFFLINE);
                             threadsAPI.storeUser(user);
@@ -903,6 +910,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     map.put(Content.EST, Message.CONNECT.name());
                                     map.put(Content.ALIAS, hostUser.getAlias());
                                     map.put(Content.PKEY, hostUser.getPublicKey());
+                                    map.put(Content.FCM,
+                                            Preferences.getToken(getApplicationContext()));
 
                                     ipfs.pubsub_pub(user.getPID().getPid(), gson.toJson(map));
                                 }
@@ -1163,7 +1172,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 return;
             }
 
-            Service.sendThreads(getApplicationContext(), Collections.singletonList(idx));
+            Service.getInstance(getApplicationContext()).sendThreads(
+                    getApplicationContext(), Collections.singletonList(idx));
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }

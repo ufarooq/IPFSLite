@@ -14,10 +14,12 @@ import threads.core.Preferences;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 class NotificationSender {
+
     private static final String CHANNEL_ID = "CHANNEL_ID";
 
     static void createChannel(@NonNull Context context) {
         checkNotNull(context);
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             try {
                 CharSequence name = context.getString(R.string.channel_name);
