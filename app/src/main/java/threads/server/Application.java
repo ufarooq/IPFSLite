@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import threads.core.Preferences;
 import threads.ipfs.api.ConnMgrConfig;
 import threads.ipfs.api.Profile;
+import threads.ipfs.api.PubsubConfig;
 import threads.share.ConnectService;
 
 public class Application extends android.app.Application {
@@ -45,6 +46,7 @@ public class Application extends android.app.Application {
                 Preferences.setRelayHopEnabled(getApplicationContext(), false);
                 Preferences.setAutoRelayEnabled(getApplicationContext(), true);
 
+                Preferences.setPubsubRouter(getApplicationContext(), PubsubConfig.RouterEnum.gossipsub);
 
                 Preferences.setConnMgrConfigType(getApplicationContext(), ConnMgrConfig.TypeEnum.basic);
                 Preferences.setLowWater(getApplicationContext(), 30);
@@ -75,6 +77,8 @@ public class Application extends android.app.Application {
         Preferences.setDaemonRunning(getApplicationContext(), false);
         Preferences.createPublicPrivateKeys(getApplicationContext());
         Preferences.setAccessToken(getApplicationContext(), "");
+
+
         NotificationSender.createChannel(getApplicationContext());
 
     }
