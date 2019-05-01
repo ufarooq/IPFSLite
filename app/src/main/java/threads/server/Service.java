@@ -136,6 +136,14 @@ public class Service {
                             String est = map.get(Content.EST);
                             Message type = Message.valueOf(est);
                             switch (type) {
+                                case PONG: {
+                                    RTCSession.getInstance().pong(senderPid);
+                                    break;
+                                }
+                                case PING: {
+                                    RTCSession.getInstance().emitPong(senderPid);
+                                    break;
+                                }
                                 case SESSION_CALL: {
 
                                     if (RTCSession.getInstance().isBusy()) {
@@ -532,8 +540,7 @@ public class Service {
                             if (currentStatus != UserStatus.BLOCKED &&
                                     currentStatus != UserStatus.DIALING) {
                                 try {
-                                    // TODO what if user is blocked in between
-                                    boolean value = ipfs.pubsub_connected(user.getPID());
+                                    boolean value = ipfs.pubsub_connected(user.getPID(), true);
                                     if (value) {
                                         if (threads.getStatus(user) != UserStatus.DIALING) {
                                             threads.setStatus(user, UserStatus.ONLINE);
@@ -1345,7 +1352,6 @@ public class Service {
             final IPFS ipfs = Singleton.getInstance().getIpfs();
             if (ipfs != null) {
                 if (Network.isConnected(context)) {
-                    //if (!ipfs.pubsub_connected(user.getPID(),true)) { // TODO
                     String token = user.getAdditional(Content.FCM);
                     if (!token.isEmpty()) {
                         NotificationFCMServer.getInstance().sendNotification(
@@ -1353,7 +1359,6 @@ public class Service {
                                         context, R.raw.threads_server),
                                 token, host.getPid());
                     }
-                    //}
                 }
             }
         } catch (Throwable e) {
@@ -1374,7 +1379,7 @@ public class Service {
             try {
                 wakeupCall(context, user);
 
-                if (ConnectService.connectUser(user.getPID(), timeout)) {
+                if (ConnectService.connectUser(user.getPID(), true, timeout)) {
 
                     for (long idx : idxs) {
                         Thread threadObject = threads.getThreadByIdx(idx);

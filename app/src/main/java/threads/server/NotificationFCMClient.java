@@ -10,6 +10,8 @@ import com.google.firebase.messaging.RemoteMessage;
 import org.apache.commons.text.StringEscapeUtils;
 
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import threads.core.Preferences;
 import threads.core.api.Content;
@@ -45,17 +47,20 @@ public class NotificationFCMClient extends FirebaseMessagingService {
                 final String pid = StringEscapeUtils.unescapeJava(data.get(Content.PID));
                 checkNotNull(pid);
 
-                try {
-                    if (!Service.isInitialized()) {
-                        Service.getInstance(getApplicationContext());
-                        int timeout = ConnectService.getConnectionTimeout(getApplicationContext());
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(() -> {
+                    try {
+                        if (!Service.isInitialized()) {
+                            Service.getInstance(getApplicationContext());
+                            int timeout = ConnectService.getConnectionTimeout(getApplicationContext());
 
-                        ConnectService.connectUser(PID.create(pid), timeout);
-                        Thread.sleep(10000);
+                            ConnectService.connectUser(PID.create(pid), true, timeout);
+
+                        }
+                    } catch (Throwable e) {
+                        Log.e(TAG, e.getLocalizedMessage(), e);
                     }
-                } catch (Throwable e) {
-                    Log.e(TAG, e.getLocalizedMessage(), e);
-                }
+                });
 
             }
         }
