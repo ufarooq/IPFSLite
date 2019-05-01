@@ -14,6 +14,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.Preferences;
+import threads.core.Singleton;
+import threads.core.THREADS;
 import threads.core.api.Content;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
@@ -52,9 +54,16 @@ public class NotificationFCMClient extends FirebaseMessagingService {
                     try {
                         if (!Service.isInitialized()) {
                             Service.getInstance(getApplicationContext());
-                            int timeout = ConnectService.getConnectionTimeout(getApplicationContext());
 
-                            ConnectService.connectUser(PID.create(pid), true, timeout);
+                            final THREADS threadsAPI = Singleton.getInstance().getThreads();
+                            if (!threadsAPI.isAccountBlocked(PID.create(pid))) {
+
+                                int timeout = ConnectService.getConnectionTimeout(
+                                        getApplicationContext());
+
+                                ConnectService.connectUser(
+                                        PID.create(pid), true, timeout);
+                            }
 
                         }
                     } catch (Throwable e) {

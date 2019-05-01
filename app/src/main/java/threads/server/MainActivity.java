@@ -567,8 +567,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             try {
                                 threadsAPI.setStatus(user, UserStatus.DIALING);
 
-                                Service.getInstance(getApplicationContext()).wakeupCall(
-                                        getApplicationContext(), user);
+                                try {
+                                    boolean checkPubsub = Preferences.isPubsubEnabled(
+                                            getApplicationContext());
+                                    ConnectService.wakeupCall(getApplicationContext(),
+                                            NotificationFCMServer.getInstance(), user,
+                                            NotificationFCMServer.getAccessToken(
+                                                    getApplicationContext(), R.raw.threads_server),
+                                            checkPubsub);
+                                } catch (Throwable e) {
+                                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                                }
 
                                 long timeout = ConnectService.getConnectionTimeout(
                                         getApplicationContext());
@@ -828,8 +837,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             Preferences.warning(getString(R.string.peer_is_blocked));
                         } else {
 
-                            Service.getInstance(getApplicationContext()).wakeupCall(
-                                    getApplicationContext(), user);
+                            try {
+                                boolean checkPubsub = Preferences.isPubsubEnabled(
+                                        getApplicationContext());
+                                ConnectService.wakeupCall(getApplicationContext(),
+                                        NotificationFCMServer.getInstance(), user,
+                                        NotificationFCMServer.getAccessToken(
+                                                getApplicationContext(), R.raw.threads_server),
+                                        checkPubsub);
+                            } catch (Throwable e) {
+                                Preferences.evaluateException(Preferences.EXCEPTION, e);
+                            }
 
                             Intent intent = RTCCallActivity.createIntent(MainActivity.this,
                                     pid, user.getAlias(), null, true);

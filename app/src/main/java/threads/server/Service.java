@@ -518,7 +518,7 @@ public class Service {
         }
     }
 
-    static void checkPeers(@NonNull Context context) {
+    private static void checkPeers(@NonNull Context context) {
         checkNotNull(context);
         PID hostPID = Preferences.getPID(context);
         try {
@@ -540,7 +540,7 @@ public class Service {
                             if (currentStatus != UserStatus.BLOCKED &&
                                     currentStatus != UserStatus.DIALING) {
                                 try {
-                                    boolean value = ipfs.pubsub_connected(user.getPID(), true);
+                                    boolean value = ipfs.swarm_peer(user.getPID()) != null;
                                     if (value) {
                                         if (threads.getStatus(user) != UserStatus.DIALING) {
                                             threads.setStatus(user, UserStatus.ONLINE);
@@ -713,7 +713,7 @@ public class Service {
         return phrase;
     }
 
-    static void cleanStates(@NonNull Context context) {
+    private static void cleanStates(@NonNull Context context) {
         checkNotNull(context);
 
         final THREADS threads = Singleton.getInstance().getThreads();
@@ -728,7 +728,7 @@ public class Service {
 
     }
 
-    static void createHost(@NonNull Context context) {
+    private static void createHost(@NonNull Context context) {
         checkNotNull(context);
 
         final THREADS threads = Singleton.getInstance().getThreads();
@@ -1343,29 +1343,6 @@ public class Service {
         return file;
     }
 
-    public void wakeupCall(@NonNull Context context, @NonNull User user) {
-        checkNotNull(context);
-        checkNotNull(user);
-        try {
-            final PID host = Preferences.getPID(context);
-            checkNotNull(host);
-            final IPFS ipfs = Singleton.getInstance().getIpfs();
-            if (ipfs != null) {
-                if (Network.isConnected(context)) {
-                    String token = user.getAdditional(Content.FCM);
-                    if (!token.isEmpty()) {
-                        NotificationFCMServer.getInstance().sendNotification(
-                                NotificationFCMServer.getAccessToken(
-                                        context, R.raw.threads_server),
-                                token, host.getPid());
-                    }
-                }
-            }
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
-    }
-
     private boolean shareUser(@NonNull Context context,
                               @NonNull User user,
                               int timeout,
@@ -1377,7 +1354,16 @@ public class Service {
         boolean success = false;
         if (ipfs != null) {
             try {
-                wakeupCall(context, user);
+                try {
+                    boolean checkPubsub = Preferences.isPubsubEnabled(context);
+                    ConnectService.wakeupCall(context,
+                            NotificationFCMServer.getInstance(), user,
+                            NotificationFCMServer.getAccessToken(
+                                    context, R.raw.threads_server), checkPubsub);
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
 
                 if (ConnectService.connectUser(user.getPID(), true, timeout)) {
 

@@ -20,11 +20,12 @@ import java.util.Collections;
 
 import threads.core.Preferences;
 import threads.core.api.Content;
+import threads.share.NotificationServer;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
 
-public class NotificationFCMServer {
+public class NotificationFCMServer implements NotificationServer {
     private static final String SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
     private static final String SERVICE = "https://fcm.googleapis.com/v1/projects/threads-server/messages:send";
     private static NotificationFCMServer INSTANCE = new NotificationFCMServer();
@@ -46,7 +47,8 @@ public class NotificationFCMServer {
             GoogleCredential googleCredential = GoogleCredential
                     .fromStream(inputStream);
             if (googleCredential.createScopedRequired()) {
-                googleCredential = googleCredential.createScoped(Collections.singleton(SCOPE));
+                googleCredential = googleCredential.createScoped(
+                        Collections.singleton(SCOPE));
             }
 
             googleCredential.refreshToken();
