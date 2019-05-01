@@ -4,7 +4,6 @@ import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -160,12 +159,8 @@ public class Service {
                                             ices = RTCSession.getInstance().turnUris(addresses);
                                         }
 
-
-                                        Intent intent = RTCCallActivity.createIntent(
-                                                context, sender, name, ices, false);
-                                        intent.setAction(RTCCallActivity.ACTION_INCOMING_CALL);
-                                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                                        context.startActivity(intent);
+                                        RTCCallActivity.createCallNotification(context, sender,
+                                                name, ices);
                                     }
                                     break;
                                 }
@@ -754,73 +749,6 @@ public class Service {
         }
     }
 
-    public void wakeupCall(@NonNull Context context, @NonNull User user) {
-        checkNotNull(context);
-        checkNotNull(user);
-        try {
-            final PID host = Preferences.getPID(context);
-            checkNotNull(host);
-            final IPFS ipfs = Singleton.getInstance().getIpfs();
-            if (ipfs != null) {
-                if (Network.isConnected(context)) {
-                    if (!ipfs.pubsub_connected(user.getPID())) {
-                        String token = user.getAdditional(Content.FCM);
-                        if (!token.isEmpty()) {
-                            NotificationFCMServer.getInstance().sendNotification(
-                                    NotificationFCMServer.getAccessToken(
-                                            context, R.raw.threads_server),
-                                    token, host.getPid());
-                        }
-                    }
-                }
-            }
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
-    }
-
-    private boolean shareUser(@NonNull Context context,
-                              @NonNull User user,
-                              int timeout,
-                              @NonNull List<Long> idxs) {
-        checkNotNull(user);
-        checkNotNull(idxs);
-        final THREADS threads = Singleton.getInstance().getThreads();
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-        boolean success = false;
-        if (ipfs != null) {
-            try {
-                wakeupCall(context, user);
-
-                if (ConnectService.connectUser(user.getPID(), timeout)) {
-
-                    for (long idx : idxs) {
-                        Thread threadObject = threads.getThreadByIdx(idx);
-                        checkNotNull(threadObject);
-
-                        CID cid = threadObject.getCid();
-                        checkNotNull(cid);
-
-                        Content map = new Content();
-                        map.put(Content.EST, Message.SHARE.name());
-                        String title = threadObject.getAdditional(Content.TITLE);
-                        if (!title.isEmpty()) {
-                            map.put(Content.TITLE, title);
-                        }
-                        map.put(Content.CID, cid.getCid());
-                        Log.e(TAG, "Send : " + map.toString());
-                        ipfs.pubsub_pub(user.getPID().getPid(), gson.toJson(map));
-                    }
-
-                    success = true;
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
-        }
-        return success;
-    }
-
     static void deleteThreads(@NonNull List<Long> idxs) {
         checkNotNull(idxs);
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
@@ -1320,68 +1248,6 @@ public class Service {
         return successCounter.get() == links.size();
     }
 
-    void sendThreads(@NonNull Context context,
-                     @NonNull List<Long> idxs) {
-        checkNotNull(context);
-
-        final PID host = Preferences.getPID(context.getApplicationContext());
-
-        final THREADS threads = Singleton.getInstance().getThreads();
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-
-        if (ipfs != null) {
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    // clean-up
-                    for (long idx : idxs) {
-                        threads.resetUnreadNotesNumber(idx);
-                    }
-
-                    List<User> users = threads.getUsers();
-                    if (users.isEmpty()) {
-                        Preferences.warning(context.getString(R.string.no_peers_connected));
-                    } else {
-                        checkNotNull(host);
-
-                        ExecutorService sharedExecutor = Executors.newFixedThreadPool(5);
-                        int timeout = ConnectService.getConnectionTimeout(context);
-                        LinkedList<Future<Boolean>> futures = new LinkedList<>();
-                        for (User user : users) {
-                            if (user.getStatus() != UserStatus.BLOCKED) {
-                                PID userPID = user.getPID();
-                                if (!userPID.equals(host)) {
-
-                                    Future<Boolean> future = sharedExecutor.submit(() ->
-                                            shareUser(context, user, timeout, idxs));
-                                    futures.add(future);
-                                }
-                            }
-                        }
-                        int counter = 0;
-                        for (Future<Boolean> future : futures) {
-                            Boolean send = future.get();
-                            if (send) {
-                                counter++;
-                            }
-                        }
-
-                        Preferences.warning(context.getString(R.string.data_shared_with_peers,
-                                String.valueOf(counter)));
-
-
-                    }
-
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
-            });
-
-
-        }
-    }
-
     static void downloadMultihash(@NonNull Context context,
                                   @NonNull THREADS threads,
                                   @NonNull IPFS ipfs,
@@ -1468,6 +1334,135 @@ public class Service {
             }
         }
         return file;
+    }
+
+    public void wakeupCall(@NonNull Context context, @NonNull User user) {
+        checkNotNull(context);
+        checkNotNull(user);
+        try {
+            final PID host = Preferences.getPID(context);
+            checkNotNull(host);
+            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            if (ipfs != null) {
+                if (Network.isConnected(context)) {
+                    //if (!ipfs.pubsub_connected(user.getPID(),true)) { // TODO
+                    String token = user.getAdditional(Content.FCM);
+                    if (!token.isEmpty()) {
+                        NotificationFCMServer.getInstance().sendNotification(
+                                NotificationFCMServer.getAccessToken(
+                                        context, R.raw.threads_server),
+                                token, host.getPid());
+                    }
+                    //}
+                }
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+    }
+
+    private boolean shareUser(@NonNull Context context,
+                              @NonNull User user,
+                              int timeout,
+                              @NonNull List<Long> idxs) {
+        checkNotNull(user);
+        checkNotNull(idxs);
+        final THREADS threads = Singleton.getInstance().getThreads();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        boolean success = false;
+        if (ipfs != null) {
+            try {
+                wakeupCall(context, user);
+
+                if (ConnectService.connectUser(user.getPID(), timeout)) {
+
+                    for (long idx : idxs) {
+                        Thread threadObject = threads.getThreadByIdx(idx);
+                        checkNotNull(threadObject);
+
+                        CID cid = threadObject.getCid();
+                        checkNotNull(cid);
+
+                        Content map = new Content();
+                        map.put(Content.EST, Message.SHARE.name());
+                        String title = threadObject.getAdditional(Content.TITLE);
+                        if (!title.isEmpty()) {
+                            map.put(Content.TITLE, title);
+                        }
+                        map.put(Content.CID, cid.getCid());
+                        Log.e(TAG, "Send : " + map.toString());
+                        ipfs.pubsub_pub(user.getPID().getPid(), gson.toJson(map));
+                    }
+
+                    success = true;
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+        }
+        return success;
+    }
+
+    void sendThreads(@NonNull Context context,
+                     @NonNull List<Long> idxs) {
+        checkNotNull(context);
+
+        final PID host = Preferences.getPID(context.getApplicationContext());
+
+        final THREADS threads = Singleton.getInstance().getThreads();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+
+        if (ipfs != null) {
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    // clean-up
+                    for (long idx : idxs) {
+                        threads.resetUnreadNotesNumber(idx);
+                    }
+
+                    List<User> users = threads.getUsers();
+                    if (users.isEmpty()) {
+                        Preferences.warning(context.getString(R.string.no_peers_connected));
+                    } else {
+                        checkNotNull(host);
+
+                        ExecutorService sharedExecutor = Executors.newFixedThreadPool(5);
+                        int timeout = ConnectService.getConnectionTimeout(context);
+                        LinkedList<Future<Boolean>> futures = new LinkedList<>();
+                        for (User user : users) {
+                            if (user.getStatus() != UserStatus.BLOCKED) {
+                                PID userPID = user.getPID();
+                                if (!userPID.equals(host)) {
+
+                                    Future<Boolean> future = sharedExecutor.submit(() ->
+                                            shareUser(context, user, timeout, idxs));
+                                    futures.add(future);
+                                }
+                            }
+                        }
+                        int counter = 0;
+                        for (Future<Boolean> future : futures) {
+                            Boolean send = future.get();
+                            if (send) {
+                                counter++;
+                            }
+                        }
+
+                        Preferences.warning(context.getString(R.string.data_shared_with_peers,
+                                String.valueOf(counter)));
+
+
+                    }
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+
+
+        }
     }
 
     private void init(@NonNull Context context) {

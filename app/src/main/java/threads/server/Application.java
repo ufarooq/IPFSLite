@@ -8,6 +8,7 @@ import threads.ipfs.api.ConnMgrConfig;
 import threads.ipfs.api.Profile;
 import threads.ipfs.api.PubsubConfig;
 import threads.share.ConnectService;
+import threads.share.RTCCallActivity;
 
 public class Application extends android.app.Application {
 
@@ -44,13 +45,13 @@ public class Application extends android.app.Application {
 
                 Preferences.setAutoNATServiceEnabled(getApplicationContext(), false);
                 Preferences.setRelayHopEnabled(getApplicationContext(), false);
-                Preferences.setAutoRelayEnabled(getApplicationContext(), true);
+                Preferences.setAutoRelayEnabled(getApplicationContext(), false);
 
                 Preferences.setPubsubRouter(getApplicationContext(), PubsubConfig.RouterEnum.gossipsub);
 
                 Preferences.setConnMgrConfigType(getApplicationContext(), ConnMgrConfig.TypeEnum.basic);
                 Preferences.setLowWater(getApplicationContext(), 30);
-                Preferences.setHighWater(getApplicationContext(), 100);
+                Preferences.setHighWater(getApplicationContext(), 80);
                 Preferences.setGracePeriod(getApplicationContext(), "5s");
 
 
@@ -76,10 +77,10 @@ public class Application extends android.app.Application {
 
         Preferences.setDaemonRunning(getApplicationContext(), false);
         Preferences.createPublicPrivateKeys(getApplicationContext());
-        Preferences.setAccessToken(getApplicationContext(), "");
 
 
         NotificationSender.createChannel(getApplicationContext());
+        RTCCallActivity.createRTCChannel(getApplicationContext());
 
     }
 

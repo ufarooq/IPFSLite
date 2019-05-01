@@ -36,23 +36,23 @@ public class NotificationFCMServer {
         return INSTANCE;
     }
 
+    @NonNull
     public static String getAccessToken(@NonNull Context context, @RawRes int id) {
         checkNotNull(context);
-        String token = Preferences.getAccessToken(context);
+        String token = "";
         try {
-            if (token.isEmpty()) {
-                InputStream inputStream = context.getResources().openRawResource(id);
-                GoogleCredential googleCredential = GoogleCredential
-                        .fromStream(inputStream);
-                if (googleCredential.createScopedRequired()) {
-                    googleCredential = googleCredential.createScoped(Collections.singleton(SCOPE));
-                }
 
-                googleCredential.refreshToken();
-
-                token = googleCredential.getAccessToken();
-                Preferences.setAccessToken(context, token);
+            InputStream inputStream = context.getResources().openRawResource(id);
+            GoogleCredential googleCredential = GoogleCredential
+                    .fromStream(inputStream);
+            if (googleCredential.createScopedRequired()) {
+                googleCredential = googleCredential.createScoped(Collections.singleton(SCOPE));
             }
+
+            googleCredential.refreshToken();
+
+            token = googleCredential.getAccessToken();
+
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }

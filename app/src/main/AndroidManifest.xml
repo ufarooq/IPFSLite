@@ -62,15 +62,6 @@
             android:screenOrientation="fullSensor"
             tools:replace="screenOrientation" />
 
-        <activity
-            android:name="threads.share.RTCCallActivity"
-            android:configChanges="orientation|smallestScreenSize|screenSize|screenLayout"
-            android:screenOrientation="fullUser"
-            android:theme="@style/ThreadsServerTheme">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
-        </activity>
 
         <service
             android:name=".NotificationFCMClient"
