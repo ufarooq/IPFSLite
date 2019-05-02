@@ -7,7 +7,6 @@ import threads.core.Preferences;
 import threads.ipfs.api.ConnMgrConfig;
 import threads.ipfs.api.Profile;
 import threads.ipfs.api.PubsubConfig;
-import threads.share.ConnectService;
 import threads.share.RTCCallActivity;
 
 public class Application extends android.app.Application {
@@ -55,8 +54,8 @@ public class Application extends android.app.Application {
                 Preferences.setGracePeriod(getApplicationContext(), "5s");
 
 
-                ConnectService.setConnectionTimeout(getApplicationContext(), 60);
-                ConnectService.setAutoConnectRelay(getApplicationContext(), true);
+                Preferences.setConnectionTimeout(getApplicationContext(), 60);
+                Preferences.setAutoConnectRelay(getApplicationContext(), true);
 
 
                 SharedPreferences.Editor editor = prefs.edit();

@@ -23,7 +23,6 @@ import java.util.List;
 
 import threads.core.Preferences;
 import threads.ipfs.api.Profile;
-import threads.share.ConnectService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -127,9 +126,9 @@ public class SettingsDialogFragment extends DialogFragment {
 
 
         Switch connect_relay_support = view.findViewById(R.id.connect_relay_support);
-        connect_relay_support.setChecked(ConnectService.isAutoConnectRelay(activity));
+        connect_relay_support.setChecked(Preferences.isAutoConnectRelay(activity));
         connect_relay_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            ConnectService.setAutoConnectRelay(activity, isChecked);
+            Preferences.setAutoConnectRelay(activity, isChecked);
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,
                     Toast.LENGTH_LONG).show();
@@ -142,7 +141,7 @@ public class SettingsDialogFragment extends DialogFragment {
 
         int offset = 10;
         connection_timeout.setMax(170);
-        int timeout = ConnectService.getConnectionTimeout(activity);
+        int timeout = Preferences.getConnectionTimeout(activity);
         connection_timeout_text.setText(getString(R.string.connection_timeout,
                 String.valueOf(timeout)));
         connection_timeout.setProgress(timeout - offset);
@@ -151,7 +150,7 @@ public class SettingsDialogFragment extends DialogFragment {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
                 int newProgress = progress + offset;
-                ConnectService.setConnectionTimeout(activity, newProgress);
+                Preferences.setConnectionTimeout(activity, newProgress);
                 connection_timeout_text.setText(
                         getString(R.string.connection_timeout,
                                 String.valueOf(newProgress)));

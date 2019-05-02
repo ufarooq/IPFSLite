@@ -147,7 +147,7 @@ public class Service {
                                 case SESSION_CALL: {
 
                                     if (RTCSession.getInstance().isBusy()) {
-                                        int timeout = ConnectService.getConnectionTimeout(context);
+                                        int timeout = Preferences.getConnectionTimeout(context);
                                         RTCSession.getInstance().emitSessionBusy(
                                                 senderPid, () -> Preferences.warning(
                                                         context.getString(R.string.connection_failed))
@@ -540,7 +540,7 @@ public class Service {
                             if (currentStatus != UserStatus.BLOCKED &&
                                     currentStatus != UserStatus.DIALING) {
                                 try {
-                                    boolean value = ipfs.swarm_peer(user.getPID()) != null;
+                                    boolean value = ipfs.swarm_peer(user.getPID(), true) != null;
                                     if (value) {
                                         if (threads.getStatus(user) != UserStatus.DIALING) {
                                             threads.setStatus(user, UserStatus.ONLINE);
@@ -938,7 +938,7 @@ public class Service {
                         CID cid = threadObject.getCid();
                         checkNotNull(cid);
 
-                        int timeout = ConnectService.getConnectionTimeout(context);
+                        int timeout = Preferences.getConnectionTimeout(context);
 
                         List<Link> links = threadsAPI.getLinks(ipfs, threadObject,
                                 timeout, true);
@@ -1066,7 +1066,7 @@ public class Service {
         boolean success;
         try {
             threads.setStatus(thread, ThreadStatus.LEACHING); // make sure
-            int timeout = ConnectService.getConnectionTimeout(context);
+            int timeout = Preferences.getConnectionTimeout(context);
             success = threads.download(ipfs, file, cid, true, false,
                     thread.getSesKey(), new THREADS.Progress() {
                         @Override
@@ -1143,7 +1143,7 @@ public class Service {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
 
-        long timeout = ConnectService.getConnectionTimeout(context);
+        long timeout = Preferences.getConnectionTimeout(context);
         List<Link> links = getLinks(ipfs, link, timeout);
         if (links != null) {
             return downloadLinks(context, threads, ipfs, thread, links);
@@ -1267,7 +1267,7 @@ public class Service {
 
 
         threads.setStatus(thread, ThreadStatus.LEACHING);
-        int timeout = ConnectService.getConnectionTimeout(context);
+        int timeout = Preferences.getConnectionTimeout(context);
         List<Link> links = threads.getLinks(ipfs, thread, timeout, false);
 
         if (links != null) {
@@ -1355,11 +1355,12 @@ public class Service {
         if (ipfs != null) {
             try {
                 try {
+                    int timeoutMillis = 550; // TODO preference
                     boolean checkPubsub = Preferences.isPubsubEnabled(context);
                     ConnectService.wakeupCall(context,
                             NotificationFCMServer.getInstance(), user,
                             NotificationFCMServer.getAccessToken(
-                                    context, R.raw.threads_server), checkPubsub);
+                                    context, R.raw.threads_server), checkPubsub, timeoutMillis);
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -1420,7 +1421,7 @@ public class Service {
                         checkNotNull(host);
 
                         ExecutorService sharedExecutor = Executors.newFixedThreadPool(5);
-                        int timeout = ConnectService.getConnectionTimeout(context);
+                        int timeout = Preferences.getConnectionTimeout(context);
                         LinkedList<Future<Boolean>> futures = new LinkedList<>();
                         for (User user : users) {
                             if (user.getStatus() != UserStatus.BLOCKED) {
@@ -1499,8 +1500,9 @@ public class Service {
                     new java.lang.Thread(() -> startPeers(context)).start();
                 }
 
-                if (ConnectService.isAutoConnectRelay(context)) {
-                    new java.lang.Thread(() -> ConnectService.connectRelays(context, 10000)).start();
+                if (Preferences.isAutoConnectRelay(context)) {
+                    int timeout = Preferences.getConnectionTimeout(context);
+                    new java.lang.Thread(() -> ConnectService.connectRelays(context, 10000, timeout)).start();
                 }
                 new java.lang.Thread(() -> checkTangleServer(context)).start();
             }

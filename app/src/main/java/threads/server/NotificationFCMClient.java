@@ -58,7 +58,7 @@ public class NotificationFCMClient extends FirebaseMessagingService {
                             final THREADS threadsAPI = Singleton.getInstance().getThreads();
                             if (!threadsAPI.isAccountBlocked(PID.create(pid))) {
 
-                                int timeout = ConnectService.getConnectionTimeout(
+                                int timeout = Preferences.getConnectionTimeout(
                                         getApplicationContext());
 
                                 ConnectService.connectUser(

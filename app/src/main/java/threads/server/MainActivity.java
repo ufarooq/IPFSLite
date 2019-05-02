@@ -568,18 +568,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 threadsAPI.setStatus(user, UserStatus.DIALING);
 
                                 try {
+                                    int timeoutMillis = 550; // TODO preference
                                     boolean checkPubsub = Preferences.isPubsubEnabled(
                                             getApplicationContext());
                                     ConnectService.wakeupCall(getApplicationContext(),
                                             NotificationFCMServer.getInstance(), user,
                                             NotificationFCMServer.getAccessToken(
                                                     getApplicationContext(), R.raw.threads_server),
-                                            checkPubsub);
+                                            checkPubsub, timeoutMillis);
                                 } catch (Throwable e) {
                                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                                 }
 
-                                long timeout = ConnectService.getConnectionTimeout(
+                                long timeout = Preferences.getConnectionTimeout(
                                         getApplicationContext());
 
                                 boolean value = ConnectService.connectUser(user.getPID(), true, timeout);
@@ -838,13 +839,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         } else {
 
                             try {
+                                int timeoutMillis = 550; // TODO preference
                                 boolean checkPubsub = Preferences.isPubsubEnabled(
                                         getApplicationContext());
                                 ConnectService.wakeupCall(getApplicationContext(),
                                         NotificationFCMServer.getInstance(), user,
                                         NotificationFCMServer.getAccessToken(
                                                 getApplicationContext(), R.raw.threads_server),
-                                        checkPubsub);
+                                        checkPubsub, timeoutMillis);
                             } catch (Throwable e) {
                                 Preferences.evaluateException(Preferences.EXCEPTION, e);
                             }
@@ -912,7 +914,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         try {
                             threadsAPI.setStatus(user, UserStatus.DIALING);
-                            long timeout = ConnectService.getConnectionTimeout(
+                            long timeout = Preferences.getConnectionTimeout(
                                     getApplicationContext());
                             boolean value = ConnectService.connectUser(user.getPID(), true, timeout);
                             if (value) {
@@ -1035,7 +1037,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Preferences.error(getString(R.string.daemon_not_running));
             return;
         }
-        final int timeout = ConnectService.getConnectionTimeout(getApplicationContext());
+        final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
