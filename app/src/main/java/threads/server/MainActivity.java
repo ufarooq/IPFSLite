@@ -806,15 +806,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CAMERA},
-                    REQUEST_VIDEO_CAPTURE);
-            storedUser.set(pid);
-            return;
-        }
 
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.MODIFY_AUDIO_SETTINGS)
