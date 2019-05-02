@@ -7,7 +7,7 @@ import threads.core.Preferences;
 import threads.ipfs.api.ConnMgrConfig;
 import threads.ipfs.api.Profile;
 import threads.ipfs.api.PubsubConfig;
-import threads.share.RTCCallActivity;
+import threads.share.RTCSession;
 
 public class Application extends android.app.Application {
 
@@ -79,7 +79,7 @@ public class Application extends android.app.Application {
 
 
         NotificationSender.createChannel(getApplicationContext());
-        RTCCallActivity.createRTCChannel(getApplicationContext());
+        RTCSession.createRTCChannel(getApplicationContext());
 
     }
 

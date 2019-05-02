@@ -69,6 +69,17 @@
         </activity>
 
         <activity
+            android:name="threads.share.RTCVideoCallActivity"
+            android:configChanges="orientation|smallestScreenSize|screenSize|screenLayout"
+            android:launchMode="singleTop"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="fullUser"
+            android:theme="@style/ThreadsServerTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+        <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
             android:screenOrientation="fullSensor"
             tools:replace="screenOrientation" />
