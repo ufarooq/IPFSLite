@@ -148,10 +148,11 @@ public class Service {
 
                                     if (RTCSession.getInstance().isBusy()) {
                                         int timeout = Preferences.getConnectionTimeout(context);
+                                        int threshold = Preferences.getThresholdPong(context);
                                         RTCSession.getInstance().emitSessionBusy(
                                                 senderPid, () -> Preferences.warning(
                                                         context.getString(R.string.connection_failed))
-                                                , timeout);
+                                                , timeout, threshold);
                                     } else {
 
                                         User user = threadsAPI.getUserByPID(senderPid);
@@ -1345,12 +1346,13 @@ public class Service {
 
     private boolean shareUser(@NonNull Context context,
                               @NonNull User user,
-                              int timeout,
                               @NonNull List<Long> idxs) {
         checkNotNull(user);
         checkNotNull(idxs);
         final THREADS threads = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
+        final int timeout = Preferences.getConnectionTimeout(context);
+        final int threshold = Preferences.getThresholdPong(context);
         boolean success = false;
         if (ipfs != null) {
             try {
@@ -1366,7 +1368,8 @@ public class Service {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
 
-                if (ConnectService.connectUser(user.getPID(), true, timeout)) {
+                if (ConnectService.connectUser(user.getPID(),
+                        true, timeout, threshold)) {
 
                     for (long idx : idxs) {
                         Thread threadObject = threads.getThreadByIdx(idx);
@@ -1421,7 +1424,6 @@ public class Service {
                         checkNotNull(host);
 
                         ExecutorService sharedExecutor = Executors.newFixedThreadPool(5);
-                        int timeout = Preferences.getConnectionTimeout(context);
                         LinkedList<Future<Boolean>> futures = new LinkedList<>();
                         for (User user : users) {
                             if (user.getStatus() != UserStatus.BLOCKED) {
@@ -1429,7 +1431,7 @@ public class Service {
                                 if (!userPID.equals(host)) {
 
                                     Future<Boolean> future = sharedExecutor.submit(() ->
-                                            shareUser(context, user, timeout, idxs));
+                                            shareUser(context, user, idxs));
                                     futures.add(future);
                                 }
                             }

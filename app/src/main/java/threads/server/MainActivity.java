@@ -581,10 +581,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                                 }
 
-                                long timeout = Preferences.getConnectionTimeout(
+                                int timeout = Preferences.getConnectionTimeout(
                                         getApplicationContext());
-
-                                boolean value = ConnectService.connectUser(user.getPID(), true, timeout);
+                                int threshold = Preferences.getThresholdPong(
+                                        getApplicationContext());
+                                boolean value = ConnectService.connectUser(
+                                        user.getPID(), true, timeout, threshold);
                                 if (value) {
                                     threadsAPI.setStatus(user, UserStatus.ONLINE);
                                 } else {
@@ -916,9 +918,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         try {
                             threadsAPI.setStatus(user, UserStatus.DIALING);
-                            long timeout = Preferences.getConnectionTimeout(
+                            int timeout = Preferences.getConnectionTimeout(
                                     getApplicationContext());
-                            boolean value = ConnectService.connectUser(user.getPID(), true, timeout);
+                            int threshold = Preferences.getThresholdPong(
+                                    getApplicationContext());
+                            boolean value = ConnectService.connectUser(
+                                    user.getPID(), true, timeout, threshold);
                             if (value) {
                                 threadsAPI.setStatus(user, UserStatus.ONLINE);
 
