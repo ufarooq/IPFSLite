@@ -21,19 +21,19 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top|end"
-        android:layout_margin="@dimen/fab_margin"
         app:backgroundTint="@color/lightGray"
+        app:layout_anchor="@id/fab_delete"
+        app:layout_anchorGravity="top"
         app:srcCompat="@drawable/send_fab" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_delete"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
+        android:layout_gravity="top|end"
         app:backgroundTint="@color/lightGray"
-        app:layout_anchor="@id/fab_send"
-        app:layout_anchorGravity="bottom"
+        app:layout_anchor="@id/fab_action"
+        app:layout_anchorGravity="top"
         app:srcCompat="@drawable/delete_fab" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
