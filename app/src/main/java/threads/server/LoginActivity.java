@@ -12,15 +12,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.core.Preferences;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private final AtomicBoolean finished = new AtomicBoolean(false);
-
-    private long mLastClickTime = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

@@ -28,7 +28,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 public class NotificationFCMServer implements NotificationServer {
     private static final String SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
     private static final String SERVICE = "https://fcm.googleapis.com/v1/projects/threads-server/messages:send";
-    private static NotificationFCMServer INSTANCE = new NotificationFCMServer();
+    private static final NotificationFCMServer INSTANCE = new NotificationFCMServer();
 
     private NotificationFCMServer() {
     }
@@ -69,12 +69,12 @@ public class NotificationFCMServer implements NotificationServer {
         checkNotNull(pid);
 
 
-        JsonObject nofiObj = new JsonObject();
-        nofiObj.addProperty(Content.PID,
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty(Content.PID,
                 StringEscapeUtils.escapeJava(pid));
         JsonObject jsonObj = new JsonObject();
         jsonObj.addProperty("token", token);
-        jsonObj.add("data", nofiObj);
+        jsonObj.add("data", jsonObject);
 
         JsonObject msgObj = new JsonObject();
         msgObj.add("message", jsonObj);
