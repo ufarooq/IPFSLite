@@ -61,6 +61,7 @@
             android:configChanges="orientation|smallestScreenSize|screenSize|screenLayout"
             android:launchMode="singleTop"
             android:screenOrientation="fullUser"
+            android:parentActivityName=".MainActivity"
             android:theme="@style/ThreadsServerTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
