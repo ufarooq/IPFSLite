@@ -1355,7 +1355,7 @@ public class Service {
         if (ipfs != null) {
             try {
                 try {
-                    int timeoutMillis = 550; // TODO preference
+                    int timeoutMillis = Preferences.getTimeoutPong(context);
                     boolean checkPubsub = Preferences.isPubsubEnabled(context);
                     ConnectService.wakeupCall(context,
                             NotificationFCMServer.getInstance(), user,

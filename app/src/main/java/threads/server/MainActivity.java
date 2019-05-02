@@ -568,7 +568,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 threadsAPI.setStatus(user, UserStatus.DIALING);
 
                                 try {
-                                    int timeoutMillis = 550; // TODO preference
+                                    int timeoutMillis = Preferences.getTimeoutPong(
+                                            getApplicationContext());
                                     boolean checkPubsub = Preferences.isPubsubEnabled(
                                             getApplicationContext());
                                     ConnectService.wakeupCall(getApplicationContext(),
@@ -839,7 +840,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         } else {
 
                             try {
-                                int timeoutMillis = 550; // TODO preference
+                                int timeoutMillis = Preferences.getTimeoutPong(
+                                        getApplicationContext());
                                 boolean checkPubsub = Preferences.isPubsubEnabled(
                                         getApplicationContext());
                                 ConnectService.wakeupCall(getApplicationContext(),
