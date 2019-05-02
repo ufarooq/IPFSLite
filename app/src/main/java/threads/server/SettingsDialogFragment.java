@@ -141,7 +141,7 @@ public class SettingsDialogFragment extends DialogFragment {
 
         int offset = 10;
         connection_timeout.setMax(170);
-        int timeout = Preferences.getConnectionTimeout(activity);
+        int timeout = (Preferences.getConnectionTimeout(activity) / 1000);
         connection_timeout_text.setText(getString(R.string.connection_timeout,
                 String.valueOf(timeout)));
         connection_timeout.setProgress(timeout - offset);
@@ -150,7 +150,8 @@ public class SettingsDialogFragment extends DialogFragment {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
                 int newProgress = progress + offset;
-                Preferences.setConnectionTimeout(activity, newProgress);
+                int newValue = newProgress * 1000;
+                Preferences.setConnectionTimeout(activity, newValue);
                 connection_timeout_text.setText(
                         getString(R.string.connection_timeout,
                                 String.valueOf(newProgress)));
