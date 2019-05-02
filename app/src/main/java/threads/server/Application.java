@@ -54,7 +54,7 @@ public class Application extends android.app.Application {
                 Preferences.setGracePeriod(getApplicationContext(), "5s");
 
 
-                Preferences.setConnectionTimeout(getApplicationContext(), 60);
+                Preferences.setConnectionTimeout(getApplicationContext(), 30000);
                 Preferences.setAutoConnectRelay(getApplicationContext(), true);
 
 
