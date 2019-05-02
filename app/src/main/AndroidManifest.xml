@@ -56,6 +56,16 @@
             android:label="@string/app_name"
             android:theme="@style/ThreadsServerTheme" />
 
+        <activity
+            android:name="threads.share.RTCCallActivity"
+            android:configChanges="orientation|smallestScreenSize|screenSize|screenLayout"
+            android:launchMode="singleTop"
+            android:screenOrientation="fullUser"
+            android:theme="@style/ThreadsServerTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
 
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
