@@ -35,6 +35,9 @@ public class NotificationFCMClient extends FirebaseMessagingService {
     @Override
     public void onNewToken(@NonNull String token) {
         super.onNewToken(token);
+
+        Log.e(TAG, "TOKEN : " + token);
+
         Preferences.setToken(getApplicationContext(), token);
     }
 

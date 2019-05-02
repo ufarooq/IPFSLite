@@ -242,12 +242,9 @@ public class Service {
                                         if (pubKey == null) {
                                             pubKey = "";
                                         }
-                                        String token = map.get(Content.FCM);
-                                        if (token == null) {
-                                            token = "";
-                                        }
+
                                         createUser(context, senderPid,
-                                                alias, pubKey, UserType.VERIFIED, token);
+                                                alias, pubKey, UserType.VERIFIED);
                                     }
                                     break;
                                 }
@@ -259,12 +256,8 @@ public class Service {
                                         if (pubKey == null) {
                                             pubKey = "";
                                         }
-                                        String token = map.get(Content.FCM);
-                                        if (token == null) {
-                                            token = "";
-                                        }
                                         adaptUser(context, senderPid,
-                                                alias, pubKey, UserType.VERIFIED, token);
+                                                alias, pubKey, UserType.VERIFIED);
                                     }
                                     break;
                                 }
@@ -293,11 +286,8 @@ public class Service {
                                 if (pubKey == null) {
                                     pubKey = "";
                                 }
-                                String token = map.get(Content.FCM);
-                                if (token == null) {
-                                    token = "";
-                                }
-                                createUser(context, senderPid, alias, pubKey, UserType.VERIFIED, token);
+
+                                createUser(context, senderPid, alias, pubKey, UserType.VERIFIED);
                             } else if (map.containsKey(Content.CID)) {
                                 String cid = map.get(Content.CID);
                                 checkNotNull(cid);
@@ -318,7 +308,7 @@ public class Service {
                             // ignore exception
                         }
 
-                        createUser(context, senderPid, name, "", UserType.UNKNOWN, "");
+                        createUser(context, senderPid, name, "", UserType.UNKNOWN);
                     }
 
                 }
@@ -393,14 +383,13 @@ public class Service {
                                   @NonNull PID senderPid,
                                   @NonNull String alias,
                                   @NonNull String pubKey,
-                                  @NonNull UserType userType,
-                                  @NonNull String token) {
+                                  @NonNull UserType userType) {
         checkNotNull(context);
         checkNotNull(senderPid);
         checkNotNull(alias);
         checkNotNull(pubKey);
         checkNotNull(userType);
-        checkNotNull(token);
+
         try {
             final THREADS threadsAPI = Singleton.getInstance().getThreads();
             final IPFS ipfs = Singleton.getInstance().getIpfs();
@@ -418,7 +407,7 @@ public class Service {
                 sender.setAlias(alias);
                 sender.setImage(image);
                 sender.setType(userType);
-                sender.addAdditional(Content.FCM, token, true);
+
                 threadsAPI.storeUser(sender);
 
             }
@@ -474,14 +463,13 @@ public class Service {
                                    @NonNull PID senderPid,
                                    @NonNull String alias,
                                    @NonNull String pubKey,
-                                   @NonNull UserType userType,
-                                   @NonNull String token) {
+                                   @NonNull UserType userType) {
         checkNotNull(context);
         checkNotNull(senderPid);
         checkNotNull(alias);
         checkNotNull(pubKey);
         checkNotNull(userType);
-        checkNotNull(token);
+
         try {
             final THREADS threadsAPI = Singleton.getInstance().getThreads();
             final IPFS ipfs = Singleton.getInstance().getIpfs();
@@ -495,7 +483,6 @@ public class Service {
 
                     sender = threadsAPI.createUser(senderPid, pubKey, alias, userType, image);
                     sender.setStatus(UserStatus.BLOCKED);
-                    sender.addAdditional(Content.FCM, token, true);
                     threadsAPI.storeUser(sender);
 
 
@@ -507,8 +494,8 @@ public class Service {
                     map.put(Content.EST, Message.CONNECT_REPLY.name());
                     map.put(Content.ALIAS, hostUser.getAlias());
                     map.put(Content.PKEY, hostUser.getPublicKey());
-                    map.put(Content.FCM, Preferences.getToken(context));
-                    Log.e(TAG, "Send : " + map.toString());
+
+
                     ipfs.pubsub_pub(senderPid.getPid(), gson.toJson(map));
 
                     Preferences.error(context.getString(R.string.user_connect_try, alias));
@@ -1360,7 +1347,7 @@ public class Service {
                     int timeoutMillis = Preferences.getTimeoutPong(context);
                     boolean checkPubsub = Preferences.isPubsubEnabled(context);
                     ConnectService.wakeupCall(context,
-                            NotificationFCMServer.getInstance(), user,
+                            NotificationFCMServer.getInstance(), user.getPID(),
                             NotificationFCMServer.getAccessToken(
                                     context, R.raw.threads_server), checkPubsub, timeoutMillis);
 

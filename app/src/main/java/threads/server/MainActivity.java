@@ -573,7 +573,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     boolean checkPubsub = Preferences.isPubsubEnabled(
                                             getApplicationContext());
                                     ConnectService.wakeupCall(getApplicationContext(),
-                                            NotificationFCMServer.getInstance(), user,
+                                            NotificationFCMServer.getInstance(), user.getPID(),
                                             NotificationFCMServer.getAccessToken(
                                                     getApplicationContext(), R.raw.threads_server),
                                             checkPubsub, timeoutMillis);
@@ -847,7 +847,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 boolean checkPubsub = Preferences.isPubsubEnabled(
                                         getApplicationContext());
                                 ConnectService.wakeupCall(getApplicationContext(),
-                                        NotificationFCMServer.getInstance(), user,
+                                        NotificationFCMServer.getInstance(), user.getPID(),
                                         NotificationFCMServer.getAccessToken(
                                                 getApplicationContext(), R.raw.threads_server),
                                         checkPubsub, timeoutMillis);
@@ -937,8 +937,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     map.put(Content.EST, Message.CONNECT.name());
                                     map.put(Content.ALIAS, hostUser.getAlias());
                                     map.put(Content.PKEY, hostUser.getPublicKey());
-                                    map.put(Content.FCM,
-                                            Preferences.getToken(getApplicationContext()));
 
                                     ipfs.pubsub_pub(user.getPID().getPid(), gson.toJson(map));
                                 }
