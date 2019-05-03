@@ -230,10 +230,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (codecDecider.getCodex() == CodecDecider.Codec.MULTIHASH ||
                     codecDecider.getCodex() == CodecDecider.Codec.URI) {
 
-                PID pid = Preferences.getPID(getApplicationContext());
-                checkNotNull(pid);
+                PID host = Preferences.getPID(getApplicationContext());
+                checkNotNull(host);
                 String multihash = codecDecider.getMultihash();
-                Service.downloadMultihash(getApplicationContext(), pid, multihash, null);
+                Service.downloadMultihash(getApplicationContext(), host, multihash, null);
             } else {
                 Preferences.error(getString(R.string.codec_not_supported));
             }
@@ -567,26 +567,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             try {
                                 threadsAPI.setStatus(user, UserStatus.DIALING);
 
-                                try {
-                                    int timeoutMillis = Preferences.getTimeoutPong(
-                                            getApplicationContext());
-                                    boolean checkPubsub = Preferences.isPubsubEnabled(
-                                            getApplicationContext());
-                                    ConnectService.wakeupCall(getApplicationContext(),
-                                            NotificationFCMServer.getInstance(), user.getPID(),
-                                            NotificationFCMServer.getAccessToken(
-                                                    getApplicationContext(), R.raw.threads_server),
-                                            checkPubsub, timeoutMillis);
-                                } catch (Throwable e) {
-                                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                                }
+                                final boolean pubsubEnabled = Preferences.isPubsubEnabled(
+                                        getApplicationContext());
+                                final int timeoutPong = Preferences.getTimeoutPong(
+                                        getApplicationContext());
+
+                                ConnectService.wakeupCall(getApplicationContext(),
+                                        NotificationFCMServer.getInstance(), user.getPID(),
+                                        NotificationFCMServer.getAccessToken(
+                                                getApplicationContext(), R.raw.threads_server),
+                                        pubsubEnabled, timeoutPong);
+
 
                                 int timeout = Preferences.getConnectionTimeout(
                                         getApplicationContext());
                                 int threshold = Preferences.getThresholdPong(
                                         getApplicationContext());
                                 boolean value = ConnectService.connectUser(
-                                        user.getPID(), true, timeout, threshold);
+                                        user.getPID(), pubsubEnabled, timeout, threshold);
                                 if (value) {
                                     threadsAPI.setStatus(user, UserStatus.ONLINE);
                                 } else {
@@ -832,19 +830,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             Preferences.warning(getString(R.string.peer_is_blocked));
                         } else {
 
-                            try {
-                                int timeoutMillis = Preferences.getTimeoutPong(
-                                        getApplicationContext());
-                                boolean checkPubsub = Preferences.isPubsubEnabled(
-                                        getApplicationContext());
-                                ConnectService.wakeupCall(getApplicationContext(),
-                                        NotificationFCMServer.getInstance(), user.getPID(),
-                                        NotificationFCMServer.getAccessToken(
-                                                getApplicationContext(), R.raw.threads_server),
-                                        checkPubsub, timeoutMillis);
-                            } catch (Throwable e) {
-                                Preferences.evaluateException(Preferences.EXCEPTION, e);
-                            }
+
+                            final int timeoutPong = Preferences.getTimeoutPong(
+                                    getApplicationContext());
+                            final boolean pubsubEnabled = Preferences.isPubsubEnabled(
+                                    getApplicationContext());
+
+                            ConnectService.wakeupCall(getApplicationContext(),
+                                    NotificationFCMServer.getInstance(), user.getPID(),
+                                    NotificationFCMServer.getAccessToken(
+                                            getApplicationContext(), R.raw.threads_server),
+                                    pubsubEnabled, timeoutPong);
+
 
                             Intent intent = RTCCallActivity.createIntent(MainActivity.this,
                                     pid, user.getAlias(), null, true);
@@ -914,7 +911,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             int threshold = Preferences.getThresholdPong(
                                     getApplicationContext());
                             boolean value = ConnectService.connectUser(
-                                    user.getPID(), true, timeout, threshold);
+                                    user.getPID(), false, timeout, threshold); // no pubsub check
                             if (value) {
                                 threadsAPI.setStatus(user, UserStatus.ONLINE);
 

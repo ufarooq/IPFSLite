@@ -39,6 +39,8 @@ import threads.core.mdl.EventViewModel;
 import threads.core.mdl.ThreadViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.Network;
+import threads.ipfs.api.PID;
+import threads.share.ConnectService;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThreadsViewAdapter;
 import threads.share.UtilitySevice;
@@ -605,6 +607,25 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                     ExecutorService executor = Executors.newSingleThreadExecutor();
                     executor.submit(() -> {
                         try {
+                            PID host = Preferences.getPID(mContext);
+                            checkNotNull(host);
+                            PID sender = thread.getSenderPid();
+                            if (!host.equals(sender)) {
+
+                                final boolean pubsubEnabled = Preferences.isPubsubEnabled(mContext);
+                                final int timeoutPong = Preferences.getTimeoutPong(mContext);
+
+                                ConnectService.wakeupCall(mContext,
+                                        NotificationFCMServer.getInstance(), sender,
+                                        NotificationFCMServer.getAccessToken(
+                                                mContext, R.raw.threads_server),
+                                        pubsubEnabled, timeoutPong);
+
+                                final int timeout = Preferences.getConnectionTimeout(mContext);
+                                final int threshold = Preferences.getThresholdPong(mContext);
+                                ConnectService.connectUser(sender, pubsubEnabled, timeout, threshold);
+                            }
+
                             Service.downloadMultihash(mContext, threadsAPI, ipfs, thread, null);
                         } catch (Throwable e) {
                             Preferences.evaluateException(Preferences.EXCEPTION, e);

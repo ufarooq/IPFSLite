@@ -1343,20 +1343,17 @@ public class Service {
         boolean success = false;
         if (ipfs != null) {
             try {
-                try {
-                    int timeoutMillis = Preferences.getTimeoutPong(context);
-                    boolean checkPubsub = Preferences.isPubsubEnabled(context);
-                    ConnectService.wakeupCall(context,
-                            NotificationFCMServer.getInstance(), user.getPID(),
-                            NotificationFCMServer.getAccessToken(
-                                    context, R.raw.threads_server), checkPubsub, timeoutMillis);
+                final boolean pubsubEnabled = Preferences.isPubsubEnabled(context);
+                final int timeoutPong = Preferences.getTimeoutPong(context);
 
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
+                ConnectService.wakeupCall(context,
+                        NotificationFCMServer.getInstance(), user.getPID(),
+                        NotificationFCMServer.getAccessToken(
+                                context, R.raw.threads_server), pubsubEnabled, timeoutPong);
+
 
                 if (ConnectService.connectUser(user.getPID(),
-                        true, timeout, threshold)) {
+                        pubsubEnabled, timeout, threshold)) {
 
                     for (long idx : idxs) {
                         Thread threadObject = threads.getThreadByIdx(idx);
