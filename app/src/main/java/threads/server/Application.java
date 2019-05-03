@@ -81,7 +81,6 @@ public class Application extends android.app.Application {
         NotificationSender.createChannel(getApplicationContext());
         RTCSession.createRTCChannel(getApplicationContext());
 
-
     }
 
 
