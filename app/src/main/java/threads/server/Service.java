@@ -12,7 +12,6 @@ import android.provider.DocumentsContract;
 import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -1347,14 +1346,10 @@ public class Service {
                 final boolean pubsubEnabled = Preferences.isPubsubEnabled(context);
                 final int timeoutPong = Preferences.getTimeoutPong(context);
 
-                boolean sendNotification = ConnectService.wakeupCall(context,
+                ConnectService.wakeupCall(context,
                         NotificationFCMServer.getInstance(), user.getPID(),
                         NotificationFCMServer.getAccessToken(
                                 context, R.raw.threads_server), pubsubEnabled, timeoutPong);
-                if (sendNotification) {
-                    Toast.makeText(context,
-                            "Wakeup FCM Notification", Toast.LENGTH_LONG).show();
-                }
 
                 if (ConnectService.connectUser(user.getPID(),
                         pubsubEnabled, timeout, threshold)) {

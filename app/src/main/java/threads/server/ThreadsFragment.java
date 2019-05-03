@@ -9,7 +9,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -616,15 +615,12 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                                 final boolean pubsubEnabled = Preferences.isPubsubEnabled(mContext);
                                 final int timeoutPong = Preferences.getTimeoutPong(mContext);
 
-                                boolean sendNotification = ConnectService.wakeupCall(mContext,
+                                ConnectService.wakeupCall(mContext,
                                         NotificationFCMServer.getInstance(), sender,
                                         NotificationFCMServer.getAccessToken(
                                                 mContext, R.raw.threads_server),
                                         pubsubEnabled, timeoutPong);
-                                if (sendNotification) {
-                                    Toast.makeText(mContext,
-                                            "Wakeup FCM Notification", Toast.LENGTH_LONG).show();
-                                }
+
                                 final int timeout = Preferences.getConnectionTimeout(mContext);
                                 final int threshold = Preferences.getThresholdPong(mContext);
                                 ConnectService.connectUser(sender, pubsubEnabled, timeout, threshold);
