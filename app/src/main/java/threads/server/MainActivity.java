@@ -572,12 +572,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 final int timeoutPong = Preferences.getTimeoutPong(
                                         getApplicationContext());
 
-                                ConnectService.wakeupCall(getApplicationContext(),
+                                boolean sendNotification = ConnectService.wakeupCall(getApplicationContext(),
                                         NotificationFCMServer.getInstance(), user.getPID(),
                                         NotificationFCMServer.getAccessToken(
                                                 getApplicationContext(), R.raw.threads_server),
                                         pubsubEnabled, timeoutPong);
-
+                                if (sendNotification) {
+                                    Toast.makeText(getApplicationContext(),
+                                            "Wakeup FCM Notification", Toast.LENGTH_LONG).show();
+                                }
 
                                 int timeout = Preferences.getConnectionTimeout(
                                         getApplicationContext());
@@ -836,12 +839,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             final boolean pubsubEnabled = Preferences.isPubsubEnabled(
                                     getApplicationContext());
 
-                            ConnectService.wakeupCall(getApplicationContext(),
+                            boolean sendNotification = ConnectService.wakeupCall(getApplicationContext(),
                                     NotificationFCMServer.getInstance(), user.getPID(),
                                     NotificationFCMServer.getAccessToken(
                                             getApplicationContext(), R.raw.threads_server),
                                     pubsubEnabled, timeoutPong);
-
+                            if (sendNotification) {
+                                Toast.makeText(getApplicationContext(),
+                                        "Wakeup FCM Notification", Toast.LENGTH_LONG).show();
+                            }
 
                             Intent intent = RTCCallActivity.createIntent(MainActivity.this,
                                     pid, user.getAlias(), null, true);
