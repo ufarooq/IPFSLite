@@ -20,6 +20,7 @@ import java.util.Collections;
 
 import threads.core.Preferences;
 import threads.core.api.Content;
+import threads.ipfs.Network;
 import threads.share.NotificationServer;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -56,14 +57,16 @@ public class NotificationFCMServer implements NotificationServer {
             token = googleCredential.getAccessToken();
 
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            if (Network.isConnected(context)) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
         }
         return token;
     }
 
-    public void sendNotification(@NonNull String accessToken,
-                                 @NonNull String token,
-                                 @NonNull String pid) {
+    public boolean sendNotification(@NonNull String accessToken,
+                                    @NonNull String token,
+                                    @NonNull String pid) {
         checkNotNull(accessToken);
         checkNotNull(token);
         checkNotNull(pid);
@@ -80,11 +83,12 @@ public class NotificationFCMServer implements NotificationServer {
         msgObj.add("message", jsonObj);
 
 
-        sendMessageToFcm(accessToken, msgObj.toString());
+        return sendMessageToFcm(accessToken, msgObj.toString());
     }
 
-    private void sendMessageToFcm(@NonNull String accessToken, @NonNull String postData) {
+    private boolean sendMessageToFcm(@NonNull String accessToken, @NonNull String postData) {
         HttpURLConnection httpConn = null;
+        boolean result = true;
         try {
             httpConn = getConnection(accessToken);
 
@@ -104,12 +108,13 @@ public class NotificationFCMServer implements NotificationServer {
             }
             in.close();
         } catch (Throwable e) {
-            threads.core.Preferences.evaluateException(Preferences.EXCEPTION, e);
+            result = false;
         } finally {
             if (httpConn != null) {
                 httpConn.disconnect();
             }
         }
+        return result;
     }
 
     private HttpURLConnection getConnection(@NonNull String accessToken) throws Exception {
