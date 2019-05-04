@@ -1338,21 +1338,18 @@ public class Service {
         checkNotNull(idxs);
         final THREADS threads = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
-        final int timeout = Preferences.getConnectionTimeout(context);
-        final int threshold = Preferences.getThresholdPong(context);
         boolean success = false;
         if (ipfs != null) {
             try {
                 final boolean pubsubEnabled = Preferences.isPubsubEnabled(context);
-                final int timeoutPong = Preferences.getTimeoutPong(context);
 
-                ConnectService.wakeupCall(context,
+                final boolean pubsubCheck = pubsubEnabled && !
+                        user.getPublicKey().isEmpty();
+
+                if (ConnectService.wakeupConnectCall(context,
                         NotificationFCMServer.getInstance(), user.getPID(),
                         NotificationFCMServer.getAccessToken(
-                                context, R.raw.threads_server), pubsubEnabled, timeoutPong);
-
-                if (ConnectService.connectUser(user.getPID(),
-                        pubsubEnabled, timeout, threshold)) {
+                                context, R.raw.threads_server), pubsubCheck)) {
 
                     for (long idx : idxs) {
                         Thread threadObject = threads.getThreadByIdx(idx);

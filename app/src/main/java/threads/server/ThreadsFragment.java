@@ -35,6 +35,7 @@ import threads.core.THREADS;
 import threads.core.api.Content;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
+import threads.core.api.User;
 import threads.core.mdl.EventViewModel;
 import threads.core.mdl.ThreadViewModel;
 import threads.ipfs.IPFS;
@@ -613,17 +614,21 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                             if (!host.equals(sender)) {
 
                                 final boolean pubsubEnabled = Preferences.isPubsubEnabled(mContext);
-                                final int timeoutPong = Preferences.getTimeoutPong(mContext);
+                                boolean pubsubCheck = false;
+                                if (pubsubEnabled) {
+                                    User user = threadsAPI.getUserByPID(sender);
+                                    if (user != null) {
+                                        pubsubCheck = !user.getPublicKey().isEmpty();
+                                    }
+                                }
 
-                                ConnectService.wakeupCall(mContext,
+
+                                ConnectService.wakeupConnectCall(mContext,
                                         NotificationFCMServer.getInstance(), sender,
                                         NotificationFCMServer.getAccessToken(
                                                 mContext, R.raw.threads_server),
-                                        pubsubEnabled, timeoutPong);
+                                        pubsubCheck);
 
-                                final int timeout = Preferences.getConnectionTimeout(mContext);
-                                final int threshold = Preferences.getThresholdPong(mContext);
-                                ConnectService.connectUser(sender, pubsubEnabled, timeout, threshold);
                             }
 
                             Service.downloadMultihash(mContext, threadsAPI, ipfs, thread, null);
