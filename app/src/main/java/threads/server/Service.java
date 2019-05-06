@@ -147,12 +147,9 @@ public class Service {
                                 case SESSION_CALL: {
 
                                     if (RTCSession.getInstance().isBusy()) {
-                                        int timeout = Preferences.getConnectionTimeout(context);
-                                        int threshold = Preferences.getThresholdPong(context);
-                                        RTCSession.getInstance().emitSessionBusy(
+                                        RTCSession.getInstance().emitSessionBusy(context,
                                                 senderPid, () -> Preferences.warning(
-                                                        context.getString(R.string.connection_failed))
-                                                , timeout, threshold);
+                                                        context.getString(R.string.connection_failed)));
                                     } else {
 
                                         User user = threadsAPI.getUserByPID(senderPid);

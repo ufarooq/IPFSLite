@@ -62,12 +62,8 @@ public class NotificationFCMClient extends FirebaseMessagingService {
                             if (!threadsAPI.isAccountBlocked(PID.create(pid))) {
                                 final boolean pubsubEnabled = Preferences.isPubsubEnabled(
                                         getApplicationContext());
-                                final int timeout = Preferences.getConnectionTimeout(
-                                        getApplicationContext());
-                                final int threshold = Preferences.getThresholdPong(
-                                        getApplicationContext());
-                                ConnectService.connectUser(
-                                        PID.create(pid), pubsubEnabled, timeout, threshold);
+                                ConnectService.connectUser(getApplicationContext(),
+                                        PID.create(pid), pubsubEnabled);
                             }
 
                         }

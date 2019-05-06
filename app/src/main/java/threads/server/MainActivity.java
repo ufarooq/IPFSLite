@@ -898,12 +898,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         try {
                             threadsAPI.setStatus(user, UserStatus.DIALING);
-                            int timeout = Preferences.getConnectionTimeout(
-                                    getApplicationContext());
-                            int threshold = Preferences.getThresholdPong(
-                                    getApplicationContext());
-                            boolean value = ConnectService.connectUser(
-                                    user.getPID(), false, timeout, threshold); // no pubsub check
+
+                            boolean value = ConnectService.connectUser(getApplicationContext(),
+                                    user.getPID(), false); // no pubsub check
                             if (value) {
                                 threadsAPI.setStatus(user, UserStatus.ONLINE);
 
