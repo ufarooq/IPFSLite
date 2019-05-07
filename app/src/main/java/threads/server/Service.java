@@ -331,8 +331,12 @@ public class Service {
             if (Network.isConnected(context)) {
                 IOTA iota = Singleton.getInstance().getIota();
                 if (iota != null) {
-                    if (!IOTA.remotePoW(iota.getNodeInfo())) {
-                        iota.setLocalPoW(new PearlDiverLocalPoW());
+                    try {
+                        if (!IOTA.remotePoW(iota.getNodeInfo())) {
+                            iota.setLocalPoW(new PearlDiverLocalPoW());
+                        }
+                    } catch (Throwable e) {
+                        // TODO IOTA not running
                     }
                 }
             }
