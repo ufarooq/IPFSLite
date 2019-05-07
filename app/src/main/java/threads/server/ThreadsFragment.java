@@ -29,6 +29,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -39,7 +40,6 @@ import threads.core.api.User;
 import threads.core.mdl.EventViewModel;
 import threads.core.mdl.ThreadViewModel;
 import threads.ipfs.IPFS;
-import threads.ipfs.Network;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
 import threads.share.ThreadActionDialogFragment;
@@ -622,12 +622,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                                     }
                                 }
 
-
-                                ConnectService.wakeupConnectCall(mContext,
-                                        NotificationFCMServer.getInstance(), sender,
-                                        NotificationFCMServer.getAccessToken(
-                                                mContext, R.raw.threads_server),
-                                        pubsubCheck);
+                                ConnectService.wakeupConnectCall(mContext, sender, pubsubCheck);
 
                             }
 

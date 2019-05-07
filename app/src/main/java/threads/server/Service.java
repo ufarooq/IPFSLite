@@ -32,6 +32,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -45,7 +46,6 @@ import threads.core.api.UserStatus;
 import threads.core.api.UserType;
 import threads.iota.IOTA;
 import threads.ipfs.IPFS;
-import threads.ipfs.Network;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
 import threads.ipfs.api.Multihash;
@@ -82,7 +82,8 @@ public class Service {
                         .permitNetwork().build();
                 StrictMode.setThreadPolicy(policy);
 
-                Singleton.getInstance().init(context, () -> "", true);
+                Singleton.getInstance().init(context, () -> "",
+                        NotificationFCMServer.getInstance(context), true);
 
 
                 Preferences.setConfigChanged(context, false);
@@ -90,6 +91,7 @@ public class Service {
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.IPFS_INSTALL_FAILURE, e);
             }
+
 
             SINGLETON.startDaemon(context);
             SINGLETON.init(context);
@@ -148,8 +150,7 @@ public class Service {
 
                                     if (RTCSession.getInstance().isBusy()) {
                                         RTCSession.getInstance().emitSessionBusy(context,
-                                                senderPid, () -> Preferences.warning(
-                                                        context.getString(R.string.connection_failed)));
+                                                senderPid);
                                     } else {
 
                                         User user = threadsAPI.getUserByPID(senderPid);
@@ -1343,10 +1344,7 @@ public class Service {
                 final boolean pubsubCheck = pubsubEnabled && !
                         user.getPublicKey().isEmpty();
 
-                if (ConnectService.wakeupConnectCall(context,
-                        NotificationFCMServer.getInstance(), user.getPID(),
-                        NotificationFCMServer.getAccessToken(
-                                context, R.raw.threads_server), pubsubCheck)) {
+                if (ConnectService.wakeupConnectCall(context, user.getPID(), pubsubCheck)) {
 
                     for (long idx : idxs) {
                         Thread threadObject = threads.getThreadByIdx(idx);

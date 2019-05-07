@@ -48,6 +48,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.psdev.licensesdialog.LicensesDialogFragment;
+import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -59,7 +60,6 @@ import threads.core.api.UserStatus;
 import threads.core.api.UserType;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.IPFS;
-import threads.ipfs.Network;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Link;
 import threads.ipfs.api.Multihash;
@@ -573,10 +573,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         user.getPublicKey().isEmpty();
 
                                 boolean value = ConnectService.wakeupConnectCall(getApplicationContext(),
-                                        NotificationFCMServer.getInstance(), user.getPID(),
-                                        NotificationFCMServer.getAccessToken(
-                                                getApplicationContext(), R.raw.threads_server),
-                                        pubsubCheck);
+                                        user.getPID(), pubsubCheck);
 
 
                                 if (value) {
@@ -828,15 +825,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     getApplicationContext());
                             final boolean pubsubCheck = pubsubEnabled &&
                                     !user.getPublicKey().isEmpty();
-                            boolean sendNotification = ConnectService.wakeupCall(
-                                    getApplicationContext(),
-                                    NotificationFCMServer.getInstance(), user.getPID(),
-                                    NotificationFCMServer.getAccessToken(
-                                            getApplicationContext(), R.raw.threads_server),
-                                    pubsubCheck);
 
                             Intent intent = RTCCallActivity.createIntent(MainActivity.this,
-                                    pid, user.getAlias(), null, true, sendNotification);
+                                    pid, user.getAlias(), null, true, pubsubCheck);
                             intent.setAction(RTCCallActivity.ACTION_OUTGOING_CALL);
                             MainActivity.this.startActivity(intent);
                         }

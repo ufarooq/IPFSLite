@@ -3,7 +3,7 @@ package threads.server;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RawRes;
+import androidx.annotation.Nullable;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.gson.JsonObject;
@@ -19,32 +19,38 @@ import java.net.URL;
 import java.util.Collections;
 
 import threads.core.Preferences;
+import threads.core.Singleton;
 import threads.core.api.Content;
-import threads.ipfs.Network;
-import threads.share.NotificationServer;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
 
-public class NotificationFCMServer implements NotificationServer {
+public class NotificationFCMServer implements Singleton.NotificationServer {
     private static final String SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
     private static final String SERVICE = "https://fcm.googleapis.com/v1/projects/threads-server/messages:send";
-    private static final NotificationFCMServer INSTANCE = new NotificationFCMServer();
+    private static NotificationFCMServer INSTANCE = null;
 
-    private NotificationFCMServer() {
+    private final Context context;
+
+    private NotificationFCMServer(@NonNull Context context) {
+        checkNotNull(context);
+        this.context = context;
     }
 
-    static NotificationFCMServer getInstance() {
+    static NotificationFCMServer getInstance(@NonNull Context context) {
+        checkNotNull(context);
+        if (INSTANCE == null) {
+            INSTANCE = new NotificationFCMServer(context);
+        }
         return INSTANCE;
     }
 
-    @NonNull
-    public static String getAccessToken(@NonNull Context context, @RawRes int id) {
+    @Nullable
+    private String getAccessToken(@NonNull Context context) {
         checkNotNull(context);
-        String token = "";
         try {
 
-            InputStream inputStream = context.getResources().openRawResource(id);
+            InputStream inputStream = context.getResources().openRawResource(R.raw.threads_server);
             GoogleCredential googleCredential = GoogleCredential
                     .fromStream(inputStream);
             if (googleCredential.createScopedRequired()) {
@@ -54,36 +60,35 @@ public class NotificationFCMServer implements NotificationServer {
 
             googleCredential.refreshToken();
 
-            token = googleCredential.getAccessToken();
+            return googleCredential.getAccessToken();
 
         } catch (Throwable e) {
-            if (Network.isConnected(context)) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
-            }
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-        return token;
+        return null;
     }
 
-    public boolean sendNotification(@NonNull String accessToken,
-                                    @NonNull String token,
+
+    public boolean sendNotification(@NonNull String token,
                                     @NonNull String pid) {
-        checkNotNull(accessToken);
         checkNotNull(token);
         checkNotNull(pid);
+        String accessToken = getAccessToken(context);
+        if (accessToken != null) {
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty(Content.PID,
+                    StringEscapeUtils.escapeJava(pid));
+            JsonObject jsonObj = new JsonObject();
+            jsonObj.addProperty("token", token);
+            jsonObj.add("data", jsonObject);
+
+            JsonObject msgObj = new JsonObject();
+            msgObj.add("message", jsonObj);
 
 
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty(Content.PID,
-                StringEscapeUtils.escapeJava(pid));
-        JsonObject jsonObj = new JsonObject();
-        jsonObj.addProperty("token", token);
-        jsonObj.add("data", jsonObject);
-
-        JsonObject msgObj = new JsonObject();
-        msgObj.add("message", jsonObj);
-
-
-        return sendMessageToFcm(accessToken, msgObj.toString());
+            return sendMessageToFcm(accessToken, msgObj.toString());
+        }
+        return false;
     }
 
     private boolean sendMessageToFcm(@NonNull String accessToken, @NonNull String postData) {
