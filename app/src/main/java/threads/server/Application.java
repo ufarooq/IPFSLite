@@ -78,7 +78,7 @@ public class Application extends android.app.Application {
         Preferences.createPublicPrivateKeys(getApplicationContext());
 
 
-        NotificationSender.createChannel(getApplicationContext());
+        ProgressChannel.createProgressChannel(getApplicationContext());
         RTCSession.createRTCChannel(getApplicationContext());
 
     }

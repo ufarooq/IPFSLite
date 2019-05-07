@@ -945,7 +945,7 @@ public class Service {
 
 
                         NotificationCompat.Builder builder =
-                                NotificationSender.createProgressNotification(
+                                ProgressChannel.createProgressNotification(
                                         context, title);
 
                         final NotificationManager notificationManager = (NotificationManager)
@@ -1041,7 +1041,7 @@ public class Service {
 
 
         NotificationCompat.Builder builder =
-                NotificationSender.createProgressNotification(
+                ProgressChannel.createProgressNotification(
                         context, filename);
 
         final NotificationManager notificationManager = (NotificationManager)
