@@ -57,6 +57,7 @@ public class Application extends android.app.Application {
                 Preferences.setConnectionTimeout(getApplicationContext(), 30000);
                 Preferences.setAutoConnectRelay(getApplicationContext(), true);
 
+                Preferences.setTangleTimeout(getApplicationContext(), 5);
 
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putInt(Application.UPDATE, versionCode);
