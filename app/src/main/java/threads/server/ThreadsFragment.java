@@ -543,7 +543,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             if (threads.isEmpty()) {
                 threadIdx = thread.getIdx();
 
-                String threadKind = thread.getAdditional(Application.THREAD_KIND);
+                String threadKind = thread.getAdditional(Preferences.THREAD_KIND);
                 checkNotNull(threadKind);
                 Service.ThreadKind kind = Service.ThreadKind.valueOf(threadKind);
                 if (kind == Service.ThreadKind.NODE) {

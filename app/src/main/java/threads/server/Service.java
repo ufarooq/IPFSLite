@@ -631,7 +631,7 @@ public class Service {
                     Thread thread = threadsAPI.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
                             "", null, 0L, false);
                     thread.addAdditional(Content.TITLE, fileDetails.getFileName(), false);
-                    thread.addAdditional(Application.THREAD_KIND, ThreadKind.LEAF.name(), false);
+                    thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
                     CID image = ipfs.add(bytes, true, false);
                     thread.setImage(image);
                     thread.setMimeType(fileDetails.getMimeType());
@@ -888,7 +888,7 @@ public class Service {
 
         Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
                 "", cid, parent, false);
-        thread.addAdditional(Application.THREAD_KIND, ThreadKind.LEAF.name(), false); // not known yet
+        thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false); // not known yet
         if (filename != null) {
             thread.addAdditional(Content.TITLE, filename, false);
             evaluateMimeType(thread, filename);
@@ -1021,7 +1021,7 @@ public class Service {
         CID cid = thread.getCid();
         checkNotNull(cid);
 
-        threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
+        threads.setAdditional(thread, Preferences.THREAD_KIND, ThreadKind.LEAF.name(), true);
         String filename = thread.getAdditional(Content.TITLE);
         return download(context, threads, ipfs, thread, cid, filename);
     }
@@ -1116,7 +1116,7 @@ public class Service {
         threads.setAdditional(thread, Content.TITLE,
                 filename.substring(0, filename.length() - 1), false);
         threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
-        threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.NODE.name(), true);
+        threads.setAdditional(thread, Preferences.THREAD_KIND, ThreadKind.NODE.name(), true);
 
         try {
             CID image = THREADS.createResourceImage(context, threads, ipfs, "",
@@ -1168,7 +1168,7 @@ public class Service {
         String filename = link.getPath();
         threads.setAdditional(thread, Content.TITLE, filename, false);
         evaluateMimeType(thread, filename);
-        threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.LEAF.name(), true);
+        threads.setAdditional(thread, Preferences.THREAD_KIND, ThreadKind.LEAF.name(), true);
 
 
         return download(context, threads, ipfs, thread, link.getCid(), link.getPath());
@@ -1277,7 +1277,7 @@ public class Service {
 
                 // thread is directory
                 threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
-                threads.setAdditional(thread, Application.THREAD_KIND, ThreadKind.NODE.name(), true);
+                threads.setAdditional(thread, Preferences.THREAD_KIND, ThreadKind.NODE.name(), true);
 
                 try {
                     CID image = THREADS.createResourceImage(context, threads, ipfs, "",

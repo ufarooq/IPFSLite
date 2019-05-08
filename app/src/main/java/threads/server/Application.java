@@ -12,8 +12,6 @@ import threads.share.RTCSession;
 public class Application extends android.app.Application {
 
 
-    public static final String THREAD_KIND = "THREAD_KIND";
-
     private static final String APP_KEY = "AppKey";
     private static final String UPDATE = "UPDATE";
 
