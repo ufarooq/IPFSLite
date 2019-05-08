@@ -213,9 +213,11 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
             if (getActivity() != null) {
                 FragmentManager fm = getActivity().getSupportFragmentManager();
                 boolean pubsubEnabled = Preferences.isPubsubEnabled(mContext);
+                boolean knownUser = !user.getPublicKey().isEmpty();
+                boolean callActive = pubsubEnabled && knownUser;
                 UserActionDialogFragment.newInstance(
                         user.getPID().getPid(), true, true,
-                        true, true, true, pubsubEnabled)
+                        true, true, true, callActive)
                         .show(fm, UserActionDialogFragment.TAG);
             }
         } catch (Throwable e) {
