@@ -674,7 +674,15 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     @Override
     public int getMediaResource(@NonNull Thread thread) {
+        checkNotNull(thread);
         return UtilitySevice.getMediaResource(thread.getMimeType(), false);
+    }
+
+    @NonNull
+    @Override
+    public String getDate(@NonNull Thread thread) {
+        checkNotNull(thread);
+        return Preferences.getDate(thread.getDate());
     }
 
     @Override

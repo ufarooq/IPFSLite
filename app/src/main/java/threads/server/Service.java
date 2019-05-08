@@ -53,6 +53,7 @@ import threads.ipfs.api.PID;
 import threads.share.ConnectService;
 import threads.share.RTCCallActivity;
 import threads.share.RTCSession;
+import threads.share.RelayService;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -1483,7 +1484,8 @@ public class Service {
 
                 if (Preferences.isAutoConnectRelay(context)) {
                     int timeout = Preferences.getConnectionTimeout(context);
-                    new java.lang.Thread(() -> ConnectService.connectRelays(context, 10000, timeout)).start();
+                    new java.lang.Thread(() -> RelayService.connectRelays(
+                            context, 10000, timeout)).start();
                 }
                 new java.lang.Thread(() -> checkTangleServer(context)).start();
             }
