@@ -23,7 +23,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -37,12 +36,9 @@ import threads.core.THREADS;
 import threads.core.api.Content;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
-import threads.core.api.User;
 import threads.core.mdl.EventViewModel;
 import threads.core.mdl.ThreadViewModel;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.PID;
-import threads.share.ConnectService;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThreadsViewAdapter;
 import threads.share.UtilitySevice;
@@ -601,41 +597,16 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             }
 
 
-            try {
-                final THREADS threadsAPI = Singleton.getInstance().getThreads();
-
-                final IPFS ipfs = Singleton.getInstance().getIpfs();
-                if (ipfs != null) {
-                    ExecutorService executor = Executors.newSingleThreadExecutor();
-                    executor.submit(() -> {
-                        try {
-                            PID host = Preferences.getPID(mContext);
-                            checkNotNull(host);
-                            PID sender = thread.getSenderPid();
-                            if (!host.equals(sender)) {
-
-                                final boolean pubsubEnabled = Preferences.isPubsubEnabled(mContext);
-                                boolean pubsubCheck = false;
-                                if (pubsubEnabled) {
-                                    User user = threadsAPI.getUserByPID(sender);
-                                    if (user != null) {
-                                        pubsubCheck = !user.getPublicKey().isEmpty();
-                                    }
-                                }
-                                Hashtable<String, String> params = new Hashtable<>();
-                                ConnectService.wakeupConnectCall(
-                                        mContext, sender, params, pubsubCheck);
-
-                            }
-
-                            Service.downloadMultihash(mContext, threadsAPI, ipfs, thread, null);
-                        } catch (Throwable e) {
-                            Preferences.evaluateException(Preferences.EXCEPTION, e);
-                        }
-                    });
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            if (ipfs != null) {
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(() -> {
+                    try {
+                        Service.getInstance(mContext).downloadThread(mContext, thread);
+                    } catch (Throwable e) {
+                        Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    }
+                });
             }
 
         } catch (Throwable e) {

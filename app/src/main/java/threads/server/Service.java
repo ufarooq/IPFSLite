@@ -1247,11 +1247,11 @@ public class Service {
         return successCounter.get() == links.size();
     }
 
-    static void downloadMultihash(@NonNull Context context,
-                                  @NonNull THREADS threads,
-                                  @NonNull IPFS ipfs,
-                                  @NonNull Thread thread,
-                                  @Nullable PID sender) {
+    private static void downloadMultihash(@NonNull Context context,
+                                          @NonNull THREADS threads,
+                                          @NonNull IPFS ipfs,
+                                          @NonNull Thread thread,
+                                          @Nullable PID sender) {
         checkNotNull(context);
         checkNotNull(threads);
         checkNotNull(ipfs);
@@ -1333,6 +1333,39 @@ public class Service {
             }
         }
         return file;
+    }
+
+    void downloadThread(@NonNull Context context, @NonNull Thread thread) {
+
+        checkNotNull(context);
+        checkNotNull(thread);
+
+        final THREADS threads = Singleton.getInstance().getThreads();
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            threads.setStatus(thread, ThreadStatus.LEACHING);
+            PID host = Preferences.getPID(context);
+            checkNotNull(host);
+            PID sender = thread.getSenderPid();
+            if (!host.equals(sender)) {
+
+                final boolean pubsubEnabled = Preferences.isPubsubEnabled(context);
+                boolean pubsubCheck = false;
+                if (pubsubEnabled) {
+                    User user = threads.getUserByPID(sender);
+                    if (user != null) {
+                        pubsubCheck = !user.getPublicKey().isEmpty();
+                    }
+                }
+                Hashtable<String, String> params = new Hashtable<>();
+                ConnectService.wakeupConnectCall(
+                        context, sender, params, pubsubCheck);
+
+            }
+
+            Service.downloadMultihash(context, threads, ipfs, thread, null);
+        }
+
     }
 
     private boolean shareUser(@NonNull Context context,
