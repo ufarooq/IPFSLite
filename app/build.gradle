@@ -71,7 +71,7 @@ dependencies {
     implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
 
     // UI+API (LICENSE done)
-    implementation 'threads.share:share:3.9.9'
+    implementation 'threads.share:share:4.0.0'
 
     // QR Scanner (LICENSE done)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'
@@ -99,7 +99,7 @@ dependencies {
     //implementation 'threads.pow:pow:1.0.9'
 
     // API (LICENSE done)
-    implementation 'threads.core:threads:6.9.9'
+    implementation 'threads.core:threads:7.0.1'
 
     // API (LICENSE done)
     implementation 'threads.iota:threads:2.7.2'
