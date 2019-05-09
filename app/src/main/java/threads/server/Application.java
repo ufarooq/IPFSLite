@@ -42,7 +42,7 @@ public class Application extends android.app.Application {
 
                 Preferences.setAutoNATServiceEnabled(getApplicationContext(), false);
                 Preferences.setRelayHopEnabled(getApplicationContext(), false);
-                Preferences.setAutoRelayEnabled(getApplicationContext(), false);
+                Preferences.setAutoRelayEnabled(getApplicationContext(), true); // TODO check
 
                 Preferences.setPubsubRouter(getApplicationContext(), PubsubConfig.RouterEnum.gossipsub);
 
@@ -53,9 +53,11 @@ public class Application extends android.app.Application {
 
 
                 Preferences.setConnectionTimeout(getApplicationContext(), 30000);
-                Preferences.setAutoConnectRelay(getApplicationContext(), true);
+                Preferences.setAutoConnectRelay(getApplicationContext(), true); // TODO check
 
                 Preferences.setTangleTimeout(getApplicationContext(), 5);
+
+                Preferences.setDialRelay(getApplicationContext(), false); // TODO check
 
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putInt(Application.UPDATE, versionCode);
