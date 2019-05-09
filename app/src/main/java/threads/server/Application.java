@@ -42,7 +42,7 @@ public class Application extends android.app.Application {
 
                 Preferences.setAutoNATServiceEnabled(getApplicationContext(), false);
                 Preferences.setRelayHopEnabled(getApplicationContext(), false);
-                Preferences.setAutoRelayEnabled(getApplicationContext(), true); // TODO check
+                Preferences.setAutoRelayEnabled(getApplicationContext(), false); // TODO check
 
                 Preferences.setPubsubRouter(getApplicationContext(), PubsubConfig.RouterEnum.gossipsub);
 

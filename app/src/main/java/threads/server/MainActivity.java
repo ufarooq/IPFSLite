@@ -904,7 +904,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     checkNotNull(hostUser);
 
                                     Content map = new Content();
-                                    map.put(Content.EST, Message.CONNECT.name());
+                                    map.put(Content.EST, "CONNECT");
                                     map.put(Content.ALIAS, hostUser.getAlias());
                                     map.put(Content.PKEY, hostUser.getPublicKey());
 

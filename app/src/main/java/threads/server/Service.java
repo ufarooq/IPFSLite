@@ -37,7 +37,6 @@ import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
-import threads.core.api.Addresses;
 import threads.core.api.Content;
 import threads.core.api.Kind;
 import threads.core.api.Thread;
@@ -52,7 +51,6 @@ import threads.ipfs.api.Link;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
-import threads.share.RTCCallActivity;
 import threads.share.RTCSession;
 import threads.share.RelayService;
 
@@ -134,164 +132,69 @@ public class Service {
                     } else if (result.getCodex() == CodecDecider.Codec.URI) {
                         Service.downloadMultihash(context, senderPid, result.getMultihash(), null);
                     } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {
-                        Content map = result.getContent();
-                        checkNotNull(map);
-                        if (map.containsKey(Content.EST)) {
-                            String est = map.get(Content.EST);
-                            Message type = Message.valueOf(est);
-                            switch (type) {
-                                case PONG: {
-                                    RTCSession.getInstance().pong(senderPid);
-                                    break;
-                                }
-                                case PING: {
-                                    RTCSession.getInstance().emitPong(senderPid);
-                                    break;
-                                }
-                                case SESSION_CALL: {
+                        Content content = result.getContent();
+                        checkNotNull(content);
+                        if (content.containsKey(Content.EST)) {
+                            String est = content.get(Content.EST);
+                            if ("CONNECT".equals(est)) {
+                                if (content.containsKey(Content.ALIAS)) {
+                                    String alias = content.get(Content.ALIAS);
+                                    checkNotNull(alias);
+                                    String pubKey = content.get(Content.PKEY);
+                                    if (pubKey == null) {
+                                        pubKey = "";
+                                    }
 
-                                    if (RTCSession.getInstance().isBusy()) {
-                                        RTCSession.getInstance().emitSessionBusy(context,
-                                                senderPid);
-                                    } else {
+                                    createUser(context, senderPid,
+                                            alias, pubKey, UserType.VERIFIED);
+                                }
+                            } else if ("CONNECT_REPLY".equals(est)) {
+                                if (content.containsKey(Content.ALIAS)) {
+                                    String alias = content.get(Content.ALIAS);
+                                    checkNotNull(alias);
+                                    String pubKey = content.get(Content.PKEY);
+                                    if (pubKey == null) {
+                                        pubKey = "";
+                                    }
+                                    adaptUser(context, senderPid,
+                                            alias, pubKey, UserType.VERIFIED);
+                                }
+                            } else if ("SHARE".equals(est)) {
 
-                                        User user = threadsAPI.getUserByPID(senderPid);
-                                        String name = sender;
-                                        if (user != null) {
-                                            name = user.getAlias();
-                                        }
+                                if (content.containsKey(Content.CID)) {
+                                    String cid = content.get(Content.CID);
+                                    checkNotNull(cid);
+                                    String title = content.get(Content.TITLE);
+                                    Service.downloadMultihash(context, senderPid, cid, title);
+                                }
 
-                                        String adds = map.get(Content.ICES);
-                                        String[] ices = null;
-                                        if (adds != null) {
-                                            Addresses addresses = Addresses.toAddresses(adds);
-                                            ices = RTCSession.getInstance().turnUris(addresses);
-                                        }
+                            } else if ("REPLY".equals(est)) {
 
-                                        RTCCallActivity.createCallNotification(context, sender,
-                                                name, ices);
-                                    }
-                                    break;
+                                if (content.containsKey(Content.CID)) {
+                                    String cid = content.get(Content.CID);
+                                    checkNotNull(cid);
+                                    Service.publishReply(context, senderPid, cid);
                                 }
-                                case SESSION_TIMEOUT: {
-                                    RTCSession.getInstance().timeout(senderPid);
-                                    break;
-                                }
-                                case SESSION_BUSY: {
-                                    RTCSession.getInstance().busy(senderPid);
-                                    break;
-                                }
-                                case SESSION_ACCEPT: {
-                                    String[] ices = null;
-                                    String adds = map.get(Content.ICES);
-                                    if (adds != null) {
-                                        Addresses addresses = Addresses.toAddresses(adds);
-                                        ices = RTCSession.getInstance().turnUris(addresses);
-                                    }
-                                    RTCSession.getInstance().accept(senderPid, ices);
-                                    break;
-                                }
-                                case SESSION_REJECT: {
-                                    RTCSession.getInstance().reject(senderPid);
-                                    break;
-                                }
-                                case SESSION_OFFER: {
-                                    String sdp = map.get(Content.SDP);
-                                    checkNotNull(sdp);
-                                    RTCSession.getInstance().offer(senderPid, sdp);
-                                    break;
-                                }
-                                case SESSION_ANSWER: {
-                                    String sdp = map.get(Content.SDP);
-                                    checkNotNull(sdp);
-                                    String esk = map.get(Content.TYPE);
-                                    checkNotNull(esk);
-                                    RTCSession.getInstance().answer(senderPid, sdp, esk);
-                                    break;
-                                }
-                                case SESSION_CANDIDATE_REMOVE: {
-                                    String sdp = map.get(Content.SDP);
-                                    checkNotNull(sdp);
-                                    String mid = map.get(Content.MID);
-                                    checkNotNull(mid);
-                                    String index = map.get(Content.INDEX);
-                                    checkNotNull(index);
-                                    RTCSession.getInstance().candidate_remove(
-                                            senderPid, sdp, mid, index);
-                                    break;
-                                }
-                                case SESSION_CANDIDATE: {
-                                    String sdp = map.get(Content.SDP);
-                                    checkNotNull(sdp);
-                                    String mid = map.get(Content.MID);
-                                    checkNotNull(mid);
-                                    String index = map.get(Content.INDEX);
-                                    checkNotNull(index);
-                                    RTCSession.getInstance().candidate(senderPid, sdp, mid, index);
-                                    break;
-                                }
-                                case SESSION_CLOSE: {
-                                    RTCSession.getInstance().close(senderPid);
-                                    break;
-                                }
-                                case CONNECT: {
-                                    if (map.containsKey(Content.ALIAS)) {
-                                        String alias = map.get(Content.ALIAS);
-                                        checkNotNull(alias);
-                                        String pubKey = map.get(Content.PKEY);
-                                        if (pubKey == null) {
-                                            pubKey = "";
-                                        }
+                            } else {
 
-                                        createUser(context, senderPid,
-                                                alias, pubKey, UserType.VERIFIED);
-                                    }
-                                    break;
-                                }
-                                case CONNECT_REPLY: {
-                                    if (map.containsKey(Content.ALIAS)) {
-                                        String alias = map.get(Content.ALIAS);
-                                        checkNotNull(alias);
-                                        String pubKey = map.get(Content.PKEY);
-                                        if (pubKey == null) {
-                                            pubKey = "";
-                                        }
-                                        adaptUser(context, senderPid,
-                                                alias, pubKey, UserType.VERIFIED);
-                                    }
-                                    break;
-                                }
-                                case SHARE: {
-                                    if (map.containsKey(Content.CID)) {
-                                        String cid = map.get(Content.CID);
-                                        checkNotNull(cid);
-                                        String title = map.get(Content.TITLE);
-                                        Service.downloadMultihash(context, senderPid, cid, title);
-                                    }
-                                    break;
-                                }
-                                case REPLY: {
-                                    if (map.containsKey(Content.CID)) {
-                                        String cid = map.get(Content.CID);
-                                        checkNotNull(cid);
-                                        Service.publishReply(context, senderPid, cid);
-                                    }
-                                }
+                                RTCSession.handleContent(context, senderPid, content);
                             }
+
+
                         } else {
-                            if (map.containsKey(Content.ALIAS)) {
-                                String alias = map.get(Content.ALIAS);
+                            if (content.containsKey(Content.ALIAS)) {
+                                String alias = content.get(Content.ALIAS);
                                 checkNotNull(alias);
-                                String pubKey = map.get(Content.PKEY);
+                                String pubKey = content.get(Content.PKEY);
                                 if (pubKey == null) {
                                     pubKey = "";
                                 }
 
                                 createUser(context, senderPid, alias, pubKey, UserType.VERIFIED);
-                            } else if (map.containsKey(Content.CID)) {
-                                String cid = map.get(Content.CID);
+                            } else if (content.containsKey(Content.CID)) {
+                                String cid = content.get(Content.CID);
                                 checkNotNull(cid);
-                                String title = map.get(Content.TITLE);
+                                String title = content.get(Content.TITLE);
                                 Service.downloadMultihash(context, senderPid, cid, title);
                             }
                         }
@@ -495,7 +398,7 @@ public class Service {
                     User hostUser = threadsAPI.getUserByPID(host);
                     checkNotNull(hostUser);
                     Content map = new Content();
-                    map.put(Content.EST, Message.CONNECT_REPLY.name());
+                    map.put(Content.EST, "CONNECT_REPLY");
                     map.put(Content.ALIAS, hostUser.getAlias());
                     map.put(Content.PKEY, hostUser.getPublicKey());
 
@@ -578,7 +481,7 @@ public class Service {
         checkNotNull(cid);
 
         Content map = new Content();
-        map.put(Content.EST, Message.REPLY.name());
+        map.put(Content.EST, "REPLY");
         map.put(Content.CID, cid.getCid());
 
         try {
@@ -1393,7 +1296,7 @@ public class Service {
                         checkNotNull(cid);
 
                         Content map = new Content();
-                        map.put(Content.EST, Message.SHARE.name());
+                        map.put(Content.EST, "SHARE");
                         String title = threadObject.getAdditional(Content.TITLE);
                         if (!title.isEmpty()) {
                             map.put(Content.TITLE, title);
