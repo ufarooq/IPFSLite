@@ -71,7 +71,7 @@ dependencies {
     implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
 
     // UI+API (LICENSE done)
-    implementation 'threads.share:share:3.9.7'
+    implementation 'threads.share:share:3.9.9'
 
     // QR Scanner (LICENSE done)
     implementation 'com.github.kenglxn.QRGen:android:2.5.0'
@@ -81,7 +81,7 @@ dependencies {
 
 
     // API (LICENSE done)
-    implementation "androidx.lifecycle:lifecycle-extensions:2.1.0-alpha04"
+    implementation "androidx.lifecycle:lifecycle-extensions:2.2.0-alpha01"
 
     // API (LICENSE done)
     implementation 'com.google.firebase:firebase-messaging:17.6.0'
@@ -99,7 +99,7 @@ dependencies {
     //implementation 'threads.pow:pow:1.0.9'
 
     // API (LICENSE done)
-    implementation 'threads.core:threads:6.9.6'
+    implementation 'threads.core:threads:6.9.9'
 
     // API (LICENSE done)
     implementation 'threads.iota:threads:2.7.2'

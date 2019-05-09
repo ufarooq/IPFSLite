@@ -23,6 +23,7 @@ import org.iota.jota.pow.pearldiver.PearlDiverLocalPoW;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -1348,8 +1349,8 @@ public class Service {
 
                 final boolean pubsubCheck = pubsubEnabled && !
                         user.getPublicKey().isEmpty();
-
-                if (ConnectService.wakeupConnectCall(context, user.getPID(), pubsubCheck)) {
+                Hashtable<String, String> params = new Hashtable<>();
+                if (ConnectService.wakeupConnectCall(context, user.getPID(), params, pubsubCheck)) {
 
                     for (long idx : idxs) {
                         Thread threadObject = threads.getThreadByIdx(idx);

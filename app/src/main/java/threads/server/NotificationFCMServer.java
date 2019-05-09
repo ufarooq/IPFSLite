@@ -17,6 +17,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Map;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
@@ -70,7 +71,8 @@ public class NotificationFCMServer implements Singleton.NotificationServer {
 
 
     public boolean sendNotification(@NonNull String token,
-                                    @NonNull String pid) {
+                                    @NonNull String pid,
+                                    @NonNull Map<String, String> params) {
         checkNotNull(token);
         checkNotNull(pid);
         String accessToken = getAccessToken(context);
@@ -78,6 +80,15 @@ public class NotificationFCMServer implements Singleton.NotificationServer {
             JsonObject jsonObject = new JsonObject();
             jsonObject.addProperty(Content.PID,
                     StringEscapeUtils.escapeJava(pid));
+
+            for (String key : params.keySet()) {
+                String content = params.get(key);
+                if (content != null) {
+                    jsonObject.addProperty(key, StringEscapeUtils.escapeJava(content));
+                }
+            }
+
+
             JsonObject jsonObj = new JsonObject();
             jsonObj.addProperty("token", token);
             jsonObj.add("data", jsonObject);

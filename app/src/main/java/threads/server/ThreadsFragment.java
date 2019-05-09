@@ -23,6 +23,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -621,8 +622,9 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                                         pubsubCheck = !user.getPublicKey().isEmpty();
                                     }
                                 }
-
-                                ConnectService.wakeupConnectCall(mContext, sender, pubsubCheck);
+                                Hashtable<String, String> params = new Hashtable<>();
+                                ConnectService.wakeupConnectCall(
+                                        mContext, sender, params, pubsubCheck);
 
                             }
 

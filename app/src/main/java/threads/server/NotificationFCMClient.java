@@ -60,6 +60,16 @@ public class NotificationFCMClient extends FirebaseMessagingService {
 
                             final THREADS threadsAPI = Singleton.getInstance().getThreads();
                             if (!threadsAPI.isAccountBlocked(PID.create(pid))) {
+
+                                // check if peer hash is transmitted
+                                if (data.containsKey(Content.PEER)) {
+                                    String hash = StringEscapeUtils.unescapeJava(
+                                            data.get(Content.PEER));
+                                    checkNotNull(hash);
+                                    threadsAPI.getPeerByHash(hash);
+                                }
+
+
                                 final boolean pubsubEnabled = Preferences.isPubsubEnabled(
                                         getApplicationContext());
                                 ConnectService.connectUser(getApplicationContext(),

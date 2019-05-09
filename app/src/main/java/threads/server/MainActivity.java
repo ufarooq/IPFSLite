@@ -41,6 +41,7 @@ import com.google.zxing.integration.android.IntentResult;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -571,9 +572,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         getApplicationContext());
                                 final boolean pubsubCheck = pubsubEnabled && !
                                         user.getPublicKey().isEmpty();
-
-                                boolean value = ConnectService.wakeupConnectCall(getApplicationContext(),
-                                        user.getPID(), pubsubCheck);
+                                Hashtable<String, String> params = new Hashtable<>();
+                                boolean value = ConnectService.wakeupConnectCall(
+                                        getApplicationContext(),
+                                        user.getPID(), params, pubsubCheck);
 
 
                                 if (value) {
