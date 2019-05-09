@@ -19,7 +19,6 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 
-import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.api.Content;
 
@@ -64,7 +63,7 @@ public class NotificationFCMServer implements Singleton.NotificationServer {
             return googleCredential.getAccessToken();
 
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            // ignore exception, can happen when no connection
         }
         return null;
     }
