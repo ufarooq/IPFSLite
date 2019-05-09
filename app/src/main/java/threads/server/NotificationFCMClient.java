@@ -17,6 +17,7 @@ import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.Content;
+import threads.iota.IOTA;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
 
@@ -57,25 +58,26 @@ public class NotificationFCMClient extends FirebaseMessagingService {
                     try {
                         if (!Service.isInitialized()) {
                             Service.getInstance(getApplicationContext());
+                        }
+                        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+                        if (!threadsAPI.isAccountBlocked(PID.create(pid))) {
 
-                            final THREADS threadsAPI = Singleton.getInstance().getThreads();
-                            if (!threadsAPI.isAccountBlocked(PID.create(pid))) {
-
-                                // check if peer hash is transmitted
-                                if (data.containsKey(Content.PEER)) {
+                            // check if peer hash is transmitted
+                            if (data.containsKey(Content.PEER)) {
+                                IOTA iota = Singleton.getInstance().getIota();
+                                if (iota != null) {
                                     String hash = StringEscapeUtils.unescapeJava(
                                             data.get(Content.PEER));
                                     checkNotNull(hash);
-                                    threadsAPI.getPeerByHash(hash);
+                                    threadsAPI.getPeerByHash(iota, PID.create(pid), hash);
                                 }
-
-
-                                final boolean pubsubEnabled = Preferences.isPubsubEnabled(
-                                        getApplicationContext());
-                                ConnectService.connectUser(getApplicationContext(),
-                                        PID.create(pid), pubsubEnabled);
                             }
 
+
+                            final boolean pubsubEnabled = Preferences.isPubsubEnabled(
+                                    getApplicationContext());
+                            ConnectService.connectUser(getApplicationContext(),
+                                    PID.create(pid), pubsubEnabled);
                         }
                     } catch (Throwable e) {
                         Log.e(TAG, e.getLocalizedMessage(), e);
