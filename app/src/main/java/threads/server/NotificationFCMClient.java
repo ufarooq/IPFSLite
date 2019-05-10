@@ -1,7 +1,5 @@
 package threads.server;
 
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -25,8 +23,6 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 
 public class NotificationFCMClient extends FirebaseMessagingService {
-    private static final String TAG = NotificationFCMClient.class.getSimpleName();
-
 
     public NotificationFCMClient() {
         super();
@@ -37,8 +33,6 @@ public class NotificationFCMClient extends FirebaseMessagingService {
     public void onNewToken(@NonNull String token) {
         super.onNewToken(token);
 
-        Log.e(TAG, "TOKEN : " + token);
-
         Preferences.setToken(getApplicationContext(), token);
     }
 
@@ -48,7 +42,7 @@ public class NotificationFCMClient extends FirebaseMessagingService {
         Map<String, String> data = remoteMessage.getData();
 
         if (data != null) {
-            Log.e(TAG, data.toString());
+
             if (data.containsKey(Content.PID)) {
                 final String pid = StringEscapeUtils.unescapeJava(data.get(Content.PID));
                 checkNotNull(pid);
@@ -59,6 +53,7 @@ public class NotificationFCMClient extends FirebaseMessagingService {
                         if (!Service.isInitialized()) {
                             Service.getInstance(getApplicationContext());
                         }
+                        Preferences.debug(data.toString());
                         final THREADS threadsAPI = Singleton.getInstance().getThreads();
                         if (!threadsAPI.isAccountBlocked(PID.create(pid))) {
 
@@ -80,7 +75,7 @@ public class NotificationFCMClient extends FirebaseMessagingService {
                                     PID.create(pid), pubsubEnabled);
                         }
                     } catch (Throwable e) {
-                        Log.e(TAG, e.getLocalizedMessage(), e);
+                        Preferences.debug("" + e.getLocalizedMessage());
                     }
                 });
 

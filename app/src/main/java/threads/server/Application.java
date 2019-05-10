@@ -58,6 +58,7 @@ public class Application extends android.app.Application {
                 Preferences.setTangleTimeout(getApplicationContext(), 5);
 
                 Preferences.setDialRelay(getApplicationContext(), true); // TODO check
+                Preferences.setDebugMode(getApplicationContext(), true); // TODO change in release mode
 
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putInt(Application.UPDATE, versionCode);

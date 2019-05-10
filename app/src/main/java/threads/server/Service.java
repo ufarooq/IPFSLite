@@ -109,9 +109,9 @@ public class Service {
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
 
 
-        if (Preferences.DEBUG_MODE) {
-            Log.e(TAG, "Pubsub Daemon :" + pid.getPid());
-        }
+        Preferences.debug("Token : " + Preferences.getToken(context));
+        Preferences.debug("Start Pubsub Daemon :" + pid.getPid());
+
 
         ipfs.pubsub_sub(pid.getPid(), false, (message) -> {
 
@@ -216,15 +216,8 @@ public class Service {
 
                 }
             } catch (Throwable e) {
-                if (Preferences.DEBUG_MODE) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-            } finally {
-                if (Preferences.DEBUG_MODE) {
-                    Log.e(TAG, "Received : " + message.toString());
-                }
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
-
 
         });
 
@@ -1398,13 +1391,10 @@ public class Service {
             if (ipfs != null) {
 
                 try {
-                    if (Preferences.DEBUG_MODE) {
-                        Log.e(TAG, "Start Daemon");
-                    }
+                    Preferences.debug("Start Daemon");
+
                     ipfs.daemon(Preferences.isPubsubEnabled(context));
-                    if (Preferences.DEBUG_MODE) {
-                        Log.e(TAG, "End Daemon");
-                    }
+
                     Preferences.setDaemonRunning(context, true);
                 } catch (Throwable e) {
                     Preferences.setDaemonRunning(context, false);

@@ -19,6 +19,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 
+import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.api.Content;
 
@@ -63,7 +64,7 @@ public class NotificationFCMServer implements Singleton.NotificationServer {
             return googleCredential.getAccessToken();
 
         } catch (Throwable e) {
-            // ignore exception, can happen when no connection
+            Preferences.debug("" + e.getLocalizedMessage());
         }
         return null;
     }
@@ -74,6 +75,8 @@ public class NotificationFCMServer implements Singleton.NotificationServer {
                                     @NonNull Map<String, String> params) {
         checkNotNull(token);
         checkNotNull(pid);
+
+
         String accessToken = getAccessToken(context);
         if (accessToken != null) {
             JsonObject jsonObject = new JsonObject();
@@ -123,6 +126,7 @@ public class NotificationFCMServer implements Singleton.NotificationServer {
             }
             in.close();
         } catch (Throwable e) {
+            Preferences.debug("" + e.getLocalizedMessage());
             result = false;
         } finally {
             if (httpConn != null) {
