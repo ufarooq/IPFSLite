@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 
 import threads.core.Preferences;
 import threads.ipfs.api.ConnMgrConfig;
-import threads.ipfs.api.Profile;
 import threads.ipfs.api.PubsubConfig;
 import threads.share.RTCSession;
 
@@ -24,10 +23,7 @@ public class Application extends android.app.Application {
             if (prefs.getInt(Application.UPDATE, 0) != versionCode) {
 
                 Preferences.setConfigChanged(getApplicationContext(), true);
-                Preferences.setBinaryUpgrade(getApplicationContext(), true);
 
-
-                Preferences.setProfile(getApplicationContext(), Profile.LOW_POWER);
                 Preferences.setPubsubEnabled(getApplicationContext(), true);
 
                 // Experimental Features
@@ -36,7 +32,6 @@ public class Application extends android.app.Application {
 
 
                 Preferences.setApiPort(getApplicationContext(), 5001);
-                Preferences.setGatewayPort(getApplicationContext(), 8080);
                 Preferences.setSwarmPort(getApplicationContext(), 4001);
 
 
@@ -76,7 +71,6 @@ public class Application extends android.app.Application {
 
         runUpdatesIfNecessary();
 
-        Preferences.setDaemonRunning(getApplicationContext(), false);
         Preferences.createPublicPrivateKeys(getApplicationContext());
 
 

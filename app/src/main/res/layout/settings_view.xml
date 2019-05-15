@@ -23,12 +23,6 @@
         android:layout_marginRight="@dimen/fab_margin"
         android:textAppearance="@style/TextAppearance.AppCompat.Small" />
 
-    <Spinner
-        android:id="@+id/spinner_profile"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="@dimen/fab_margin"
-        android:layout_marginRight="@dimen/fab_margin" />
 
     <Switch
         android:id="@+id/quic_support"

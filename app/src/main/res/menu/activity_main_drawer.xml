@@ -9,10 +9,6 @@
             android:icon="@android:drawable/ic_menu_preferences"
             android:title="@string/settings" />
         <item
-            android:id="@+id/nav_webui"
-            android:icon="@drawable/compass"
-            android:title="@string/webui" />
-        <item
             android:id="@+id/nav_cli"
             android:icon="@android:drawable/ic_menu_help"
             android:title="@string/commands" />

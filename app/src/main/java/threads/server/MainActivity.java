@@ -62,7 +62,7 @@ import threads.core.api.UserType;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
-import threads.ipfs.api.Link;
+import threads.ipfs.api.LinkInfo;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
@@ -219,12 +219,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        // CHECKED
-        if (!Preferences.isDaemonRunning(getApplicationContext())) {
-            Preferences.error(getString(R.string.daemon_not_running));
-            return;
-        }
-
 
         try {
             CodecDecider codecDecider = CodecDecider.evaluate(codec);
@@ -330,22 +324,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     fragment.show(getSupportFragmentManager(), null);
 
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
-                break;
-            }
-            case R.id.nav_webui: {
-                // mis-clicking prevention, using threshold of 1000 ms
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse(Preferences.getWebUI(getApplicationContext())));
-                    startActivity(intent);
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
@@ -543,11 +521,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Preferences.error(getString(R.string.offline_mode));
             return;
         }
-        // CHECKED
-        if (!Preferences.isDaemonRunning(getApplicationContext())) {
-            Preferences.error(getString(R.string.daemon_not_running));
-            return;
-        }
+
 
         try {
             final IPFS ipfs = Singleton.getInstance().getIpfs();
@@ -780,11 +754,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Preferences.error(getString(R.string.offline_mode));
             return;
         }
-        // CHECKED
-        if (!Preferences.isDaemonRunning(getApplicationContext())) {
-            Preferences.error(getString(R.string.daemon_not_running));
-            return;
-        }
 
 
         if (ContextCompat.checkSelfPermission(this,
@@ -877,7 +846,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         if (user == null) {
                             byte[] data = THREADS.getImage(getApplicationContext(),
                                     pid.getPid(), R.drawable.server_network);
-                            CID image = ipfs.add(data, true, false);
+                            CID image = ipfs.add(data, true);
                             user = threadsAPI.createUser(pid, "", // not yet known
                                     pid.getPid(), UserType.VERIFIED, image);
                             user.setStatus(UserStatus.OFFLINE);
@@ -945,15 +914,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         checkNotNull(threadObject);
                         CID cid = threadObject.getCid();
                         checkNotNull(cid);
-                        String multihash = cid.getCid();
 
-                        ipfs.cmd("name", "publish", multihash);
+                        ipfs.name_publish(cid);
 
-                        PID pid = Preferences.getPID(getApplicationContext());
-                        checkNotNull(pid);
-                        ipfs.cmd("name", "resolve", pid.getPid());
+                        String resolve = ipfs.name_resolve();
 
-                        Uri uri = Uri.parse("https://ipfs.io/ipns/" + pid.getPid());
+                        Uri uri = Uri.parse("https://ipfs.io" + resolve);
 
                         Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -1007,11 +973,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadPlay(long idx) {
 
-        // CHECKED
-        if (!Preferences.isDaemonRunning(getApplicationContext())) {
-            Preferences.error(getString(R.string.daemon_not_running));
-            return;
-        }
+
         final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
@@ -1024,19 +986,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     CID cid = threadObject.getCid();
                     checkNotNull(cid);
-                    String multihash = cid.getCid();
 
-                    List<Link> links = threadsAPI.getLinks(ipfs, threadObject, timeout, true);
+
+                    List<LinkInfo> links = threadsAPI.getLinks(ipfs, threadObject, timeout, true);
                     checkNotNull(links);
                     String path = "";
                     if (links.size() == 1) {
-                        Link link = links.get(0);
-                        path = "/" + link.getPath();
+                        LinkInfo link = links.get(0);
+                        cid = link.getCid();
                     }
 
-                    Uri uri = Uri.parse(Preferences.getGateway(getApplicationContext(),
-                            IPFS.Style.ipfs) +
-                            multihash + path);
+                    Uri uri = Uri.parse("http://127.0.0.1:" +
+                            Preferences.getApiPort(getApplicationContext()) +
+                            "/api/v0/cat?arg=" + cid.getCid() + "&offline=true");
 
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW);
@@ -1161,11 +1123,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Preferences.error(getString(R.string.offline_mode));
                 return;
             }
-            // CHECKED
-            if (!Preferences.isDaemonRunning(getApplicationContext())) {
-                Preferences.error(getString(R.string.daemon_not_running));
-                return;
-            }
 
             Service.getInstance(getApplicationContext()).sendThreads(
                     getApplicationContext(), Collections.singletonList(idx));
@@ -1214,7 +1171,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     user.setAlias(name);
                     byte[] data = THREADS.getImage(getApplicationContext(),
                             name, R.drawable.server_network);
-                    CID image = ipfs.add(data, true, false);
+                    CID image = ipfs.add(data, true);
                     user.setImage(image);
 
                     threadsAPI.storeUser(user);

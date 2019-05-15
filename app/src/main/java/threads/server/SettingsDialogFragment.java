@@ -5,10 +5,7 @@ import android.app.Dialog;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.SeekBar;
-import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -17,12 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import threads.core.Preferences;
-import threads.ipfs.api.Profile;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -44,43 +36,6 @@ public class SettingsDialogFragment extends DialogFragment {
 
         @SuppressWarnings("all")
         View view = inflater.inflate(R.layout.settings_view, null);
-
-        Spinner spinner_profile = view.findViewById(R.id.spinner_profile);
-        List<Profile> profiles = new ArrayList<>(Arrays.asList(Profile.values()));
-        profiles.remove(Profile.RANDOMPORTS);
-        ArrayAdapter<Profile> adapter = new ArrayAdapter<>(activity,
-                android.R.layout.simple_spinner_item, profiles);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner_profile.setAdapter(adapter);
-        spinner_profile.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
-                try {
-                    Profile profile = (Profile) parent.getItemAtPosition(position);
-                    if (profile != Preferences.getProfile(activity)) {
-                        Preferences.setProfile(activity, profile);
-                        Preferences.setConfigChanged(activity, true);
-
-
-                        Toast.makeText(getContext(),
-                                R.string.daemon_restart_config_changed,
-                                Toast.LENGTH_LONG).show();
-
-                    }
-                } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
-                }
-
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-        int pos = profiles.indexOf(Preferences.getProfile(activity));
-        spinner_profile.setSelection(pos);
 
 
         Switch quic_support = view.findViewById(R.id.quic_support);

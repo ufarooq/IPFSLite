@@ -376,11 +376,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 Preferences.error(getString(R.string.offline_mode));
                 return;
             }
-            // CHECKED
-            if (!Preferences.isDaemonRunning(mContext)) {
-                Preferences.error(getString(R.string.daemon_not_running));
-                return;
-            }
 
             Service.getInstance(mContext).sendThreads(mContext, new ArrayList<>(threads));
 
@@ -589,13 +584,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 Preferences.error(getString(R.string.offline_mode));
                 return;
             }
-
-            // CHECKED
-            if (!Preferences.isDaemonRunning(mContext)) {
-                Preferences.error(getString(R.string.daemon_not_running));
-                return;
-            }
-
 
             final IPFS ipfs = Singleton.getInstance().getIpfs();
             if (ipfs != null) {
