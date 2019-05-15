@@ -4,6 +4,7 @@ import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -47,9 +48,11 @@ import threads.core.api.UserType;
 import threads.iota.IOTA;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
+import threads.ipfs.api.ConnMgrConfig;
 import threads.ipfs.api.LinkInfo;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
+import threads.ipfs.api.PubsubConfig;
 import threads.share.ConnectService;
 import threads.share.RTCSession;
 import threads.share.RelayService;
@@ -65,7 +68,58 @@ public class Service {
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(3);
     private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(1);
     private final AtomicBoolean initDone = new AtomicBoolean(false);
+    private static final String APP_KEY = "AppKey";
+    private static final String UPDATE = "UPDATE";
 
+
+    private static void runUpdatesIfNecessary(@NonNull Context context) {
+        try {
+            int versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
+            SharedPreferences prefs = context.getSharedPreferences(
+                    APP_KEY, Context.MODE_PRIVATE);
+            if (prefs.getInt(UPDATE, 0) != versionCode) {
+
+                Preferences.setConfigChanged(context, true);
+
+                Preferences.setPubsubEnabled(context, true);
+
+                // Experimental Features
+                Preferences.setQUICEnabled(context, true);
+                Preferences.setFilestoreEnabled(context, false);
+
+
+                Preferences.setApiPort(context, 5001);
+                Preferences.setSwarmPort(context, 4001);
+
+
+                Preferences.setAutoNATServiceEnabled(context, false);
+                Preferences.setRelayHopEnabled(context, false);
+                Preferences.setAutoRelayEnabled(context, false); // TODO check
+
+                Preferences.setPubsubRouter(context, PubsubConfig.RouterEnum.gossipsub);
+
+                Preferences.setConnMgrConfigType(context, ConnMgrConfig.TypeEnum.basic);
+                Preferences.setLowWater(context, 30);
+                Preferences.setHighWater(context, 80);
+                Preferences.setGracePeriod(context, "5s");
+
+
+                Preferences.setConnectionTimeout(context, 30000);
+                Preferences.setAutoConnectRelay(context, true); // TODO check
+
+                Preferences.setTangleTimeout(context, 10);
+
+                Preferences.setDialRelay(context, true); // TODO check
+                Preferences.setDebugMode(context, true); // TODO change in release mode
+
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putInt(UPDATE, versionCode);
+                editor.apply();
+            }
+        } catch (Throwable e) {
+            // ignore exception
+        }
+    }
     private Service() {
     }
 
@@ -75,6 +129,14 @@ public class Service {
 
     public static Service getInstance(@NonNull Context context) {
         if (!SINGLETON.initDone.getAndSet(true)) {
+
+            runUpdatesIfNecessary(context);
+
+
+            Preferences.createPublicPrivateKeys(context);
+            ProgressChannel.createProgressChannel(context);
+            RTCSession.createRTCChannel(context);
+
             try {
 
                 // TODO remove in the future (change JOTA)

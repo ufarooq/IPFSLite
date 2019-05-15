@@ -33,7 +33,6 @@
     <application
         android:allowBackup="false"
         android:hardwareAccelerated="true"
-        android:name="threads.server.Application"
         tools:ignore="GoogleAppIndexingWarning"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
