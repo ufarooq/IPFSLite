@@ -23,6 +23,8 @@ import androidx.fragment.app.DialogFragment;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.core.Preferences;
@@ -46,9 +48,11 @@ public class EditPeerDialogFragment extends DialogFragment {
         mContext = context;
         try {
             mListener = (EditPeerDialogFragment.ActionListener) getActivity();
+            Service.getInstance(context).peersCheckEnable(true);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
+
     }
 
 
@@ -179,12 +183,26 @@ public class EditPeerDialogFragment extends DialogFragment {
 
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
 
+        peersOnlineStatus();
+
         return dialog;
+    }
+
+    private void peersOnlineStatus() {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                Service.getInstance(mContext).checkPeersOnlineStatus(mContext);
+            } catch (Throwable e) {
+                Preferences.evaluateException(Preferences.EXCEPTION, e);
+            }
+        });
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
+        Service.getInstance(mContext).peersCheckEnable(false);
         mContext = null;
     }
 

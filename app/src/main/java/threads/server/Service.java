@@ -72,54 +72,7 @@ public class Service {
     private static final String UPDATE = "UPDATE";
 
 
-    private static void runUpdatesIfNecessary(@NonNull Context context) {
-        try {
-            int versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
-            SharedPreferences prefs = context.getSharedPreferences(
-                    APP_KEY, Context.MODE_PRIVATE);
-            if (prefs.getInt(UPDATE, 0) != versionCode) {
-
-                Preferences.setConfigChanged(context, true);
-
-                Preferences.setPubsubEnabled(context, true);
-
-                // Experimental Features
-                Preferences.setQUICEnabled(context, true);
-                Preferences.setFilestoreEnabled(context, false);
-
-
-                Preferences.setApiPort(context, 5001);
-                Preferences.setSwarmPort(context, 4001);
-
-
-                Preferences.setAutoNATServiceEnabled(context, false);
-                Preferences.setRelayHopEnabled(context, false);
-                Preferences.setAutoRelayEnabled(context, false); // TODO check
-
-                Preferences.setPubsubRouter(context, PubsubConfig.RouterEnum.gossipsub);
-
-                Preferences.setConnMgrConfigType(context, ConnMgrConfig.TypeEnum.basic);
-                Preferences.setLowWater(context, 30);
-                Preferences.setHighWater(context, 80);
-                Preferences.setGracePeriod(context, "5s");
-
-
-                Preferences.setConnectionTimeout(context, 30000);
-                Preferences.setAutoConnectRelay(context, true); // TODO check
-
-                Preferences.setTangleTimeout(context, 10);
-
-                Preferences.setDialRelay(context, true); // TODO check
-                Preferences.setDebugMode(context, true); // TODO change in release mode
-
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putInt(UPDATE, versionCode);
-                editor.apply();
-            }
-        } catch (Throwable e) {
-            // ignore exception
-        }
-    }
+    private final AtomicBoolean peerCheckFlag = new AtomicBoolean(false);
     private Service() {
     }
 
@@ -305,25 +258,96 @@ public class Service {
         }
     }
 
-    private static void startPeers(@NonNull Context context) {
-        checkNotNull(context);
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-        if (ipfs != null) {
-            try {
-                while (ipfs.isDaemonRunning()) {
-                    threads.server.Service.checkPeers(context);
-                    if (Network.isConnected(context)) {
-                        java.lang.Thread.sleep(1000);
-                    } else {
-                        java.lang.Thread.sleep(30000);
-                    }
-                }
-            } catch (Throwable e) {
-                // IGNORE exception occurs when daemon is shutdown
-            } finally {
-                threads.server.Service.checkPeers(context);
+    private static void runUpdatesIfNecessary(@NonNull Context context) {
+        try {
+            int versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
+            SharedPreferences prefs = context.getSharedPreferences(
+                    APP_KEY, Context.MODE_PRIVATE);
+            if (prefs.getInt(UPDATE, 0) != versionCode) {
+
+                Preferences.setConfigChanged(context, true);
+
+                Preferences.setPubsubEnabled(context, true);
+
+                // Experimental Features
+                Preferences.setQUICEnabled(context, true);
+                Preferences.setFilestoreEnabled(context, false);
+
+
+                Preferences.setApiPort(context, 5001);
+                Preferences.setSwarmPort(context, 4001);
+
+
+                Preferences.setAutoNATServiceEnabled(context, false);
+                Preferences.setRelayHopEnabled(context, false);
+                Preferences.setAutoRelayEnabled(context, false); // TODO check
+
+                Preferences.setPubsubRouter(context, PubsubConfig.RouterEnum.gossipsub);
+
+                Preferences.setConnMgrConfigType(context, ConnMgrConfig.TypeEnum.basic);
+                Preferences.setLowWater(context, 30);
+                Preferences.setHighWater(context, 80);
+                Preferences.setGracePeriod(context, "5s");
+
+
+                Preferences.setConnectionTimeout(context, 30000);
+                Preferences.setAutoConnectRelay(context, true); // TODO check
+
+                Preferences.setTangleTimeout(context, 10);
+
+                Preferences.setSilent(context, false); // TODO check
+                Preferences.setDialRelay(context, true); // TODO check
+                Preferences.setDebugMode(context, true); // TODO change in release mode
+
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putInt(UPDATE, versionCode);
+                editor.apply();
             }
+        } catch (Throwable e) {
+            // ignore exception
         }
+    }
+
+    private static boolean handleDirectoryLink(@NonNull Context context,
+                                               @NonNull THREADS threads,
+                                               @NonNull IPFS ipfs,
+                                               @NonNull Thread thread,
+                                               @NonNull LinkInfo link) {
+
+        String filename = link.getName();
+        threads.setAdditional(thread, Content.TITLE,
+                filename.substring(0, filename.length() - 1), false);
+        threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
+        threads.setAdditional(thread, Preferences.THREAD_KIND, ThreadKind.NODE.name(), true);
+
+        try {
+            CID image = THREADS.createResourceImage(context, threads, ipfs, "",
+                    R.drawable.folder_outline);
+            threads.setImage(thread, image);
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+        try {
+            CID cid = thread.getCid();
+            if (cid != null) {
+                threads.pin_add(ipfs, cid, -1, true);
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
+
+        int timeout = Preferences.getConnectionTimeout(context);
+        List<LinkInfo> links = getLinks(ipfs, link, timeout);
+        if (links != null) {
+            return downloadLinks(context, threads, ipfs, thread, links);
+        } else {
+            return false;
+        }
+
+    }
+
+    public void peersCheckEnable(boolean value) {
+        peerCheckFlag.set(value);
     }
 
     private static void startPubsub(@NonNull Context context) {
@@ -472,66 +496,20 @@ public class Service {
         }
     }
 
-    private static void checkPeers(@NonNull Context context) {
+    public void checkPeersOnlineStatus(@NonNull Context context) {
         checkNotNull(context);
-        PID hostPID = Preferences.getPID(context);
-        try {
-            final THREADS threads = Singleton.getInstance().getThreads();
-            if (Network.isConnected(context)) {
-
-                final IPFS ipfs = Singleton.getInstance().getIpfs();
-                if (ipfs != null) {
-
-                    List<User> users = threads.getUsers();
-
-                    if (hostPID != null) {
-                        User host = threads.getUserByPID(hostPID);
-                        users.remove(host);
-                    }
-                    if (Network.isConnected(context)) {
-                        for (User user : users) {
-                            UserStatus currentStatus = user.getStatus();
-                            if (currentStatus != UserStatus.BLOCKED &&
-                                    currentStatus != UserStatus.DIALING) {
-                                try {
-                                    boolean value = ipfs.swarm_peer(user.getPID(), true) != null;
-                                    if (value) {
-                                        if (threads.getStatus(user) != UserStatus.DIALING) {
-                                            threads.setStatus(user, UserStatus.ONLINE);
-                                        }
-                                    } else {
-                                        if (threads.getStatus(user) != UserStatus.DIALING) {
-                                            threads.setStatus(user, UserStatus.OFFLINE);
-                                        }
-                                    }
-                                } catch (Throwable e) {
-                                    if (threads.getStatus(user) != UserStatus.DIALING) {
-                                        threads.setStatus(user, UserStatus.OFFLINE);
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        for (User user : users) {
-                            if (UserStatus.OFFLINE != user.getStatus()) {
-                                threads.setStatus(user, UserStatus.OFFLINE);
-                            }
-
-                        }
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            try {
+                if (ipfs.isDaemonRunning()) {
+                    while (peerCheckFlag.get()) {
+                        checkPeers(context);
+                        java.lang.Thread.sleep(1000);
                     }
                 }
-            } else {
-                List<User> users = threads.getUsers();
-                for (User user : users) {
-
-                    if (UserStatus.OFFLINE != user.getStatus()) {
-                        threads.setStatus(user, UserStatus.OFFLINE);
-                    }
-
-                }
+            } catch (Throwable e) {
+                // IGNORE exception occurs when daemon is shutdown
             }
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
     }
 
@@ -1072,42 +1050,67 @@ public class Service {
         return success;
     }
 
-    private static boolean handleDirectoryLink(@NonNull Context context,
-                                               @NonNull THREADS threads,
-                                               @NonNull IPFS ipfs,
-                                               @NonNull Thread thread,
-                                               @NonNull LinkInfo link) {
-
-        String filename = link.getName();
-        threads.setAdditional(thread, Content.TITLE,
-                filename.substring(0, filename.length() - 1), false);
-        threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
-        threads.setAdditional(thread, Preferences.THREAD_KIND, ThreadKind.NODE.name(), true);
-
+    private void checkPeers(@NonNull Context context) {
+        checkNotNull(context);
+        PID hostPID = Preferences.getPID(context);
         try {
-            CID image = THREADS.createResourceImage(context, threads, ipfs, "",
-                    R.drawable.folder_outline);
-            threads.setImage(thread, image);
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
-        try {
-            CID cid = thread.getCid();
-            if (cid != null) {
-                threads.pin_add(ipfs, cid);
+            final THREADS threads = Singleton.getInstance().getThreads();
+            if (Network.isConnected(context)) {
+
+                final IPFS ipfs = Singleton.getInstance().getIpfs();
+                if (ipfs != null) {
+
+                    List<User> users = threads.getUsers();
+
+                    if (hostPID != null) {
+                        User host = threads.getUserByPID(hostPID);
+                        users.remove(host);
+                    }
+                    if (Network.isConnected(context)) {
+                        for (User user : users) {
+                            UserStatus currentStatus = user.getStatus();
+                            if (currentStatus != UserStatus.BLOCKED &&
+                                    currentStatus != UserStatus.DIALING) {
+                                try {
+                                    boolean value = ipfs.swarm_peer(user.getPID(), true) != null;
+                                    if (value) {
+                                        if (threads.getStatus(user) != UserStatus.DIALING) {
+                                            threads.setStatus(user, UserStatus.ONLINE);
+                                        }
+                                    } else {
+                                        if (threads.getStatus(user) != UserStatus.DIALING) {
+                                            threads.setStatus(user, UserStatus.OFFLINE);
+                                        }
+                                    }
+                                } catch (Throwable e) {
+                                    if (threads.getStatus(user) != UserStatus.DIALING) {
+                                        threads.setStatus(user, UserStatus.OFFLINE);
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        for (User user : users) {
+                            if (UserStatus.OFFLINE != user.getStatus()) {
+                                threads.setStatus(user, UserStatus.OFFLINE);
+                            }
+
+                        }
+                    }
+                }
+            } else {
+                List<User> users = threads.getUsers();
+                for (User user : users) {
+
+                    if (UserStatus.OFFLINE != user.getStatus()) {
+                        threads.setStatus(user, UserStatus.OFFLINE);
+                    }
+
+                }
             }
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
-
-        int timeout = Preferences.getConnectionTimeout(context);
-        List<LinkInfo> links = getLinks(ipfs, link, timeout);
-        if (links != null) {
-            return downloadLinks(context, threads, ipfs, thread, links);
-        } else {
-            return false;
-        }
-
     }
 
     @Nullable
@@ -1442,10 +1445,8 @@ public class Service {
         checkNotNull(context);
         new java.lang.Thread(() -> {
             try {
-
                 Service.cleanStates(context);
                 Service.createHost(context);
-                Service.checkPeers(context);
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.EXCEPTION, e);
             }
@@ -1471,10 +1472,6 @@ public class Service {
 
                 if (ipfs.isDaemonRunning()) {
                     new java.lang.Thread(() -> startPubsub(context)).start();
-                }
-
-                if (ipfs.isDaemonRunning()) {
-                    new java.lang.Thread(() -> startPeers(context)).start();
                 }
 
                 if (Preferences.isAutoConnectRelay(context)) {
