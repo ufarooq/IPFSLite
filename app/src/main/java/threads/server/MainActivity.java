@@ -362,7 +362,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 mLastClickTime = SystemClock.elapsedRealtime();
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse("https://docs.ipfs.io/reference/api/cli"));
+                    intent.setData(Uri.parse("https://docs.ipfs.io/reference/api/http"));
                     startActivity(intent);
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
