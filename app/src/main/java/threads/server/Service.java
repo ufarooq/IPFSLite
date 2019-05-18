@@ -279,8 +279,8 @@ public class Service {
 
 
                 Preferences.setAutoNATServiceEnabled(context, false);
-                Preferences.setRelayHopEnabled(context, false);
-                Preferences.setAutoRelayEnabled(context, false); // TODO check
+                Preferences.setRelayHopEnabled(context, true); // TODO check
+                Preferences.setAutoRelayEnabled(context, true); // TODO check
 
                 Preferences.setPubsubRouter(context, PubsubConfig.RouterEnum.gossipsub);
 
@@ -295,7 +295,8 @@ public class Service {
 
                 Preferences.setTangleTimeout(context, 10);
 
-                Preferences.setSilent(context, false); // TODO check
+                Preferences.setMdnsEnabled(context, false); // does not work anyway now TODO
+                Preferences.setSilent(context, true); // TODO check
                 Preferences.setDialRelay(context, true); // TODO check
                 Preferences.setDebugMode(context, true); // TODO change in release mode
 
