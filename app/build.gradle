@@ -76,7 +76,6 @@ dependencies {
     // UI (for showing licences file) (LICENSE done)
     implementation 'de.psdev.licensesdialog:licensesdialog:2.0.0'
 
-
     // API (LICENSE done)
     implementation "androidx.lifecycle:lifecycle-extensions:2.2.0-alpha01"
 
@@ -96,25 +95,22 @@ dependencies {
     //implementation 'threads.pow:pow:1.0.9'
 
     // UI+API (LICENSE done)
-    implementation 'threads.share:share:4.1.7'
+    implementation 'threads.share:share:4.1.8'
 
     // API (LICENSE done)
-    implementation 'threads.core:threads:7.1.6'
+    implementation 'threads.core:threads:7.1.7'
 
     // API (LICENSE done)
-    implementation 'threads.iota:threads:2.7.2'
+    implementation 'threads.iota:threads:2.7.3'
 
     // API (LICENSE done)
-    implementation 'threads.ipfs:threads:1.4.7'
+    implementation 'threads.ipfs:threads:1.4.8'
 
     // API (LICENSE done)
     implementation 'threads.mobile:ipfs:0.0.2'
 
     // API (LICENSE done)
     implementation 'com.google.code.gson:gson:2.8.5'
-
-    // JOTA API (LICENSE done)
-    implementation 'com.github.iotaledger:iota-java:1.0.0-beta5'
 
 }
 

@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
-import android.os.StrictMode;
 import android.provider.DocumentsContract;
 import android.text.TextUtils;
 import android.util.Log;
@@ -91,11 +90,6 @@ public class Service {
             RTCSession.createRTCChannel(context);
 
             try {
-
-                // TODO remove in the future (change JOTA)
-                StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder()
-                        .permitNetwork().build();
-                StrictMode.setThreadPolicy(policy);
 
                 Singleton.getInstance().init(context, () -> "",
                         NotificationFCMServer.getInstance(context), true);
