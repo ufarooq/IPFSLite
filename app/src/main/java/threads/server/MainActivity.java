@@ -877,7 +877,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     map.put(Content.ALIAS, hostUser.getAlias());
                                     map.put(Content.PKEY, hostUser.getPublicKey());
 
-                                    ipfs.pubsub_pub(user.getPID().getPid(), gson.toJson(map));
+                                    ipfs.pubsubPub(user.getPID().getPid(), gson.toJson(map));
                                 }
                             } else {
                                 threadsAPI.setStatus(user, UserStatus.OFFLINE);

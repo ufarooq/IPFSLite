@@ -128,7 +128,7 @@ public class Service {
         Preferences.debug("Start Pubsub Daemon :" + pid.getPid());
 
 
-        ipfs.pubsub_sub(pid.getPid(), (message) -> {
+        ipfs.pubsubSub(pid.getPid(), (message) -> {
 
             try {
 
@@ -487,7 +487,7 @@ public class Service {
                     map.put(Content.PKEY, hostUser.getPublicKey());
 
 
-                    ipfs.pubsub_pub(senderPid.getPid(), gson.toJson(map));
+                    ipfs.pubsubPub(senderPid.getPid(), gson.toJson(map));
 
                     Preferences.error(context.getString(R.string.user_connect_try, alias));
                 }
@@ -524,7 +524,7 @@ public class Service {
 
         try {
             Log.e(TAG, "Send : " + map.toString());
-            ipfs.pubsub_pub(sender.getPid(), gson.toJson(map));
+            ipfs.pubsubPub(sender.getPid(), gson.toJson(map));
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
@@ -1073,7 +1073,7 @@ public class Service {
                             if (currentStatus != UserStatus.BLOCKED &&
                                     currentStatus != UserStatus.DIALING) {
                                 try {
-                                    boolean value = ipfs.swarm_peer(user.getPID(), true) != null;
+                                    boolean value = ipfs.swarmConnected(user.getPID());
                                     if (value) {
                                         if (threads.getStatus(user) != UserStatus.DIALING) {
                                             threads.setStatus(user, UserStatus.ONLINE);
@@ -1369,7 +1369,7 @@ public class Service {
                         }
                         map.put(Content.CID, cid.getCid());
                         Log.e(TAG, "Send : " + map.toString());
-                        ipfs.pubsub_pub(user.getPID().getPid(), gson.toJson(map));
+                        ipfs.pubsubPub(user.getPID().getPid(), gson.toJson(map));
                     }
 
                     success = true;
