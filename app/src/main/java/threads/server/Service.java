@@ -226,6 +226,8 @@ public class Service {
                 }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            } finally {
+                Log.e(TAG, "Receive : " + message.getMessage());
             }
 
         });

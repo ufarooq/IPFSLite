@@ -48,7 +48,6 @@ android {
     }
     configurations.all {
         exclude group: 'com.google.guava', module: 'listenablefuture'
-        exclude group: 'com.github.kenglxn.QRGen', module: 'core'
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
