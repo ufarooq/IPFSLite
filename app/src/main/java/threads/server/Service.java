@@ -1467,9 +1467,8 @@ public class Service {
                 }
 
                 if (Preferences.isAutoConnectRelay(context)) {
-                    int timeout = Preferences.getConnectionTimeout(context);
                     new java.lang.Thread(() -> RelayService.connectRelays(
-                            context, 10000, timeout)).start();
+                            context, 10000)).start();
                 }
                 new java.lang.Thread(() -> checkTangleServer(context)).start();
             }

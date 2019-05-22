@@ -120,17 +120,20 @@ public class SettingsDialogFragment extends DialogFragment {
         SeekBar connection_timeout = view.findViewById(R.id.connection_timeout);
 
 
-        int offset = 10;
-        connection_timeout.setMax(170);
-        int timeout = (Preferences.getConnectionTimeout(activity) / 1000);
+        connection_timeout.setMax(180);
+        int timeout = 0;
+        int connectionTimeout = Preferences.getConnectionTimeout(activity);
+        if (connectionTimeout > 0) {
+            timeout = (connectionTimeout / 1000);
+        }
         connection_timeout_text.setText(getString(R.string.connection_timeout,
                 String.valueOf(timeout)));
-        connection_timeout.setProgress(timeout - offset);
+        connection_timeout.setProgress(timeout);
         connection_timeout.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
-                int newProgress = progress + offset;
+                int newProgress = progress;
                 int newValue = newProgress * 1000;
                 Preferences.setConnectionTimeout(activity, newValue);
                 connection_timeout_text.setText(
