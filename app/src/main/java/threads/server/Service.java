@@ -286,15 +286,15 @@ public class Service {
                 Preferences.setGracePeriod(context, "5s");
 
 
-                Preferences.setConnectionTimeout(context, 30000);
+                Preferences.setConnectionTimeout(context, 45000);
                 Preferences.setAutoConnectRelay(context, true); // TODO check
 
                 Preferences.setTangleTimeout(context, 10);
 
-                Preferences.setMdnsEnabled(context, false); // does not work anyway now TODO
-                Preferences.setSilent(context, true); // TODO check
+                Preferences.setMdnsEnabled(context, true);
+
                 Preferences.setDialRelay(context, true); // TODO check
-                Preferences.setDebugMode(context, true); // TODO change in release mode
+                Preferences.setDebugMode(context, false); // TODO change in release mode
 
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putInt(UPDATE, versionCode);

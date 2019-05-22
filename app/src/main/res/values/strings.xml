@@ -24,6 +24,7 @@
     <string name="daemon_restart_config_changed">Please restart the application due to the configuration changes.</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="quic_support">QUIC Support</string>
+    <string name="pubsub_router">Enable Gossipsub</string>
     <string name="pubsub_support">Pubsub Support</string>
     <string name="commands">Commands</string>
     <string name="share_app">Share</string>
@@ -86,4 +87,5 @@
     <string name="permission_audio_settings_denied">Permission modify audio settings denied</string>
     <string name="abort">Abort</string>
     <string name="version_number">%1$s</string>
+    <string name="mdns_support">MDNS Support</string>
 </resources>

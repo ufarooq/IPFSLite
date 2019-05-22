@@ -15,6 +15,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
 import threads.core.Preferences;
+import threads.ipfs.api.PubsubConfig;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -51,6 +52,18 @@ public class SettingsDialogFragment extends DialogFragment {
 
         });
 
+        Switch mdns_support = view.findViewById(R.id.mdns_support);
+        mdns_support.setChecked(Preferences.isMdnsEnabled(activity));
+        mdns_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Preferences.setMdnsEnabled(activity, isChecked);
+            Preferences.setConfigChanged(activity, true);
+
+            Toast.makeText(getContext(),
+                    R.string.daemon_restart_config_changed,
+                    Toast.LENGTH_LONG).show();
+
+
+        });
 
         Switch pubsub_support = view.findViewById(R.id.pubsub_support);
         pubsub_support.setChecked(Preferences.isPubsubEnabled(activity));
@@ -65,6 +78,24 @@ public class SettingsDialogFragment extends DialogFragment {
 
         });
 
+
+        Switch pubsub_router = view.findViewById(R.id.pubsub_router);
+        pubsub_router.setChecked(Preferences.getPubsubRouter(activity)
+                == PubsubConfig.RouterEnum.gossipsub);
+        pubsub_router.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                Preferences.setPubsubRouter(activity, PubsubConfig.RouterEnum.gossipsub);
+            } else {
+                Preferences.setPubsubRouter(activity, PubsubConfig.RouterEnum.floodsub);
+            }
+            Preferences.setConfigChanged(activity, true);
+
+            Toast.makeText(getContext(),
+                    R.string.daemon_restart_config_changed,
+                    Toast.LENGTH_LONG).show();
+
+
+        });
 
         Switch auto_relay_support = view.findViewById(R.id.auto_relay_support);
         auto_relay_support.setChecked(Preferences.isAutoRelayEnabled(activity));
