@@ -43,7 +43,6 @@ public class SettingsDialogFragment extends DialogFragment {
         quic_support.setChecked(Preferences.isQUICEnabled(activity));
         quic_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Preferences.setQUICEnabled(activity, isChecked);
-            Preferences.setConfigChanged(activity, true);
 
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,
@@ -56,7 +55,6 @@ public class SettingsDialogFragment extends DialogFragment {
         mdns_support.setChecked(Preferences.isMdnsEnabled(activity));
         mdns_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Preferences.setMdnsEnabled(activity, isChecked);
-            Preferences.setConfigChanged(activity, true);
 
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,
@@ -69,7 +67,6 @@ public class SettingsDialogFragment extends DialogFragment {
         pubsub_support.setChecked(Preferences.isPubsubEnabled(activity));
         pubsub_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Preferences.setPubsubEnabled(activity, isChecked);
-            Preferences.setConfigChanged(activity, true);
 
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,
@@ -88,7 +85,6 @@ public class SettingsDialogFragment extends DialogFragment {
             } else {
                 Preferences.setPubsubRouter(activity, PubsubConfig.RouterEnum.floodsub);
             }
-            Preferences.setConfigChanged(activity, true);
 
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,
@@ -101,7 +97,6 @@ public class SettingsDialogFragment extends DialogFragment {
         auto_relay_support.setChecked(Preferences.isAutoRelayEnabled(activity));
         auto_relay_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Preferences.setAutoRelayEnabled(activity, isChecked);
-            Preferences.setConfigChanged(activity, true);
 
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,

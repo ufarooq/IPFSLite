@@ -94,9 +94,6 @@ public class Service {
                 Singleton.getInstance().init(context, () -> "",
                         NotificationFCMServer.getInstance(context), true);
 
-
-                Preferences.setConfigChanged(context, false);
-
             } catch (Throwable e) {
                 Preferences.evaluateException(Preferences.IPFS_INSTALL_FAILURE, e);
             }
@@ -261,8 +258,6 @@ public class Service {
                     APP_KEY, Context.MODE_PRIVATE);
             if (prefs.getInt(UPDATE, 0) != versionCode) {
 
-                Preferences.setConfigChanged(context, true);
-
                 Preferences.setPubsubEnabled(context, true);
 
                 // Experimental Features
@@ -287,7 +282,7 @@ public class Service {
 
 
                 Preferences.setConnectionTimeout(context, 45000);
-                Preferences.setAutoConnectRelay(context, true); // TODO check
+                Preferences.setAutoConnectRelay(context, false); // TODO check
 
                 Preferences.setTangleTimeout(context, 10);
 
