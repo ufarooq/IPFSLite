@@ -217,6 +217,19 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
         });
 
 
+        Switch logs_mode_enable = view.findViewById(R.id.logs_mode_enable);
+        logs_mode_enable.setChecked(Preferences.isDebugMode(activity));
+        logs_mode_enable.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Preferences.setDebugMode(activity, isChecked);
+
+            Toast.makeText(getContext(),
+                    R.string.daemon_restart_config_changed,
+                    Toast.LENGTH_LONG).show();
+
+
+        });
+
+
         Switch connect_relay_support = view.findViewById(R.id.connect_relay_support);
         connect_relay_support.setChecked(Preferences.isAutoConnectRelay(activity));
         connect_relay_support.setOnCheckedChangeListener((buttonView, isChecked) -> {

@@ -1474,6 +1474,17 @@ public class Service {
                     new java.lang.Thread(() -> FCMService.publishToken(context)).start();
                 }
                 new java.lang.Thread(() -> checkTangleServer(context)).start();
+
+                if (Preferences.isDebugMode(context)) {
+                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                    executor.submit(() -> {
+                        try {
+                            ipfs.log();
+                        } catch (Throwable e) {
+                            Preferences.evaluateException(Preferences.EXCEPTION, e);
+                        }
+                    });
+                }
             }
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);

@@ -88,4 +88,5 @@
     <string name="abort">Abort</string>
     <string name="version_number">%1$s</string>
     <string name="mdns_support">MDNS Support</string>
+    <string name="logs_mode_enable">Debug Mode (logs)</string>
 </resources>
