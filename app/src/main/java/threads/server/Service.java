@@ -479,7 +479,7 @@ public class Service {
                     map.put(Content.PKEY, hostUser.getPublicKey());
 
 
-                    ipfs.pubsubPub(senderPid.getPid(), gson.toJson(map));
+                    ipfs.pubsubPub(senderPid.getPid(), gson.toJson(map), 50);
 
                     Preferences.error(context.getString(R.string.user_connect_try, alias));
                 }
@@ -516,7 +516,7 @@ public class Service {
 
         try {
             Log.e(TAG, "Send : " + map.toString());
-            ipfs.pubsubPub(sender.getPid(), gson.toJson(map));
+            ipfs.pubsubPub(sender.getPid(), gson.toJson(map), 50);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
         }
@@ -1361,7 +1361,7 @@ public class Service {
                         }
                         map.put(Content.CID, cid.getCid());
                         Log.e(TAG, "Send : " + map.toString());
-                        ipfs.pubsubPub(user.getPID().getPid(), gson.toJson(map));
+                        ipfs.pubsubPub(user.getPID().getPid(), gson.toJson(map), 50);
                     }
 
                     success = true;
