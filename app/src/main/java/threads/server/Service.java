@@ -53,6 +53,7 @@ import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.PubsubConfig;
 import threads.share.ConnectService;
+import threads.share.FCMService;
 import threads.share.RTCSession;
 import threads.share.RelayService;
 
@@ -270,8 +271,8 @@ public class Service {
 
 
                 Preferences.setAutoNATServiceEnabled(context, false);
-                Preferences.setRelayHopEnabled(context, true); // TODO check
-                Preferences.setAutoRelayEnabled(context, true); // TODO check
+                Preferences.setRelayHopEnabled(context, false); // TODO check
+                Preferences.setAutoRelayEnabled(context, false); // TODO check
 
                 Preferences.setPubsubRouter(context, PubsubConfig.RouterEnum.gossipsub);
 
@@ -284,7 +285,7 @@ public class Service {
                 Preferences.setConnectionTimeout(context, 45000);
                 Preferences.setAutoConnectRelay(context, false); // TODO check
 
-                Preferences.setTangleTimeout(context, 10);
+                Preferences.setTangleTimeout(context, 15);
 
                 Preferences.setMdnsEnabled(context, true);
 
@@ -1469,6 +1470,8 @@ public class Service {
                 if (Preferences.isAutoConnectRelay(context)) {
                     new java.lang.Thread(() -> RelayService.connectRelays(
                             context, 10000)).start();
+                } else {
+                    new java.lang.Thread(() -> FCMService.publishToken(context)).start();
                 }
                 new java.lang.Thread(() -> checkTangleServer(context)).start();
             }
