@@ -86,7 +86,6 @@ public class Service {
             runUpdatesIfNecessary(context);
 
 
-            Preferences.createPublicPrivateKeys(context);
             ProgressChannel.createProgressChannel(context);
             RTCSession.createRTCChannel(context);
 
@@ -665,7 +664,7 @@ public class Service {
 
                 User user = threads.getUserByPID(pid);
                 if (user == null) {
-                    String publicKey = Preferences.getPublicKey(context);
+                    String publicKey = ipfs.getRawPublicKey();
                     byte[] data = THREADS.getImage(context, pid.getPid(), R.drawable.server_network);
 
                     CID image = ipfs.add(data, true);
@@ -1479,7 +1478,7 @@ public class Service {
                     ExecutorService executor = Executors.newSingleThreadExecutor();
                     executor.submit(() -> {
                         try {
-                            ipfs.log();
+                            ipfs.logs();
                         } catch (Throwable e) {
                             Preferences.evaluateException(Preferences.EXCEPTION, e);
                         }
