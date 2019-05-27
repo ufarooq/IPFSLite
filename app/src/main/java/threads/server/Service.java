@@ -313,8 +313,9 @@ public class Service {
         threads.setAdditional(thread, Preferences.THREAD_KIND, ThreadKind.NODE.name(), true);
 
         try {
-            CID image = THREADS.createResourceImage(context, threads, ipfs, "",
+            CID image = THREADS.createResourceImage(context, threads, ipfs,
                     R.drawable.folder_outline);
+            checkNotNull(image);
             threads.setImage(thread, image);
         } catch (Throwable e) {
             Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -894,7 +895,7 @@ public class Service {
 
                         try {
                             boolean finished = threadsAPI.download(ipfs, file, cid,
-                                    false, true, threadObject.getSesKey(),
+                                    false, true,
                                     new THREADS.Progress() {
                                         @Override
                                         public void setProgress(int percent) {
@@ -995,7 +996,7 @@ public class Service {
             threads.setStatus(thread, ThreadStatus.LEACHING); // make sure
             int timeout = Preferences.getConnectionTimeout(context);
             success = threads.download(ipfs, file, cid, true, false,
-                    thread.getSesKey(), new THREADS.Progress() {
+                    new THREADS.Progress() {
                         @Override
                         public void setProgress(int percent) {
                             builder.setProgress(100, percent, false);
@@ -1022,7 +1023,8 @@ public class Service {
             } else {
                 try {
                     CID image = THREADS.createResourceImage(
-                            context, threads, ipfs, "", R.drawable.file_document);
+                            context, threads, ipfs, R.drawable.file_document);
+                    checkNotNull(image);
                     threads.setImage(thread, image);
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
@@ -1241,7 +1243,7 @@ public class Service {
                 threads.setAdditional(thread, Preferences.THREAD_KIND, ThreadKind.NODE.name(), true);
 
                 try {
-                    CID image = THREADS.createResourceImage(context, threads, ipfs, "",
+                    CID image = THREADS.createResourceImage(context, threads, ipfs,
                             R.drawable.folder_outline);
                     threads.setImage(thread, image);
                 } catch (Throwable e) {

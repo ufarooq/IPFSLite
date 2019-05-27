@@ -990,7 +990,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     List<LinkInfo> links = threadsAPI.getLinks(ipfs, threadObject, timeout, true);
                     checkNotNull(links);
-                    String path = "";
+
                     if (links.size() == 1) {
                         LinkInfo link = links.get(0);
                         cid = link.getCid();
