@@ -1267,7 +1267,7 @@ public class Service {
                             if (currentStatus != UserStatus.BLOCKED &&
                                     currentStatus != UserStatus.DIALING) {
                                 try {
-                                    boolean value = ipfs.swarmConnected(user.getPID());
+                                    boolean value = ipfs.isConnected(user.getPID());
                                     if (value) {
                                         if (threads.getStatus(user) != UserStatus.DIALING) {
                                             threads.setStatus(user, UserStatus.ONLINE);
