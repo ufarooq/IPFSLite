@@ -42,7 +42,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Collections;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -62,7 +61,6 @@ import threads.core.api.UserType;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
-import threads.ipfs.api.LinkInfo;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
@@ -316,7 +314,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_licences: {
                 try {
 
-                    final LicensesDialogFragment fragment = new LicensesDialogFragment.Builder(this)
+                    LicensesDialogFragment fragment =
+                            new LicensesDialogFragment.Builder(this)
                             .setNotices(R.raw.licenses)
                             .setShowFullLicenseText(false)
                             .setIncludeOwnLicense(true)
@@ -973,8 +972,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadPlay(long idx) {
 
-
-        final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
         final IPFS ipfs = Singleton.getInstance().getIpfs();
         if (ipfs != null) {
@@ -986,15 +983,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     CID cid = threadObject.getCid();
                     checkNotNull(cid);
+                    cid = ipfs.getContent(cid);
 
-
-                    List<LinkInfo> links = threadsAPI.getLinks(ipfs, threadObject, timeout, true);
-                    checkNotNull(links);
-
-                    if (links.size() == 1) {
-                        LinkInfo link = links.get(0);
-                        cid = link.getCid();
-                    }
 
                     Uri uri = Uri.parse("http://127.0.0.1:" +
                             Preferences.getApiPort(getApplicationContext()) +
@@ -1004,8 +994,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         Intent intent = new Intent(Intent.ACTION_VIEW);
                         intent.setDataAndType(uri, threadObject.getMimeType()); // TODO might not be right
                         intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-                                Intent.FLAG_ACTIVITY_CLEAR_TASK);
                         startActivity(intent);
                     } catch (Throwable e) {
                         startActivity(new Intent(Intent.ACTION_VIEW, uri));
@@ -1202,7 +1190,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final int mNumOfTabs;
 
         PagerAdapter(FragmentManager fm, int NumOfTabs) {
-            super(fm);
+            super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
             this.mNumOfTabs = NumOfTabs;
         }
 

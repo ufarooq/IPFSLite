@@ -67,12 +67,11 @@ public class Service {
     private static final Gson gson = new Gson();
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(3);
     private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(1);
-    private final AtomicBoolean initDone = new AtomicBoolean(false);
     private static final String APP_KEY = "AppKey";
     private static final String UPDATE = "UPDATE";
-
-
+    private final AtomicBoolean initDone = new AtomicBoolean(false);
     private final AtomicBoolean peerCheckFlag = new AtomicBoolean(false);
+
     private Service() {
     }
 
@@ -80,6 +79,7 @@ public class Service {
         return SINGLETON.initDone.get();
     }
 
+    @NonNull
     public static Service getInstance(@NonNull Context context) {
         if (!SINGLETON.initDone.getAndSet(true)) {
 
@@ -339,10 +339,6 @@ public class Service {
 
     }
 
-    public void peersCheckEnable(boolean value) {
-        peerCheckFlag.set(value);
-    }
-
     private static void startPubsub(@NonNull Context context) {
         checkNotNull(context);
         final IPFS ipfs = Singleton.getInstance().getIpfs();
@@ -486,23 +482,6 @@ public class Service {
             }
         } catch (Throwable e) {
             // ignore exception
-        }
-    }
-
-    public void checkPeersOnlineStatus(@NonNull Context context) {
-        checkNotNull(context);
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
-        if (ipfs != null) {
-            try {
-                if (ipfs.isDaemonRunning()) {
-                    while (peerCheckFlag.get()) {
-                        checkPeers(context);
-                        java.lang.Thread.sleep(1000);
-                    }
-                }
-            } catch (Throwable e) {
-                // IGNORE exception occurs when daemon is shutdown
-            }
         }
     }
 
@@ -872,7 +851,10 @@ public class Service {
                         if (links.size() == 1) {
                             LinkInfo link = links.get(0);
                             cid = link.getCid();
-                            size = link.getSize();
+                            Integer linkSize = link.getSize();
+                            if (linkSize != null) {
+                                size = linkSize;
+                            }
                         }
                         String title = threadObject.getAdditional(Content.TITLE);
 
@@ -968,7 +950,7 @@ public class Service {
                                     @NonNull Thread thread,
                                     @NonNull CID cid,
                                     @NonNull String filename,
-                                    @NonNull Integer size) {
+                                    @Nullable Integer size) {
 
         checkNotNull(context);
         checkNotNull(threads);
@@ -976,7 +958,12 @@ public class Service {
         checkNotNull(thread);
         checkNotNull(cid);
         checkNotNull(filename);
-        checkNotNull(size);
+
+
+        int filesize = -1;
+        if (size != null) {
+            filesize = size;
+        }
 
         NotificationCompat.Builder builder =
                 ProgressChannel.createProgressNotification(
@@ -1009,13 +996,13 @@ public class Service {
                         public boolean isStopped() {
                             return !Network.isConnected(context);
                         }
-                    }, timeout, size);
+                    }, timeout, filesize);
 
             if (success) {
                 try {
                     byte[] image = THREADS.getPreviewImage(context, file);
                     if (image != null) {
-                        threads.setImage(ipfs, thread, image, true);
+                        threads.setImage(ipfs, thread, image);
                     }
                 } catch (Throwable e) {
                     // no exception will be reported
@@ -1042,69 +1029,6 @@ public class Service {
         }
 
         return success;
-    }
-
-    private void checkPeers(@NonNull Context context) {
-        checkNotNull(context);
-        PID hostPID = Preferences.getPID(context);
-        try {
-            final THREADS threads = Singleton.getInstance().getThreads();
-            if (Network.isConnected(context)) {
-
-                final IPFS ipfs = Singleton.getInstance().getIpfs();
-                if (ipfs != null) {
-
-                    List<User> users = threads.getUsers();
-
-                    if (hostPID != null) {
-                        User host = threads.getUserByPID(hostPID);
-                        users.remove(host);
-                    }
-                    if (Network.isConnected(context)) {
-                        for (User user : users) {
-                            UserStatus currentStatus = user.getStatus();
-                            if (currentStatus != UserStatus.BLOCKED &&
-                                    currentStatus != UserStatus.DIALING) {
-                                try {
-                                    boolean value = ipfs.swarmConnected(user.getPID());
-                                    if (value) {
-                                        if (threads.getStatus(user) != UserStatus.DIALING) {
-                                            threads.setStatus(user, UserStatus.ONLINE);
-                                        }
-                                    } else {
-                                        if (threads.getStatus(user) != UserStatus.DIALING) {
-                                            threads.setStatus(user, UserStatus.OFFLINE);
-                                        }
-                                    }
-                                } catch (Throwable e) {
-                                    if (threads.getStatus(user) != UserStatus.DIALING) {
-                                        threads.setStatus(user, UserStatus.OFFLINE);
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        for (User user : users) {
-                            if (UserStatus.OFFLINE != user.getStatus()) {
-                                threads.setStatus(user, UserStatus.OFFLINE);
-                            }
-
-                        }
-                    }
-                }
-            } else {
-                List<User> users = threads.getUsers();
-                for (User user : users) {
-
-                    if (UserStatus.OFFLINE != user.getStatus()) {
-                        threads.setStatus(user, UserStatus.OFFLINE);
-                    }
-
-                }
-            }
-        } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
-        }
     }
 
     @Nullable
@@ -1240,12 +1164,15 @@ public class Service {
 
                 // thread is directory
                 threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
-                threads.setAdditional(thread, Preferences.THREAD_KIND, ThreadKind.NODE.name(), true);
+                threads.setAdditional(thread, Preferences.THREAD_KIND,
+                        ThreadKind.NODE.name(), true);
 
                 try {
                     CID image = THREADS.createResourceImage(context, threads, ipfs,
                             R.drawable.folder_outline);
-                    threads.setImage(thread, image);
+                    if (image != null) {
+                        threads.setImage(thread, image);
+                    }
                 } catch (Throwable e) {
                     Preferences.evaluateException(Preferences.EXCEPTION, e);
                 }
@@ -1295,6 +1222,90 @@ public class Service {
             }
         }
         return file;
+    }
+
+    public void peersCheckEnable(boolean value) {
+        peerCheckFlag.set(value);
+    }
+
+    public void checkPeersOnlineStatus(@NonNull Context context) {
+        checkNotNull(context);
+        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        if (ipfs != null) {
+            try {
+                if (ipfs.isDaemonRunning()) {
+                    while (peerCheckFlag.get()) {
+                        checkPeers(context);
+                        java.lang.Thread.sleep(1000);
+                    }
+                }
+            } catch (Throwable e) {
+                // IGNORE exception occurs when daemon is shutdown
+            }
+        }
+    }
+
+    private void checkPeers(@NonNull Context context) {
+        checkNotNull(context);
+        PID hostPID = Preferences.getPID(context);
+        try {
+            final THREADS threads = Singleton.getInstance().getThreads();
+            if (Network.isConnected(context)) {
+
+                final IPFS ipfs = Singleton.getInstance().getIpfs();
+                if (ipfs != null) {
+
+                    List<User> users = threads.getUsers();
+
+                    if (hostPID != null) {
+                        User host = threads.getUserByPID(hostPID);
+                        users.remove(host);
+                    }
+                    if (Network.isConnected(context)) {
+                        for (User user : users) {
+                            UserStatus currentStatus = user.getStatus();
+                            if (currentStatus != UserStatus.BLOCKED &&
+                                    currentStatus != UserStatus.DIALING) {
+                                try {
+                                    boolean value = ipfs.swarmConnected(user.getPID());
+                                    if (value) {
+                                        if (threads.getStatus(user) != UserStatus.DIALING) {
+                                            threads.setStatus(user, UserStatus.ONLINE);
+                                        }
+                                    } else {
+                                        if (threads.getStatus(user) != UserStatus.DIALING) {
+                                            threads.setStatus(user, UserStatus.OFFLINE);
+                                        }
+                                    }
+                                } catch (Throwable e) {
+                                    if (threads.getStatus(user) != UserStatus.DIALING) {
+                                        threads.setStatus(user, UserStatus.OFFLINE);
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        for (User user : users) {
+                            if (UserStatus.OFFLINE != user.getStatus()) {
+                                threads.setStatus(user, UserStatus.OFFLINE);
+                            }
+
+                        }
+                    }
+                }
+            } else {
+                List<User> users = threads.getUsers();
+                for (User user : users) {
+
+                    if (UserStatus.OFFLINE != user.getStatus()) {
+                        threads.setStatus(user, UserStatus.OFFLINE);
+                    }
+
+                }
+            }
+        } catch (Throwable e) {
+            Preferences.evaluateException(Preferences.EXCEPTION, e);
+        }
     }
 
     void downloadThread(@NonNull Context context, @NonNull Thread thread) {
