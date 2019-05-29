@@ -18,6 +18,7 @@ import threads.core.api.Content;
 import threads.iota.IOTA;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
+import threads.share.RelayService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -71,6 +72,7 @@ public class NotificationFCMClient extends FirebaseMessagingService {
 
                             final boolean pubsubEnabled = Preferences.isPubsubEnabled(
                                     getApplicationContext());
+                            RelayService.publishPeer(getApplicationContext());
                             ConnectService.connectUser(getApplicationContext(),
                                     PID.create(pid), pubsubEnabled);
                         }

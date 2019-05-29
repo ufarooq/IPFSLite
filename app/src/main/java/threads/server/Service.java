@@ -53,7 +53,6 @@ import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.PubsubConfig;
 import threads.share.ConnectService;
-import threads.share.FCMService;
 import threads.share.RTCSession;
 import threads.share.RelayService;
 
@@ -271,26 +270,26 @@ public class Service {
 
 
                 Preferences.setAutoNATServiceEnabled(context, false);
-                Preferences.setRelayHopEnabled(context, false); // TODO check
-                Preferences.setAutoRelayEnabled(context, false); // TODO check
+                Preferences.setRelayHopEnabled(context, true); // TODO check
+                Preferences.setAutoRelayEnabled(context, true); // TODO check
 
                 Preferences.setPubsubRouter(context, PubsubConfig.RouterEnum.gossipsub);
 
                 Preferences.setConnMgrConfigType(context, ConnMgrConfig.TypeEnum.basic);
                 Preferences.setLowWater(context, 30);
                 Preferences.setHighWater(context, 80);
-                Preferences.setGracePeriod(context, "5s");
+                Preferences.setGracePeriod(context, "10s");
 
 
                 Preferences.setConnectionTimeout(context, 45000);
-                Preferences.setAutoConnectRelay(context, false); // TODO check
+                Preferences.setAutoConnectRelay(context, true); // TODO check
 
                 Preferences.setTangleTimeout(context, 15);
 
-                Preferences.setMdnsEnabled(context, true);
+                Preferences.setMdnsEnabled(context, false); // TODO
 
                 Preferences.setDialRelay(context, true); // TODO check
-                Preferences.setDebugMode(context, false); // TODO change in release mode
+                Preferences.setDebugMode(context, true); // TODO change in release mode
 
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putInt(UPDATE, versionCode);
@@ -1480,12 +1479,8 @@ public class Service {
                     new java.lang.Thread(() -> startPubsub(context)).start();
                 }
 
-                if (Preferences.isAutoConnectRelay(context)) {
-                    new java.lang.Thread(() -> RelayService.connectedRelays(
-                            context, 10000)).start();
-                } else {
-                    new java.lang.Thread(() -> FCMService.publishToken(context)).start();
-                }
+                new java.lang.Thread(() -> RelayService.publishPeer(context)).start();
+
                 new java.lang.Thread(() -> checkTangleServer(context)).start();
 
                 if (Preferences.isDebugMode(context)) {

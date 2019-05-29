@@ -68,6 +68,7 @@ import threads.share.InfoDialogFragment;
 import threads.share.NameDialogFragment;
 import threads.share.PermissionAction;
 import threads.share.RTCCallActivity;
+import threads.share.RelayService;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.UserActionDialogFragment;
 import threads.share.WebViewDialogFragment;
@@ -860,6 +861,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         try {
                             threadsAPI.setStatus(user, UserStatus.DIALING);
 
+                            RelayService.publishPeer(getApplicationContext());
                             boolean value = ConnectService.connectUser(getApplicationContext(),
                                     user.getPID(), false); // no pubsub check
                             if (value) {
