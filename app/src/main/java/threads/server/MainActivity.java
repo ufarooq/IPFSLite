@@ -486,6 +486,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickUserInfo(@NonNull String pid) {
         checkNotNull(pid);
         try {
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    RelayService.publishPeer(getApplicationContext());
+                } catch (Throwable e) {
+                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                }
+            });
+
             InfoDialogFragment.show(this, pid,
                     getString(R.string.peer_id),
                     getString(R.string.peer_access, pid));
