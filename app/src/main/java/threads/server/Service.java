@@ -115,8 +115,9 @@ public class Service {
         final THREADS threadsAPI = Singleton.getInstance().getThreads();
 
 
-        Preferences.debug("Token : " + Preferences.getToken(context));
-        Preferences.debug("Start Pubsub Daemon :" + pid.getPid());
+        Singleton.getInstance().getConsoleListener().debug(
+                "Token : " + Preferences.getToken(context));
+        Singleton.getInstance().getConsoleListener().debug("Start Pubsub Daemon :" + pid.getPid());
 
 
         ipfs.pubsubSub(pid.getPid(), (message) -> {
@@ -1466,7 +1467,7 @@ public class Service {
             if (ipfs != null) {
 
                 try {
-                    Preferences.debug("Start Daemon");
+                    Singleton.getInstance().getConsoleListener().debug("Start Daemon");
 
                     ipfs.daemon(Preferences.isPubsubEnabled(context));
 
@@ -1480,7 +1481,7 @@ public class Service {
                 }
 
                 if (Preferences.isAutoConnectRelay(context)) {
-                    new java.lang.Thread(() -> RelayService.connectRelays(
+                    new java.lang.Thread(() -> RelayService.connectedRelays(
                             context, 10000)).start();
                 } else {
                     new java.lang.Thread(() -> FCMService.publishToken(context)).start();

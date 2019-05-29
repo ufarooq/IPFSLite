@@ -19,7 +19,6 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 
-import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.api.Content;
 
@@ -64,7 +63,7 @@ public class NotificationFCMServer implements Singleton.NotificationServer {
             return googleCredential.getAccessToken();
 
         } catch (Throwable e) {
-            Preferences.debug("" + e.getLocalizedMessage());
+            Singleton.getInstance().getConsoleListener().debug("" + e.getLocalizedMessage());
         }
         return null;
     }
@@ -126,7 +125,7 @@ public class NotificationFCMServer implements Singleton.NotificationServer {
             }
             in.close();
         } catch (Throwable e) {
-            Preferences.debug("" + e.getLocalizedMessage());
+            Singleton.getInstance().getConsoleListener().debug("" + e.getLocalizedMessage());
             result = false;
         } finally {
             if (httpConn != null) {

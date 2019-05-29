@@ -53,7 +53,7 @@ public class NotificationFCMClient extends FirebaseMessagingService {
                         if (!Service.isInitialized()) {
                             Service.getInstance(getApplicationContext());
                         }
-                        Preferences.debug(data.toString());
+                        Singleton.getInstance().getConsoleListener().debug(data.toString());
                         final THREADS threadsAPI = Singleton.getInstance().getThreads();
                         if (!threadsAPI.isAccountBlocked(PID.create(pid))) {
 
@@ -75,7 +75,8 @@ public class NotificationFCMClient extends FirebaseMessagingService {
                                     PID.create(pid), pubsubEnabled);
                         }
                     } catch (Throwable e) {
-                        Preferences.debug("" + e.getLocalizedMessage());
+                        Singleton.getInstance().getConsoleListener().debug(
+                                "" + e.getLocalizedMessage());
                     }
                 });
 
