@@ -62,11 +62,9 @@ public class NotificationFCMClient extends FirebaseMessagingService {
                             if (data.containsKey(Content.PEER)) {
                                 IOTA iota = Singleton.getInstance(getApplicationContext()).getIota();
                                 checkNotNull(iota);
-                                String hash = StringEscapeUtils.unescapeJava(
-                                        data.get(Content.PEER));
+                                String hash = StringEscapeUtils.unescapeJava(data.get(Content.PEER));
                                 checkNotNull(hash);
                                 threadsAPI.getPeerByHash(iota, PID.create(pid), hash);
-
                             }
 
 
