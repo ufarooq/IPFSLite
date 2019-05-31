@@ -30,21 +30,13 @@ public class NotificationFCMServer implements Singleton.NotificationServer {
     private static final String TAG = NotificationFCMServer.class.getSimpleName();
     private static final String SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
     private static final String SERVICE = "https://fcm.googleapis.com/v1/projects/threads-server/messages:send";
-    private static NotificationFCMServer INSTANCE = null;
+    private static NotificationFCMServer SINGELTON = new NotificationFCMServer();
 
-    private final Context context;
-
-    private NotificationFCMServer(@NonNull Context context) {
-        checkNotNull(context);
-        this.context = context;
+    private NotificationFCMServer() {
     }
 
-    static NotificationFCMServer getInstance(@NonNull Context context) {
-        checkNotNull(context);
-        if (INSTANCE == null) {
-            INSTANCE = new NotificationFCMServer(context);
-        }
-        return INSTANCE;
+    static NotificationFCMServer getInstance() {
+        return SINGELTON;
     }
 
     @Nullable
@@ -71,9 +63,11 @@ public class NotificationFCMServer implements Singleton.NotificationServer {
     }
 
 
-    public boolean sendNotification(@NonNull String token,
+    public boolean sendNotification(@NonNull Context context,
+                                    @NonNull String token,
                                     @NonNull String pid,
                                     @NonNull Map<String, String> params) {
+        checkNotNull(context);
         checkNotNull(token);
         checkNotNull(pid);
 

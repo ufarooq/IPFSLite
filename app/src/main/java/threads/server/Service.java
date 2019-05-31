@@ -86,7 +86,7 @@ public class Service {
 
             Singleton singleton = Singleton.getInstance(context);
             singleton.setAesKey(() -> "");
-            singleton.setNotificationServer(NotificationFCMServer.getInstance(context));
+            singleton.setNotificationServer(NotificationFCMServer.getInstance());
 
             SINGLETON = new Service();
             SINGLETON.startDaemon(context);
@@ -254,7 +254,7 @@ public class Service {
                 // Experimental Features
                 Preferences.setQUICEnabled(context, true);
                 Preferences.setFilestoreEnabled(context, false);
-                Preferences.setPreferTLS(context, false); // TODO check
+                Preferences.setPreferTLS(context, false);
 
 
                 Preferences.setApiPort(context, 5001);
@@ -262,8 +262,8 @@ public class Service {
 
 
                 Preferences.setAutoNATServiceEnabled(context, false);
-                Preferences.setRelayHopEnabled(context, true); // TODO check
-                Preferences.setAutoRelayEnabled(context, true); // TODO check
+                Preferences.setRelayHopEnabled(context, true);
+                Preferences.setAutoRelayEnabled(context, true);
 
                 Preferences.setPubsubRouter(context, PubsubConfig.RouterEnum.gossipsub);
 
@@ -274,15 +274,15 @@ public class Service {
 
 
                 Preferences.setConnectionTimeout(context, 45000);
-                Preferences.setAutoConnectRelay(context, true); // TODO check
+                Preferences.setAutoConnectRelay(context, false);
 
                 Preferences.setTangleTimeout(context, 15);
 
-                Preferences.setMdnsEnabled(context, true); // TODO
+                Preferences.setMdnsEnabled(context, true);
 
                 Preferences.setReportMode(context, true);
-                Preferences.setDialRelay(context, true); // TODO check
-                Preferences.setDebugMode(context, true); // TODO change in release mode
+                Preferences.setDialRelay(context, true);
+                Preferences.setDebugMode(context, false);
 
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putInt(UPDATE, versionCode);
