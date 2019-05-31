@@ -833,6 +833,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickConnectPeer(@NonNull String multihash) {
+
+        // CHECKED
+        if (!Network.isConnected(getApplicationContext())) {
+            Singleton singleton = Singleton.getInstance(getApplicationContext());
+            Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
+            return;
+        }
+
+
         checkNotNull(multihash);
         try {
             final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();

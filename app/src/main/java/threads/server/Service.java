@@ -1232,11 +1232,9 @@ public class Service {
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         if (ipfs != null) {
             try {
-                if (ipfs.isDaemonRunning()) {
-                    while (peerCheckFlag.get()) {
-                        checkPeers(context);
-                        java.lang.Thread.sleep(1000);
-                    }
+                while (peerCheckFlag.get() && ipfs.isDaemonRunning()) {
+                    checkPeers(context);
+                    java.lang.Thread.sleep(1000);
                 }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -1268,6 +1266,7 @@ public class Service {
                                     currentStatus != UserStatus.DIALING) {
                                 try {
                                     boolean value = ipfs.isConnected(user.getPID());
+
                                     if (value) {
                                         if (threads.getStatus(user) != UserStatus.DIALING) {
                                             threads.setStatus(user, UserStatus.ONLINE);
