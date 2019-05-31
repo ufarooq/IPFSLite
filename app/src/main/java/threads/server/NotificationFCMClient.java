@@ -51,22 +51,22 @@ public class NotificationFCMClient extends FirebaseMessagingService {
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() -> {
                     try {
-                        if (!Service.isInitialized()) {
-                            Service.getInstance(getApplicationContext());
-                        }
-                        Singleton.getInstance().getConsoleListener().debug(data.toString());
-                        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+
+                        Service.getInstance(getApplicationContext());
+
+                        Singleton.getInstance(getApplicationContext()).getConsoleListener().debug(data.toString());
+                        final THREADS threadsAPI = Singleton.getInstance(getApplicationContext()).getThreads();
                         if (!threadsAPI.isAccountBlocked(PID.create(pid))) {
 
                             // check if peer hash is transmitted
                             if (data.containsKey(Content.PEER)) {
-                                IOTA iota = Singleton.getInstance().getIota();
-                                if (iota != null) {
-                                    String hash = StringEscapeUtils.unescapeJava(
-                                            data.get(Content.PEER));
-                                    checkNotNull(hash);
-                                    threadsAPI.getPeerByHash(iota, PID.create(pid), hash);
-                                }
+                                IOTA iota = Singleton.getInstance(getApplicationContext()).getIota();
+                                checkNotNull(iota);
+                                String hash = StringEscapeUtils.unescapeJava(
+                                        data.get(Content.PEER));
+                                checkNotNull(hash);
+                                threadsAPI.getPeerByHash(iota, PID.create(pid), hash);
+
                             }
 
 
@@ -77,7 +77,7 @@ public class NotificationFCMClient extends FirebaseMessagingService {
                                     PID.create(pid), pubsubEnabled);
                         }
                     } catch (Throwable e) {
-                        Singleton.getInstance().getConsoleListener().debug(
+                        Singleton.getInstance(getApplicationContext()).getConsoleListener().debug(
                                 "" + e.getLocalizedMessage());
                     }
                 });

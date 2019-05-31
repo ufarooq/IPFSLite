@@ -5,17 +5,17 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
-
-import threads.core.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
 class ProgressChannel {
 
     private static final String CHANNEL_ID = "CHANNEL_ID";
+    private static final String TAG = ProgressChannel.class.getSimpleName();
 
     static void createProgressChannel(@NonNull Context context) {
         checkNotNull(context);
@@ -35,7 +35,7 @@ class ProgressChannel {
                 }
 
             } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
         }
     }

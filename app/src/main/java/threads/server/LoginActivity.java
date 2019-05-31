@@ -2,6 +2,7 @@ package threads.server;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -13,10 +14,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.Preferences;
-
 public class LoginActivity extends AppCompatActivity {
 
+    private static final String TAG = LoginActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,7 +39,7 @@ public class LoginActivity extends AppCompatActivity {
             String version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
             app_version.setText(getString(R.string.version_number, version));
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
 

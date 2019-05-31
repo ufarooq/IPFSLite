@@ -1,7 +1,9 @@
 package threads.server;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,17 +16,30 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.mdl.MessagesViewModel;
 import threads.share.MessageViewAdapter;
 
 public class ConsoleFragment extends Fragment {
-
+    private static final String TAG = ConsoleFragment.class.getSimpleName();
     private MessageViewAdapter messageViewAdapter;
 
     private long mLastClickTime = 0;
 
+    private Context mContext;
+
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mContext = null;
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        mContext = context;
+    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -38,14 +53,14 @@ public class ConsoleFragment extends Fragment {
                 return;
             }
             mLastClickTime = SystemClock.elapsedRealtime();
-            new Thread(() -> Singleton.getInstance().getThreads().clearMessages()).start();
+            new Thread(() -> Singleton.getInstance(mContext).getThreads().clearMessages()).start();
 
         });
 
         RecyclerView mRecyclerView = view.findViewById(R.id.view_message_list);
         mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
-        LinearLayoutManager linearLayout = new LinearLayoutManager(getContext());
+        LinearLayoutManager linearLayout = new LinearLayoutManager(mContext);
 
 
         mRecyclerView.setLayoutManager(linearLayout);
@@ -62,7 +77,7 @@ public class ConsoleFragment extends Fragment {
 
                     mRecyclerView.scrollToPosition(messageViewAdapter.getItemCount() - 1);
                 } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
             }
 

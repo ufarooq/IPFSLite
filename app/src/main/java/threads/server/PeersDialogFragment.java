@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,8 +15,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
-
-import threads.core.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -46,7 +45,7 @@ public class PeersDialogFragment extends DialogFragment {
         try {
             actionListener = (ActionListener) getActivity();
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 

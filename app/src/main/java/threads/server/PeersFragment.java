@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -28,6 +29,7 @@ import java.util.concurrent.Executors;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
+import threads.core.THREADS;
 import threads.core.api.User;
 import threads.core.api.UserStatus;
 import threads.core.mdl.UsersViewModel;
@@ -42,6 +44,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class PeersFragment extends Fragment implements UsersViewAdapter.UsersViewAdapterListener {
 
+    private static final String TAG = PeersFragment.class.getSimpleName();
     private long mLastClickTime = 0;
 
 
@@ -65,7 +68,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
             actionListener = (PeersFragment.ActionListener) getActivity();
             Service.getInstance(context).peersCheckEnable(true);
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -75,7 +78,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
             try {
                 Service.getInstance(mContext).checkPeersOnlineStatus(mContext);
             } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
         });
     }
@@ -119,13 +122,14 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                 mLastClickTime = SystemClock.elapsedRealtime();
 
 
-                final IPFS ipfs = Singleton.getInstance().getIpfs();
+                final THREADS threads = Singleton.getInstance(mContext).getThreads();
+                final IPFS ipfs = Singleton.getInstance(mContext).getIpfs();
                 if (ipfs != null) {
                     ExecutorService executor = Executors.newSingleThreadExecutor();
                     executor.submit(() -> {
                         try {
                             PeerInfo info = ipfs.id();
-
+                            checkNotNull(info);
                             String html = "<html><h2>Addresses</h2><ul>";
                             List<String> addresses = info.getMultiAddresses();
                             for (String address : addresses) {
@@ -145,7 +149,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
                         } catch (Throwable e) {
                             // ignore exception for now
-                            Preferences.evaluateException(Preferences.EXCEPTION, e);
+                            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                         }
                     });
 
@@ -207,11 +211,11 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                     try {
                         usersViewAdapter.updateData(peers);
                     } catch (Throwable e) {
-                        Preferences.evaluateException(Preferences.EXCEPTION, e);
+                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
                     }
                 }
             } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
 
         });
@@ -236,7 +240,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                         .show(fm, UserActionDialogFragment.TAG);
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
     }

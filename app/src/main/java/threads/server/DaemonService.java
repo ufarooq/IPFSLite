@@ -17,8 +17,6 @@ import androidx.core.content.ContextCompat;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import threads.core.Preferences;
-
 import static androidx.core.util.Preconditions.checkNotNull;
 
 
@@ -36,7 +34,7 @@ public class DaemonService extends Service {
             Intent intent = new Intent(context, DaemonService.class);
             ContextCompat.startForegroundService(context, intent);
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -92,7 +90,7 @@ public class DaemonService extends Service {
         try {
             createChannel(getApplicationContext());
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
         super.onCreate();
     }

@@ -1,6 +1,7 @@
 package threads.server;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,6 +27,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 
 public class NotificationFCMServer implements Singleton.NotificationServer {
+    private static final String TAG = NotificationFCMServer.class.getSimpleName();
     private static final String SCOPE = "https://www.googleapis.com/auth/firebase.messaging";
     private static final String SERVICE = "https://fcm.googleapis.com/v1/projects/threads-server/messages:send";
     private static NotificationFCMServer INSTANCE = null;
@@ -63,7 +65,7 @@ public class NotificationFCMServer implements Singleton.NotificationServer {
             return googleCredential.getAccessToken();
 
         } catch (Throwable e) {
-            Singleton.getInstance().getConsoleListener().debug("" + e.getLocalizedMessage());
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
         return null;
     }
@@ -125,7 +127,7 @@ public class NotificationFCMServer implements Singleton.NotificationServer {
             }
             in.close();
         } catch (Throwable e) {
-            Singleton.getInstance().getConsoleListener().debug("" + e.getLocalizedMessage());
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
             result = false;
         } finally {
             if (httpConn != null) {

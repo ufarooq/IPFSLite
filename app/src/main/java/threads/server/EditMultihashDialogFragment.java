@@ -10,6 +10,7 @@ import android.os.SystemClock;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,7 +26,6 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import threads.core.Preferences;
 import threads.ipfs.api.Multihash;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -53,7 +53,7 @@ public class EditMultihashDialogFragment extends DialogFragment {
         try {
             mListener = (EditMultihashDialogFragment.ActionListener) getActivity();
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -200,7 +200,7 @@ public class EditMultihashDialogFragment extends DialogFragment {
                 imm.hideSoftInputFromWindow(multihash.getWindowToken(), 0);
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
     }

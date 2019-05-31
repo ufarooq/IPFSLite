@@ -5,6 +5,7 @@ import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.app.Dialog;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -97,7 +98,7 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
             scaleDown.setDuration(500);
             scaleDown.start();
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -129,7 +130,7 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
             scaleDown.setDuration(500);
             scaleDown.start();
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 

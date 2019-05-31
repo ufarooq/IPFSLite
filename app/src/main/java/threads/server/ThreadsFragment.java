@@ -3,6 +3,7 @@ package threads.server;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -47,7 +48,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.ThreadsViewAdapterListener {
 
-
+    private static final String TAG = ThreadsFragment.class.getSimpleName();
     private static final String DIRECTORY = "DIRECTORY";
     private static final String IDXS = "IDXS";
     private static final String SELECTION = "SELECTION";
@@ -150,7 +151,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 outState.putLong(DIRECTORY, dir);
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
         super.onSaveInstanceState(outState);
     }
@@ -189,7 +190,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             }
             update(directory.get());
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
     }
@@ -296,7 +297,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
                 }
             } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
 
         });
@@ -332,7 +333,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 }
             });
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {
             evaluateFabDeleteVisibility();
         }
@@ -365,7 +366,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 }
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -373,7 +374,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         try {
             // CHECKED
             if (!Network.isConnected(mContext)) {
-                Preferences.error(getString(R.string.offline_mode));
+                Singleton singleton = Singleton.getInstance(mContext);
+                Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
                 return;
             }
 
@@ -382,12 +384,12 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
             unmarkThreads();
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
     private void markThreads() {
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+        final THREADS threadsAPI = Singleton.getInstance(mContext).getThreads();
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -408,7 +410,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                     getActivity().runOnUiThread(() -> threadsViewAdapter.notifyDataSetChanged());
                 }
             } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
+                Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
             } finally {
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(this::evaluateFabDeleteVisibility);
@@ -418,14 +420,14 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     }
 
     private void clearUnreadNotes() {
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+        final THREADS threadsAPI = Singleton.getInstance(mContext).getThreads();
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
                 threadsAPI.resetThreadUnreadNotesNumber(directory.get());
             } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
+                Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
             }
         });
     }
@@ -439,7 +441,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             threadIdx = -1;
             threadsViewAdapter.notifyDataSetChanged();
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {
             evaluateFabDeleteVisibility();
         }
@@ -447,14 +449,14 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     private void deleteAction() {
 
-        Service.deleteThreads(new ArrayList<>(threads));
+        Service.deleteThreads(mContext, new ArrayList<>(threads));
         try {
             if (threads.contains(threadIdx)) {
                 threadIdx = -1;
             }
             threads.clear();
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {
             evaluateFabDeleteVisibility();
         }
@@ -465,14 +467,14 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
         unmarkThreads();
 
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
+        final THREADS threads = Singleton.getInstance(mContext).getThreads();
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
                 Long idx = directory.get();
 
-                Thread thread = threadsAPI.getThreadByIdx(idx);
+                Thread thread = threads.getThreadByIdx(idx);
                 if (thread != null) {
                     long parent = thread.getThread();
 
@@ -482,7 +484,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 }
 
             } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
+                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
             }
         });
     }
@@ -507,7 +509,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                         .show(fm, ThreadActionDialogFragment.TAG);
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -523,7 +525,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 }
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
     }
@@ -544,7 +546,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 }
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
     }
@@ -558,7 +560,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 evaluateFabDeleteVisibility();
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -581,24 +583,25 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         try {
             // CHECKED
             if (!Network.isConnected(mContext)) {
-                Preferences.error(getString(R.string.offline_mode));
+                Singleton singleton = Singleton.getInstance(mContext);
+                Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
                 return;
             }
 
-            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            final IPFS ipfs = Singleton.getInstance(mContext).getIpfs();
             if (ipfs != null) {
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() -> {
                     try {
                         Service.getInstance(mContext).downloadThread(mContext, thread);
                     } catch (Throwable e) {
-                        Preferences.evaluateException(Preferences.EXCEPTION, e);
+                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
                     }
                 });
             }
 
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 

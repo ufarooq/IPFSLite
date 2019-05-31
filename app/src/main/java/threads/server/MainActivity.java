@@ -8,6 +8,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -85,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         PeersFragment.ActionListener,
         NameDialogFragment.ActionListener {
 
+    private static final String TAG = MainActivity.class.getSimpleName();
     private static final Gson gson = new Gson();
     private static final int REQUEST_VIDEO_CAPTURE = 1;
     private static final int REQUEST_AUDIO_CAPTURE = 2;
@@ -205,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -214,7 +216,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(getString(R.string.offline_mode));
+            Singleton singleton = Singleton.getInstance(getApplicationContext());
+            Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
             return;
         }
 
@@ -229,10 +232,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 String multihash = codecDecider.getMultihash();
                 Service.downloadMultihash(getApplicationContext(), host, multihash, null);
             } else {
-                Preferences.error(getString(R.string.codec_not_supported));
+                Singleton singleton = Singleton.getInstance(getApplicationContext());
+                Preferences.error(singleton.getThreads(),
+                        getString(R.string.codec_not_supported));
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -252,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             findViewById(R.id.fab_daemon).setVisibility(View.VISIBLE);
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
     }
@@ -297,7 +302,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
                 break;
             }
@@ -308,7 +313,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     startActivity(intent);
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
                 break;
             }
@@ -317,15 +322,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     LicensesDialogFragment fragment =
                             new LicensesDialogFragment.Builder(this)
-                            .setNotices(R.raw.licenses)
-                            .setShowFullLicenseText(false)
-                            .setIncludeOwnLicense(true)
-                            .build();
+                                    .setNotices(R.raw.licenses)
+                                    .setShowFullLicenseText(false)
+                                    .setIncludeOwnLicense(true)
+                                    .build();
 
                     fragment.show(getSupportFragmentManager(), null);
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
                 break;
             }
@@ -335,7 +340,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     SettingsDialogFragment settingsDialogFragment = new SettingsDialogFragment();
                     settingsDialogFragment.show(fm, SettingsDialogFragment.TAG);
                 } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
                 break;
             }
@@ -350,7 +355,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     i.putExtra(Intent.EXTRA_TEXT, sAux);
                     startActivity(Intent.createChooser(i, getString(R.string.choose_one)));
                 } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
                 break;
             }
@@ -365,7 +370,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     intent.setData(Uri.parse("https://docs.ipfs.io/reference/api/http"));
                     startActivity(intent);
                 } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
                 break;
             }
@@ -392,7 +397,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -410,7 +415,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         getString(R.string.feature_camera_required), Toast.LENGTH_LONG).show();
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -421,7 +426,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             EditMultihashDialogFragment editMultihashDialogFragment = new EditMultihashDialogFragment();
             editMultihashDialogFragment.show(fm, EditMultihashDialogFragment.TAG);
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -439,7 +444,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivityForResult(Intent.createChooser(intent,
                     getString(R.string.select_files)), REQUEST_SELECT_FILES);
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -451,7 +456,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             EditPeerDialogFragment editPeerDialogFragment = new EditPeerDialogFragment();
             editPeerDialogFragment.show(fm, EditPeerDialogFragment.TAG);
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -459,26 +464,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickUserBlock(@NonNull String pid) {
         checkNotNull(pid);
         try {
-            final THREADS threadsAPI = Singleton.getInstance().getThreads();
+            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
 
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    User user = threadsAPI.getUserByPID(PID.create(pid));
+                    User user = threads.getUserByPID(PID.create(pid));
                     checkNotNull(user);
 
                     if (user.getStatus() == UserStatus.BLOCKED) {
-                        threadsAPI.unblockUser(user, UserStatus.OFFLINE);
+                        threads.unblockUser(user, UserStatus.OFFLINE);
                     } else {
-                        threadsAPI.blockUser(user);
+                        threads.blockUser(user);
                     }
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                 }
             });
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -486,13 +491,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickUserInfo(@NonNull String pid) {
         checkNotNull(pid);
         try {
-
+            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
                     RelayService.publishPeer(getApplicationContext());
                 } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                 }
             });
 
@@ -500,7 +505,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     getString(R.string.peer_id),
                     getString(R.string.peer_access, pid));
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -508,17 +513,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickUserDelete(@NonNull String pid) {
         checkNotNull(pid);
         try {
+            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    THREADS threadsAPI = Singleton.getInstance().getThreads();
-                    threadsAPI.removeUserByPID(PID.create(pid));
+                    threads.removeUserByPID(PID.create(pid));
                 } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                 }
             });
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -528,29 +533,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(getString(R.string.offline_mode));
+            Singleton singleton = Singleton.getInstance(getApplicationContext());
+            Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
             return;
         }
 
 
         try {
-            final IPFS ipfs = Singleton.getInstance().getIpfs();
-
+            final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
             if (ipfs != null) {
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() -> {
                     try {
 
-                        THREADS threadsAPI = Singleton.getInstance().getThreads();
-                        User user = threadsAPI.getUserByPID(PID.create(pid));
+
+                        User user = threads.getUserByPID(PID.create(pid));
                         checkNotNull(user);
 
                         if (user.getStatus() == UserStatus.BLOCKED) {
-                            Preferences.warning(getString(R.string.peer_is_blocked));
+                            Preferences.warning(threads, getString(R.string.peer_is_blocked));
                         } else {
 
                             try {
-                                threadsAPI.setStatus(user, UserStatus.DIALING);
+                                threads.setStatus(user, UserStatus.DIALING);
 
                                 final boolean pubsubEnabled = Preferences.isPubsubEnabled(
                                         getApplicationContext());
@@ -563,21 +569,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                                 if (value) {
-                                    threadsAPI.setStatus(user, UserStatus.ONLINE);
+                                    threads.setStatus(user, UserStatus.ONLINE);
                                 } else {
-                                    threadsAPI.setStatus(user, UserStatus.OFFLINE);
+                                    threads.setStatus(user, UserStatus.OFFLINE);
                                 }
                             } catch (Throwable e) {
-                                threadsAPI.setStatus(user, UserStatus.OFFLINE);
+                                threads.setStatus(user, UserStatus.OFFLINE);
                             }
                         }
                     } catch (Throwable e) {
-                        Preferences.evaluateException(Preferences.EXCEPTION, e);
+                        Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                     }
                 });
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -589,7 +595,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             NameDialogFragment.newInstance(pid, getString(R.string.peer_name))
                     .show(fm, NameDialogFragment.TAG);
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -688,7 +694,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     snackbar.show();
                 }
             } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
 
         });
@@ -715,7 +721,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     snackbar.show();
                 }
             } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
 
         });
@@ -732,7 +738,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     snackbar.show();
                 }
             } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
 
         });
@@ -745,7 +751,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     eventViewModel.removeEvent(event);
                 }
             } catch (Throwable e) {
-                Preferences.evaluateException(Preferences.EXCEPTION, e);
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
 
         });
@@ -761,7 +767,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(getString(R.string.offline_mode));
+            Singleton singleton = Singleton.getInstance(getApplicationContext());
+            Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
             return;
         }
 
@@ -787,8 +794,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
         try {
-            final IPFS ipfs = Singleton.getInstance().getIpfs();
-            final THREADS threads = Singleton.getInstance().getThreads();
+            final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
             final PID host = Preferences.getPID(getApplicationContext());
             checkNotNull(host);
             if (ipfs != null) {
@@ -799,7 +806,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         checkNotNull(user);
 
                         if (user.getStatus() == UserStatus.BLOCKED) {
-                            Preferences.warning(getString(R.string.peer_is_blocked));
+                            Preferences.warning(threads, getString(R.string.peer_is_blocked));
                         } else {
 
                             final boolean pubsubEnabled = Preferences.isPubsubEnabled(
@@ -813,12 +820,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             MainActivity.this.startActivity(intent);
                         }
                     } catch (Throwable e) {
-                        Preferences.evaluateException(Preferences.EXCEPTION, e);
+                        Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                     }
                 });
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
     }
@@ -828,7 +835,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickConnectPeer(@NonNull String multihash) {
         checkNotNull(multihash);
         try {
-            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
             if (ipfs != null) {
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() -> {
@@ -838,7 +846,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         try {
                             Multihash.fromBase58(multihash);
                         } catch (Throwable e) {
-                            Preferences.error(getString(R.string.multihash_not_valid));
+                            Preferences.error(threads, getString(R.string.multihash_not_valid));
                             return;
                         }
 
@@ -846,41 +854,40 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         PID pid = PID.create(multihash);
 
                         if (pid.equals(host)) {
-                            Preferences.warning(getString(R.string.same_pid_like_host));
+                            Preferences.warning(threads, getString(R.string.same_pid_like_host));
                             return;
                         }
 
 
-                        THREADS threadsAPI = Singleton.getInstance().getThreads();
-                        User user = threadsAPI.getUserByPID(pid);
+                        User user = threads.getUserByPID(pid);
                         if (user == null) {
                             byte[] data = THREADS.getImage(getApplicationContext(),
                                     pid.getPid(), R.drawable.server_network);
                             CID image = ipfs.add(data, true);
-                            user = threadsAPI.createUser(pid, "", // not yet known
+                            user = threads.createUser(pid, "", // not yet known
                                     pid.getPid(), UserType.VERIFIED, image);
                             user.setStatus(UserStatus.OFFLINE);
-                            threadsAPI.storeUser(user);
+                            threads.storeUser(user);
 
                         } else {
-                            Preferences.warning(getString(R.string.peer_exists_with_pid));
+                            Preferences.warning(threads, getString(R.string.peer_exists_with_pid));
                             return;
                         }
                         checkNotNull(user);
 
                         try {
-                            threadsAPI.setStatus(user, UserStatus.DIALING);
+                            threads.setStatus(user, UserStatus.DIALING);
 
                             RelayService.publishPeer(getApplicationContext());
                             boolean value = ConnectService.connectUser(getApplicationContext(),
                                     user.getPID(), false); // no pubsub check
                             if (value) {
-                                threadsAPI.setStatus(user, UserStatus.ONLINE);
+                                threads.setStatus(user, UserStatus.ONLINE);
 
                                 // make a connection to peer
                                 if (Preferences.isPubsubEnabled(getApplicationContext())) {
                                     checkNotNull(host);
-                                    User hostUser = threadsAPI.getUserByPID(host);
+                                    User hostUser = threads.getUserByPID(host);
                                     checkNotNull(hostUser);
 
                                     Content map = new Content();
@@ -891,20 +898,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     ipfs.pubsubPub(user.getPID().getPid(), gson.toJson(map), 50);
                                 }
                             } else {
-                                threadsAPI.setStatus(user, UserStatus.OFFLINE);
+                                threads.setStatus(user, UserStatus.OFFLINE);
                             }
                         } catch (Throwable e) {
-                            threadsAPI.setStatus(user, UserStatus.OFFLINE);
+                            threads.setStatus(user, UserStatus.OFFLINE);
                         }
 
 
                     } catch (Throwable e) {
-                        Preferences.evaluateException(Preferences.EXCEPTION, e);
+                        Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                     }
                 });
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -912,16 +919,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickThreadPublish(long idx) {
 
         try {
-            final THREADS threadsAPI = Singleton.getInstance().getThreads();
-            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+            final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
             if (ipfs != null) {
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() -> {
 
-                    threadsAPI.setThreadStatus(idx, ThreadStatus.PUBLISHING);
+                    threads.setThreadStatus(idx, ThreadStatus.PUBLISHING);
 
                     try {
-                        Thread threadObject = threadsAPI.getThreadByIdx(idx);
+                        Thread threadObject = threads.getThreadByIdx(idx);
                         checkNotNull(threadObject);
                         CID cid = threadObject.getCid();
                         checkNotNull(cid);
@@ -938,27 +945,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         startActivity(intent);
 
                     } catch (Throwable e) {
-                        Preferences.evaluateException(Preferences.EXCEPTION, e);
+                        Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                     } finally {
-                        threadsAPI.setThreadStatus(idx, ThreadStatus.ONLINE);
+                        threads.setThreadStatus(idx, ThreadStatus.ONLINE);
                     }
                 });
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
     @Override
     public void clickThreadInfo(long idx) {
         try {
-            final THREADS threadsAPI = Singleton.getInstance().getThreads();
-            final IPFS ipfs = Singleton.getInstance().getIpfs();
+            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+            final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
             if (ipfs != null) {
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() -> {
                     try {
-                        Thread threadObject = threadsAPI.getThreadByIdx(idx);
+                        Thread threadObject = threads.getThreadByIdx(idx);
                         checkNotNull(threadObject);
 
                         CID cid = threadObject.getCid();
@@ -971,12 +978,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                     } catch (Throwable e) {
-                        Preferences.evaluateException(Preferences.EXCEPTION, e);
+                        Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                     }
                 });
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
     }
@@ -984,8 +991,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadPlay(long idx) {
 
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        final THREADS threadsAPI = Singleton.getInstance(getApplicationContext()).getThreads();
+        final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
@@ -1011,7 +1018,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         startActivity(new Intent(Intent.ACTION_VIEW, uri));
                     }
                 } catch (Throwable ex) {
-                    Preferences.error(getString(R.string.no_activity_found_to_handle_uri));
+                    Preferences.error(threadsAPI, getString(R.string.no_activity_found_to_handle_uri));
                 }
             });
         }
@@ -1020,12 +1027,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadDelete(long idx) {
 
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    Service.deleteThread(ipfs, idx);
+                    Service.deleteThread(getApplicationContext(), ipfs, idx);
                 } catch (Throwable e) {
                     // ignore exception for now
                 }
@@ -1036,8 +1043,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadView(long idx) {
 
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        final THREADS threadsAPI = Singleton.getInstance(getApplicationContext()).getThreads();
+        final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
@@ -1057,7 +1064,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     startActivity(intent);
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
                 }
             });
         }
@@ -1066,8 +1073,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadShare(long idx) {
 
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        final THREADS threadsAPI = Singleton.getInstance(getApplicationContext()).getThreads();
+        final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
@@ -1107,7 +1114,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
                 }
             });
         }
@@ -1120,14 +1127,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         try {
             // CHECKED
             if (!Network.isConnected(getApplicationContext())) {
-                Preferences.error(getString(R.string.offline_mode));
+                Singleton singleton = Singleton.getInstance(getApplicationContext());
+                Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
                 return;
             }
 
             Service.getInstance(getApplicationContext()).sendThreads(
                     getApplicationContext(), Collections.singletonList(idx));
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -1147,7 +1155,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Service.localDownloadThread(getApplicationContext(), idx);
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
 
@@ -1158,8 +1166,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(pid);
         checkNotNull(name);
 
-        final THREADS threadsAPI = Singleton.getInstance().getThreads();
-        final IPFS ipfs = Singleton.getInstance().getIpfs();
+        final THREADS threadsAPI = Singleton.getInstance(getApplicationContext()).getThreads();
+        final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
 
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -1177,7 +1185,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     threadsAPI.storeUser(user);
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
                 }
             });
         }
@@ -1193,7 +1201,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             checkNotNull(pid);
             clickUserInfo(pid.getPid());
         } catch (Throwable e) {
-            Preferences.evaluateException(Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
     }
