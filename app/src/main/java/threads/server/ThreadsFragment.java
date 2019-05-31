@@ -42,7 +42,7 @@ import threads.core.mdl.ThreadViewModel;
 import threads.ipfs.IPFS;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThreadsViewAdapter;
-import threads.share.UtilitySevice;
+import threads.share.UtilityService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -639,7 +639,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public int getMediaResource(@NonNull Thread thread) {
         checkNotNull(thread);
-        return UtilitySevice.getMediaResource(thread.getMimeType(), false);
+        return UtilityService.getMediaResource(thread.getMimeType(), false);
     }
 
     @NonNull

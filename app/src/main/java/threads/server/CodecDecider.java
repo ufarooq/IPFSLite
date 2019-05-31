@@ -19,7 +19,6 @@ public class CodecDecider {
 
     private static final Gson gson = new Gson();
     private String multihash = null;
-    private URI uri = null;
     private Content map = null;
     private Codec codex = Codec.UNKNOWN;
 
@@ -53,7 +52,6 @@ public class CodecDecider {
                         Multihash.fromBase58(multihash);
                         codecDecider.setMultihash(multihash);
                         codecDecider.setCodex(Codec.URI);
-                        codecDecider.setUri(uri);
                         return codecDecider;
                     }
                 } catch (Throwable e) {
@@ -93,14 +91,6 @@ public class CodecDecider {
 
     private void setCodex(Codec codex) {
         this.codex = codex;
-    }
-
-    public URI getUri() {
-        return uri;
-    }
-
-    private void setUri(URI uri) {
-        this.uri = uri;
     }
 
 

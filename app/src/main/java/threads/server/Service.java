@@ -956,9 +956,9 @@ public class Service {
         checkNotNull(filename);
 
 
-        int filesize = -1;
+        int fileSize = -1;
         if (size != null) {
-            filesize = size;
+            fileSize = size;
         }
 
         NotificationCompat.Builder builder =
@@ -992,7 +992,7 @@ public class Service {
                         public boolean isStopped() {
                             return !Network.isConnected(context);
                         }
-                    }, timeout, filesize);
+                    }, timeout, fileSize);
 
             if (success) {
                 try {
@@ -1223,11 +1223,11 @@ public class Service {
         return file;
     }
 
-    public void peersCheckEnable(boolean value) {
+    void peersCheckEnable(boolean value) {
         peerCheckFlag.set(value);
     }
 
-    public void checkPeersOnlineStatus(@NonNull Context context) {
+    void checkPeersOnlineStatus(@NonNull Context context) {
         checkNotNull(context);
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         if (ipfs != null) {
@@ -1239,7 +1239,7 @@ public class Service {
                     }
                 }
             } catch (Throwable e) {
-                // IGNORE exception occurs when daemon is shutdown
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
         }
     }
@@ -1432,7 +1432,8 @@ public class Service {
                             }
                         }
 
-                        Preferences.warning(threads, context.getString(R.string.data_shared_with_peers,
+                        Preferences.warning(threads,
+                                context.getString(R.string.data_shared_with_peers,
                                 String.valueOf(counter)));
 
 
@@ -1473,7 +1474,6 @@ public class Service {
                     ipfs.daemon(Preferences.isPubsubEnabled(context));
 
                 } catch (Throwable e) {
-
                     Preferences.evaluateException(threads, Preferences.IPFS_START_FAILURE, e);
                 }
 
