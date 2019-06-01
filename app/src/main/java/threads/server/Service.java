@@ -61,14 +61,13 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 
 public class Service {
-    private static Service SINGLETON = null;
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(3);
     private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(1);
     private static final String APP_KEY = "AppKey";
     private static final String UPDATE = "UPDATE";
-
+    private static Service SINGLETON = null;
     private final AtomicBoolean peerCheckFlag = new AtomicBoolean(false);
 
     private Service() {
@@ -534,10 +533,15 @@ public class Service {
                                 R.drawable.file_document);
                     }
 
+                    String name = fileDetails.getFileName();
+                    long size = fileDetails.getFileSize();
+
                     Thread thread = threadsAPI.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
                             "", null, 0L, false);
-                    thread.addAdditional(Content.TITLE, fileDetails.getFileName(), false);
+                    thread.addAdditional(Content.TITLE, name, false);
                     thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
+                    thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
+
                     CID image = ipfs.add(bytes, true);
                     thread.setImage(image);
                     thread.setMimeType(fileDetails.getMimeType());
@@ -550,8 +554,7 @@ public class Service {
 
                         threadsAPI.setStatus(thread, ThreadStatus.LEACHING);
 
-                        CID cid = ipfs.add(inputStream, fileDetails.getFileName(),
-                                true, true);
+                        CID cid = ipfs.add(inputStream, fileDetails.getFileName(), true);
                         checkNotNull(cid);
 
                         // cleanup of entries with same CID
@@ -840,28 +843,22 @@ public class Service {
 
                         int timeout = Preferences.getConnectionTimeout(context);
 
-                        List<LinkInfo> links = threadsAPI.getLinks(ipfs, threadObject,
-                                timeout, true);
-                        checkNotNull(links);
-                        int size = -1;
-                        if (links.size() == 1) {
-                            LinkInfo link = links.get(0);
-                            cid = link.getCid();
-                            Integer linkSize = link.getSize();
-                            if (linkSize != null) {
-                                size = linkSize;
-                            }
+                        String name = threadObject.getAdditional(Content.TITLE);
+                        long size = -1;
+                        try {
+                            size = Long.valueOf(threadObject.getAdditional(Content.FILESIZE));
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
                         }
-                        String title = threadObject.getAdditional(Content.TITLE);
 
                         File dir = Environment.getExternalStoragePublicDirectory(
                                 Environment.DIRECTORY_DOWNLOADS);
-                        File file = new File(dir, title);
+                        File file = new File(dir, name);
 
 
                         NotificationCompat.Builder builder =
                                 ProgressChannel.createProgressNotification(
-                                        context, title);
+                                        context, name);
 
                         final NotificationManager notificationManager = (NotificationManager)
                                 context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
@@ -1433,7 +1430,7 @@ public class Service {
 
                         Preferences.warning(threads,
                                 context.getString(R.string.data_shared_with_peers,
-                                String.valueOf(counter)));
+                                        String.valueOf(counter)));
 
 
                     }

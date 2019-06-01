@@ -1000,18 +1000,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadPlay(long idx) {
 
-        final THREADS threadsAPI = Singleton.getInstance(getApplicationContext()).getThreads();
+        final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
         final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    Thread threadObject = threadsAPI.getThreadByIdx(idx);
-                    checkNotNull(threadObject);
+                    Thread thread = threads.getThreadByIdx(idx);
+                    checkNotNull(thread);
 
-                    CID cid = threadObject.getCid();
+                    CID cid = thread.getCid();
                     checkNotNull(cid);
-                    cid = ipfs.getContent(cid);
 
 
                     Uri uri = Uri.parse("http://127.0.0.1:" +
@@ -1020,14 +1019,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW);
-                        intent.setDataAndType(uri, threadObject.getMimeType()); // TODO might not be right
+                        intent.setDataAndType(uri, thread.getMimeType()); // TODO might not be right
                         intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         startActivity(intent);
                     } catch (Throwable e) {
                         startActivity(new Intent(Intent.ACTION_VIEW, uri));
                     }
                 } catch (Throwable ex) {
-                    Preferences.error(threadsAPI, getString(R.string.no_activity_found_to_handle_uri));
+                    Preferences.error(threads, getString(R.string.no_activity_found_to_handle_uri));
                 }
             });
         }
