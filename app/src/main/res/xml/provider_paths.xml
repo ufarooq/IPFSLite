@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
     <files-path
-        name="shared"
-        path="." />
+        name="ipfs"
+        path="share" />
     <cache-path
         name="cache"
-        path="." />
+        path="cache" />
 </paths>

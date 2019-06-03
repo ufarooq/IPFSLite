@@ -262,7 +262,6 @@ public class Service {
                 Preferences.setPreferTLS(context, false);
 
 
-                Preferences.setApiPort(context, 5001);
                 Preferences.setSwarmPort(context, 4001);
 
 

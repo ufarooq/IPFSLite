@@ -1013,10 +1013,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     CID cid = thread.getCid();
                     checkNotNull(cid);
 
+                    File file = ipfs.get(cid);
 
-                    Uri uri = Uri.parse("http://127.0.0.1:" +
-                            Preferences.getApiPort(getApplicationContext()) +
-                            "/api/v0/cat?arg=" + cid.getCid() + "&offline=true");
+                    Uri uri = FileProvider.getUriForFile(
+                            this, getApplicationContext()
+                                    .getPackageName() + ".provider", file);
 
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW);
