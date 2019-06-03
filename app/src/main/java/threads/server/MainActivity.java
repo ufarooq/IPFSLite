@@ -360,21 +360,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 break;
             }
-            case R.id.nav_cli: {
-                // mis-clicking prevention, using threshold of 1000 ms
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-                try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse("https://docs.ipfs.io/reference/api/http"));
-                    startActivity(intent);
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-                break;
-            }
         }
 
         drawer_layout.closeDrawer(GravityCompat.START);
