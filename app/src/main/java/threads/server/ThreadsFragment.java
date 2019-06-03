@@ -623,7 +623,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @NonNull
     @Override
     public String getTitle(@NonNull Thread thread) {
-        return getCompactString(thread.getAdditional(Content.TITLE));
+        return getCompactString(thread.getAdditional(Content.FILENAME));
     }
 
     @Override

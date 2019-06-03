@@ -23,6 +23,7 @@ import org.iota.jota.pow.pearldiver.PearlDiverLocalPoW;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -75,6 +76,7 @@ public class Service {
 
     @NonNull
     public static Service getInstance(@NonNull Context context) {
+        checkNotNull(context);
         if (SINGLETON == null) {
 
             runUpdatesIfNecessary(context);
@@ -123,9 +125,11 @@ public class Service {
                     CodecDecider result = CodecDecider.evaluate(code);
 
                     if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
-                        Service.downloadMultihash(context, senderPid, result.getMultihash(), null);
+                        Service.downloadMultihash(context, senderPid,
+                                result.getMultihash(), null, null);
                     } else if (result.getCodex() == CodecDecider.Codec.URI) {
-                        Service.downloadMultihash(context, senderPid, result.getMultihash(), null);
+                        Service.downloadMultihash(context, senderPid,
+                                result.getMultihash(), null, null);
                     } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {
                         Content content = result.getContent();
                         checkNotNull(content);
@@ -159,8 +163,9 @@ public class Service {
                                 if (content.containsKey(Content.CID)) {
                                     String cid = content.get(Content.CID);
                                     checkNotNull(cid);
-                                    String title = content.get(Content.TITLE);
-                                    Service.downloadMultihash(context, senderPid, cid, title);
+                                    String filename = content.get(Content.FILENAME);
+                                    String filesize = content.get(Content.FILESIZE);
+                                    Service.downloadMultihash(context, senderPid, cid, filename, filesize);
                                 }
 
                             } else if ("REPLY".equals(est)) {
@@ -189,8 +194,9 @@ public class Service {
                             } else if (content.containsKey(Content.CID)) {
                                 String cid = content.get(Content.CID);
                                 checkNotNull(cid);
-                                String title = content.get(Content.TITLE);
-                                Service.downloadMultihash(context, senderPid, cid, title);
+                                String filename = content.get(Content.FILENAME);
+                                String filesize = content.get(Content.FILESIZE);
+                                Service.downloadMultihash(context, senderPid, cid, filename, filesize);
                             }
                         }
                     } else if (result.getCodex() == CodecDecider.Codec.UNKNOWN) {
@@ -273,7 +279,7 @@ public class Service {
 
 
                 Preferences.setConnectionTimeout(context, 45000);
-                Preferences.setAutoConnectRelay(context, false);
+                Preferences.setAutoConnectRelay(context, true);
 
                 Preferences.setTangleTimeout(context, 15);
 
@@ -299,8 +305,13 @@ public class Service {
                                                @NonNull LinkInfo link) {
 
         String filename = link.getName();
-        threads.setAdditional(thread, Content.TITLE,
+        threads.setAdditional(thread, Content.FILENAME,
                 filename.substring(0, filename.length() - 1), false);
+        Integer size = link.getSize();
+        if (size == null) {
+            size = -1;
+        }
+        threads.setAdditional(thread, Content.FILESIZE, String.valueOf(size), false);
         threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
         threads.setAdditional(thread, Preferences.THREAD_KIND, ThreadKind.NODE.name(), true);
 
@@ -321,8 +332,7 @@ public class Service {
             Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
         }
 
-        int timeout = Preferences.getConnectionTimeout(context);
-        List<LinkInfo> links = getLinks(ipfs, link, timeout);
+        List<LinkInfo> links = getLinks(context, ipfs, link.getCid());
         if (links != null) {
             return downloadLinks(context, threads, ipfs, thread, links);
         } else {
@@ -538,7 +548,7 @@ public class Service {
 
                     Thread thread = threadsAPI.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
                             "", null, 0L, false);
-                    thread.addAdditional(Content.TITLE, name, false);
+                    thread.addAdditional(Content.FILENAME, name, false);
                     thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
                     thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
 
@@ -554,7 +564,7 @@ public class Service {
 
                         threadsAPI.setStatus(thread, ThreadStatus.LEACHING);
 
-                        CID cid = ipfs.add(inputStream, fileDetails.getFileName(), true);
+                        CID cid = ipfs.add(inputStream, true);
                         checkNotNull(cid);
 
                         // cleanup of entries with same CID
@@ -700,7 +710,8 @@ public class Service {
     static void downloadMultihash(@NonNull Context context,
                                   @NonNull PID sender,
                                   @NonNull String multihash,
-                                  @Nullable String filename) {
+                                  @Nullable String filename,
+                                  @Nullable String filesize) {
 
         checkNotNull(context);
         checkNotNull(sender);
@@ -745,7 +756,8 @@ public class Service {
                         }
 
                     } else {
-                        long idx = createThread(context, ipfs, sender, cid, filename, 0L);
+                        long idx = createThread(
+                                context, ipfs, sender, cid, filename, filesize, 0L);
                         Thread thread = threads.getThreadByIdx(idx);
                         checkNotNull(thread);
                         downloadMultihash(context, threads, ipfs, thread, sender);
@@ -759,25 +771,21 @@ public class Service {
         }
     }
 
-    private static void evaluateMimeType(@NonNull Context context,
-                                         @NonNull Thread thread,
-                                         @NonNull String filename) {
+    @NonNull
+    private static String evaluateMimeType(@NonNull Context context, @NonNull String filename) {
         final THREADS threads = Singleton.getInstance(context).getThreads();
         try {
             Optional<String> extension = THREADS.getExtension(filename);
             if (extension.isPresent()) {
                 String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.get());
                 if (mimeType != null) {
-                    threads.setMimeType(thread, mimeType);
-                } else {
-                    threads.setMimeType(thread, Preferences.OCTET_MIME_TYPE); // not know what type
+                    return mimeType;
                 }
-            } else {
-                threads.setMimeType(thread, Preferences.OCTET_MIME_TYPE); // not know what type
             }
         } catch (Throwable e) {
             Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
         }
+        return Preferences.OCTET_MIME_TYPE;
     }
 
     private static long createThread(@NonNull Context context,
@@ -785,6 +793,7 @@ public class Service {
                                      @NonNull PID creator,
                                      @NonNull CID cid,
                                      @Nullable String filename,
+                                     @Nullable String filesize,
                                      long parent) {
 
         checkNotNull(context);
@@ -802,11 +811,16 @@ public class Service {
                 "", cid, parent, false);
         thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false); // not known yet
         if (filename != null) {
-            thread.addAdditional(Content.TITLE, filename, false);
-            evaluateMimeType(context, thread, filename);
+            thread.addAdditional(Content.FILENAME, filename, false);
+            thread.setMimeType(evaluateMimeType(context, filename));
         } else {
             thread.setMimeType(Preferences.OCTET_MIME_TYPE); // not known yet
-            thread.addAdditional(Content.TITLE, cid.getCid(), false);
+            thread.addAdditional(Content.FILENAME, cid.getCid(), false);
+        }
+        if (filesize != null) {
+            thread.addAdditional(Content.FILESIZE, filesize, false);
+        } else {
+            thread.addAdditional(Content.FILESIZE, "-1", false);
         }
 
 
@@ -843,7 +857,7 @@ public class Service {
 
                         int timeout = Preferences.getConnectionTimeout(context);
 
-                        String name = threadObject.getAdditional(Content.TITLE);
+                        String name = threadObject.getAdditional(Content.FILENAME);
                         long size = -1;
                         try {
                             size = Long.valueOf(threadObject.getAdditional(Content.FILESIZE));
@@ -915,10 +929,10 @@ public class Service {
         }
     }
 
-    private static boolean downloadUnknown(@NonNull Context context,
-                                           @NonNull THREADS threads,
-                                           @NonNull IPFS ipfs,
-                                           @NonNull Thread thread) {
+    private static boolean downloadThread(@NonNull Context context,
+                                          @NonNull THREADS threads,
+                                          @NonNull IPFS ipfs,
+                                          @NonNull Thread thread) {
 
         checkNotNull(context);
         checkNotNull(threads);
@@ -933,8 +947,12 @@ public class Service {
         checkNotNull(cid);
 
         threads.setAdditional(thread, Preferences.THREAD_KIND, ThreadKind.LEAF.name(), true);
-        String filename = thread.getAdditional(Content.TITLE);
-        return download(context, threads, ipfs, thread, cid, filename, -1); // size not known
+
+
+        String filename = thread.getAdditional(Content.FILENAME);
+        String filesize = thread.getAdditional(Content.FILESIZE);
+
+        return download(context, threads, ipfs, thread, cid, filename, Integer.valueOf(filesize));
     }
 
     private static boolean download(@NonNull Context context,
@@ -1024,20 +1042,7 @@ public class Service {
         return success;
     }
 
-    @Nullable
-    private static List<LinkInfo> getLinks(@NonNull IPFS ipfs, @NonNull LinkInfo link, int timeout) {
-        checkNotNull(ipfs);
-        checkNotNull(link);
 
-        CID cid = link.getCid();
-        List<LinkInfo> links = null;
-        try {
-            links = ipfs.ls(cid, timeout, false);
-        } catch (Throwable e) {
-            // ignore exception
-        }
-        return links;
-    }
 
     private static boolean handleContentLink(@NonNull Context context,
                                              @NonNull THREADS threads,
@@ -1046,8 +1051,14 @@ public class Service {
                                              @NonNull LinkInfo link) {
 
         String filename = link.getName();
-        threads.setAdditional(thread, Content.TITLE, filename, false);
-        evaluateMimeType(context, thread, filename);
+        Integer size = link.getSize();
+        String filesize = "-1";
+        if (size != null) {
+            filesize = String.valueOf(size);
+        }
+        threads.setAdditional(thread, Content.FILENAME, filename, false);
+        threads.setAdditional(thread, Content.FILESIZE, filesize, false);
+        threads.setMimeType(thread, evaluateMimeType(context, filename));
         threads.setAdditional(thread, Preferences.THREAD_KIND, ThreadKind.LEAF.name(), true);
 
 
@@ -1065,6 +1076,7 @@ public class Service {
 
         String filename = link.getName();
 
+        // TODO check type of link
 
         if (filename.endsWith("/")) {
             // assume this is a directory
@@ -1106,9 +1118,9 @@ public class Service {
                     }
                 }
             } else {
-
+                // TODO rethink filename and filesize here
                 long idx = createThread(context, ipfs,
-                        thread.getSenderPid(), cid, null, thread.getIdx());
+                        thread.getSenderPid(), cid, null, null, thread.getIdx());
                 Thread entry = threads.getThreadByIdx(idx);
                 checkNotNull(entry);
                 success = downloadLink(context, threads, ipfs, entry, link);
@@ -1129,6 +1141,26 @@ public class Service {
         return successCounter.get() == links.size();
     }
 
+    @Nullable
+    private static List<LinkInfo> getLinks(@NonNull Context context,
+                                           @NonNull IPFS ipfs,
+                                           @NonNull CID cid) {
+        checkNotNull(context);
+        checkNotNull(cid);
+        int timeout = Preferences.getConnectionTimeout(context);
+        List<LinkInfo> links = ipfs.ls(cid, timeout, false);
+        if (links == null) {
+            return null;
+        }
+        List<LinkInfo> result = new ArrayList<>();
+        for (LinkInfo link : links) {
+            if (!link.getName().isEmpty()) {
+                result.add(link);
+            }
+        }
+        return result;
+    }
+
     private static void downloadMultihash(@NonNull Context context,
                                           @NonNull THREADS threads,
                                           @NonNull IPFS ipfs,
@@ -1141,12 +1173,16 @@ public class Service {
 
 
         threads.setStatus(thread, ThreadStatus.LEACHING);
-        int timeout = Preferences.getConnectionTimeout(context);
-        List<LinkInfo> links = threads.getLinks(ipfs, thread, timeout, false);
+
+        CID cid = thread.getCid();
+        checkNotNull(cid);
+
+        List<LinkInfo> links = getLinks(context, ipfs, cid);
 
         if (links != null) {
             if (links.isEmpty()) {
-                boolean result = downloadUnknown(context, threads, ipfs, thread);
+
+                boolean result = downloadThread(context, threads, ipfs, thread);
                 if (result) {
                     threads.setStatus(thread, ThreadStatus.ONLINE);
                     if (sender != null) {
@@ -1156,7 +1192,7 @@ public class Service {
                     threads.setStatus(thread, ThreadStatus.ERROR);
                 }
 
-            } else if (links.size() > 1) {
+            } else {
 
                 // thread is directory
                 threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
@@ -1174,19 +1210,6 @@ public class Service {
                 }
 
                 boolean result = downloadLinks(context, threads, ipfs, thread, links);
-                if (result) {
-                    threads.setStatus(thread, ThreadStatus.ONLINE);
-                    if (sender != null) {
-                        replySender(ipfs, sender, thread);
-                    }
-                } else {
-                    threads.setStatus(thread, ThreadStatus.ERROR);
-                }
-            } else {
-
-                LinkInfo link = links.get(0);
-
-                boolean result = downloadLink(context, threads, ipfs, thread, link);
                 if (result) {
                     threads.setStatus(thread, ThreadStatus.ONLINE);
                     if (sender != null) {
@@ -1245,60 +1268,43 @@ public class Service {
         try {
             PID hostPID = Preferences.getPID(context);
             final THREADS threads = Singleton.getInstance(context).getThreads();
-            if (Network.isConnected(context)) {
 
-                final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-                if (ipfs != null) {
 
-                    List<User> users = threads.getUsers();
+            final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+            if (ipfs != null) {
 
-                    if (hostPID != null) {
-                        User host = threads.getUserByPID(hostPID);
-                        users.remove(host);
-                    }
-                    if (Network.isConnected(context)) {
-                        for (User user : users) {
-                            UserStatus currentStatus = user.getStatus();
-                            if (currentStatus != UserStatus.BLOCKED &&
-                                    currentStatus != UserStatus.DIALING) {
-                                try {
-                                    boolean value = ipfs.isConnected(user.getPID());
+                List<User> users = threads.getUsers();
 
-                                    if (value) {
-                                        if (threads.getStatus(user) != UserStatus.DIALING) {
-                                            threads.setStatus(user, UserStatus.ONLINE);
-                                        }
-                                    } else {
-                                        if (threads.getStatus(user) != UserStatus.DIALING) {
-                                            threads.setStatus(user, UserStatus.OFFLINE);
-                                        }
-                                    }
-                                } catch (Throwable e) {
-                                    if (threads.getStatus(user) != UserStatus.DIALING) {
-                                        threads.setStatus(user, UserStatus.OFFLINE);
-                                    }
+                if (hostPID != null) {
+                    User host = threads.getUserByPID(hostPID);
+                    users.remove(host);
+                }
+
+                for (User user : users) {
+                    UserStatus currentStatus = user.getStatus();
+                    if (currentStatus != UserStatus.BLOCKED &&
+                            currentStatus != UserStatus.DIALING) {
+                        try {
+                            boolean value = ipfs.isConnected(user.getPID());
+                            Log.e(TAG, "Connection Status : " + value);
+                            if (value) {
+                                if (threads.getStatus(user) != UserStatus.DIALING) {
+                                    threads.setStatus(user, UserStatus.ONLINE);
+                                }
+                            } else {
+                                if (threads.getStatus(user) != UserStatus.DIALING) {
+                                    threads.setStatus(user, UserStatus.OFFLINE);
                                 }
                             }
-                        }
-                    } else {
-                        for (User user : users) {
-                            if (UserStatus.OFFLINE != user.getStatus()) {
+                        } catch (Throwable e) {
+                            if (threads.getStatus(user) != UserStatus.DIALING) {
                                 threads.setStatus(user, UserStatus.OFFLINE);
                             }
-
                         }
                     }
                 }
-            } else {
-                List<User> users = threads.getUsers();
-                for (User user : users) {
-
-                    if (UserStatus.OFFLINE != user.getStatus()) {
-                        threads.setStatus(user, UserStatus.OFFLINE);
-                    }
-
-                }
             }
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -1363,10 +1369,10 @@ public class Service {
 
                         Content map = new Content();
                         map.put(Content.EST, "SHARE");
-                        String title = threadObject.getAdditional(Content.TITLE);
-                        if (!title.isEmpty()) {
-                            map.put(Content.TITLE, title);
-                        }
+                        String filename = threadObject.getAdditional(Content.FILENAME);
+                        String filesize = threadObject.getAdditional(Content.FILESIZE);
+                        map.put(Content.FILENAME, filename);
+                        map.put(Content.FILESIZE, filesize);
                         map.put(Content.CID, cid.getCid());
                         Log.e(TAG, "Send : " + map.toString());
                         ipfs.pubsubPub(user.getPID().getPid(), gson.toJson(map), 50);

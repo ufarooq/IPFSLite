@@ -230,7 +230,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 PID host = Preferences.getPID(getApplicationContext());
                 checkNotNull(host);
                 String multihash = codecDecider.getMultihash();
-                Service.downloadMultihash(getApplicationContext(), host, multihash, null);
+                Service.downloadMultihash(
+                        getApplicationContext(), host, multihash, null, null);
             } else {
                 Singleton singleton = Singleton.getInstance(getApplicationContext());
                 Preferences.error(singleton.getThreads(),
@@ -1019,6 +1020,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     try {
                         Intent intent = new Intent(Intent.ACTION_VIEW);
+
                         intent.setDataAndType(uri, thread.getMimeType()); // TODO might not be right
                         intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                         startActivity(intent);
