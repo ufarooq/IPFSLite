@@ -858,8 +858,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         if (user == null) {
                             byte[] data = THREADS.getImage(getApplicationContext(),
                                     pid.getPid(), R.drawable.server_network);
-                            CID image = ipfs.add(data, true);
-                            user = threads.createUser(pid, "", // not yet known
+                            CID image = ipfs.add(data, "", true);
+                            user = threads.createUser(pid, "", // not yet known TODO
                                     pid.getPid(), UserType.VERIFIED, image);
                             user.setStatus(UserStatus.OFFLINE);
                             threads.storeUser(user);
@@ -1175,7 +1175,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     user.setAlias(name);
                     byte[] data = THREADS.getImage(getApplicationContext(),
                             name, R.drawable.server_network);
-                    CID image = ipfs.add(data, true);
+                    CID image = ipfs.add(data, "", true);
                     user.setImage(image);
 
                     threadsAPI.storeUser(user);

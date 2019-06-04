@@ -316,7 +316,7 @@ public class Service {
 
         try {
             CID image = THREADS.createResourceImage(context, threads, ipfs,
-                    R.drawable.folder_outline);
+                    R.drawable.folder_outline, "");
             checkNotNull(image);
             threads.setImage(thread, image);
         } catch (Throwable e) {
@@ -379,7 +379,7 @@ public class Service {
 
                 // create a new user which is blocked (User has to unblock and verified the user)
                 byte[] data = THREADS.getImage(context, alias, R.drawable.server_network);
-                CID image = ipfs.add(data, true);
+                CID image = ipfs.add(data, "", true);
 
 
                 sender.setStatus(UserStatus.ONLINE);
@@ -459,7 +459,7 @@ public class Service {
 
                     // create a new user which is blocked (User has to unblock and verified the user)
                     byte[] data = THREADS.getImage(context, alias, R.drawable.server_network);
-                    CID image = ipfs.add(data, true);
+                    CID image = ipfs.add(data, "", true);
 
                     sender = threadsAPI.createUser(senderPid, pubKey, alias, userType, image);
                     sender.setStatus(UserStatus.BLOCKED);
@@ -551,7 +551,7 @@ public class Service {
                     thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
                     thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
 
-                    CID image = ipfs.add(bytes, true);
+                    CID image = ipfs.add(bytes, "", true);
                     thread.setImage(image);
                     thread.setMimeType(fileDetails.getMimeType());
                     long idx = threadsAPI.storeThread(thread);
@@ -563,7 +563,7 @@ public class Service {
 
                         threadsAPI.setStatus(thread, ThreadStatus.LEACHING);
 
-                        CID cid = ipfs.add(inputStream, true);
+                        CID cid = ipfs.add(inputStream, "", true);
                         checkNotNull(cid);
 
                         // cleanup of entries with same CID
@@ -652,7 +652,7 @@ public class Service {
                     String publicKey = ipfs.getRawPublicKey();
                     byte[] data = THREADS.getImage(context, pid.getPid(), R.drawable.server_network);
 
-                    CID image = ipfs.add(data, true);
+                    CID image = ipfs.add(data, "", true);
 
                     user = threads.createUser(pid, publicKey,
                             getDeviceName(), UserType.VERIFIED, image);
@@ -826,7 +826,7 @@ public class Service {
         try {
             byte[] image = THREADS.getImage(context.getApplicationContext(),
                     user.getAlias(), R.drawable.file_document);
-            thread.setImage(ipfs.add(image, true));
+            thread.setImage(ipfs.add(image, "", true));
         } catch (Throwable e) {
             Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
         }
@@ -882,7 +882,7 @@ public class Service {
                         }
 
                         try {
-                            boolean finished = threadsAPI.download(ipfs, file, cid,
+                            boolean finished = threadsAPI.download(ipfs, file, cid, "",
                                     false, true,
                                     new THREADS.Progress() {
                                         @Override
@@ -992,7 +992,7 @@ public class Service {
         try {
             threads.setStatus(thread, ThreadStatus.LEACHING); // make sure
             int timeout = Preferences.getConnectionTimeout(context);
-            success = threads.download(ipfs, file, cid, true, false,
+            success = threads.download(ipfs, file, cid, "", true, false,
                     new THREADS.Progress() {
                         @Override
                         public void setProgress(int percent) {
@@ -1020,7 +1020,7 @@ public class Service {
             } else {
                 try {
                     CID image = THREADS.createResourceImage(
-                            context, threads, ipfs, R.drawable.file_document);
+                            context, threads, ipfs, R.drawable.file_document, "");
                     checkNotNull(image);
                     threads.setImage(thread, image);
                 } catch (Throwable e) {
@@ -1200,7 +1200,7 @@ public class Service {
 
                 try {
                     CID image = THREADS.createResourceImage(context, threads, ipfs,
-                            R.drawable.folder_outline);
+                            R.drawable.folder_outline, "");
                     if (image != null) {
                         threads.setImage(thread, image);
                     }
