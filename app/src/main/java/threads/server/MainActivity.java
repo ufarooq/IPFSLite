@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.ClipData;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -40,7 +39,6 @@ import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.util.Collections;
 import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
@@ -1069,29 +1067,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadShare(long idx) {
 
-        final THREADS threadsAPI = Singleton.getInstance(getApplicationContext()).getThreads();
+        final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
         final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    Thread threadObject = threadsAPI.getThreadByIdx(idx);
-                    checkNotNull(threadObject);
+                    Thread thread = threads.getThreadByIdx(idx);
+                    checkNotNull(thread);
 
-                    CID cid = threadObject.getCid();
+                    CID cid = thread.getCid();
                     checkNotNull(cid);
                     String multihash = cid.getCid();
 
-                    Bitmap bitmap = Preferences.getBitmap(getApplicationContext(), multihash);
+                    CID bitmap = Preferences.getBitmap(getApplicationContext(), multihash);
                     checkNotNull(bitmap);
-                    File file = Service.getCacheFile(getApplicationContext(),
-                            multihash + ".png");
-
-                    FileOutputStream fileOutputStream = new FileOutputStream(file);
-
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, fileOutputStream);
-                    fileOutputStream.flush();
-                    fileOutputStream.close();
+                    File file = ipfs.get(bitmap, ".png", "");
 
                     Uri uri = FileProvider.getUriForFile(getApplicationContext(),
                             "threads.server.provider", file);
@@ -1110,7 +1101,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                 }
             });
         }
