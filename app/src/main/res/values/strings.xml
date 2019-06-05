@@ -93,4 +93,5 @@
     <string name="relay_hop_enabled">Enable Relay Hop</string>
     <string name="swarm_settings">Swarm Settings</string>
     <string name="config">Config</string>
+    <string name="reprovider_enabled">Enable Reprovider [12h]</string>
 </resources>

@@ -179,6 +179,22 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
 
         });
 
+        Switch reprovider_enabled = view.findViewById(R.id.reprovider_enabled);
+        reprovider_enabled.setChecked(Preferences.getReproviderInterval(activity).equals("12h"));
+        reprovider_enabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                Preferences.setReproviderInterval(activity, "12h");
+            } else {
+                Preferences.setReproviderInterval(activity, "0"); // disable
+            }
+
+            Toast.makeText(getContext(),
+                    R.string.daemon_restart_config_changed,
+                    Toast.LENGTH_LONG).show();
+
+
+        });
+
 
         Switch quic_support = view.findViewById(R.id.quic_support);
         quic_support.setChecked(Preferences.isQUICEnabled(activity));
