@@ -276,7 +276,7 @@ public class Service {
 
                 Preferences.setConnMgrConfigType(context, ConnMgrConfig.TypeEnum.basic);
                 Preferences.setLowWater(context, 30);
-                Preferences.setHighWater(context, 80);
+                Preferences.setHighWater(context, 100);
                 Preferences.setGracePeriod(context, "10s");
 
 
