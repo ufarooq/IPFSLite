@@ -501,10 +501,15 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             if (getActivity() != null) {
                 boolean sendActive = Preferences.isPubsubEnabled(mContext);
                 boolean online = thread.getStatus() == ThreadStatus.ONLINE;
+                String threadKind = thread.getAdditional(Preferences.THREAD_KIND);
+                checkNotNull(threadKind);
+                Service.ThreadKind kind = Service.ThreadKind.valueOf(threadKind);
+                boolean playActive = kind == Service.ThreadKind.LEAF;
+
                 FragmentManager fm = getActivity().getSupportFragmentManager();
 
                 ThreadActionDialogFragment.newInstance(
-                        thread.getIdx(), true, true, true,
+                        thread.getIdx(), true, playActive, true,
                         topLevel.get(), online, true, sendActive, true)
                         .show(fm, ThreadActionDialogFragment.TAG);
             }
