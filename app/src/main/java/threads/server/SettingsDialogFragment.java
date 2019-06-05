@@ -19,6 +19,7 @@ import androidx.fragment.app.DialogFragment;
 
 import threads.core.Preferences;
 import threads.ipfs.api.PubsubConfig;
+import threads.ipfs.api.RoutingConfig;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -151,11 +152,14 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
         View view = inflater.inflate(R.layout.settings_view, null);
         //view.setOnTouchListener(this); // TODO not yet activated
 
-        Switch quic_support = view.findViewById(R.id.quic_support);
-        quic_support.setChecked(Preferences.isQUICEnabled(activity));
-        quic_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Preferences.setQUICEnabled(activity, isChecked);
-
+        Switch dht_support = view.findViewById(R.id.dht_support);
+        dht_support.setChecked(Preferences.getRoutingType(activity) == RoutingConfig.TypeEnum.dht);
+        dht_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                Preferences.setRoutingType(activity, RoutingConfig.TypeEnum.dht);
+            } else {
+                Preferences.setRoutingType(activity, RoutingConfig.TypeEnum.dhtclient);
+            }
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,
                     Toast.LENGTH_LONG).show();
@@ -174,6 +178,33 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
 
 
         });
+
+
+        Switch quic_support = view.findViewById(R.id.quic_support);
+        quic_support.setChecked(Preferences.isQUICEnabled(activity));
+        quic_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Preferences.setQUICEnabled(activity, isChecked);
+
+            Toast.makeText(getContext(),
+                    R.string.daemon_restart_config_changed,
+                    Toast.LENGTH_LONG).show();
+
+
+        });
+
+
+        Switch tls_prefer = view.findViewById(R.id.tls_prefer);
+        tls_prefer.setChecked(Preferences.isPreferTLS(activity));
+        tls_prefer.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Preferences.setPreferTLS(activity, isChecked);
+
+            Toast.makeText(getContext(),
+                    R.string.daemon_restart_config_changed,
+                    Toast.LENGTH_LONG).show();
+
+
+        });
+
 
         Switch pubsub_support = view.findViewById(R.id.pubsub_support);
         pubsub_support.setChecked(Preferences.isPubsubEnabled(activity));
@@ -205,6 +236,19 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
 
         });
 
+
+        Switch logs_mode_enable = view.findViewById(R.id.logs_mode_enable);
+        logs_mode_enable.setChecked(Preferences.isDebugMode(activity));
+        logs_mode_enable.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Preferences.setDebugMode(activity, isChecked);
+
+            Toast.makeText(getContext(),
+                    R.string.daemon_restart_config_changed,
+                    Toast.LENGTH_LONG).show();
+
+
+        });
+
         Switch auto_relay_support = view.findViewById(R.id.auto_relay_support);
         auto_relay_support.setChecked(Preferences.isAutoRelayEnabled(activity));
         auto_relay_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -217,11 +261,22 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
 
         });
 
+        Switch auto_nat_service_enabled = view.findViewById(R.id.auto_nat_service_enabled);
+        auto_nat_service_enabled.setChecked(Preferences.isAutoNATServiceEnabled(activity));
+        auto_nat_service_enabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Preferences.setAutoNATServiceEnabled(activity, isChecked);
 
-        Switch logs_mode_enable = view.findViewById(R.id.logs_mode_enable);
-        logs_mode_enable.setChecked(Preferences.isDebugMode(activity));
-        logs_mode_enable.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Preferences.setDebugMode(activity, isChecked);
+            Toast.makeText(getContext(),
+                    R.string.daemon_restart_config_changed,
+                    Toast.LENGTH_LONG).show();
+
+
+        });
+
+        Switch relay_hop_enabled = view.findViewById(R.id.relay_hop_enabled);
+        relay_hop_enabled.setChecked(Preferences.isRelayHopEnabled(activity));
+        relay_hop_enabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Preferences.setRelayHopEnabled(activity, isChecked);
 
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,

@@ -13,10 +13,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
-            android:text="@string/ipfs_settings"
+            android:text="@string/general_settings"
             android:textAlignment="center"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
             android:textColor="@color/colorPrimary" />
+
+        <Switch
+            android:id="@+id/dht_support"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginRight="16dp"
+            android:padding="8dp"
+            android:text="@string/dht_support" />
 
         <Switch
             android:id="@+id/mdns_support"
@@ -27,17 +37,6 @@
             android:layout_marginRight="16dp"
             android:padding="8dp"
             android:text="@string/mdns_support" />
-
-
-        <Switch
-            android:id="@+id/quic_support"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginRight="16dp"
-            android:padding="8dp"
-            android:text="@string/quic_support" />
 
 
         <Switch
@@ -61,6 +60,31 @@
             android:text="@string/pubsub_router" />
 
         <Switch
+            android:id="@+id/logs_mode_enable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginRight="16dp"
+            android:padding="8dp"
+            android:text="@string/logs_mode_enable" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:background="?android:attr/listDivider" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:text="@string/swarm_settings"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textColor="@color/colorPrimary" />
+
+        <Switch
             android:id="@+id/auto_relay_support"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -71,14 +95,61 @@
             android:text="@string/auto_relay_support" />
 
         <Switch
-            android:id="@+id/logs_mode_enable"
+            android:id="@+id/auto_nat_service_enabled"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
             android:layout_marginTop="16dp"
             android:layout_marginRight="16dp"
             android:padding="8dp"
-            android:text="@string/logs_mode_enable" />
+            android:text="@string/auto_nat_service_enabled" />
+
+        <Switch
+            android:id="@+id/relay_hop_enabled"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginRight="16dp"
+            android:padding="8dp"
+            android:text="@string/relay_hop_enabled" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="16dp"
+            android:background="?android:attr/listDivider" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:text="@string/experimental_settings"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textColor="@color/colorPrimary" />
+
+        <Switch
+            android:id="@+id/tls_prefer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginRight="16dp"
+            android:padding="8dp"
+            android:text="@string/prefer_tls" />
+
+
+        <Switch
+            android:id="@+id/quic_support"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginRight="16dp"
+            android:padding="8dp"
+            android:text="@string/quic_support" />
+
 
         <View
             android:layout_width="match_parent"

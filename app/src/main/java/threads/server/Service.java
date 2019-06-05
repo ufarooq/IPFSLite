@@ -53,6 +53,7 @@ import threads.ipfs.api.LinkInfo;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.PubsubConfig;
+import threads.ipfs.api.RoutingConfig;
 import threads.share.ConnectService;
 import threads.share.RTCSession;
 import threads.share.RelayService;
@@ -259,13 +260,14 @@ public class Service {
                 // Experimental Features
                 Preferences.setQUICEnabled(context, true);
                 Preferences.setFilestoreEnabled(context, false);
-                Preferences.setPreferTLS(context, false);
+                Preferences.setPreferTLS(context, true);
 
 
                 Preferences.setSwarmPort(context, 4001);
+                Preferences.setRoutingType(context, RoutingConfig.TypeEnum.dht); // TODO add to settings
 
 
-                Preferences.setAutoNATServiceEnabled(context, false);
+                Preferences.setAutoNATServiceEnabled(context, true);
                 Preferences.setRelayHopEnabled(context, true);
                 Preferences.setAutoRelayEnabled(context, true);
 
@@ -1040,7 +1042,6 @@ public class Service {
 
         return success;
     }
-
 
 
     private static boolean handleContentLink(@NonNull Context context,

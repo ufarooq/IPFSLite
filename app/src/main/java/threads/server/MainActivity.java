@@ -343,7 +343,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 break;
             }
+            case R.id.nav_config: {
+                try {
+                    IPFS ipfs = Singleton.getInstance(this).getIpfs();
+                    if (ipfs != null) {
+                        String data = "<html><h2>Config</h2><pre>" + ipfs.config_show() + "</pre></html>";
+                        WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.HTML, data)
+                                .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
+                    }
 
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+                break;
+            }
             case R.id.nav_share: {
                 try {
                     Intent i = new Intent(Intent.ACTION_SEND);

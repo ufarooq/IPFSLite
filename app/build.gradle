@@ -103,7 +103,7 @@ dependencies {
     implementation 'threads.iota:threads:2.7.3'
 
     // API (LICENSE done)
-    implementation 'threads.ipfs:threads:1.6.9'
+    implementation 'threads.ipfs:threads:1.7.0'
 
     // API (LICENSE done)
     implementation 'threads.mobile:ipfs:0.1.3'
