@@ -260,11 +260,11 @@ public class Service {
                 // Experimental Features
                 Preferences.setQUICEnabled(context, true);
                 Preferences.setFilestoreEnabled(context, false);
-                Preferences.setPreferTLS(context, true);
+                Preferences.setPreferTLS(context, false);
 
 
                 Preferences.setSwarmPort(context, 4001);
-                Preferences.setRoutingType(context, RoutingConfig.TypeEnum.dht);
+                Preferences.setRoutingType(context, RoutingConfig.TypeEnum.dhtclient);
 
 
                 Preferences.setAutoNATServiceEnabled(context, true);
@@ -307,12 +307,9 @@ public class Service {
                                                @NonNull LinkInfo link) {
 
         String filename = link.getName();
-        threads.setAdditional(thread, Content.FILENAME,
-                filename.substring(0, filename.length() - 1), false);
-        Integer size = link.getSize();
-        if (size == null) {
-            size = -1;
-        }
+        threads.setAdditional(thread, Content.FILENAME, filename, false);
+        long size = link.getSize();
+
         threads.setAdditional(thread, Content.FILESIZE, String.valueOf(size), false);
         threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
         threads.setAdditional(thread, Preferences.THREAD_KIND, ThreadKind.NODE.name(), true);
@@ -954,7 +951,7 @@ public class Service {
         String filename = thread.getAdditional(Content.FILENAME);
         String filesize = thread.getAdditional(Content.FILESIZE);
 
-        return download(context, threads, ipfs, thread, cid, filename, Integer.valueOf(filesize));
+        return download(context, threads, ipfs, thread, cid, filename, Long.valueOf(filesize));
     }
 
     private static boolean download(@NonNull Context context,
@@ -963,7 +960,7 @@ public class Service {
                                     @NonNull Thread thread,
                                     @NonNull CID cid,
                                     @NonNull String filename,
-                                    @Nullable Integer size) {
+                                    long size) {
 
         checkNotNull(context);
         checkNotNull(threads);
@@ -973,10 +970,7 @@ public class Service {
         checkNotNull(filename);
 
 
-        int fileSize = -1;
-        if (size != null) {
-            fileSize = size;
-        }
+
 
         NotificationCompat.Builder builder =
                 ProgressChannel.createProgressNotification(
@@ -1009,7 +1003,7 @@ public class Service {
                         public boolean isStopped() {
                             return !Network.isConnected(context);
                         }
-                    }, timeout, fileSize);
+                    }, timeout, size);
 
             if (success) {
                 try {
@@ -1052,11 +1046,8 @@ public class Service {
                                              @NonNull LinkInfo link) {
 
         String filename = link.getName();
-        Integer size = link.getSize();
-        String filesize = "-1";
-        if (size != null) {
-            filesize = String.valueOf(size);
-        }
+        String filesize = String.valueOf(link.getSize());
+
         threads.setAdditional(thread, Content.FILENAME, filename, false);
         threads.setAdditional(thread, Content.FILESIZE, filesize, false);
         threads.setMimeType(thread, evaluateMimeType(context, filename));
@@ -1075,11 +1066,7 @@ public class Service {
         // UPDATE UI
         Preferences.event(threads, Preferences.THREAD_SELECT_EVENT, String.valueOf(thread.getIdx()));
 
-        String filename = link.getName();
-
-        // TODO check type of link
-
-        if (filename.endsWith("/")) {
+        if (link.isDirectory()) {
             // assume this is a directory
             return handleDirectoryLink(context, threads, ipfs, thread, link);
         } else {
@@ -1287,14 +1274,18 @@ public class Service {
                             currentStatus != UserStatus.DIALING) {
                         try {
                             boolean value = ipfs.isConnected(user.getPID());
-                            Log.e(TAG, "Connection Status : " + value);
-                            if (value) {
-                                if (threads.getStatus(user) != UserStatus.DIALING) {
-                                    threads.setStatus(user, UserStatus.ONLINE);
-                                }
-                            } else {
-                                if (threads.getStatus(user) != UserStatus.DIALING) {
-                                    threads.setStatus(user, UserStatus.OFFLINE);
+
+                            currentStatus = user.getStatus();
+                            if (currentStatus != UserStatus.BLOCKED &&
+                                    currentStatus != UserStatus.DIALING) {
+                                if (value) {
+                                    if (currentStatus != UserStatus.ONLINE) {
+                                        threads.setStatus(user, UserStatus.ONLINE);
+                                    }
+                                } else {
+                                    if (currentStatus != UserStatus.OFFLINE) {
+                                        threads.setStatus(user, UserStatus.OFFLINE);
+                                    }
                                 }
                             }
                         } catch (Throwable e) {

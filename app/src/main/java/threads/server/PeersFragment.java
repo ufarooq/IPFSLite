@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -209,6 +210,9 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
                     }
                     try {
+
+                        peers.sort(Comparator.comparing(User::getAlias));
+
                         usersViewAdapter.updateData(peers);
                     } catch (Throwable e) {
                         Log.e(TAG, "" + e.getLocalizedMessage(), e);
