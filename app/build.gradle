@@ -111,6 +111,9 @@ dependencies {
     // API (LICENSE done)
     implementation 'com.google.code.gson:gson:2.8.5'
 
+    // API (LICENSE done)
+    implementation 'commons-io:commons-io:2.5'
+
 }
 
 // Place it at the end of the file

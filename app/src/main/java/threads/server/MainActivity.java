@@ -38,6 +38,8 @@ import com.google.gson.Gson;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
+import org.apache.commons.io.FilenameUtils;
+
 import java.io.File;
 import java.util.Collections;
 import java.util.Hashtable;
@@ -1009,20 +1011,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     CID cid = thread.getCid();
                     checkNotNull(cid);
 
-                    File file = ipfs.get(cid);
+                    String filename = thread.getAdditional(Content.FILENAME);
+                    String extension = FilenameUtils.getExtension(filename);
+                    if (!extension.isEmpty()) {
+                        extension = ".".concat(extension);
+                    }
+                    String mimeType = thread.getMimeType();
+                    File file = ipfs.get(cid, extension, "");
+                    if (file.exists()) {
+                        Uri uri = FileProvider.getUriForFile(
+                                this, getApplicationContext()
+                                        .getPackageName() + ".provider", file);
 
-                    Uri uri = FileProvider.getUriForFile(
-                            this, getApplicationContext()
-                                    .getPackageName() + ".provider", file);
-
-                    try {
-                        Intent intent = new Intent(Intent.ACTION_VIEW);
-
-                        intent.setDataAndType(uri, thread.getMimeType()); // TODO might not be right
-                        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        startActivity(intent);
-                    } catch (Throwable e) {
-                        startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                        try {
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            intent.setDataAndType(uri, mimeType);
+                            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            startActivity(intent);
+                        } catch (Throwable e) {
+                            startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                        }
                     }
                 } catch (Throwable ex) {
                     Preferences.error(threads, getString(R.string.no_activity_found_to_handle_uri));
