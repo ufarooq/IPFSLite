@@ -267,7 +267,7 @@ public class Service {
                 Preferences.setRoutingType(context, RoutingConfig.TypeEnum.dhtclient);
 
 
-                Preferences.setAutoNATServiceEnabled(context, true);
+                Preferences.setAutoNATServiceEnabled(context, false);
                 Preferences.setRelayHopEnabled(context, true);
                 Preferences.setAutoRelayEnabled(context, true);
 
@@ -487,14 +487,15 @@ public class Service {
     }
 
     private static void replySender(@NonNull IPFS ipfs, @NonNull PID sender, @NonNull Thread thread) {
-        CID cid = thread.getCid();
-        checkNotNull(cid);
-
-        Content map = new Content();
-        map.put(Content.EST, "REPLY");
-        map.put(Content.CID, cid.getCid());
-
         try {
+            CID cid = thread.getCid();
+            checkNotNull(cid);
+
+            Content map = new Content();
+            map.put(Content.EST, "REPLY");
+            map.put(Content.CID, cid.getCid());
+
+
             Log.e(TAG, "Send : " + map.toString());
             ipfs.pubsubPub(sender.getPid(), gson.toJson(map), 50);
         } catch (Throwable e) {
