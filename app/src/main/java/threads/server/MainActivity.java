@@ -926,6 +926,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadPublish(long idx) {
 
+        // CHECKED
+        if (!Network.isConnected(getApplicationContext())) {
+            Singleton singleton = Singleton.getInstance(getApplicationContext());
+            Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
+            return;
+        }
+
         try {
             final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
             final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
@@ -936,9 +943,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     threads.setThreadStatus(idx, ThreadStatus.PUBLISHING);
 
                     try {
-                        Thread threadObject = threads.getThreadByIdx(idx);
-                        checkNotNull(threadObject);
-                        CID cid = threadObject.getCid();
+                        Thread thread = threads.getThreadByIdx(idx);
+                        checkNotNull(thread);
+                        CID cid = thread.getCid();
                         checkNotNull(cid);
 
                         ipfs.name_publish(cid);

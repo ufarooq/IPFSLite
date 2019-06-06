@@ -630,6 +630,7 @@ public class Service {
 
         try {
             threads.setUserStatus(UserStatus.DIALING, UserStatus.OFFLINE);
+            threads.setThreadStatus(ThreadStatus.PUBLISHING, ThreadStatus.ONLINE);
             threads.setThreadStatus(ThreadStatus.LEACHING, ThreadStatus.ERROR);
             threads.setThreadStatus(ThreadStatus.OFFLINE, ThreadStatus.ERROR);
         } catch (Throwable e) {
