@@ -208,8 +208,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
 
-        LinearLayoutManager linearLayout = new LinearLayoutManager(mContext);
-        mRecyclerView.setLayoutManager(linearLayout);
+        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(mContext);
+        mRecyclerView.setLayoutManager(linearLayoutManager);
         threadsViewAdapter = new ThreadsViewAdapter(mContext, this);
         mRecyclerView.setAdapter(threadsViewAdapter);
 
@@ -275,26 +275,14 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 ViewModelProviders.of(this).get(EventViewModel.class);
 
 
-        eventViewModel.getThreadSelectEvent().observe(this, (event) -> {
+        eventViewModel.getThreadSrollEvent().observe(this, (event) -> {
             try {
                 if (event != null) {
-
-                    if (threadsViewAdapter != null) {
-                        String content = event.getContent();
-                        try {
-                            long idx = Long.valueOf(content);
-                            int pos = threadsViewAdapter.getPositionOfItem(idx);
-                            if (pos > -1) {
-                                threadIdx = idx;
-                                threadsViewAdapter.setState(threadIdx,
-                                        ThreadsViewAdapter.State.SELECTED);
-                                mRecyclerView.scrollToPosition(pos);
-                            }
-                        } catch (Throwable e) {
-                            // ignore exception
-                        }
+                    try {
+                        linearLayoutManager.scrollToPosition(0);
+                    } catch (Throwable e) {
+                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
                     }
-
                 }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

@@ -19,6 +19,7 @@ import androidx.core.app.NotificationCompat;
 
 import com.google.gson.Gson;
 
+import org.apache.commons.io.FilenameUtils;
 import org.iota.jota.pow.pearldiver.PearlDiverLocalPoW;
 
 import java.io.File;
@@ -66,7 +67,7 @@ public class Service {
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(3);
-    private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(1);
+    private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(2);
     private static final String APP_KEY = "AppKey";
     private static final String UPDATE = "UPDATE";
     private static Service SINGLETON = null;
@@ -507,10 +508,10 @@ public class Service {
         checkNotNull(context);
         checkNotNull(uri);
 
-        final THREADS threadsAPI = Singleton.getInstance(context).getThreads();
+        final THREADS threads = Singleton.getInstance(context).getThreads();
         THREADS.FileDetails fileDetails = THREADS.getFileDetails(context, uri);
         if (fileDetails == null) {
-            Preferences.error(threadsAPI, context.getString(R.string.file_not_supported));
+            Preferences.error(threads, context.getString(R.string.file_not_supported));
             return;
         }
 
@@ -526,7 +527,7 @@ public class Service {
 
                     PID pid = Preferences.getPID(context);
                     checkNotNull(pid);
-                    User host = threadsAPI.getUserByPID(pid);
+                    User host = threads.getUserByPID(pid);
                     checkNotNull(host);
 
 
@@ -546,7 +547,7 @@ public class Service {
                     String name = fileDetails.getFileName();
                     long size = fileDetails.getFileSize();
 
-                    Thread thread = threadsAPI.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
+                    Thread thread = threads.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
                             "", null, 0L, false);
                     thread.addAdditional(Content.FILENAME, name, false);
                     thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
@@ -555,35 +556,35 @@ public class Service {
                     CID image = ipfs.add(bytes, "", true);
                     thread.setImage(image);
                     thread.setMimeType(fileDetails.getMimeType());
-                    long idx = threadsAPI.storeThread(thread);
+                    long idx = threads.storeThread(thread);
 
+                    Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
 
-                    thread = threadsAPI.getThreadByIdx(idx); // TODO optimize here
+                    thread = threads.getThreadByIdx(idx); // TODO optimize here
                     checkNotNull(thread);
                     try {
 
-                        threadsAPI.setStatus(thread, ThreadStatus.LEACHING);
+                        threads.setStatus(thread, ThreadStatus.LEACHING);
 
                         CID cid = ipfs.add(inputStream, "", true);
                         checkNotNull(cid);
 
                         // cleanup of entries with same CID
-                        List<Thread> sameEntries = threadsAPI.getThreadsByCID(cid);
+                        List<Thread> sameEntries = threads.getThreadsByCID(cid);
                         for (Thread entry : sameEntries) {
-                            threadsAPI.removeThread(entry);
+                            threads.removeThread(entry);
                         }
 
-                        threadsAPI.setCID(thread, cid);
-                        threadsAPI.setStatus(thread, ThreadStatus.ONLINE);
+                        threads.setCID(thread, cid);
+                        threads.setStatus(thread, ThreadStatus.ONLINE);
                     } catch (Throwable e) {
-                        threadsAPI.setStatus(thread, ThreadStatus.ERROR);
+                        threads.setStatus(thread, ThreadStatus.ERROR);
                     } finally {
-                        Preferences.event(threadsAPI, Preferences.THREAD_SELECT_EVENT,
-                                String.valueOf(thread.getIdx()));
+                        Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
                     }
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                 }
             });
         }
@@ -658,8 +659,9 @@ public class Service {
 
                     user = threads.createUser(pid, publicKey,
                             getDeviceName(), UserType.VERIFIED, image);
-                    user.setStatus(UserStatus.BLOCKED);
+
                     threads.storeUser(user);
+                    threads.blockUserByPID(pid);
                 }
             } catch (Throwable e) {
                 Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
@@ -759,10 +761,12 @@ public class Service {
                     } else {
                         long idx = createThread(
                                 context, ipfs, sender, cid, filename, filesize, 0L);
+
+                        Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
                         Thread thread = threads.getThreadByIdx(idx);
                         checkNotNull(thread);
                         downloadMultihash(context, threads, ipfs, thread, sender);
-
+                        Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
                     }
 
                 } catch (Throwable e) {
@@ -940,10 +944,6 @@ public class Service {
         checkNotNull(ipfs);
         checkNotNull(thread);
 
-        // UPDATE UI
-        Preferences.event(threads, Preferences.THREAD_SELECT_EVENT, String.valueOf(thread.getIdx()));
-
-
         CID cid = thread.getCid();
         checkNotNull(cid);
 
@@ -985,13 +985,12 @@ public class Service {
         if (notificationManager != null) {
             notificationManager.notify(notifyID, notification);
         }
-        File file = getCacheFile(context, System.currentTimeMillis() + filename);
 
         boolean success;
         try {
             threads.setStatus(thread, ThreadStatus.LEACHING); // make sure
             int timeout = Preferences.getConnectionTimeout(context);
-            success = threads.download(ipfs, file, cid, "", true, false,
+            success = threads.receive(ipfs, cid, "",
                     new THREADS.Progress() {
                         @Override
                         public void setProgress(int percent) {
@@ -1009,9 +1008,23 @@ public class Service {
 
             if (success) {
                 try {
-                    byte[] image = THREADS.getPreviewImage(context, file);
-                    if (image != null) {
-                        threads.setImage(ipfs, thread, image);
+                    File file = ipfs.get(cid);
+                    if (!file.isDirectory()) {
+                        String extension = FilenameUtils.getExtension(filename);
+                        if (!extension.isEmpty()) {
+                            extension = ".".concat(extension);
+                        }
+
+                        file = ipfs.get(cid, extension, "");
+                        byte[] image = THREADS.getPreviewImage(context, file);
+                        if (image != null) {
+                            threads.setImage(ipfs, thread, image);
+                        }
+                    } else {
+                        threads.setAdditional(thread,
+                                Preferences.THREAD_KIND, ThreadKind.NODE.name(), true);
+                        threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
+
                     }
                 } catch (Throwable e) {
                     // no exception will be reported
@@ -1031,9 +1044,6 @@ public class Service {
         } finally {
             if (notificationManager != null) {
                 notificationManager.cancel(notifyID);
-            }
-            if (file.exists()) {
-                checkArgument(file.delete());
             }
         }
 
@@ -1065,9 +1075,6 @@ public class Service {
                                         @NonNull IPFS ipfs,
                                         @NonNull Thread thread,
                                         @NonNull LinkInfo link) {
-        // UPDATE UI
-        Preferences.event(threads, Preferences.THREAD_SELECT_EVENT, String.valueOf(thread.getIdx()));
-
         if (link.isDirectory()) {
             // assume this is a directory
             return handleDirectoryLink(context, threads, ipfs, thread, link);
@@ -1083,11 +1090,6 @@ public class Service {
                                          @NonNull IPFS ipfs,
                                          @NonNull Thread thread,
                                          @NonNull List<LinkInfo> links) {
-        // UPDATE UI
-        Preferences.event(threads,
-                Preferences.THREAD_SELECT_EVENT,
-                String.valueOf(thread.getIdx()));
-
 
         AtomicInteger successCounter = new AtomicInteger(0);
         for (LinkInfo link : links) {
@@ -1100,10 +1102,6 @@ public class Service {
                     if (entry.getStatus() != ThreadStatus.ONLINE) {
                         success = downloadLink(context, threads, ipfs, entry, link);
                     } else {
-                        // UPDATE UI
-                        Preferences.event(threads,
-                                Preferences.THREAD_SELECT_EVENT,
-                                String.valueOf(entry.getIdx()));
                         success = true;
                     }
                 }
