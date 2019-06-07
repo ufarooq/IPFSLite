@@ -70,6 +70,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private ThreadViewModel threadViewModel;
     private long mLastClickTime = 0;
     private Context mContext;
+    private ThreadsFragment.ActionListener mListener;
 
     private static String getCompactString(@NonNull String title) {
         checkNotNull(title);
@@ -80,12 +81,18 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
+        try {
+            mListener = (ThreadsFragment.ActionListener) getActivity();
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
         mContext = null;
+        mListener = null;
     }
 
     @Override
@@ -489,15 +496,11 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             if (getActivity() != null) {
                 boolean sendActive = Preferences.isPubsubEnabled(mContext);
                 boolean online = thread.getStatus() == ThreadStatus.ONLINE;
-                String threadKind = thread.getAdditional(Preferences.THREAD_KIND);
-                checkNotNull(threadKind);
-                Service.ThreadKind kind = Service.ThreadKind.valueOf(threadKind);
-                boolean playActive = kind == Service.ThreadKind.LEAF;
 
                 FragmentManager fm = getActivity().getSupportFragmentManager();
 
                 ThreadActionDialogFragment.newInstance(
-                        thread.getIdx(), true, playActive, true,
+                        thread.getIdx(), true, true,
                         topLevel.get(), online, true, sendActive, true)
                         .show(fm, ThreadActionDialogFragment.TAG);
             }
@@ -527,6 +530,11 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void onClick(@NonNull Thread thread) {
         checkNotNull(thread);
         try {
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
+
             if (threads.isEmpty()) {
                 threadIdx = thread.getIdx();
 
@@ -536,6 +544,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 if (kind == Service.ThreadKind.NODE) {
                     long idx = thread.getIdx();
                     update(idx);
+                } else {
+                    mListener.clickThreadPlay(threadIdx);
                 }
             }
         } catch (Throwable e) {
@@ -657,4 +667,10 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         return 0;
     }
 
+
+    public interface ActionListener {
+
+        void clickThreadPlay(long idx);
+
+    }
 }

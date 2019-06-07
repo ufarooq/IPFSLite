@@ -19,7 +19,6 @@ import androidx.core.app.NotificationCompat;
 
 import com.google.gson.Gson;
 
-import org.apache.commons.io.FilenameUtils;
 import org.iota.jota.pow.pearldiver.PearlDiverLocalPoW;
 
 import java.io.File;
@@ -569,6 +568,9 @@ public class Service {
                         CID cid = ipfs.add(inputStream, "", true);
                         checkNotNull(cid);
 
+                        long length = ipfs.get(cid).length();
+                        System.out.println(length);
+
                         // cleanup of entries with same CID
                         List<Thread> sameEntries = threads.getThreadsByCID(cid);
                         for (Thread entry : sameEntries) {
@@ -767,6 +769,10 @@ public class Service {
                         checkNotNull(thread);
                         downloadMultihash(context, threads, ipfs, thread, sender);
                         Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
+
+                        // Now check if MIME TYPE of thread can be evaluated
+                        // TODO
+
                     }
 
                 } catch (Throwable e) {
@@ -972,8 +978,6 @@ public class Service {
         checkNotNull(filename);
 
 
-
-
         NotificationCompat.Builder builder =
                 ProgressChannel.createProgressNotification(
                         context, filename);
@@ -1010,13 +1014,7 @@ public class Service {
                 try {
                     File file = ipfs.get(cid);
                     if (!file.isDirectory()) {
-                        String extension = FilenameUtils.getExtension(filename);
-                        if (!extension.isEmpty()) {
-                            extension = ".".concat(extension);
-                        }
-
-                        file = ipfs.get(cid, extension, "");
-                        byte[] image = THREADS.getPreviewImage(context, file);
+                        byte[] image = THREADS.getPreviewImage(context, cid);
                         if (image != null) {
                             threads.setImage(ipfs, thread, image);
                         }

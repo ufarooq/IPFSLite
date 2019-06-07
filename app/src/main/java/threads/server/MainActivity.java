@@ -38,8 +38,6 @@ import com.google.gson.Gson;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
-import org.apache.commons.io.FilenameUtils;
-
 import java.io.File;
 import java.util.Collections;
 import java.util.Hashtable;
@@ -65,13 +63,17 @@ import threads.ipfs.api.CID;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
+import threads.share.IPFSAudioDialogFragment;
+import threads.share.ImageDialogFragment;
 import threads.share.InfoDialogFragment;
 import threads.share.NameDialogFragment;
+import threads.share.PDFViewActivity;
 import threads.share.PermissionAction;
 import threads.share.RTCCallActivity;
 import threads.share.RelayService;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.UserActionDialogFragment;
+import threads.share.VideoDialogFragment;
 import threads.share.WebViewDialogFragment;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -84,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         EditMultihashDialogFragment.ActionListener,
         EditPeerDialogFragment.ActionListener,
         PeersFragment.ActionListener,
+        ThreadsFragment.ActionListener,
         NameDialogFragment.ActionListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -1019,26 +1022,46 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     checkNotNull(cid);
 
                     String filename = thread.getAdditional(Content.FILENAME);
-                    String extension = FilenameUtils.getExtension(filename);
-                    if (!extension.isEmpty()) {
-                        extension = ".".concat(extension);
-                    }
                     String mimeType = thread.getMimeType();
-                    File file = ipfs.get(cid, extension, "");
-                    if (file.exists()) {
+
+
+                    if (mimeType.startsWith("image")) {
+                        ImageDialogFragment.newInstance(cid.getCid(), thread.getSesKey()).show(
+                                MainActivity.this.getSupportFragmentManager(), ImageDialogFragment.TAG);
+
+                    } else if (mimeType.startsWith("video")) {
+                        File file = ipfs.get(cid);
+
                         Uri uri = FileProvider.getUriForFile(
                                 this, getApplicationContext()
                                         .getPackageName() + ".provider", file);
+                        VideoDialogFragment.newInstance(uri).show(
+                                MainActivity.this.getSupportFragmentManager(), VideoDialogFragment.TAG);
 
-                        try {
-                            Intent intent = new Intent(Intent.ACTION_VIEW);
-                            intent.setDataAndType(uri, mimeType);
-                            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            startActivity(intent);
-                        } catch (Throwable e) {
-                            startActivity(new Intent(Intent.ACTION_VIEW, uri));
-                        }
+                    } else if (mimeType.startsWith("audio")) {
+                        File file = ipfs.get(cid);
+
+                        Uri uri = FileProvider.getUriForFile(
+                                this, getApplicationContext()
+                                        .getPackageName() + ".provider", file);
+                        IPFSAudioDialogFragment.newInstance(uri,
+                                filename,
+                                thread.getSenderAlias(), thread.getSesKey())
+                                .show(MainActivity.this.getSupportFragmentManager(),
+                                        IPFSAudioDialogFragment.TAG);
+                        VideoDialogFragment.newInstance(uri).show(
+                                MainActivity.this.getSupportFragmentManager(), VideoDialogFragment.TAG);
+
+                    } else if (mimeType.startsWith(Preferences.PDF_MIME_TYPE)) {
+
+                        Intent intent = new Intent(MainActivity.this,
+                                PDFViewActivity.class);
+                        intent.putExtra(PDFViewActivity.CID_ID, cid.getCid());
+                        intent.putExtra(PDFViewActivity.KEY, thread.getSesKey());
+
+                        startActivity(intent);
                     }
+
                 } catch (Throwable ex) {
                     Preferences.error(threads, getString(R.string.no_activity_found_to_handle_uri));
                 }

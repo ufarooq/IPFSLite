@@ -67,7 +67,15 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
-
+        <activity
+            android:name="threads.share.PDFViewActivity"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="fullUser"
+            android:theme="@style/ThreadsServerTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
         <activity
             android:name="threads.share.RTCVideoCallActivity"
             android:configChanges="orientation|smallestScreenSize|screenSize|screenLayout"

@@ -44,6 +44,7 @@ public class EditMultihashDialogFragment extends DialogFragment {
     public void onDetach() {
         super.onDetach();
         mContext = null;
+        mListener = null;
     }
 
     @Override
