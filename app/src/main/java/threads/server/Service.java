@@ -18,6 +18,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import com.google.gson.Gson;
+import com.j256.simplemagic.ContentInfo;
 
 import org.iota.jota.pow.pearldiver.PearlDiverLocalPoW;
 
@@ -770,9 +771,13 @@ public class Service {
                         downloadMultihash(context, threads, ipfs, thread, sender);
                         Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
 
-                        // Now check if MIME TYPE of thread can be evaluated
-                        // TODO
-
+                        // Now check if MIME TYPE of thread can be re-evaluated
+                        if (threads.getMimeType(thread).equals(Preferences.OCTET_MIME_TYPE)) {
+                            ContentInfo contentInfo = ipfs.getContentInfo(cid, "");
+                            if (contentInfo != null) {
+                                threads.setMimeType(thread, contentInfo.getMimeType());
+                            }
+                        }
                     }
 
                 } catch (Throwable e) {

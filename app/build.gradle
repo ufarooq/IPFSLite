@@ -29,8 +29,9 @@ ext {
 android {
     signingConfigs {
     }
+
     compileSdkVersion 29
-    buildToolsVersion '28.0.3'
+
     defaultConfig {
         applicationId "threads.server"
         minSdkVersion 24
@@ -94,10 +95,10 @@ dependencies {
     //implementation 'threads.pow:pow:1.0.9'
 
     // UI+API (LICENSE done)
-    implementation 'threads.share:share:4.7.0'
+    implementation 'threads.share:share:4.7.1'
 
     // API (LICENSE done)
-    implementation 'threads.core:threads:7.6.0'
+    implementation 'threads.core:threads:7.6.1'
 
     // API (LICENSE done)
     implementation 'threads.iota:threads:2.7.4'
