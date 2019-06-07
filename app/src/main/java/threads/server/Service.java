@@ -261,7 +261,7 @@ public class Service {
                 // Experimental Features
                 Preferences.setQUICEnabled(context, true);
                 Preferences.setFilestoreEnabled(context, false);
-                Preferences.setPreferTLS(context, true);
+                Preferences.setPreferTLS(context, false);
 
 
                 Preferences.setSwarmPort(context, 4001);

@@ -1017,49 +1017,52 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 try {
                     Thread thread = threads.getThreadByIdx(idx);
                     checkNotNull(thread);
+                    ThreadStatus status = thread.getStatus();
+                    if (status == ThreadStatus.ONLINE ||
+                            status == ThreadStatus.PUBLISHING) {
 
-                    CID cid = thread.getCid();
-                    checkNotNull(cid);
+                        CID cid = thread.getCid();
+                        checkNotNull(cid);
 
-                    String filename = thread.getAdditional(Content.FILENAME);
-                    String mimeType = thread.getMimeType();
+                        String filename = thread.getAdditional(Content.FILENAME);
+                        String mimeType = thread.getMimeType();
 
 
-                    if (mimeType.startsWith("image")) {
-                        ImageDialogFragment.newInstance(cid.getCid(), thread.getSesKey()).show(
-                                MainActivity.this.getSupportFragmentManager(), ImageDialogFragment.TAG);
+                        if (mimeType.startsWith("image")) {
+                            ImageDialogFragment.newInstance(cid.getCid(), thread.getSesKey()).show(
+                                    MainActivity.this.getSupportFragmentManager(), ImageDialogFragment.TAG);
 
-                    } else if (mimeType.startsWith("video")) {
-                        File file = ipfs.get(cid);
+                        } else if (mimeType.startsWith("video")) {
+                            File file = ipfs.get(cid);
 
-                        Uri uri = FileProvider.getUriForFile(
-                                this, getApplicationContext()
-                                        .getPackageName() + ".provider", file);
-                        VideoDialogFragment.newInstance(uri).show(
-                                MainActivity.this.getSupportFragmentManager(), VideoDialogFragment.TAG);
+                            Uri uri = FileProvider.getUriForFile(
+                                    this, getApplicationContext()
+                                            .getPackageName() + ".provider", file);
+                            VideoDialogFragment.newInstance(uri).show(
+                                    MainActivity.this.getSupportFragmentManager(), VideoDialogFragment.TAG);
 
-                    } else if (mimeType.startsWith("audio")) {
-                        File file = ipfs.get(cid);
+                        } else if (mimeType.startsWith("audio")) {
+                            File file = ipfs.get(cid);
 
-                        Uri uri = FileProvider.getUriForFile(
-                                this, getApplicationContext()
-                                        .getPackageName() + ".provider", file);
-                        IPFSAudioDialogFragment.newInstance(uri,
-                                filename,
-                                thread.getSenderAlias(), thread.getSesKey())
-                                .show(MainActivity.this.getSupportFragmentManager(),
-                                        IPFSAudioDialogFragment.TAG);
+                            Uri uri = FileProvider.getUriForFile(
+                                    this, getApplicationContext()
+                                            .getPackageName() + ".provider", file);
+                            IPFSAudioDialogFragment.newInstance(uri,
+                                    filename,
+                                    thread.getSenderAlias(), thread.getSesKey())
+                                    .show(MainActivity.this.getSupportFragmentManager(),
+                                            IPFSAudioDialogFragment.TAG);
 
-                    } else if (mimeType.startsWith(Preferences.PDF_MIME_TYPE)) {
+                        } else if (mimeType.startsWith(Preferences.PDF_MIME_TYPE)) {
 
-                        Intent intent = new Intent(MainActivity.this,
-                                PDFViewActivity.class);
-                        intent.putExtra(PDFViewActivity.CID_ID, cid.getCid());
-                        intent.putExtra(PDFViewActivity.KEY, thread.getSesKey());
+                            Intent intent = new Intent(MainActivity.this,
+                                    PDFViewActivity.class);
+                            intent.putExtra(PDFViewActivity.CID_ID, cid.getCid());
+                            intent.putExtra(PDFViewActivity.KEY, thread.getSesKey());
 
-                        startActivity(intent);
+                            startActivity(intent);
+                        }
                     }
-
                 } catch (Throwable ex) {
                     Preferences.error(threads, getString(R.string.no_activity_found_to_handle_uri));
                 }
