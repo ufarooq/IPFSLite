@@ -1049,8 +1049,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 thread.getSenderAlias(), thread.getSesKey())
                                 .show(MainActivity.this.getSupportFragmentManager(),
                                         IPFSAudioDialogFragment.TAG);
-                        VideoDialogFragment.newInstance(uri).show(
-                                MainActivity.this.getSupportFragmentManager(), VideoDialogFragment.TAG);
 
                     } else if (mimeType.startsWith(Preferences.PDF_MIME_TYPE)) {
 
