@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -1061,6 +1062,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             intent.putExtra(PDFViewActivity.KEY, thread.getSesKey());
 
                             startActivity(intent);
+                        } else if (mimeType.startsWith("text")) {
+
+                            byte[] data = ipfs.get(cid, "", -1, true);
+                            if (data != null) {
+                                String content = Base64.encodeToString(data, Base64.NO_PADDING);
+                                WebViewDialogFragment.newInstance(mimeType, content, "base64").
+                                        show(MainActivity.this.getSupportFragmentManager(),
+                                                WebViewDialogFragment.TAG);
+                            }
                         }
                     }
                 } catch (Throwable ex) {
