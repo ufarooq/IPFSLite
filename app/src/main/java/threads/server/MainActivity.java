@@ -1146,26 +1146,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     CID bitmap = Preferences.getBitmap(getApplicationContext(), multihash);
                     checkNotNull(bitmap);
-                    File file = ipfs.get(bitmap, "");
 
-                    if (file.exists()) {
-                        File dest = new File(file.getParentFile(), file.getName() + ".png");
-                        file.renameTo(dest);
+                    File file = new File(getFilesDir(),
+                            "share" + File.separator + multihash + ".png");
 
-                        Uri uri = FileProvider.getUriForFile(getApplicationContext(),
-                                "threads.server.provider", dest);
-
-
-                        Intent shareIntent = new Intent();
-                        shareIntent.setAction(Intent.ACTION_SEND);
-                        shareIntent.putExtra(Intent.EXTRA_SUBJECT, multihash);
-                        shareIntent.putExtra(Intent.EXTRA_TEXT,
-                                getString(R.string.multihash_access, multihash));
-                        shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
-                        shareIntent.setType("image/png");
-                        startActivity(Intent.createChooser(shareIntent,
-                                getResources().getText(R.string.share)));
+                    if (!file.exists()) {
+                        ipfs.store(file, bitmap, "");
                     }
+
+                    Uri uri = FileProvider.getUriForFile(getApplicationContext(),
+                            "threads.server.provider", file);
+
+
+                    Intent shareIntent = new Intent();
+                    shareIntent.setAction(Intent.ACTION_SEND);
+                    shareIntent.putExtra(Intent.EXTRA_SUBJECT, multihash);
+                    shareIntent.putExtra(Intent.EXTRA_TEXT,
+                            getString(R.string.multihash_access, multihash));
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+                    shareIntent.setType("image/png");
+                    startActivity(Intent.createChooser(shareIntent,
+                            getResources().getText(R.string.share)));
 
 
                 } catch (Throwable e) {

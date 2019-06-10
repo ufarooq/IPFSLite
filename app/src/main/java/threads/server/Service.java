@@ -764,25 +764,25 @@ public class Service {
                         }
 
                     }
-                        long idx = createThread(
-                                context, ipfs, sender, cid, filename, filesize, 0L);
+                    long idx = createThread(
+                            context, ipfs, sender, cid, filename, filesize, 0L);
 
-                        Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
-                        Thread thread = threads.getThreadByIdx(idx);
-                        checkNotNull(thread);
-                        downloadMultihash(context, threads, ipfs, thread, sender);
-                        Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
+                    Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
+                    Thread thread = threads.getThreadByIdx(idx);
+                    checkNotNull(thread);
+                    downloadMultihash(context, threads, ipfs, thread, sender);
+                    Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
 
-                        // Now check if MIME TYPE of thread can be re-evaluated
-                        if (threads.getMimeType(thread).equals(Preferences.OCTET_MIME_TYPE)) {
-                            ContentInfo contentInfo = ipfs.getContentInfo(cid, "");
-                            if (contentInfo != null) {
-                                threads.setMimeType(thread, contentInfo.getMimeType());
-                                // THIS can be wrong with the filename
-                                threads.setAdditional(thread, Content.FILENAME,
-                                        cid.getCid() + "." + contentInfo.getName(), true);
-                            }
+                    // Now check if MIME TYPE of thread can be re-evaluated
+                    if (threads.getMimeType(thread).equals(Preferences.OCTET_MIME_TYPE)) {
+                        ContentInfo contentInfo = ipfs.getContentInfo(cid, "");
+                        if (contentInfo != null) {
+                            threads.setMimeType(thread, contentInfo.getMimeType());
+                            // THIS can be wrong with the filename
+                            threads.setAdditional(thread, Content.FILENAME,
+                                    cid.getCid() + "." + contentInfo.getName(), true);
                         }
+                    }
 
 
                 } catch (Throwable e) {
@@ -1084,7 +1084,6 @@ public class Service {
                                         @NonNull Thread thread,
                                         @NonNull LinkInfo link) {
         if (link.isDirectory()) {
-            // assume this is a directory
             return handleDirectoryLink(context, threads, ipfs, thread, link);
         } else {
             return handleContentLink(context, threads, ipfs, thread, link);
@@ -1102,39 +1101,43 @@ public class Service {
         AtomicInteger successCounter = new AtomicInteger(0);
         for (LinkInfo link : links) {
 
-            boolean success = false;
+
             CID cid = link.getCid();
-            /*
+
             List<Thread> entries = threads.getThreadsByCID(cid);
             if (!entries.isEmpty()) {
                 for (Thread entry : entries) {
-                    if (entry.getStatus() != ThreadStatus.ONLINE) {
-                        success = downloadLink(context, threads, ipfs, entry, link);
-                    } else {
+                    if (entry.getThread() == thread.getThread()) {
+                        if (entry.getStatus() != ThreadStatus.ONLINE) {
 
-                        success = true;
+                            boolean success = downloadLink(context, threads, ipfs, entry, link);
+                            if (success) {
+                                successCounter.incrementAndGet();
+                            }
+                            break;
+                        } else {
+                            successCounter.incrementAndGet();
+                            break;
+                        }
                     }
                 }
-            } else {*/
-                // TODO rethink filename and filesize here
-                long idx = createThread(context, ipfs,
-                        thread.getSenderPid(), cid, link.getName(),
-                        String.valueOf(link.getSize()), thread.getIdx());
-                Thread entry = threads.getThreadByIdx(idx);
-                checkNotNull(entry);
-                success = downloadLink(context, threads, ipfs, entry, link);
-
-                if (success) {
-                    threads.setStatus(entry, ThreadStatus.ONLINE);
-                } else {
-                    threads.setStatus(entry, ThreadStatus.ERROR);
-                }
-
-            // }
+            }
+            // TODO rethink creation of thread (TODO add directory info)
+            long idx = createThread(context, ipfs,
+                    thread.getSenderPid(), cid, link.getName(),
+                    String.valueOf(link.getSize()), thread.getIdx());
+            Thread entry = threads.getThreadByIdx(idx);
+            checkNotNull(entry);
+            boolean success = downloadLink(context, threads, ipfs, entry, link);
 
             if (success) {
                 successCounter.incrementAndGet();
+                threads.setStatus(entry, ThreadStatus.ONLINE);
+            } else {
+                threads.setStatus(entry, ThreadStatus.ERROR);
             }
+
+
         }
 
         return successCounter.get() == links.size();
