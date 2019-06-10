@@ -569,9 +569,6 @@ public class Service {
                         CID cid = ipfs.add(inputStream, "", true);
                         checkNotNull(cid);
 
-                        long length = ipfs.get(cid).length();
-                        System.out.println(length);
-
                         // cleanup of entries with same CID
                         List<Thread> sameEntries = threads.getThreadsByCID(cid);
                         for (Thread entry : sameEntries) {
@@ -750,18 +747,23 @@ public class Service {
 
                     CID cid = CID.create(multihash);
                     List<Thread> entries = threads.getThreadsByCID(cid);
+
                     if (!entries.isEmpty()) {
                         for (Thread entry : entries) {
-                            if (entry.getStatus() == ThreadStatus.DELETING ||
-                                    entry.getStatus() == ThreadStatus.ONLINE ||
-                                    entry.getStatus() == ThreadStatus.PUBLISHING) {
-                                replySender(ipfs, sender, entry);
-                            } else {
-                                downloadMultihash(context, threads, ipfs, entry, sender);
+                            if (entry.getThread() == 0L) {
+                                if (entry.getStatus() == ThreadStatus.DELETING ||
+                                        entry.getStatus() == ThreadStatus.ONLINE ||
+                                        entry.getStatus() == ThreadStatus.PUBLISHING) {
+                                    replySender(ipfs, sender, entry);
+                                    return;
+                                } else {
+                                    downloadMultihash(context, threads, ipfs, entry, sender);
+                                    return;
+                                }
                             }
                         }
 
-                    } else {
+                    }
                         long idx = createThread(
                                 context, ipfs, sender, cid, filename, filesize, 0L);
 
@@ -776,9 +778,12 @@ public class Service {
                             ContentInfo contentInfo = ipfs.getContentInfo(cid, "");
                             if (contentInfo != null) {
                                 threads.setMimeType(thread, contentInfo.getMimeType());
+                                // THIS can be wrong with the filename
+                                threads.setAdditional(thread, Content.FILENAME,
+                                        cid.getCid() + "." + contentInfo.getName(), true);
                             }
                         }
-                    }
+
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
@@ -1017,9 +1022,9 @@ public class Service {
 
             if (success) {
                 try {
-                    File file = ipfs.get(cid);
+                    File file = ipfs.get(cid, "");
                     if (!file.isDirectory()) {
-                        byte[] image = THREADS.getPreviewImage(context, cid);
+                        byte[] image = THREADS.getPreviewImage(context, cid, "");
                         if (image != null) {
                             threads.setImage(ipfs, thread, image);
                         }
@@ -1030,7 +1035,7 @@ public class Service {
 
                     }
                 } catch (Throwable e) {
-                    // no exception will be reported
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
             } else {
                 try {
@@ -1099,19 +1104,22 @@ public class Service {
 
             boolean success = false;
             CID cid = link.getCid();
+            /*
             List<Thread> entries = threads.getThreadsByCID(cid);
             if (!entries.isEmpty()) {
                 for (Thread entry : entries) {
                     if (entry.getStatus() != ThreadStatus.ONLINE) {
                         success = downloadLink(context, threads, ipfs, entry, link);
                     } else {
+
                         success = true;
                     }
                 }
-            } else {
+            } else {*/
                 // TODO rethink filename and filesize here
                 long idx = createThread(context, ipfs,
-                        thread.getSenderPid(), cid, null, null, thread.getIdx());
+                        thread.getSenderPid(), cid, link.getName(),
+                        String.valueOf(link.getSize()), thread.getIdx());
                 Thread entry = threads.getThreadByIdx(idx);
                 checkNotNull(entry);
                 success = downloadLink(context, threads, ipfs, entry, link);
@@ -1122,7 +1130,7 @@ public class Service {
                     threads.setStatus(entry, ThreadStatus.ERROR);
                 }
 
-            }
+            // }
 
             if (success) {
                 successCounter.incrementAndGet();
