@@ -1155,7 +1155,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
 
                     Uri uri = FileProvider.getUriForFile(getApplicationContext(),
-                            "threads.server.provider", file);
+                            getApplicationContext().getPackageName() + ".provider", file);
 
 
                     Intent shareIntent = new Intent();
