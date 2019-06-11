@@ -77,7 +77,6 @@ import threads.share.UserActionDialogFragment;
 import threads.share.VideoDialogFragment;
 import threads.share.WebViewDialogFragment;
 
-import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
@@ -1035,21 +1034,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     MainActivity.this.getSupportFragmentManager(), ImageDialogFragment.TAG);
 
                         } else if (mimeType.startsWith("video")) {
-                            File file = ipfs.get(cid, "");
-                            File dest = new File(file.getParentFile(), filename);
-                            checkArgument(file.renameTo(dest));
 
-                            Uri uri = Uri.fromFile(dest);
+                            File file = new File(ipfs.getCacheDir(), cid.getCid());
+                            if (!file.exists()) {
+                                ipfs.store(file, cid, "");
+                            }
+
+                            Uri uri = Uri.fromFile(file);
                             VideoDialogFragment.newInstance(uri).show(
                                     MainActivity.this.getSupportFragmentManager(), VideoDialogFragment.TAG);
 
                         } else if (mimeType.startsWith("audio")) {
-                            File file = ipfs.get(cid, "");
-                            File dest = new File(file.getParentFile(), filename);
-                            checkArgument(file.renameTo(dest));
+                            File file = new File(ipfs.getCacheDir(), cid.getCid());
+                            if (!file.exists()) {
+                                ipfs.store(file, cid, "");
+                            }
 
-
-                            Uri uri = Uri.fromFile(dest);
+                            Uri uri = Uri.fromFile(file);
                             IPFSAudioDialogFragment.newInstance(uri,
                                     filename,
                                     thread.getSenderAlias(), thread.getSesKey())
@@ -1147,8 +1148,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     CID bitmap = Preferences.getBitmap(getApplicationContext(), multihash);
                     checkNotNull(bitmap);
 
-                    File file = new File(getFilesDir(),
-                            "share" + File.separator + multihash + ".png");
+                    File file = new File(ipfs.getCacheDir(), multihash + ".png");
 
                     if (!file.exists()) {
                         ipfs.store(file, bitmap, "");
@@ -1165,6 +1165,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             getString(R.string.multihash_access, multihash));
                     shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
                     shareIntent.setType("image/png");
+                    shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     startActivity(Intent.createChooser(shareIntent,
                             getResources().getText(R.string.share)));
 

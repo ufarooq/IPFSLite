@@ -560,11 +560,9 @@ public class Service {
 
                     Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
 
-                    thread = threads.getThreadByIdx(idx); // TODO optimize here
-                    checkNotNull(thread);
-                    try {
 
-                        threads.setStatus(thread, ThreadStatus.LEACHING);
+                    try {
+                        threads.setThreadStatus(idx, ThreadStatus.LEACHING);
 
                         CID cid = ipfs.add(inputStream, "", true);
                         checkNotNull(cid);
@@ -575,10 +573,10 @@ public class Service {
                             threads.removeThread(entry);
                         }
 
-                        threads.setCID(thread, cid);
-                        threads.setStatus(thread, ThreadStatus.ONLINE);
+                        threads.setThreadCID(idx, cid);
+                        threads.setThreadStatus(idx, ThreadStatus.ONLINE);
                     } catch (Throwable e) {
-                        threads.setStatus(thread, ThreadStatus.ERROR);
+                        threads.setThreadStatus(idx, ThreadStatus.ERROR);
                     } finally {
                         Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
                     }
@@ -1092,6 +1090,20 @@ public class Service {
 
     }
 
+    private static Thread getDirectoryThread(@NonNull THREADS threads,
+                                             @NonNull Thread thread,
+                                             @NonNull CID cid) {
+        List<Thread> entries = threads.getThreadsByCID(cid);
+        if (!entries.isEmpty()) {
+            for (Thread entry : entries) {
+                if (entry.getThread() == thread.getIdx()) {
+                    return entry;
+                }
+            }
+        }
+        return null;
+    }
+
     private static boolean downloadLinks(@NonNull Context context,
                                          @NonNull THREADS threads,
                                          @NonNull IPFS ipfs,
@@ -1101,42 +1113,36 @@ public class Service {
         AtomicInteger successCounter = new AtomicInteger(0);
         for (LinkInfo link : links) {
 
-
             CID cid = link.getCid();
+            Thread entry = getDirectoryThread(threads, thread, cid);
+            if (entry != null) {
+                if (entry.getStatus() != ThreadStatus.ONLINE) {
 
-            List<Thread> entries = threads.getThreadsByCID(cid);
-            if (!entries.isEmpty()) {
-                for (Thread entry : entries) {
-                    if (entry.getThread() == thread.getThread()) {
-                        if (entry.getStatus() != ThreadStatus.ONLINE) {
-
-                            boolean success = downloadLink(context, threads, ipfs, entry, link);
-                            if (success) {
-                                successCounter.incrementAndGet();
-                            }
-                            break;
-                        } else {
-                            successCounter.incrementAndGet();
-                            break;
-                        }
+                    boolean success = downloadLink(context, threads, ipfs, entry, link);
+                    if (success) {
+                        successCounter.incrementAndGet();
                     }
+
+                } else {
+                    successCounter.incrementAndGet();
+                }
+            } else {
+
+                // TODO rethink creation of thread (TODO add directory info)
+                long idx = createThread(context, ipfs,
+                        thread.getSenderPid(), cid, link.getName(),
+                        String.valueOf(link.getSize()), thread.getIdx());
+                entry = threads.getThreadByIdx(idx);
+                checkNotNull(entry);
+                boolean success = downloadLink(context, threads, ipfs, entry, link);
+
+                if (success) {
+                    successCounter.incrementAndGet();
+                    threads.setStatus(entry, ThreadStatus.ONLINE);
+                } else {
+                    threads.setStatus(entry, ThreadStatus.ERROR);
                 }
             }
-            // TODO rethink creation of thread (TODO add directory info)
-            long idx = createThread(context, ipfs,
-                    thread.getSenderPid(), cid, link.getName(),
-                    String.valueOf(link.getSize()), thread.getIdx());
-            Thread entry = threads.getThreadByIdx(idx);
-            checkNotNull(entry);
-            boolean success = downloadLink(context, threads, ipfs, entry, link);
-
-            if (success) {
-                successCounter.incrementAndGet();
-                threads.setStatus(entry, ThreadStatus.ONLINE);
-            } else {
-                threads.setStatus(entry, ThreadStatus.ERROR);
-            }
-
 
         }
 
