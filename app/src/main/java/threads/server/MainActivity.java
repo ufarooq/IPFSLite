@@ -65,16 +65,16 @@ import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
 import threads.share.IPFSAudioDialogFragment;
+import threads.share.IPFSVideoActivity;
 import threads.share.ImageDialogFragment;
 import threads.share.InfoDialogFragment;
 import threads.share.NameDialogFragment;
-import threads.share.PDFViewActivity;
+import threads.share.PDFView;
 import threads.share.PermissionAction;
 import threads.share.RTCCallActivity;
 import threads.share.RelayService;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.UserActionDialogFragment;
-import threads.share.VideoDialogFragment;
 import threads.share.WebViewDialogFragment;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -1026,6 +1026,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         checkNotNull(cid);
 
                         String filename = thread.getAdditional(Content.FILENAME);
+                        String filesize = thread.getAdditional(Content.FILESIZE);
                         String mimeType = thread.getMimeType();
 
 
@@ -1035,14 +1036,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         } else if (mimeType.startsWith("video")) {
 
-                            File file = new File(ipfs.getCacheDir(), cid.getCid());
-                            if (!file.exists()) {
-                                ipfs.store(file, cid, "");
-                            }
-
-                            Uri uri = Uri.fromFile(file);
-                            VideoDialogFragment.newInstance(uri).show(
-                                    MainActivity.this.getSupportFragmentManager(), VideoDialogFragment.TAG);
+                            Intent intent = new Intent(MainActivity.this,
+                                    IPFSVideoActivity.class);
+                            intent.putExtra(IPFSVideoActivity.CID_ID, cid.getCid());
+                            intent.putExtra(IPFSVideoActivity.KEY, thread.getSesKey());
+                            intent.putExtra(IPFSVideoActivity.SIZE, Long.valueOf(filesize));
+                            startActivity(intent);
 
                         } else if (mimeType.startsWith("audio")) {
                             File file = new File(ipfs.getCacheDir(), cid.getCid());
@@ -1059,12 +1058,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         } else if (mimeType.startsWith(Preferences.PDF_MIME_TYPE)) {
 
-                            Intent intent = new Intent(MainActivity.this,
-                                    PDFViewActivity.class);
-                            intent.putExtra(PDFViewActivity.CID_ID, cid.getCid());
-                            intent.putExtra(PDFViewActivity.KEY, thread.getSesKey());
-
-                            startActivity(intent);
+                            File file = new File(ipfs.getCacheDir(), cid.getCid());
+                            if (!file.exists()) {
+                                ipfs.store(file, cid, "");
+                            }
+                            PDFView.with(MainActivity.this)
+                                    .fromfilepath(file.getAbsolutePath())
+                                    .swipeHorizontal(true)
+                                    .start();
                         } else if (mimeType.startsWith("text")) {
 
                             byte[] data = ipfs.get(cid, "", -1, true);

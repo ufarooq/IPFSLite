@@ -62,7 +62,7 @@
         <copyright />
         <license>Apache Software License 2.0</license>
     </notice>
-    Apache Software License 2.0
+
     <notice>
         <name>multiformats/java-multibase</name>
         <url>https://github.com/multiformats/java-multihash/blob/master/LICENSE</url>
@@ -77,17 +77,4 @@
         <license>ISC License</license>
     </notice>
 
-    <notice>
-        <name>brianwernick/ExoMedia</name>
-        <url>https://github.com/brianwernick/ExoMedia</url>
-        <copyright />
-        <license>Apache Software License 2.0</license>
-    </notice>
-
-    <notice>
-        <name>barteksc/AndroidPdfViewer</name>
-        <url>https://github.com/barteksc/AndroidPdfViewer</url>
-        <copyright />
-        <license>Apache Software License 2.0</license>
-    </notice>
 </notices>
