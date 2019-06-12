@@ -1076,6 +1076,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         show(MainActivity.this.getSupportFragmentManager(),
                                                 WebViewDialogFragment.TAG);
                             }
+                        } else if (mimeType.equals(Preferences.OCTET_MIME_TYPE)) {
+
+                            byte[] data = ipfs.get(cid, "", -1, true);
+                            if (data.length > 0) {
+                                String content = new String(data);
+                                WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.TEXT, content).
+                                        show(MainActivity.this.getSupportFragmentManager(),
+                                                WebViewDialogFragment.TAG);
+                            }
                         }
                     }
                 } catch (Throwable ex) {

@@ -775,10 +775,16 @@ public class Service {
                     if (threads.getMimeType(thread).equals(Preferences.OCTET_MIME_TYPE)) {
                         ContentInfo contentInfo = ipfs.getContentInfo(cid, "");
                         if (contentInfo != null) {
-                            threads.setMimeType(thread, contentInfo.getMimeType());
-                            // THIS can be wrong with the filename
-                            threads.setAdditional(thread, Content.FILENAME,
-                                    cid.getCid() + "." + contentInfo.getName(), true);
+                            String mimeType = contentInfo.getMimeType();
+                            if (mimeType != null) {
+                                threads.setMimeType(thread, mimeType);
+                            }
+                            String extension = contentInfo.getName();
+                            if (extension != null) {
+                                // THIS can be wrong with the filename
+                                threads.setAdditional(thread, Content.FILENAME,
+                                        cid.getCid() + "." + extension, true);
+                            }
                         }
                     }
 
