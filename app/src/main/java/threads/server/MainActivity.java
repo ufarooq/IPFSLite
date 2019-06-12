@@ -61,6 +61,7 @@ import threads.core.api.UserType;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
+import threads.ipfs.api.IpnsInfo;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
@@ -952,17 +953,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         CID cid = thread.getCid();
                         checkNotNull(cid);
 
-                        ipfs.name_publish(cid);
+                        IpnsInfo info = ipfs.name_publish(cid);
 
-                        String resolve = ipfs.name_resolve();
+                        if (info != null) {
+                            Uri uri = Uri.parse("https://ipfs.io" + info.getValue());
 
-                        Uri uri = Uri.parse("https://ipfs.io" + resolve);
-
-                        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
-
+                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                        }
                     } catch (Throwable e) {
                         Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                     } finally {
