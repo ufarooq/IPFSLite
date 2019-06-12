@@ -1066,6 +1066,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     .fromfilepath(file.getAbsolutePath())
                                     .swipeHorizontal(true)
                                     .start();
+
                         } else if (mimeType.startsWith("text")) {
 
                             byte[] data = ipfs.get(cid, "", -1, true);
