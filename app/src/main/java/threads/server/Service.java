@@ -77,7 +77,7 @@ public class Service {
     }
 
     @NonNull
-    public static Service getInstance(@NonNull Context context) {
+    static Service getInstance(@NonNull Context context) {
         checkNotNull(context);
         if (SINGLETON == null) {
 
@@ -157,8 +157,7 @@ public class Service {
                                     if (pubKey == null) {
                                         pubKey = "";
                                     }
-                                    adaptUser(context, senderPid,
-                                            alias, pubKey, UserType.VERIFIED);
+                                    adaptUser(context, senderPid, alias, pubKey);
                                 }
                             } else if ("SHARE".equals(est)) {
 
@@ -307,31 +306,6 @@ public class Service {
                                                @NonNull Thread thread,
                                                @NonNull LinkInfo link) {
 
-        String filename = link.getName();
-        threads.setAdditional(thread, Content.FILENAME, filename, false);
-        long size = link.getSize();
-
-        threads.setAdditional(thread, Content.FILESIZE, String.valueOf(size), false);
-        threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
-        threads.setAdditional(thread, Preferences.THREAD_KIND, ThreadKind.NODE.name(), true);
-
-        try {
-            CID image = THREADS.createResourceImage(context, threads, ipfs,
-                    R.drawable.folder_outline, "");
-            checkNotNull(image);
-            threads.setImage(thread, image);
-        } catch (Throwable e) {
-            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-        }
-        try {
-            CID cid = thread.getCid();
-            if (cid != null) {
-                threads.pin_add(ipfs, cid, -1, true);
-            }
-        } catch (Throwable e) {
-            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-        }
-
         List<LinkInfo> links = getLinks(context, ipfs, link.getCid());
         if (links != null) {
             return downloadLinks(context, threads, ipfs, thread, links);
@@ -363,13 +337,11 @@ public class Service {
     private static void adaptUser(@NonNull Context context,
                                   @NonNull PID senderPid,
                                   @NonNull String alias,
-                                  @NonNull String pubKey,
-                                  @NonNull UserType userType) {
+                                  @NonNull String pubKey) {
         checkNotNull(context);
         checkNotNull(senderPid);
         checkNotNull(alias);
         checkNotNull(pubKey);
-        checkNotNull(userType);
 
         try {
             final THREADS threadsAPI = Singleton.getInstance(context).getThreads();
@@ -387,7 +359,7 @@ public class Service {
                 sender.setPublicKey(pubKey);
                 sender.setAlias(alias);
                 sender.setImage(image);
-                sender.setType(userType);
+                sender.setType(UserType.VERIFIED);
 
                 threadsAPI.storeUser(sender);
 
@@ -762,31 +734,13 @@ public class Service {
                         }
 
                     }
-                    long idx = createThread(
-                            context, ipfs, sender, cid, filename, filesize, 0L);
+                    long idx = createThread(context, ipfs, sender, cid, filename, filesize);
 
                     Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
                     Thread thread = threads.getThreadByIdx(idx);
                     checkNotNull(thread);
                     downloadMultihash(context, threads, ipfs, thread, sender);
                     Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
-
-                    // Now check if MIME TYPE of thread can be re-evaluated
-                    if (threads.getMimeType(thread).equals(Preferences.OCTET_MIME_TYPE)) {
-                        ContentInfo contentInfo = ipfs.getContentInfo(cid, "");
-                        if (contentInfo != null) {
-                            String mimeType = contentInfo.getMimeType();
-                            if (mimeType != null) {
-                                threads.setMimeType(thread, mimeType);
-                            }
-                            String extension = contentInfo.getName();
-                            if (extension != null) {
-                                // THIS can be wrong with the filename
-                                threads.setAdditional(thread, Content.FILENAME,
-                                        cid.getCid() + "." + extension, true);
-                            }
-                        }
-                    }
 
 
                 } catch (Throwable e) {
@@ -817,9 +771,71 @@ public class Service {
                                      @NonNull IPFS ipfs,
                                      @NonNull PID creator,
                                      @NonNull CID cid,
-                                     @Nullable String filename,
-                                     @Nullable String filesize,
+                                     @NonNull LinkInfo link,
                                      long parent) {
+
+        checkNotNull(context);
+        checkNotNull(ipfs);
+        checkNotNull(creator);
+        checkNotNull(cid);
+        checkNotNull(link);
+
+
+        final THREADS threads = Singleton.getInstance(context).getThreads();
+
+        User user = threads.getUserByPID(creator);
+        checkNotNull(user);
+
+        Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
+                "", cid, parent, false);
+
+        if (link.isDirectory()) {
+            thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.NODE.name(), false);
+        } else {
+            thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
+        }
+
+        String filename = link.getName();
+        thread.addAdditional(Content.FILENAME, filename, false);
+
+        long size = link.getSize();
+        thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
+
+        if (link.isDirectory()) {
+            thread.setMimeType(DocumentsContract.Document.MIME_TYPE_DIR);
+        } else {
+            thread.setMimeType(evaluateMimeType(context, filename));
+        }
+
+
+        if (link.isDirectory()) {
+            try {
+                CID image = THREADS.createResourceImage(context, threads, ipfs,
+                        R.drawable.folder_outline, "");
+                if (image != null) {
+                    thread.setImage(image);
+                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+            }
+        } else {
+            try {
+                byte[] image = THREADS.getImage(context.getApplicationContext(),
+                        user.getAlias(), R.drawable.file_document);
+                thread.setImage(ipfs.add(image, "", true));
+            } catch (Throwable e) {
+                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+            }
+        }
+        return threads.storeThread(thread);
+    }
+
+    private static long createThread(@NonNull Context context,
+                                     @NonNull IPFS ipfs,
+                                     @NonNull PID creator,
+                                     @NonNull CID cid,
+                                     @Nullable String filename,
+                                     @Nullable String filesize) {
 
         checkNotNull(context);
         checkNotNull(ipfs);
@@ -833,7 +849,7 @@ public class Service {
         checkNotNull(user);
 
         Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
-                "", cid, parent, false);
+                "", cid, 0L, false);
         thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false); // not known yet
         if (filename != null) {
             thread.addAdditional(Content.FILENAME, filename, false);
@@ -1005,7 +1021,7 @@ public class Service {
 
         boolean success;
         try {
-            threads.setStatus(thread, ThreadStatus.LEACHING); // make sure
+            threads.setStatus(thread, ThreadStatus.LEACHING);
             int timeout = Preferences.getConnectionTimeout(context);
             File file = threads.receive(ipfs, cid, "",
                     new IPFS.Progress() {
@@ -1025,6 +1041,19 @@ public class Service {
 
             if (file != null) {
                 success = true;
+
+
+                // Now check if MIME TYPE of thread can be re-evaluated
+                if (threads.getMimeType(thread).equals(Preferences.OCTET_MIME_TYPE)) {
+                    ContentInfo contentInfo = ipfs.getContentInfo(file);
+                    if (contentInfo != null) {
+                        String mimeType = contentInfo.getMimeType();
+                        if (mimeType != null) {
+                            threads.setMimeType(thread, mimeType);
+                        }
+                    }
+                }
+
                 try {
                     byte[] image = THREADS.getPreviewImage(context, file, filename);
                     if (image != null) {
@@ -1056,24 +1085,7 @@ public class Service {
     }
 
 
-    private static boolean handleContentLink(@NonNull Context context,
-                                             @NonNull THREADS threads,
-                                             @NonNull IPFS ipfs,
-                                             @NonNull Thread thread,
-                                             @NonNull LinkInfo link) {
 
-        String filename = link.getName();
-        String filesize = String.valueOf(link.getSize());
-
-        threads.setAdditional(thread, Content.FILENAME, filename, false);
-        threads.setAdditional(thread, Content.FILESIZE, filesize, false);
-        threads.setMimeType(thread, evaluateMimeType(context, filename));
-        threads.setAdditional(thread, Preferences.THREAD_KIND, ThreadKind.LEAF.name(), true);
-
-
-        return download(context, threads, ipfs, thread, link.getCid(), link.getName(), link.getSize());
-
-    }
 
     private static boolean downloadLink(@NonNull Context context,
                                         @NonNull THREADS threads,
@@ -1083,7 +1095,8 @@ public class Service {
         if (link.isDirectory()) {
             return handleDirectoryLink(context, threads, ipfs, thread, link);
         } else {
-            return handleContentLink(context, threads, ipfs, thread, link);
+            return download(context, threads, ipfs, thread,
+                    link.getCid(), link.getName(), link.getSize());
         }
 
 
@@ -1127,10 +1140,8 @@ public class Service {
                 }
             } else {
 
-                // TODO rethink creation of thread (TODO add directory info)
                 long idx = createThread(context, ipfs,
-                        thread.getSenderPid(), cid, link.getName(),
-                        String.valueOf(link.getSize()), thread.getIdx());
+                        thread.getSenderPid(), cid, link, thread.getIdx());
                 entry = threads.getThreadByIdx(idx);
                 checkNotNull(entry);
                 boolean success = downloadLink(context, threads, ipfs, entry, link);
@@ -1209,9 +1220,8 @@ public class Service {
                 try {
                     CID image = THREADS.createResourceImage(context, threads, ipfs,
                             R.drawable.folder_outline, "");
-                    if (image != null) {
-                        threads.setImage(thread, image);
-                    }
+                    checkNotNull(image);
+                    threads.setImage(thread, image);
                 } catch (Throwable e) {
                     Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                 }
