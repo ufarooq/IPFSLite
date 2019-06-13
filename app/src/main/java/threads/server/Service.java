@@ -909,8 +909,7 @@ public class Service {
 
                         try {
                             boolean finished = threadsAPI.download(ipfs, file, cid, "",
-                                    false, true,
-                                    new THREADS.Progress() {
+                                    new IPFS.Progress() {
                                         @Override
                                         public void setProgress(int percent) {
                                             builder.setProgress(100, percent, false);
@@ -923,7 +922,7 @@ public class Service {
                                         public boolean isStopped() {
                                             return !Network.isConnected(context);
                                         }
-                                    }, timeout, size);
+                                    }, false, true, timeout, size);
 
                             if (finished) {
                                 String mimeType = threadObject.getMimeType();
@@ -1008,8 +1007,8 @@ public class Service {
         try {
             threads.setStatus(thread, ThreadStatus.LEACHING); // make sure
             int timeout = Preferences.getConnectionTimeout(context);
-            success = threads.receive(ipfs, cid, "",
-                    new THREADS.Progress() {
+            File file = threads.receive(ipfs, cid, "",
+                    new IPFS.Progress() {
                         @Override
                         public void setProgress(int percent) {
                             builder.setProgress(100, percent, false);
@@ -1024,9 +1023,10 @@ public class Service {
                         }
                     }, timeout, size);
 
-            if (success) {
+            if (file != null) {
+                success = true;
                 try {
-                    byte[] image = THREADS.getPreviewImage(context, cid, "", filename);
+                    byte[] image = THREADS.getPreviewImage(context, file, filename);
                     if (image != null) {
                         threads.setImage(ipfs, thread, image);
                     }
@@ -1034,6 +1034,7 @@ public class Service {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
             } else {
+                success = false;
                 try {
                     CID image = THREADS.createResourceImage(
                             context, threads, ipfs, R.drawable.file_document, "");
