@@ -1026,17 +1026,9 @@ public class Service {
 
             if (success) {
                 try {
-                    File file = ipfs.get(cid, "");
-                    if (!file.isDirectory()) {
-                        byte[] image = THREADS.getPreviewImage(context, cid, "");
-                        if (image != null) {
-                            threads.setImage(ipfs, thread, image);
-                        }
-                    } else {
-                        threads.setAdditional(thread,
-                                Preferences.THREAD_KIND, ThreadKind.NODE.name(), true);
-                        threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
-
+                    byte[] image = THREADS.getPreviewImage(context, cid, "", filename);
+                    if (image != null) {
+                        threads.setImage(ipfs, thread, image);
                     }
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
