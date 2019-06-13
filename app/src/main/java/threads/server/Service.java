@@ -1239,23 +1239,6 @@ public class Service {
 
     }
 
-    @NonNull
-    static File getCacheFile(@NonNull Context context, @NonNull String name) {
-        checkNotNull(context);
-        checkNotNull(name);
-        File dir = context.getCacheDir();
-        File file = new File(dir, name);
-        if (!file.exists()) {
-            try {
-                if (!file.createNewFile()) {
-                    throw new RuntimeException("File couldn't be created.");
-                }
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return file;
-    }
 
     void peersCheckEnable(boolean value) {
         peerCheckFlag.set(value);

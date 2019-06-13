@@ -104,8 +104,7 @@ public class DaemonService extends Service {
         builder.setSmallIcon(R.drawable.server_network);
         builder.setPriority(NotificationManager.IMPORTANCE_MAX);
 
-        // Create an explicit intent for an Activity in your app
-        Intent defaultIntent = new Intent(getApplicationContext(), MainActivity.class);
+        Intent defaultIntent = new Intent(getApplicationContext(), LoginActivity.class);
         int requestID = (int) System.currentTimeMillis();
         defaultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent defaultPendingIntent = PendingIntent.getActivity(

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">IPFS</string>
+    <string name="app_name">IPFS Lite</string>
     <string name="channel_name">Download Notifications</string>
     <string name="channel_description">For normal notifications like download</string>
     <string name="daemon_channel_name">Daemon Notifications</string>
