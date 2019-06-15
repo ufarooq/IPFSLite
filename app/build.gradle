@@ -95,7 +95,7 @@ dependencies {
     //implementation 'threads.pow:pow:1.0.9'
 
     // UI+API (LICENSE done)
-    implementation 'threads.share:share:5.0.4'
+    implementation 'threads.share:share:5.0.6'
 
     // API (LICENSE done)
     implementation 'threads.core:threads:7.7.5'

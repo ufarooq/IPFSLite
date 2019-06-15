@@ -1046,6 +1046,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 ipfs.store(file, cid, "");
                             }
 
+
                             Uri uri = Uri.fromFile(file);
                             IPFSAudioDialogFragment.newInstance(uri,
                                     filename,

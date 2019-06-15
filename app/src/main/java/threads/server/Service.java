@@ -1085,8 +1085,6 @@ public class Service {
     }
 
 
-
-
     private static boolean downloadLink(@NonNull Context context,
                                         @NonNull THREADS threads,
                                         @NonNull IPFS ipfs,
