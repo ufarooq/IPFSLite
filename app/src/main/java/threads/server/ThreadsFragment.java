@@ -366,15 +366,13 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     private void sendAction() {
         try {
-            // CHECKED
-            if (!Network.isConnected(mContext)) {
-                Singleton singleton = Singleton.getInstance(mContext);
-                Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
-                return;
+
+
+            long[] sendEntries = new long[threads.size()];
+            for (int i = 0; i < threads.size(); i++) {
+                sendEntries[i] = threads.get(i);
             }
-
-            Service.getInstance(mContext).sendThreads(mContext, new ArrayList<>(threads));
-
+            mListener.clickThreadsSend(sendEntries);
 
             unmarkThreads();
         } catch (Throwable e) {
@@ -670,6 +668,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public interface ActionListener {
 
         void clickThreadPlay(long idx);
+
+        void clickThreadsSend(long[] idxs);
 
     }
 }

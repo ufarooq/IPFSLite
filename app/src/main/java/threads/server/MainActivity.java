@@ -40,7 +40,6 @@ import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -875,7 +874,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     pid.getPid(), R.drawable.server_network);
                             CID image = ipfs.add(data, "", true);
                             user = threads.createUser(pid, "", // not yet known TODO
-                                    pid.getPid(), UserType.VERIFIED, image);
+                                    pid.getPid(), UserType.UNKNOWN, image);
                             user.setStatus(UserStatus.OFFLINE);
                             threads.storeUser(user);
 
@@ -1093,6 +1092,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
+    public void clickThreadsSend(final long[] idxs) {
+        try {
+            // CHECKED
+            if (!Network.isConnected(getApplicationContext())) {
+                Singleton singleton = Singleton.getInstance(getApplicationContext());
+                Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
+                return;
+            }
+
+
+            FragmentManager fm = getSupportFragmentManager();
+            SendDialogFragment dialogFragment = new SendDialogFragment();
+            Bundle bundle = new Bundle();
+            bundle.putLongArray(SendDialogFragment.IDXS, idxs);
+            dialogFragment.setArguments(bundle);
+            dialogFragment.show(fm, SendDialogFragment.TAG);
+
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
+    @Override
     public void clickThreadDelete(long idx) {
 
         final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
@@ -1198,8 +1221,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 return;
             }
 
-            Service.getInstance(getApplicationContext()).sendThreads(
-                    getApplicationContext(), Collections.singletonList(idx));
+
+            FragmentManager fm = getSupportFragmentManager();
+            SendDialogFragment dialogFragment = new SendDialogFragment();
+            Bundle bundle = new Bundle();
+            long[] idxs = {idx};
+            bundle.putLongArray(SendDialogFragment.IDXS, idxs);
+            dialogFragment.setArguments(bundle);
+            dialogFragment.show(fm, SendDialogFragment.TAG);
+
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }

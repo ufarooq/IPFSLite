@@ -438,21 +438,21 @@ public class Service {
                     sender.setStatus(UserStatus.BLOCKED);
                     threadsAPI.storeUser(sender);
 
-
-                    PID host = Preferences.getPID(context);
-                    checkNotNull(host);
-                    User hostUser = threadsAPI.getUserByPID(host);
-                    checkNotNull(hostUser);
-                    Content map = new Content();
-                    map.put(Content.EST, "CONNECT_REPLY");
-                    map.put(Content.ALIAS, hostUser.getAlias());
-                    map.put(Content.PKEY, hostUser.getPublicKey());
-
-
-                    ipfs.pubsubPub(senderPid.getPid(), gson.toJson(map), 50);
-
                     Preferences.error(threadsAPI, context.getString(R.string.user_connect_try, alias));
                 }
+
+                PID host = Preferences.getPID(context);
+                checkNotNull(host);
+                User hostUser = threadsAPI.getUserByPID(host);
+                checkNotNull(hostUser);
+                Content map = new Content();
+                map.put(Content.EST, "CONNECT_REPLY");
+                map.put(Content.ALIAS, hostUser.getAlias());
+                map.put(Content.PKEY, hostUser.getPublicKey());
+
+                ipfs.pubsubPub(senderPid.getPid(), gson.toJson(map), 50);
+
+
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -1347,7 +1347,7 @@ public class Service {
 
     private boolean shareUser(@NonNull Context context,
                               @NonNull User user,
-                              @NonNull List<Long> idxs) {
+                              long[] idxs) {
         checkNotNull(user);
         checkNotNull(idxs);
         final THREADS threads = Singleton.getInstance(context).getThreads();
@@ -1389,9 +1389,9 @@ public class Service {
         return success;
     }
 
-    void sendThreads(@NonNull Context context,
-                     @NonNull List<Long> idxs) {
+    void sendThreads(@NonNull Context context, @NonNull List<User> users, long[] idxs) {
         checkNotNull(context);
+        checkNotNull(users);
         checkNotNull(idxs);
 
         final PID host = Preferences.getPID(context.getApplicationContext());
@@ -1409,9 +1409,8 @@ public class Service {
                         threads.resetUnreadNotesNumber(idx);
                     }
 
-                    List<User> users = threads.getUsers();
                     if (users.isEmpty()) {
-                        Preferences.warning(threads, context.getString(R.string.no_peers_connected));
+                        Preferences.error(threads, context.getString(R.string.no_sharing_peers));
                     } else {
                         checkNotNull(host);
 
