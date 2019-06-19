@@ -834,9 +834,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickConnectPeer(@NonNull String multihash) {
 
+        // CHECKED if multihash is valid
+        Singleton singleton = Singleton.getInstance(getApplicationContext());
+        try {
+            Multihash.fromBase58(multihash);
+        } catch (Throwable e) {
+            Preferences.error(singleton.getThreads(), getString(R.string.multihash_not_valid));
+            return;
+        }
+
+        // CHECKED
+        PID host = Preferences.getPID(getApplicationContext());
+        PID pid = PID.create(multihash);
+
+        if (pid.equals(host)) {
+            Preferences.error(singleton.getThreads(), getString(R.string.same_pid_like_host));
+            return;
+        }
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-            Singleton singleton = Singleton.getInstance(getApplicationContext());
+
             Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
             return;
         }
@@ -851,30 +868,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 executor.submit(() -> {
                     try {
 
-                        // check if multihash is valid
-                        try {
-                            Multihash.fromBase58(multihash);
-                        } catch (Throwable e) {
-                            Preferences.error(threads, getString(R.string.multihash_not_valid));
-                            return;
-                        }
-
-                        PID host = Preferences.getPID(getApplicationContext());
-                        PID pid = PID.create(multihash);
-
-                        if (pid.equals(host)) {
-                            Preferences.warning(threads, getString(R.string.same_pid_like_host));
-                            return;
-                        }
-
-
                         User user = threads.getUserByPID(pid);
                         if (user == null) {
                             byte[] data = THREADS.getImage(getApplicationContext(),
                                     pid.getPid(), R.drawable.server_network);
                             CID image = ipfs.add(data, "", true);
                             user = threads.createUser(pid, "", // not yet known TODO
-                                    pid.getPid(), UserType.UNKNOWN, image);
+                                    pid.getPid(), UserType.UNKNOWN, image); // TODO Unknown can not send data to
                             user.setStatus(UserStatus.OFFLINE);
                             threads.storeUser(user);
 

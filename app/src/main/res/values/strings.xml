@@ -40,7 +40,7 @@
     <string name="files">Files</string>
     <string name="offline_mode">Offline Mode</string>
     <string name="peer_exists_with_pid">Peer with the PID exists already</string>
-    <string name="same_pid_like_host">Same Peer ID like the hosts Peer ID</string>
+    <string name="same_pid_like_host">Invalid: Peer ID is your Host Peer ID</string>
     <string name="peer_name">New Peer Name</string>
     <string name="peer_is_blocked">Peer is blocked. Unblock first.</string>
     <string name="user_connect_try">Peer \"%1$s\" connection request.</string>
