@@ -874,7 +874,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     pid.getPid(), R.drawable.server_network);
                             CID image = ipfs.add(data, "", true);
                             user = threads.createUser(pid, "", // not yet known TODO
-                                    pid.getPid(), UserType.UNKNOWN, image); // TODO Unknown can not send data to
+                                    pid.getPid(), UserType.VERIFIED, image);
                             user.setStatus(UserStatus.OFFLINE);
                             threads.storeUser(user);
 

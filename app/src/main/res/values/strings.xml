@@ -45,7 +45,7 @@
     <string name="peer_is_blocked">Peer is blocked. Unblock first.</string>
     <string name="user_connect_try">Peer \"%1$s\" connection request.</string>
     <string name="action_download">Download</string>
-    <string name="no_sharing_peers">Currently no peers are defined which have the feature to share data.</string>
+    <string name="no_sharing_peers">Currently no peers are available to share data with.</string>
     <string name="data_shared_with_peers">\"%1$s\" peers were notify to download the data.</string>
     <string name="select_files">File Chooser</string>
     <string name="action_select_all">Select All</string>
