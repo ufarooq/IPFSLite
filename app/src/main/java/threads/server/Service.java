@@ -59,7 +59,6 @@ import threads.share.ConnectService;
 import threads.share.RTCSession;
 import threads.share.RelayService;
 
-import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 
@@ -98,134 +97,6 @@ public class Service {
         return SINGLETON;
     }
 
-    private static void pubsubDaemon(@NonNull Context context,
-                                     @NonNull IPFS ipfs,
-                                     @NonNull PID pid) throws Exception {
-        checkNotNull(context);
-        checkNotNull(ipfs);
-        checkNotNull(pid);
-
-        final THREADS threadsAPI = Singleton.getInstance(context).getThreads();
-
-
-        Singleton.getInstance(context).getConsoleListener().debug(
-                "Token : " + Preferences.getToken(context));
-
-
-        ipfs.pubsubSub(pid.getPid(), (message) -> {
-
-            try {
-
-                String sender = message.getSenderPid();
-                PID senderPid = PID.create(sender);
-
-
-                if (!threadsAPI.isAccountBlocked(senderPid)) {
-
-                    String code = message.getMessage().trim();
-
-                    CodecDecider result = CodecDecider.evaluate(code);
-
-                    if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
-                        Service.downloadMultihash(context, senderPid,
-                                result.getMultihash(), null, null);
-                    } else if (result.getCodex() == CodecDecider.Codec.URI) {
-                        Service.downloadMultihash(context, senderPid,
-                                result.getMultihash(), null, null);
-                    } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {
-                        Content content = result.getContent();
-                        checkNotNull(content);
-                        if (content.containsKey(Content.EST)) {
-                            String est = content.get(Content.EST);
-                            if ("CONNECT".equals(est)) {
-                                if (content.containsKey(Content.ALIAS)) {
-                                    String alias = content.get(Content.ALIAS);
-                                    checkNotNull(alias);
-                                    String pubKey = content.get(Content.PKEY);
-                                    if (pubKey == null) {
-                                        pubKey = "";
-                                    }
-
-                                    createUser(context, senderPid,
-                                            alias, pubKey, UserType.VERIFIED);
-                                }
-                            } else if ("CONNECT_REPLY".equals(est)) {
-                                if (content.containsKey(Content.ALIAS)) {
-                                    String alias = content.get(Content.ALIAS);
-                                    checkNotNull(alias);
-                                    String pubKey = content.get(Content.PKEY);
-                                    if (pubKey == null) {
-                                        pubKey = "";
-                                    }
-                                    adaptUser(context, senderPid, alias, pubKey);
-                                }
-                            } else if ("SHARE".equals(est)) {
-
-                                if (content.containsKey(Content.CID)) {
-                                    String cid = content.get(Content.CID);
-                                    checkNotNull(cid);
-                                    String filename = content.get(Content.FILENAME);
-                                    String filesize = content.get(Content.FILESIZE);
-                                    Service.downloadMultihash(context, senderPid, cid, filename, filesize);
-                                }
-
-                            } else if ("REPLY".equals(est)) {
-
-                                if (content.containsKey(Content.CID)) {
-                                    String cid = content.get(Content.CID);
-                                    checkNotNull(cid);
-                                    Service.publishReply(context, senderPid, cid);
-                                }
-                            } else {
-
-                                RTCSession.handleContent(context, senderPid, content);
-                            }
-
-
-                        } else {
-                            if (content.containsKey(Content.ALIAS)) {
-                                String alias = content.get(Content.ALIAS);
-                                checkNotNull(alias);
-                                String pubKey = content.get(Content.PKEY);
-                                if (pubKey == null) {
-                                    pubKey = "";
-                                }
-
-                                createUser(context, senderPid, alias, pubKey, UserType.VERIFIED);
-                            } else if (content.containsKey(Content.CID)) {
-                                String cid = content.get(Content.CID);
-                                checkNotNull(cid);
-                                String filename = content.get(Content.FILENAME);
-                                String filesize = content.get(Content.FILESIZE);
-                                Service.downloadMultihash(context, senderPid, cid, filename, filesize);
-                            }
-                        }
-                    } else if (result.getCodex() == CodecDecider.Codec.UNKNOWN) {
-                        // check content if might be a name
-                        String name = senderPid.getPid();
-
-                        try {
-                            String alias = message.getMessage().trim();
-                            if (alias.length() < name.length()) { // small shitty security
-                                name = alias;
-                            }
-                        } catch (Throwable e) {
-                            // ignore exception
-                        }
-
-                        createUser(context, senderPid, name, "", UserType.UNKNOWN);
-                    }
-
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            } finally {
-                Log.e(TAG, "Receive : " + message.getMessage());
-            }
-
-        });
-
-    }
 
     private static void checkTangleServer(@NonNull Context context) {
         checkNotNull(context);
@@ -291,6 +162,7 @@ public class Service {
                 Preferences.setDialRelay(context, true);
                 Preferences.setDebugMode(context, false);
 
+                Preferences.setToken(context, IOTA.generateAddress());
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putInt(UPDATE, versionCode);
                 editor.apply();
@@ -313,25 +185,6 @@ public class Service {
             return false;
         }
 
-    }
-
-    private static void startPubsub(@NonNull Context context) {
-        checkNotNull(context);
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        if (ipfs != null) {
-            if (ipfs.isDaemonRunning()) {
-                if (Preferences.isPubsubEnabled(context)) {
-                    final PID pid = Preferences.getPID(context);
-                    checkNotNull(pid);
-                    checkArgument(!pid.getPid().isEmpty());
-                    try {
-                        pubsubDaemon(context, ipfs, pid);
-                    } catch (Throwable e) {
-                        // IGNORE exception occurs when daemon is shutdown
-                    }
-                }
-            }
-        }
     }
 
     private static void adaptUser(@NonNull Context context,
@@ -1474,14 +1327,121 @@ public class Service {
                 try {
                     Singleton.getInstance(context).getConsoleListener().debug("Start Daemon");
 
-                    ipfs.daemon(Preferences.isPubsubEnabled(context));
+                    ipfs.daemon((message) -> {
+
+                        try {
+
+                            String sender = message.getSenderPid();
+                            PID senderPid = PID.create(sender);
+
+
+                            if (!threads.isAccountBlocked(senderPid)) {
+
+                                String code = message.getMessage().trim();
+
+                                CodecDecider result = CodecDecider.evaluate(code);
+
+                                if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
+                                    Service.downloadMultihash(context, senderPid,
+                                            result.getMultihash(), null, null);
+                                } else if (result.getCodex() == CodecDecider.Codec.URI) {
+                                    Service.downloadMultihash(context, senderPid,
+                                            result.getMultihash(), null, null);
+                                } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {
+                                    Content content = result.getContent();
+                                    checkNotNull(content);
+                                    if (content.containsKey(Content.EST)) {
+                                        String est = content.get(Content.EST);
+                                        if ("CONNECT".equals(est)) {
+                                            if (content.containsKey(Content.ALIAS)) {
+                                                String alias = content.get(Content.ALIAS);
+                                                checkNotNull(alias);
+                                                String pubKey = content.get(Content.PKEY);
+                                                if (pubKey == null) {
+                                                    pubKey = "";
+                                                }
+
+                                                createUser(context, senderPid,
+                                                        alias, pubKey, UserType.VERIFIED);
+                                            }
+                                        } else if ("CONNECT_REPLY".equals(est)) {
+                                            if (content.containsKey(Content.ALIAS)) {
+                                                String alias = content.get(Content.ALIAS);
+                                                checkNotNull(alias);
+                                                String pubKey = content.get(Content.PKEY);
+                                                if (pubKey == null) {
+                                                    pubKey = "";
+                                                }
+                                                adaptUser(context, senderPid, alias, pubKey);
+                                            }
+                                        } else if ("SHARE".equals(est)) {
+
+                                            if (content.containsKey(Content.CID)) {
+                                                String cid = content.get(Content.CID);
+                                                checkNotNull(cid);
+                                                String filename = content.get(Content.FILENAME);
+                                                String filesize = content.get(Content.FILESIZE);
+                                                Service.downloadMultihash(context, senderPid, cid, filename, filesize);
+                                            }
+
+                                        } else if ("REPLY".equals(est)) {
+
+                                            if (content.containsKey(Content.CID)) {
+                                                String cid = content.get(Content.CID);
+                                                checkNotNull(cid);
+                                                Service.publishReply(context, senderPid, cid);
+                                            }
+                                        } else {
+
+                                            RTCSession.handleContent(context, senderPid, content);
+                                        }
+
+
+                                    } else {
+                                        if (content.containsKey(Content.ALIAS)) {
+                                            String alias = content.get(Content.ALIAS);
+                                            checkNotNull(alias);
+                                            String pubKey = content.get(Content.PKEY);
+                                            if (pubKey == null) {
+                                                pubKey = "";
+                                            }
+
+                                            createUser(context, senderPid, alias, pubKey, UserType.VERIFIED);
+                                        } else if (content.containsKey(Content.CID)) {
+                                            String cid = content.get(Content.CID);
+                                            checkNotNull(cid);
+                                            String filename = content.get(Content.FILENAME);
+                                            String filesize = content.get(Content.FILESIZE);
+                                            Service.downloadMultihash(context, senderPid, cid, filename, filesize);
+                                        }
+                                    }
+                                } else if (result.getCodex() == CodecDecider.Codec.UNKNOWN) {
+                                    // check content if might be a name
+                                    String name = senderPid.getPid();
+
+                                    try {
+                                        String alias = message.getMessage().trim();
+                                        if (alias.length() < name.length()) { // small shitty security
+                                            name = alias;
+                                        }
+                                    } catch (Throwable e) {
+                                        // ignore exception
+                                    }
+
+                                    createUser(context, senderPid, name, "", UserType.UNKNOWN);
+                                }
+
+                            }
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                        } finally {
+                            Log.e(TAG, "Receive : " + message.getMessage());
+                        }
+
+                    }, Preferences.isPubsubEnabled(context), false);
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(threads, Preferences.IPFS_START_FAILURE, e);
-                }
-
-                if (ipfs.isDaemonRunning()) {
-                    new java.lang.Thread(() -> startPubsub(context)).start();
                 }
 
                 new java.lang.Thread(() -> RelayService.publishPeer(context)).start();

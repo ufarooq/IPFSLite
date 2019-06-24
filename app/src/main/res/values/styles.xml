@@ -1,27 +1,27 @@
 <resources>
     <!-- Base application theme. -->
-    <style name="ThreadsServerTheme" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="ThreadsServerTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorPrimaryLight</item>
     </style>
 
-    <style name="ThreadsServerAppBarOverlay" parent="ThemeOverlay.AppCompat.Dark">
+    <style name="ThreadsServerAppBarOverlay" parent="Theme.MaterialComponents.DayNight">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorPrimaryLight</item>
     </style>
 
-    <style name="ThreadsServerPopupOverlay" parent="ThemeOverlay.AppCompat.Light">
+    <style name="ThreadsServerPopupOverlay" parent="Theme.MaterialComponents.Light">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorPrimaryLight</item>
     </style>
 
-    <style name="ActionDialogAnimation" parent="Theme.AppCompat.Light.Dialog.Alert">
+    <style name="ActionDialogAnimation" parent="Theme.MaterialComponents.Light.Dialog.Alert">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
