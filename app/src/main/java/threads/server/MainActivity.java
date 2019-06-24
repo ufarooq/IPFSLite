@@ -1291,7 +1291,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickUserInfo() {
+    public void clickInfoPeer() {
 
         try {
             PID pid = Preferences.getPID(getApplicationContext());

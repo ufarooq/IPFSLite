@@ -109,7 +109,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                actionListener.clickUserInfo();
+                actionListener.clickInfoPeer();
 
                 return true;
             }
@@ -177,7 +177,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
             mLastClickTime = SystemClock.elapsedRealtime();
 
             if (getActivity() != null) {
-                PeersDialogFragment.newInstance(true, true)
+                PeersDialogFragment.newInstance(true, true, true)
                         .show(getActivity().getSupportFragmentManager(), PeersDialogFragment.TAG);
             }
 
@@ -256,6 +256,6 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
     public interface ActionListener {
 
-        void clickUserInfo();
+        void clickInfoPeer();
     }
 }

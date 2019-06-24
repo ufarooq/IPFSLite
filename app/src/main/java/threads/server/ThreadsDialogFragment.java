@@ -3,12 +3,14 @@ package threads.server;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.TextView;
 
@@ -153,6 +155,8 @@ public class ThreadsDialogFragment extends DialogFragment {
         if (window != null) {
             window.getAttributes().windowAnimations = R.style.ActionDialogAnimation;
             window.getAttributes().gravity = Gravity.BOTTOM | Gravity.CENTER;
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            window.setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
         }
         return dialog;
     }

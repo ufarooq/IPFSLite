@@ -3,12 +3,14 @@ package threads.server;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.TextView;
 
@@ -22,17 +24,20 @@ public class PeersDialogFragment extends DialogFragment {
     static final String TAG = PeersDialogFragment.class.getSimpleName();
     private static final String EDIT_PEER_ACTIVE = "EDIT_PEER_ACTIVE";
     private static final String SCAN_PEER_ACTIVE = "SCAN_PEER_ACTIVE";
+    private static final String YOUR_PEER_ACTIVE = "YOUR_PEER_ACTIVE";
 
     private ActionListener actionListener;
     private long mLastClickTime = 0;
 
     static PeersDialogFragment newInstance(boolean editPeerActive,
-                                           boolean scanPeerActive) {
+                                           boolean scanPeerActive,
+                                           boolean yourPeerActive) {
 
         Bundle bundle = new Bundle();
 
         bundle.putBoolean(EDIT_PEER_ACTIVE, editPeerActive);
         bundle.putBoolean(SCAN_PEER_ACTIVE, scanPeerActive);
+        bundle.putBoolean(YOUR_PEER_ACTIVE, yourPeerActive);
         PeersDialogFragment fragment = new PeersDialogFragment();
         fragment.setArguments(bundle);
         return fragment;
@@ -64,12 +69,13 @@ public class PeersDialogFragment extends DialogFragment {
         checkNotNull(args);
         boolean editPeerActive = args.getBoolean(EDIT_PEER_ACTIVE);
         boolean scanPeerActive = args.getBoolean(SCAN_PEER_ACTIVE);
+        boolean yourPeerActive = args.getBoolean(YOUR_PEER_ACTIVE);
 
 
         @SuppressWarnings("all")
         View view = inflater.inflate(R.layout.peers_action_view, null);
 
-        TextView menu_scan_peer = view.findViewById(R.id.menu_scan_cid);
+        TextView menu_scan_peer = view.findViewById(R.id.menu_scan_pid);
         if (!scanPeerActive) {
             menu_scan_peer.setVisibility(View.GONE);
         } else {
@@ -91,7 +97,7 @@ public class PeersDialogFragment extends DialogFragment {
         }
 
 
-        TextView menu_edit_peer = view.findViewById(R.id.menu_edit_cid);
+        TextView menu_edit_peer = view.findViewById(R.id.menu_edit_pid);
         if (!editPeerActive) {
             menu_edit_peer.setVisibility(View.GONE);
         } else {
@@ -113,7 +119,28 @@ public class PeersDialogFragment extends DialogFragment {
             });
         }
 
-        if (!editPeerActive && !scanPeerActive) {
+        TextView menu_your_peer = view.findViewById(R.id.menu_your_pid);
+        if (!yourPeerActive) {
+            menu_your_peer.setVisibility(View.GONE);
+        } else {
+            menu_your_peer.setOnClickListener((v) -> {
+
+                try {
+                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                        return;
+                    }
+
+                    mLastClickTime = SystemClock.elapsedRealtime();
+
+                    actionListener.clickInfoPeer();
+
+                } finally {
+                    dismiss();
+                }
+
+            });
+        }
+        if (!editPeerActive && !scanPeerActive && !yourPeerActive) {
             view.findViewById(R.id.row_first).setVisibility(View.GONE);
         }
 
@@ -126,6 +153,8 @@ public class PeersDialogFragment extends DialogFragment {
         if (window != null) {
             window.getAttributes().windowAnimations = R.style.ActionDialogAnimation;
             window.getAttributes().gravity = Gravity.BOTTOM | Gravity.CENTER;
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            window.setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
         }
         return dialog;
     }
@@ -135,5 +164,7 @@ public class PeersDialogFragment extends DialogFragment {
         void clickConnectPeer();
 
         void clickEditPeer();
+
+        void clickInfoPeer();
     }
 }
