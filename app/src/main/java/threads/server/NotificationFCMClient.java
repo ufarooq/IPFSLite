@@ -1,5 +1,6 @@
 package threads.server;
 
+/*
 import androidx.annotation.NonNull;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -21,10 +22,12 @@ import threads.share.ConnectService;
 import threads.share.RelayService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
+*/
 
 
-public class NotificationFCMClient extends FirebaseMessagingService {
+public class NotificationFCMClient /*extends FirebaseMessagingService*/ {
 
+    /*
     public NotificationFCMClient() {
         super();
     }
@@ -82,7 +85,6 @@ public class NotificationFCMClient extends FirebaseMessagingService {
 
             }
         }
-    }
-
+    }*/
 
 }

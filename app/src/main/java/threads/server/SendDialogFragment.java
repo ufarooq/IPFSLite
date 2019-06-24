@@ -96,6 +96,9 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
                     if (users.isEmpty()) {
                         Preferences.error(threads, mContext.getString(R.string.no_sharing_peers));
                         dismiss();
+                    } else if (users.size() == 1) {
+                        Service.getInstance(mContext).sendThreads(mContext, users, idxs);
+                        dismiss();
                     } else {
                         contactsViewAdapter.setAccounts(users);
                     }

@@ -5,8 +5,11 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -15,7 +18,12 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import threads.core.Network;
+import threads.share.RelayService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -26,7 +34,27 @@ public class DaemonService extends Service {
     private static final String HIGH_CHANNEL_ID = "HIGH_CHANNEL_ID";
     private static final int NOTIFICATION_ID = 998;
     private static final String TAG = DaemonService.class.getSimpleName();
+    private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
 
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            try {
+                if (Network.isNetworkAvailable(context)) {
+
+                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                    executor.submit(() -> {
+                        try {
+                            RelayService.publishPeer(getApplicationContext());
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                        }
+                    });
+                }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        }
+    };
 
     public static void invoke(@NonNull Context context) {
         checkNotNull(context);
@@ -73,9 +101,13 @@ public class DaemonService extends Service {
         checkNotNull(intent);
         if (DAEMON_RUNNING.get()) {
             startForeground(NOTIFICATION_ID, buildNotification());
+            IntentFilter intentFilter = new IntentFilter();
+            intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+            registerReceiver(broadcastReceiver, intentFilter);
         } else {
             try {
                 stopForeground(true);
+                unregisterReceiver(broadcastReceiver);
             } finally {
                 stopSelf();
             }
