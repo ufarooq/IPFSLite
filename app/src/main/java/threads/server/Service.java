@@ -1359,7 +1359,6 @@ public class Service {
                                                 if (pubKey == null) {
                                                     pubKey = "";
                                                 }
-
                                                 createUser(context, senderPid,
                                                         alias, pubKey, UserType.VERIFIED);
                                             }
@@ -1394,40 +1393,16 @@ public class Service {
 
                                             RTCSession.handleContent(context, senderPid, content);
                                         }
-
-
                                     } else {
-                                        if (content.containsKey(Content.ALIAS)) {
-                                            String alias = content.get(Content.ALIAS);
-                                            checkNotNull(alias);
-                                            String pubKey = content.get(Content.PKEY);
-                                            if (pubKey == null) {
-                                                pubKey = "";
-                                            }
-
-                                            createUser(context, senderPid, alias, pubKey, UserType.VERIFIED);
-                                        } else if (content.containsKey(Content.CID)) {
-                                            String cid = content.get(Content.CID);
-                                            checkNotNull(cid);
-                                            String filename = content.get(Content.FILENAME);
-                                            String filesize = content.get(Content.FILESIZE);
-                                            Service.downloadMultihash(context, senderPid, cid, filename, filesize);
-                                        }
+                                        Preferences.error(threads, context.getString(
+                                                R.string.unsupported_pubsub_message,
+                                                senderPid.getPid()));
                                     }
                                 } else if (result.getCodex() == CodecDecider.Codec.UNKNOWN) {
-                                    // check content if might be a name
-                                    String name = senderPid.getPid();
 
-                                    try {
-                                        String alias = message.getMessage().trim();
-                                        if (alias.length() < name.length()) { // small shitty security
-                                            name = alias;
-                                        }
-                                    } catch (Throwable e) {
-                                        // ignore exception
-                                    }
-
-                                    createUser(context, senderPid, name, "", UserType.UNKNOWN);
+                                    Preferences.error(threads, context.getString(
+                                            R.string.unsupported_pubsub_message,
+                                            senderPid.getPid()));
                                 }
 
                             }
