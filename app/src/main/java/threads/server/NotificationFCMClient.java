@@ -1,15 +1,34 @@
 package threads.server;
 
-//import com.google.firebase.messaging.FirebaseMessagingService;
-//import com.google.firebase.messaging.RemoteMessage;
+import androidx.annotation.NonNull;
+
+import com.google.firebase.messaging.FirebaseMessagingService;
+import com.google.firebase.messaging.RemoteMessage;
+
+import org.apache.commons.text.StringEscapeUtils;
+
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import threads.core.Preferences;
+import threads.core.Singleton;
+import threads.core.THREADS;
+import threads.core.api.Content;
+import threads.iota.IOTA;
+import threads.ipfs.api.PID;
+import threads.share.ConnectService;
+import threads.share.RelayService;
+
+import static androidx.core.util.Preconditions.checkNotNull;
 
 
-public class NotificationFCMClient /*extends FirebaseMessagingService*/ {
+public class NotificationFCMClient extends FirebaseMessagingService {
 
     public NotificationFCMClient() {
         super();
     }
-/*
+
 
     @Override
     public void onNewToken(@NonNull String token) {
@@ -64,6 +83,6 @@ public class NotificationFCMClient /*extends FirebaseMessagingService*/ {
             }
         }
     }
-*/
+
 
 }
