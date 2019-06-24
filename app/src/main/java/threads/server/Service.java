@@ -162,7 +162,6 @@ public class Service {
                 Preferences.setDialRelay(context, true);
                 Preferences.setDebugMode(context, false);
 
-                Preferences.setToken(context, IOTA.generateAddress());
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putInt(UPDATE, versionCode);
                 editor.apply();

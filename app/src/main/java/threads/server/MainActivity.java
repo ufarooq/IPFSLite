@@ -364,7 +364,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 try {
                     Intent i = new Intent(Intent.ACTION_SEND);
                     i.setType("text/plain");
-                    i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name));
+                    i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name_full));
                     String sAux = "\n" + getString(R.string.playstore_email) + "\n\n";
                     sAux = sAux + getString(R.string.playstore_url) + "\n\n";
                     i.putExtra(Intent.EXTRA_TEXT, sAux);

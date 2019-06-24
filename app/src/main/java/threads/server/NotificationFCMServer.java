@@ -6,7 +6,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
+import com.google.auth.oauth2.AccessToken;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.gson.JsonObject;
 
 import org.apache.commons.text.StringEscapeUtils;
@@ -45,16 +46,16 @@ public class NotificationFCMServer implements Singleton.NotificationServer {
         try {
 
             InputStream inputStream = context.getResources().openRawResource(R.raw.threads_server);
-            GoogleCredential googleCredential = GoogleCredential
+            GoogleCredentials googleCredential = GoogleCredentials
                     .fromStream(inputStream);
             if (googleCredential.createScopedRequired()) {
                 googleCredential = googleCredential.createScoped(
                         Collections.singleton(SCOPE));
             }
 
-            googleCredential.refreshToken();
+            AccessToken token = googleCredential.refreshAccessToken();
 
-            return googleCredential.getAccessToken();
+            return token.getTokenValue();
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
