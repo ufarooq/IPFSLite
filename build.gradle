@@ -7,7 +7,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.4.1'
-        //classpath 'com.google.gms:google-services:4.2.0' // TODO support fdroid
+        classpath 'com.google.gms:google-services:4.2.0' // TODO support fdroid
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.2'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
     }

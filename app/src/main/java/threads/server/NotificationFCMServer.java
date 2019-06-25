@@ -6,6 +6,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.auth.oauth2.AccessToken;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.gson.JsonObject;
 
 import org.apache.commons.text.StringEscapeUtils;
@@ -16,15 +18,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Collections;
 import java.util.Map;
 
 import threads.core.Singleton;
 import threads.core.api.Content;
 
 import static androidx.core.util.Preconditions.checkNotNull;
-
-//import com.google.auth.oauth2.AccessToken;
-//import com.google.auth.oauth2.GoogleCredentials;
 
 
 public class NotificationFCMServer implements Singleton.NotificationServer {
@@ -43,7 +43,7 @@ public class NotificationFCMServer implements Singleton.NotificationServer {
     @Nullable
     private String getAccessToken(@NonNull Context context) {
         checkNotNull(context);
-        /*
+
         try {
 
             InputStream inputStream = context.getResources().openRawResource(R.raw.threads_server);
@@ -61,7 +61,7 @@ public class NotificationFCMServer implements Singleton.NotificationServer {
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-        */
+
         return null;
     }
 
