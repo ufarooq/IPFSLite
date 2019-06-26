@@ -1076,9 +1076,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                                 WebViewDialogFragment.TAG);
                             }
                         } else if (mimeType.equals(Preferences.OCTET_MIME_TYPE)) {
-
+                            // TODO improve this (should show text)
                             byte[] data = ipfs.get(cid, "", -1, true);
-                            if (data.length > 0) {
+                            int length = data.length;
+                            if (length > 0 && length < 64000) { // TODO 64kb (better check if content is text)
                                 String content = new String(data);
                                 WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.TEXT, content).
                                         show(MainActivity.this.getSupportFragmentManager(),
