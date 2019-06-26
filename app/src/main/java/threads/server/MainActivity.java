@@ -177,14 +177,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 if (data.getData() != null) {
                     Uri uri = data.getData();
-                    Service.storeData(getApplicationContext(), uri);
+                    Service.getInstance(
+                            getApplicationContext()).storeData(getApplicationContext(), uri);
                 } else {
                     if (data.getClipData() != null) {
                         ClipData mClipData = data.getClipData();
                         for (int i = 0; i < mClipData.getItemCount(); i++) {
                             ClipData.Item item = mClipData.getItemAt(i);
                             Uri uri = item.getUri();
-                            Service.storeData(getApplicationContext(), uri);
+                            Service.getInstance(
+                                    getApplicationContext()).storeData(getApplicationContext(), uri);
                         }
                     }
                 }
@@ -1263,14 +1265,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(pid);
         checkNotNull(name);
 
-        final THREADS threadsAPI = Singleton.getInstance(getApplicationContext()).getThreads();
+        final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
         final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
 
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    User user = threadsAPI.getUserByPID(PID.create(pid));
+
+                    PID userPID = PID.create(pid);
+                    User user = threads.getUserByPID(userPID);
                     checkNotNull(user);
 
                     user.setAlias(name);
@@ -1279,10 +1283,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     CID image = ipfs.add(data, "", true);
                     user.setImage(image);
 
-                    threadsAPI.storeUser(user);
+                    threads.storeUser(user);
+
+                    // TODO activate threads.setSenderAlias(pid, name);
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                 }
             });
         }

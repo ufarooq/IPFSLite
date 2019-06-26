@@ -20,6 +20,7 @@ import androidx.core.app.NotificationCompat;
 import com.google.gson.Gson;
 import com.j256.simplemagic.ContentInfo;
 
+import org.apache.commons.lang3.StringUtils;
 import org.iota.jota.pow.pearldiver.PearlDiverLocalPoW;
 
 import java.io.File;
@@ -328,88 +329,64 @@ public class Service {
         }
     }
 
-    static void storeData(@NonNull Context context, @NonNull Uri uri) {
+
+    static void downloadMultihash(@NonNull Context context,
+                                  @NonNull PID sender,
+                                  @NonNull String multihash) {
+
         checkNotNull(context);
-        checkNotNull(uri);
+        checkNotNull(sender);
+        checkNotNull(multihash);
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
-        THREADS.FileDetails fileDetails = THREADS.getFileDetails(context, uri);
-        if (fileDetails == null) {
-            Preferences.error(threads, context.getString(R.string.file_not_supported));
-            return;
-        }
 
+        final PID pid = Preferences.getPID(context);
+        checkNotNull(pid);
+        final int timeout = Preferences.getConnectionTimeout(context);
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-
         if (ipfs != null) {
 
-            UPLOAD_SERVICE.submit(() -> {
+            DOWNLOAD_SERVICE.submit(() -> {
                 try {
-                    InputStream inputStream =
-                            context.getContentResolver().openInputStream(uri);
-                    checkNotNull(inputStream);
-
-                    PID pid = Preferences.getPID(context);
-                    checkNotNull(pid);
-                    User host = threads.getUserByPID(pid);
-                    checkNotNull(host);
-
-
-                    byte[] bytes;
+                    // check if multihash is valid
                     try {
-                        bytes = THREADS.getPreviewImage(context, uri);
-                        if (bytes == null) {
-                            bytes = THREADS.getImage(context, host.getAlias(),
-                                    R.drawable.file_document);
-                        }
+                        Multihash.fromBase58(multihash);
                     } catch (Throwable e) {
-                        // ignore exception
-                        bytes = THREADS.getImage(context, host.getAlias(),
-                                R.drawable.file_document);
+                        Preferences.error(threads, context.getString(R.string.multihash_not_valid));
+                        return;
                     }
 
-                    String name = fileDetails.getFileName();
-                    long size = fileDetails.getFileSize();
-
-                    Thread thread = threads.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
-                            "", null, 0L, false);
-                    thread.addAdditional(Content.FILENAME, name, false);
-                    thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
-                    thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
-
-                    CID image = ipfs.add(bytes, "", true);
-                    thread.setImage(image);
-                    thread.setMimeType(fileDetails.getMimeType());
-                    long idx = threads.storeThread(thread);
-
-                    Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
+                    User user = threads.getUserByPID(sender);
+                    if (user == null) {
+                        Preferences.error(threads, context.getString(R.string.unknown_peer_sends_data));
+                        return;
+                    }
 
 
-                    try {
-                        threads.setThreadStatus(idx, ThreadStatus.LEACHING);
+                    CID cid = CID.create(multihash);
 
-                        CID cid = ipfs.add(inputStream, "", true);
-                        checkNotNull(cid);
+                    List<LinkInfo> links = getLinks(context, ipfs, cid);
 
-                        // cleanup of entries with same CID
-                        List<Thread> sameEntries = threads.getThreadsByCID(cid);
-                        for (Thread entry : sameEntries) {
-                            threads.removeThread(entry);
-                        }
-
-                        threads.setThreadCID(idx, cid);
-                        threads.setThreadStatus(idx, ThreadStatus.ONLINE);
-                    } catch (Throwable e) {
-                        threads.setThreadStatus(idx, ThreadStatus.ERROR);
-                    } finally {
-                        Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
+                    if (links != null) {
+                        byte[] content = ipfs.get(cid, "", timeout, false);
+                        ContentFiles files = gson.fromJson(new String(content), ContentFiles.class);
+                        checkNotNull(files);
+                        downloadFiles(context, sender, files);
                     }
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                    // ignore exception
+                    downloadMultihash(context, sender, multihash, null, null);
                 }
             });
         }
+    }
+
+    static void downloadFiles(@NonNull Context context, @NonNull PID sender, @NonNull ContentFiles files) {
+        for (ContentFile file : files) {
+            downloadMultihash(context, sender, file.getCid(), file.getFilename(), file.getSize());
+        }
+
     }
 
     private static String getDeviceName() {
@@ -532,6 +509,151 @@ public class Service {
         }
     }
 
+    void storeData(@NonNull Context context, @NonNull String text) {
+        checkNotNull(context);
+        checkNotNull(text);
+
+        final THREADS threads = Singleton.getInstance(context).getThreads();
+
+
+        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+
+        if (ipfs != null) {
+
+            UPLOAD_SERVICE.submit(() -> {
+                try {
+
+                    PID pid = Preferences.getPID(context);
+                    checkNotNull(pid);
+                    User host = threads.getUserByPID(pid);
+                    checkNotNull(host);
+
+
+                    String name = StringUtils.substring(text, 0, 20);
+                    long size = text.length();
+
+                    Thread thread = threads.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
+                            "", null, 0L, false);
+                    thread.addAdditional(Content.FILENAME, name, false);
+                    thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
+                    thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
+
+                    thread.setMimeType(Preferences.PLAIN_MIME_TYPE);
+                    long idx = threads.storeThread(thread);
+
+                    Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
+
+
+                    try {
+                        threads.setThreadStatus(idx, ThreadStatus.LEACHING);
+
+                        CID cid = ipfs.add(text, "", true);
+                        checkNotNull(cid);
+
+                        // cleanup of entries with same CID
+                        List<Thread> sameEntries = threads.getThreadsByCID(cid);
+                        for (Thread entry : sameEntries) {
+                            threads.removeThread(entry);
+                        }
+
+                        threads.setThreadCID(idx, cid);
+                        threads.setThreadStatus(idx, ThreadStatus.ONLINE);
+                    } catch (Throwable e) {
+                        threads.setThreadStatus(idx, ThreadStatus.ERROR);
+                    } finally {
+                        Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
+                    }
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                }
+            });
+        }
+    }
+
+    void storeData(@NonNull Context context, @NonNull Uri uri) {
+        checkNotNull(context);
+        checkNotNull(uri);
+
+        final THREADS threads = Singleton.getInstance(context).getThreads();
+        THREADS.FileDetails fileDetails = THREADS.getFileDetails(context, uri);
+        if (fileDetails == null) {
+            Preferences.error(threads, context.getString(R.string.file_not_supported));
+            return;
+        }
+
+        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+
+        if (ipfs != null) {
+
+            UPLOAD_SERVICE.submit(() -> {
+                try {
+                    InputStream inputStream =
+                            context.getContentResolver().openInputStream(uri);
+                    checkNotNull(inputStream);
+
+                    PID pid = Preferences.getPID(context);
+                    checkNotNull(pid);
+                    User host = threads.getUserByPID(pid);
+                    checkNotNull(host);
+
+
+                    byte[] bytes;
+                    try {
+                        bytes = THREADS.getPreviewImage(context, uri);
+                        if (bytes == null) {
+                            bytes = THREADS.getImage(context, host.getAlias(),
+                                    R.drawable.file_document);
+                        }
+                    } catch (Throwable e) {
+                        // ignore exception
+                        bytes = THREADS.getImage(context, host.getAlias(),
+                                R.drawable.file_document);
+                    }
+
+                    String name = fileDetails.getFileName();
+                    long size = fileDetails.getFileSize();
+
+                    Thread thread = threads.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
+                            "", null, 0L, false);
+                    thread.addAdditional(Content.FILENAME, name, false);
+                    thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
+                    thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
+
+                    CID image = ipfs.add(bytes, "", true);
+                    thread.setImage(image);
+                    thread.setMimeType(fileDetails.getMimeType());
+                    long idx = threads.storeThread(thread);
+
+                    Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
+
+
+                    try {
+                        threads.setThreadStatus(idx, ThreadStatus.LEACHING);
+
+                        CID cid = ipfs.add(inputStream, "", true);
+                        checkNotNull(cid);
+
+                        // cleanup of entries with same CID
+                        List<Thread> sameEntries = threads.getThreadsByCID(cid);
+                        for (Thread entry : sameEntries) {
+                            threads.removeThread(entry);
+                        }
+
+                        threads.setThreadCID(idx, cid);
+                        threads.setThreadStatus(idx, ThreadStatus.ONLINE);
+                    } catch (Throwable e) {
+                        threads.setThreadStatus(idx, ThreadStatus.ERROR);
+                    } finally {
+                        Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
+                    }
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                }
+            });
+        }
+    }
     static void downloadMultihash(@NonNull Context context,
                                   @NonNull PID sender,
                                   @NonNull String multihash,
@@ -1212,26 +1334,21 @@ public class Service {
                 final boolean pubsubCheck = pubsubEnabled && !
                         user.getPublicKey().isEmpty();
                 Hashtable<String, String> params = new Hashtable<>();
-                if (ConnectService.wakeupConnectCall(context, user.getPID(), params, pubsubCheck)) {
 
-                    for (long idx : idxs) {
-                        Thread threadObject = threads.getThreadByIdx(idx);
-                        checkNotNull(threadObject);
+                ContentFiles files = new ContentFiles();
+                for (long idx : idxs) {
+                    Thread threadObject = threads.getThreadByIdx(idx);
+                    checkNotNull(threadObject);
+                    files.add(threadObject);
+                }
 
-                        CID cid = threadObject.getCid();
-                        checkNotNull(cid);
+                CID cid = ipfs.add(gson.toJson(files), "", true);
+                checkNotNull(cid);
+                params.put(Content.CID, cid.getCid());
 
-                        Content map = new Content();
-                        map.put(Content.EST, "SHARE");
-                        String filename = threadObject.getAdditional(Content.FILENAME);
-                        String filesize = threadObject.getAdditional(Content.FILESIZE);
-                        map.put(Content.FILENAME, filename);
-                        map.put(Content.FILESIZE, filesize);
-                        map.put(Content.CID, cid.getCid());
-                        Log.e(TAG, "Send : " + map.toString());
-                        ipfs.pubsubPub(user.getPID().getPid(), gson.toJson(map), 50);
-                    }
-
+                if (ConnectService.wakeupConnectCall(context,
+                        user.getPID(), params, pubsubCheck)) {
+                    ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
                     success = true;
                 }
             } catch (Throwable e) {
@@ -1342,7 +1459,7 @@ public class Service {
 
                                 if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
                                     Service.downloadMultihash(context, senderPid,
-                                            result.getMultihash(), null, null);
+                                            result.getMultihash());
                                 } else if (result.getCodex() == CodecDecider.Codec.URI) {
                                     Service.downloadMultihash(context, senderPid,
                                             result.getMultihash(), null, null);

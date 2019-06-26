@@ -1,6 +1,7 @@
 package threads.server;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -42,15 +43,48 @@ public class LoginActivity extends AppCompatActivity {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
+        Intent intent = getIntent();
+        final String action = intent.getAction();
+        final String type = intent.getType();
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             Service.getInstance(getApplicationContext());
 
+            if (Intent.ACTION_SEND.equals(action) && type != null) {
+                if ("text/plain".equals(type)) {
+                    handleSendText(intent);
+                } else {
+                    handleSend(intent);
+                }
+            }
             runOnUiThread(() -> progress_bar.setVisibility(View.GONE));
             runOnUiThread(this::login);
         });
 
+
+    }
+
+    void handleSendText(Intent intent) {
+        try {
+            String text = intent.getStringExtra(Intent.EXTRA_TEXT);
+            if (text != null) {
+                Service.getInstance(this).storeData(getApplicationContext(), text);
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
+    void handleSend(Intent intent) {
+        try {
+            Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+            if (uri != null) {
+                Service.getInstance(this).storeData(getApplicationContext(), uri);
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
     }
 
     private void login() {

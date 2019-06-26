@@ -75,6 +75,13 @@ public class NotificationFCMClient extends FirebaseMessagingService {
                             RelayService.publishPeer(getApplicationContext());
                             ConnectService.connectUser(getApplicationContext(),
                                     PID.create(pid), pubsubEnabled);
+
+
+                            if (data.containsKey(Content.CID)) {
+                                Service.downloadMultihash(getApplicationContext(),
+                                        PID.create(pid), data.get(Content.CID));
+                            }
+
                         }
                     } catch (Throwable e) {
                         Singleton.getInstance(getApplicationContext()).getConsoleListener().debug(
