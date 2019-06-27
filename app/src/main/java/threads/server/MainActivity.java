@@ -237,7 +237,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 PID host = Preferences.getPID(getApplicationContext());
                 checkNotNull(host);
                 String multihash = codecDecider.getMultihash();
-                Service.downloadMultihash(
+                Service.downloadMultihashService(
                         getApplicationContext(), host, multihash, null, null);
             } else {
                 Singleton singleton = Singleton.getInstance(getApplicationContext());

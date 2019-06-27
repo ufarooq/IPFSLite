@@ -334,6 +334,19 @@ public class Service {
     }
 
 
+    static void downloadMultihashService(@NonNull Context context,
+                                         @NonNull PID sender,
+                                         @NonNull String multihash) {
+
+        checkNotNull(context);
+        checkNotNull(sender);
+        checkNotNull(multihash);
+
+        DOWNLOAD_SERVICE.submit(() -> {
+            downloadMultihash(context, sender, multihash);
+        });
+    }
+
     static void downloadMultihash(@NonNull Context context,
                                   @NonNull PID sender,
                                   @NonNull String multihash) {
@@ -350,40 +363,39 @@ public class Service {
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         if (ipfs != null) {
 
-            DOWNLOAD_SERVICE.submit(() -> {
+            try {
+                // check if multihash is valid
                 try {
-                    // check if multihash is valid
-                    try {
-                        Multihash.fromBase58(multihash);
-                    } catch (Throwable e) {
-                        Preferences.error(threads, context.getString(R.string.multihash_not_valid));
-                        return;
-                    }
-
-                    User user = threads.getUserByPID(sender);
-                    if (user == null) {
-                        Preferences.error(threads, context.getString(R.string.unknown_peer_sends_data));
-                        return;
-                    }
-
-
-                    CID cid = CID.create(multihash);
-
-                    byte[] content = ipfs.get(cid, "", timeout, false);
-                    try {
-                        ContentFiles files = gson.fromJson(new String(content), ContentFiles.class);
-                        checkNotNull(files);
-                        downloadFiles(context, sender, files);
-                    } catch (JsonSyntaxException jse) {
-                        downloadMultihash(context, sender, multihash, null, null);
-                    }
-
-
+                    Multihash.fromBase58(multihash);
                 } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    Preferences.error(threads, context.getString(R.string.multihash_not_valid));
+                    return;
                 }
-            });
+
+                User user = threads.getUserByPID(sender);
+                if (user == null) {
+                    Preferences.error(threads, context.getString(R.string.unknown_peer_sends_data));
+                    return;
+                }
+
+
+                CID cid = CID.create(multihash);
+
+                byte[] content = ipfs.get(cid, "", timeout, false);
+                try {
+                    ContentFiles files = gson.fromJson(new String(content), ContentFiles.class);
+                    checkNotNull(files);
+                    downloadFiles(context, sender, files);
+                } catch (JsonSyntaxException jse) {
+                    downloadMultihash(context, sender, multihash, null, null);
+                }
+
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
         }
+
     }
 
     private static void downloadFiles(@NonNull Context context,
@@ -515,11 +527,27 @@ public class Service {
         }
     }
 
-    static void downloadMultihash(@NonNull Context context,
-                                  @NonNull PID sender,
-                                  @NonNull String multihash,
-                                  @Nullable String filename,
-                                  @Nullable String filesize) {
+    static void downloadMultihashService(@NonNull Context context,
+                                         @NonNull PID sender,
+                                         @NonNull String multihash,
+                                         @Nullable String filename,
+                                         @Nullable String filesize) {
+
+        checkNotNull(context);
+        checkNotNull(sender);
+        checkNotNull(multihash);
+
+        DOWNLOAD_SERVICE.submit(() -> {
+            downloadMultihash(context, sender, multihash, filename, filesize);
+        });
+
+    }
+
+    private static void downloadMultihash(@NonNull Context context,
+                                          @NonNull PID sender,
+                                          @NonNull String multihash,
+                                          @Nullable String filename,
+                                          @Nullable String filesize) {
 
         checkNotNull(context);
         checkNotNull(sender);
@@ -533,55 +561,55 @@ public class Service {
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         if (ipfs != null) {
 
-            DOWNLOAD_SERVICE.submit(() -> {
+
+            try {
+                // check if multihash is valid
                 try {
-                    // check if multihash is valid
-                    try {
-                        Multihash.fromBase58(multihash);
-                    } catch (Throwable e) {
-                        Preferences.error(threads, context.getString(R.string.multihash_not_valid));
-                        return;
-                    }
+                    Multihash.fromBase58(multihash);
+                } catch (Throwable e) {
+                    Preferences.error(threads, context.getString(R.string.multihash_not_valid));
+                    return;
+                }
 
-                    User user = threads.getUserByPID(sender);
-                    if (user == null) {
-                        Preferences.error(threads, context.getString(R.string.unknown_peer_sends_data));
-                        return;
-                    }
+                User user = threads.getUserByPID(sender);
+                if (user == null) {
+                    Preferences.error(threads, context.getString(R.string.unknown_peer_sends_data));
+                    return;
+                }
 
 
-                    CID cid = CID.create(multihash);
-                    List<Thread> entries = threads.getThreadsByCID(cid);
+                CID cid = CID.create(multihash);
+                List<Thread> entries = threads.getThreadsByCID(cid);
 
-                    if (!entries.isEmpty()) {
-                        for (Thread entry : entries) {
-                            if (entry.getThread() == 0L) {
-                                if (entry.getStatus() == ThreadStatus.DELETING ||
-                                        entry.getStatus() == ThreadStatus.ONLINE ||
-                                        entry.getStatus() == ThreadStatus.PUBLISHING) {
-                                    replySender(ipfs, sender, entry);
-                                    return;
-                                } else {
-                                    downloadMultihash(context, threads, ipfs, entry, sender);
-                                    return;
-                                }
+                if (!entries.isEmpty()) {
+                    for (Thread entry : entries) {
+                        if (entry.getThread() == 0L) {
+                            if (entry.getStatus() == ThreadStatus.DELETING ||
+                                    entry.getStatus() == ThreadStatus.ONLINE ||
+                                    entry.getStatus() == ThreadStatus.PUBLISHING) {
+                                replySender(ipfs, sender, entry);
+                                return;
+                            } else {
+                                downloadMultihash(context, threads, ipfs, entry, sender);
+                                return;
                             }
                         }
-
                     }
-                    long idx = createThread(context, ipfs, sender, cid, filename, filesize);
 
-                    Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
-                    Thread thread = threads.getThreadByIdx(idx);
-                    checkNotNull(thread);
-                    downloadMultihash(context, threads, ipfs, thread, sender);
-                    Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
-
-
-                } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                 }
-            });
+                long idx = createThread(context, ipfs, sender, cid, filename, filesize);
+
+                Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
+                Thread thread = threads.getThreadByIdx(idx);
+                checkNotNull(thread);
+                downloadMultihash(context, threads, ipfs, thread, sender);
+                Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
+
+
+            } catch (Throwable e) {
+                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+            }
+
         }
     }
 
@@ -1493,10 +1521,10 @@ public class Service {
                                 CodecDecider result = CodecDecider.evaluate(code);
 
                                 if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
-                                    Service.downloadMultihash(context, senderPid,
+                                    Service.downloadMultihashService(context, senderPid,
                                             result.getMultihash());
                                 } else if (result.getCodex() == CodecDecider.Codec.URI) {
-                                    Service.downloadMultihash(context, senderPid,
+                                    Service.downloadMultihashService(context, senderPid,
                                             result.getMultihash(), null, null);
                                 } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {
                                     Content content = result.getContent();
@@ -1531,7 +1559,8 @@ public class Service {
                                                 checkNotNull(cid);
                                                 String filename = content.get(Content.FILENAME);
                                                 String filesize = content.get(Content.FILESIZE);
-                                                Service.downloadMultihash(context, senderPid, cid, filename, filesize);
+                                                Service.downloadMultihashService(context,
+                                                        senderPid, cid, filename, filesize);
                                             }
 
                                         } else if ("REPLY".equals(est)) {
