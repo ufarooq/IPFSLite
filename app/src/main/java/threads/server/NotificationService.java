@@ -38,7 +38,8 @@ public class NotificationService extends JobService {
 
             JobInfo jobInfo = new JobInfo.Builder(NotificationService.class.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                    .setPeriodic(JobInfo.getMinPeriodMillis())
+                    .setPeriodic(JobInfo.getMinPeriodMillis(), JobInfo.getMinFlexMillis())
+                    .setPersisted(true)
                     .build();
             int resultCode = jobScheduler.schedule(jobInfo);
             if (resultCode == JobScheduler.RESULT_SUCCESS) {

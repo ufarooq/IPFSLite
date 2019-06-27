@@ -39,7 +39,6 @@ import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.mdl.EventViewModel;
 import threads.core.mdl.ThreadViewModel;
-import threads.ipfs.IPFS;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThreadsViewAdapter;
 import threads.share.UtilityService;
@@ -588,17 +587,14 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 return;
             }
 
-            final IPFS ipfs = Singleton.getInstance(mContext).getIpfs();
-            if (ipfs != null) {
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.submit(() -> {
-                    try {
-                        Service.getInstance(mContext).downloadThread(mContext, thread);
-                    } catch (Throwable e) {
-                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    }
-                });
-            }
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    Service.getInstance(mContext).downloadThread(mContext, thread);
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            });
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);

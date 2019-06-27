@@ -50,6 +50,7 @@ public class LoginActivity extends AppCompatActivity {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             Service.getInstance(getApplicationContext());
+            NotificationService.notifications(getApplicationContext());
 
             if (Intent.ACTION_SEND.equals(action) && type != null) {
                 if ("text/plain".equals(type)) {

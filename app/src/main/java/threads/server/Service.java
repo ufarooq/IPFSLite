@@ -98,7 +98,6 @@ public class Service {
             SINGLETON.startDaemon(context);
             SINGLETON.init(context);
 
-            NotificationService.notifications(context);
         }
         return SINGLETON;
     }
