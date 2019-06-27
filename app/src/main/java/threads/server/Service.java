@@ -57,8 +57,8 @@ import threads.ipfs.api.PID;
 import threads.ipfs.api.PubsubConfig;
 import threads.ipfs.api.RoutingConfig;
 import threads.share.ConnectService;
+import threads.share.PeerService;
 import threads.share.RTCSession;
-import threads.share.RelayService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -509,151 +509,6 @@ public class Service {
         }
     }
 
-    void storeData(@NonNull Context context, @NonNull String text) {
-        checkNotNull(context);
-        checkNotNull(text);
-
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-
-
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-
-        if (ipfs != null) {
-
-            UPLOAD_SERVICE.submit(() -> {
-                try {
-
-                    PID pid = Preferences.getPID(context);
-                    checkNotNull(pid);
-                    User host = threads.getUserByPID(pid);
-                    checkNotNull(host);
-
-
-                    String name = StringUtils.substring(text, 0, 20);
-                    long size = text.length();
-
-                    Thread thread = threads.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
-                            "", null, 0L, false);
-                    thread.addAdditional(Content.FILENAME, name, false);
-                    thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
-                    thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
-
-                    thread.setMimeType(Preferences.PLAIN_MIME_TYPE);
-                    long idx = threads.storeThread(thread);
-
-                    Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
-
-
-                    try {
-                        threads.setThreadStatus(idx, ThreadStatus.LEACHING);
-
-                        CID cid = ipfs.add(text, "", true);
-                        checkNotNull(cid);
-
-                        // cleanup of entries with same CID
-                        List<Thread> sameEntries = threads.getThreadsByCID(cid);
-                        for (Thread entry : sameEntries) {
-                            threads.removeThread(entry);
-                        }
-
-                        threads.setThreadCID(idx, cid);
-                        threads.setThreadStatus(idx, ThreadStatus.ONLINE);
-                    } catch (Throwable e) {
-                        threads.setThreadStatus(idx, ThreadStatus.ERROR);
-                    } finally {
-                        Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
-                    }
-
-                } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-                }
-            });
-        }
-    }
-
-    void storeData(@NonNull Context context, @NonNull Uri uri) {
-        checkNotNull(context);
-        checkNotNull(uri);
-
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-        THREADS.FileDetails fileDetails = THREADS.getFileDetails(context, uri);
-        if (fileDetails == null) {
-            Preferences.error(threads, context.getString(R.string.file_not_supported));
-            return;
-        }
-
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-
-        if (ipfs != null) {
-
-            UPLOAD_SERVICE.submit(() -> {
-                try {
-                    InputStream inputStream =
-                            context.getContentResolver().openInputStream(uri);
-                    checkNotNull(inputStream);
-
-                    PID pid = Preferences.getPID(context);
-                    checkNotNull(pid);
-                    User host = threads.getUserByPID(pid);
-                    checkNotNull(host);
-
-
-                    byte[] bytes;
-                    try {
-                        bytes = THREADS.getPreviewImage(context, uri);
-                        if (bytes == null) {
-                            bytes = THREADS.getImage(context, host.getAlias(),
-                                    R.drawable.file_document);
-                        }
-                    } catch (Throwable e) {
-                        // ignore exception
-                        bytes = THREADS.getImage(context, host.getAlias(),
-                                R.drawable.file_document);
-                    }
-
-                    String name = fileDetails.getFileName();
-                    long size = fileDetails.getFileSize();
-
-                    Thread thread = threads.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
-                            "", null, 0L, false);
-                    thread.addAdditional(Content.FILENAME, name, false);
-                    thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
-                    thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
-
-                    CID image = ipfs.add(bytes, "", true);
-                    thread.setImage(image);
-                    thread.setMimeType(fileDetails.getMimeType());
-                    long idx = threads.storeThread(thread);
-
-                    Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
-
-
-                    try {
-                        threads.setThreadStatus(idx, ThreadStatus.LEACHING);
-
-                        CID cid = ipfs.add(inputStream, "", true);
-                        checkNotNull(cid);
-
-                        // cleanup of entries with same CID
-                        List<Thread> sameEntries = threads.getThreadsByCID(cid);
-                        for (Thread entry : sameEntries) {
-                            threads.removeThread(entry);
-                        }
-
-                        threads.setThreadCID(idx, cid);
-                        threads.setThreadStatus(idx, ThreadStatus.ONLINE);
-                    } catch (Throwable e) {
-                        threads.setThreadStatus(idx, ThreadStatus.ERROR);
-                    } finally {
-                        Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
-                    }
-
-                } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-                }
-            });
-        }
-    }
     static void downloadMultihash(@NonNull Context context,
                                   @NonNull PID sender,
                                   @NonNull String multihash,
@@ -1058,7 +913,6 @@ public class Service {
         return success;
     }
 
-
     private static boolean downloadLink(@NonNull Context context,
                                         @NonNull THREADS threads,
                                         @NonNull IPFS ipfs,
@@ -1214,6 +1068,155 @@ public class Service {
 
     }
 
+    void storeData(@NonNull Context context, @NonNull String text) {
+        checkNotNull(context);
+        checkNotNull(text);
+
+        final THREADS threads = Singleton.getInstance(context).getThreads();
+
+
+        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+
+        if (ipfs != null) {
+
+            UPLOAD_SERVICE.submit(() -> {
+                try {
+
+                    PID pid = Preferences.getPID(context);
+                    checkNotNull(pid);
+                    User host = threads.getUserByPID(pid);
+                    checkNotNull(host);
+
+                    // TODO when text is a link (html etc)
+                    String name = StringUtils.substring(text, 0, 20);
+                    long size = text.length();
+
+                    Thread thread = threads.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
+                            "", null, 0L, false);
+                    thread.addAdditional(Content.FILENAME, name, false);
+                    thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
+                    thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
+
+                    byte[] bytes = THREADS.getImage(context, host.getAlias(),
+                            R.drawable.file_document);
+                    CID image = ipfs.add(bytes, "", true);
+                    thread.setImage(image);
+                    thread.setMimeType(Preferences.PLAIN_MIME_TYPE);
+                    long idx = threads.storeThread(thread);
+
+                    Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
+
+
+                    try {
+                        threads.setThreadStatus(idx, ThreadStatus.LEACHING);
+
+                        CID cid = ipfs.add(text, "", true);
+                        checkNotNull(cid);
+
+                        // cleanup of entries with same CID
+                        List<Thread> sameEntries = threads.getThreadsByCID(cid);
+                        for (Thread entry : sameEntries) {
+                            threads.removeThread(entry);
+                        }
+
+                        threads.setThreadCID(idx, cid);
+                        threads.setThreadStatus(idx, ThreadStatus.ONLINE);
+                    } catch (Throwable e) {
+                        threads.setThreadStatus(idx, ThreadStatus.ERROR);
+                    } finally {
+                        Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
+                    }
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                }
+            });
+        }
+    }
+
+    void storeData(@NonNull Context context, @NonNull Uri uri) {
+        checkNotNull(context);
+        checkNotNull(uri);
+
+        final THREADS threads = Singleton.getInstance(context).getThreads();
+        THREADS.FileDetails fileDetails = THREADS.getFileDetails(context, uri);
+        if (fileDetails == null) {
+            Preferences.error(threads, context.getString(R.string.file_not_supported));
+            return;
+        }
+
+        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+
+        if (ipfs != null) {
+
+            UPLOAD_SERVICE.submit(() -> {
+                try {
+                    InputStream inputStream =
+                            context.getContentResolver().openInputStream(uri);
+                    checkNotNull(inputStream);
+
+                    PID pid = Preferences.getPID(context);
+                    checkNotNull(pid);
+                    User host = threads.getUserByPID(pid);
+                    checkNotNull(host);
+
+
+                    byte[] bytes;
+                    try {
+                        bytes = THREADS.getPreviewImage(context, uri);
+                        if (bytes == null) {
+                            bytes = THREADS.getImage(context, host.getAlias(),
+                                    R.drawable.file_document);
+                        }
+                    } catch (Throwable e) {
+                        // ignore exception
+                        bytes = THREADS.getImage(context, host.getAlias(),
+                                R.drawable.file_document);
+                    }
+
+                    String name = fileDetails.getFileName();
+                    long size = fileDetails.getFileSize();
+
+                    Thread thread = threads.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
+                            "", null, 0L, false);
+                    thread.addAdditional(Content.FILENAME, name, false);
+                    thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
+                    thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
+
+                    CID image = ipfs.add(bytes, "", true);
+                    thread.setImage(image);
+                    thread.setMimeType(fileDetails.getMimeType());
+                    long idx = threads.storeThread(thread);
+
+                    Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
+
+
+                    try {
+                        threads.setThreadStatus(idx, ThreadStatus.LEACHING);
+
+                        CID cid = ipfs.add(inputStream, "", true);
+                        checkNotNull(cid);
+
+                        // cleanup of entries with same CID
+                        List<Thread> sameEntries = threads.getThreadsByCID(cid);
+                        for (Thread entry : sameEntries) {
+                            threads.removeThread(entry);
+                        }
+
+                        threads.setThreadCID(idx, cid);
+                        threads.setThreadStatus(idx, ThreadStatus.ONLINE);
+                    } catch (Throwable e) {
+                        threads.setThreadStatus(idx, ThreadStatus.ERROR);
+                    } finally {
+                        Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
+                    }
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                }
+            });
+        }
+    }
 
     void peersCheckEnable(boolean value) {
         peerCheckFlag.set(value);
@@ -1535,7 +1538,7 @@ public class Service {
                     Preferences.evaluateException(threads, Preferences.IPFS_START_FAILURE, e);
                 }
 
-                new java.lang.Thread(() -> RelayService.publishPeer(context)).start();
+                new java.lang.Thread(() -> PeerService.publishPeer(context)).start();
 
                 new java.lang.Thread(() -> checkTangleServer(context)).start();
 

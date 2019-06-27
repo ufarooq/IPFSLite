@@ -23,7 +23,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.core.Network;
-import threads.share.RelayService;
+import threads.share.PeerService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -44,7 +44,7 @@ public class DaemonService extends Service {
                     ExecutorService executor = Executors.newSingleThreadExecutor();
                     executor.submit(() -> {
                         try {
-                            RelayService.publishPeer(getApplicationContext());
+                            PeerService.publishPeer(getApplicationContext());
                         } catch (Throwable e) {
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
                         }

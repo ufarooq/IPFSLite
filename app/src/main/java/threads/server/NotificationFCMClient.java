@@ -1,6 +1,8 @@
 package threads.server;
 
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -19,13 +21,14 @@ import threads.core.api.Content;
 import threads.iota.IOTA;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
-import threads.share.RelayService;
+import threads.share.PeerService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
 
 public class NotificationFCMClient extends FirebaseMessagingService {
 
+    private static final String TAG = NotificationFCMClient.class.getSimpleName();
 
     public NotificationFCMClient() {
         super();
@@ -35,7 +38,7 @@ public class NotificationFCMClient extends FirebaseMessagingService {
     @Override
     public void onNewToken(@NonNull String token) {
         super.onNewToken(token);
-
+        Log.e(TAG, "Token :" + token);
         Preferences.setToken(getApplicationContext(), token);
     }
 
@@ -56,8 +59,10 @@ public class NotificationFCMClient extends FirebaseMessagingService {
 
                         Service.getInstance(getApplicationContext());
 
-                        Singleton.getInstance(getApplicationContext()).getConsoleListener().debug(data.toString());
-                        final THREADS threadsAPI = Singleton.getInstance(getApplicationContext()).getThreads();
+                        Singleton.getInstance(getApplicationContext()).getConsoleListener().debug(
+                                data.toString());
+                        final THREADS threadsAPI = Singleton.getInstance(
+                                getApplicationContext()).getThreads();
                         if (!threadsAPI.isAccountBlocked(PID.create(pid))) {
 
                             // check if peer hash is transmitted
@@ -72,7 +77,7 @@ public class NotificationFCMClient extends FirebaseMessagingService {
 
                             final boolean pubsubEnabled = Preferences.isPubsubEnabled(
                                     getApplicationContext());
-                            RelayService.publishPeer(getApplicationContext());
+                            PeerService.publishPeer(getApplicationContext());
                             ConnectService.connectUser(getApplicationContext(),
                                     PID.create(pid), pubsubEnabled);
 

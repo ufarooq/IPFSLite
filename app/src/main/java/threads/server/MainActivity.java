@@ -70,9 +70,9 @@ import threads.share.ImageDialogFragment;
 import threads.share.InfoDialogFragment;
 import threads.share.NameDialogFragment;
 import threads.share.PDFView;
+import threads.share.PeerService;
 import threads.share.PermissionAction;
 import threads.share.RTCCallActivity;
-import threads.share.RelayService;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.UserActionDialogFragment;
 import threads.share.WebViewDialogFragment;
@@ -497,7 +497,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    RelayService.publishPeer(getApplicationContext());
+                    PeerService.publishPeer(getApplicationContext());
                 } catch (Throwable e) {
                     Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                 }
@@ -889,7 +889,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         try {
                             threads.setStatus(user, UserStatus.DIALING);
 
-                            RelayService.publishPeer(getApplicationContext());
+                            PeerService.publishPeer(getApplicationContext());
                             boolean value = ConnectService.connectUser(getApplicationContext(),
                                     user.getPID(), false); // no pubsub check
                             if (value) {
