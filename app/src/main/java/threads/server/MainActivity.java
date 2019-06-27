@@ -53,7 +53,6 @@ import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.Content;
-import threads.core.api.Peer;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.api.User;
@@ -913,10 +912,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 }
 
 
-                                Peer peer = threads.getPeerByPID(user.getPID());
+                                // TODO set alias for user
+                                /*Peer peer = threads.getPeerByPID(user.getPID());
                                 if (peer != null) {
-                                    // TODO set alias for user
-                                }
+
+                                }*/
                                 // TODO set public key for user
 
                             } else {
@@ -1145,8 +1145,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
             });
-
-
 
 
         } catch (Throwable e) {
