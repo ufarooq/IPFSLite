@@ -7,6 +7,7 @@
         <copyright />
         <license>BSD 3-Clause License</license>
     </notice>
+
     <notice>
         <name>Android Support Library</name>
         <url>http://developer.android.com/tools/support-library/index.html</url>
@@ -29,8 +30,51 @@
     </notice>
 
     <notice>
-        <name>google/google-api-java-client</name>
-        <url>https://github.com/google/google-api-java-client</url>
+        <name>Apache Commons Codec</name>
+        <url>http://commons.apache.org/proper/commons-codec/</url>
+        <copyright />
+        <license>Apache Software License 2.0</license>
+    </notice>
+
+    <notice>
+        <name>Apache Commons IO</name>
+        <url>http://commons.apache.org/proper/commons-io/</url>
+        <copyright />
+        <license>Apache Software License 2.0</license>
+    </notice>
+
+    <notice>
+        <name>Apache Commons Lang</name>
+        <url>http://commons.apache.org/proper/commons-lang/</url>
+        <copyright />
+        <license>Apache Software License 2.0</license>
+    </notice>
+
+    <notice>
+        <name>Bouncy Castle Provider</name>
+        <url>http://www.bouncycastle.org/licence.html</url>
+        <copyright />
+        <license>MIT License</license>
+    </notice>
+
+    <notice>
+        <name>Retrofit</name>
+        <url>https://github.com/square/retrofit</url>
+        <copyright />
+        <license>Apache Software License 2.0</license>
+    </notice>
+
+
+    <notice>
+        <name>Retrofit Converter: Gson</name>
+        <url>https://github.com/square/retrofit/tree/master/retrofit-converters/gson</url>
+        <copyright />
+        <license>Apache Software License 2.0</license>
+    </notice>
+
+    <notice>
+        <name>Guava: Google Core Libraries For Java</name>
+        <url>https://github.com/google/guava</url>
         <copyright />
         <license>Apache Software License 2.0</license>
     </notice>
