@@ -89,11 +89,13 @@ public class Service {
 
             Singleton singleton = Singleton.getInstance(context);
             singleton.setAesKey(() -> "");
-            singleton.setNotificationServer(NotificationFCMServer.getInstance());
+            singleton.setNotificationServer(NotificationServer.getInstance());
 
             SINGLETON = new Service();
             SINGLETON.startDaemon(context);
             SINGLETON.init(context);
+
+            NotificationService.notifications(context);
         }
         return SINGLETON;
     }

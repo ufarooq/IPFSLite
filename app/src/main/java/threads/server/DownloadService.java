@@ -78,19 +78,24 @@ public class DownloadService extends JobService {
         final String peer = bundle.getString(Content.PEER);
 
         Service.getInstance(getApplicationContext());
+
+
+        final THREADS threads = Singleton.getInstance(
+                getApplicationContext()).getThreads();
+
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
 
-                final THREADS threadsAPI = Singleton.getInstance(
-                        getApplicationContext()).getThreads();
-                if (!threadsAPI.isAccountBlocked(threads.ipfs.api.PID.create(pid))) {
+
+                if (!threads.isAccountBlocked(PID.create(pid))) {
 
 
                     if (peer != null) {
                         IOTA iota = Singleton.getInstance(getApplicationContext()).getIota();
                         checkNotNull(iota);
-                        threadsAPI.getPeerByHash(iota, PID.create(pid), peer);
+                        threads.getPeerByHash(iota, PID.create(pid), peer);
                     }
 
 
@@ -98,11 +103,11 @@ public class DownloadService extends JobService {
                             getApplicationContext());
                     PeerService.publishPeer(getApplicationContext());
                     ConnectService.connectUser(getApplicationContext(),
-                            threads.ipfs.api.PID.create(pid), pubsubEnabled);
+                            PID.create(pid), pubsubEnabled);
 
 
                     Service.downloadMultihash(getApplicationContext(),
-                            threads.ipfs.api.PID.create(pid), cid);
+                            PID.create(pid), cid);
 
 
                 }
