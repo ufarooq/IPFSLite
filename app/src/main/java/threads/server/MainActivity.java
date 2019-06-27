@@ -40,7 +40,6 @@ import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 import java.io.File;
-import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -564,10 +563,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         getApplicationContext());
                                 final boolean pubsubCheck = pubsubEnabled && !
                                         user.getPublicKey().isEmpty();
-                                Hashtable<String, String> params = new Hashtable<>();
-                                boolean value = ConnectService.wakeupConnectCall(
+
+                                boolean value = ConnectService.connectUserTimeout(
                                         getApplicationContext(),
-                                        user.getPID(), params, pubsubCheck);
+                                        user.getPID(), pubsubCheck);
 
 
                                 if (value) {

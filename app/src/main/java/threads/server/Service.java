@@ -18,6 +18,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.j256.simplemagic.ContentInfo;
 
 import org.apache.commons.lang3.StringUtils;
@@ -64,6 +65,8 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 
 public class Service {
+    public static final String OFFER = "OFFER";
+    public static final String PROVIDE = "PROVIDE";
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(3);
@@ -367,18 +370,18 @@ public class Service {
 
                     CID cid = CID.create(multihash);
 
-                    List<LinkInfo> links = getLinks(context, ipfs, cid);
-
-                    if (links != null) {
-                        byte[] content = ipfs.get(cid, "", timeout, false);
+                    byte[] content = ipfs.get(cid, "", timeout, false);
+                    try {
                         ContentFiles files = gson.fromJson(new String(content), ContentFiles.class);
                         checkNotNull(files);
                         downloadFiles(context, sender, files);
+                    } catch (JsonSyntaxException jse) {
+                        downloadMultihash(context, sender, multihash, null, null);
                     }
 
+
                 } catch (Throwable e) {
-                    // ignore exception
-                    downloadMultihash(context, sender, multihash, null, null);
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
             });
         }
@@ -1313,9 +1316,15 @@ public class Service {
                         pubsubCheck = !user.getPublicKey().isEmpty();
                     }
                 }
-                Hashtable<String, String> params = new Hashtable<>();
-                ConnectService.wakeupConnectCall(
-                        context, sender, params, pubsubCheck);
+
+                if (!ConnectService.connectUserTimeout(context, sender, pubsubCheck)) {
+                    Hashtable<String, String> params = new Hashtable<>();
+                    CID cid = thread.getCid();
+                    checkNotNull(cid);
+                    params.put(Content.CID, cid.getCid());
+                    params.put(Content.EST, Service.PROVIDE);
+                    ConnectService.notifyUser(context, thread.getSenderPid(), params, pubsubCheck);
+                }
 
             }
 
@@ -1338,7 +1347,7 @@ public class Service {
 
                 final boolean pubsubCheck = pubsubEnabled && !
                         user.getPublicKey().isEmpty();
-                Hashtable<String, String> params = new Hashtable<>();
+
 
                 ContentFiles files = new ContentFiles();
                 for (long idx : idxs) {
@@ -1349,12 +1358,17 @@ public class Service {
 
                 CID cid = ipfs.add(gson.toJson(files), "", true);
                 checkNotNull(cid);
-                params.put(Content.CID, cid.getCid());
 
-                if (ConnectService.wakeupConnectCall(context,
-                        user.getPID(), params, pubsubCheck)) {
+
+                if (ConnectService.connectUserTimeout(context,
+                        user.getPID(), pubsubCheck)) {
                     ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
                     success = true;
+                } else {
+                    Hashtable<String, String> params = new Hashtable<>();
+                    params.put(Content.CID, cid.getCid());
+                    params.put(Content.EST, Service.OFFER);
+                    ConnectService.notifyUser(context, user.getPID(), params, pubsubCheck);
                 }
             } catch (Throwable e) {
                 Preferences.evaluateException(threads, Preferences.EXCEPTION, e);

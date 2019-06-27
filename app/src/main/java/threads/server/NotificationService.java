@@ -59,6 +59,8 @@ public class NotificationService extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
+
+        Log.e(TAG, "onStartJob!");
         final PID host = Preferences.getPID(getApplicationContext());
         if (host != null) {
 
@@ -79,15 +81,28 @@ public class NotificationService extends JobService {
                         Content data = gson.fromJson(notification, Content.class);
                         if (data != null) {
 
-                            if (data.containsKey(Content.PID) && data.contains(Content.CID)) {
-                                final String pid = data.get(Content.PID);
-                                checkNotNull(pid);
-                                final String cid = data.get(Content.CID);
-                                checkNotNull(cid);
-                                final String peer = data.get(Content.PEER);
-                                DownloadService.download(getApplicationContext(), pid, cid, peer);
-                            }
+                            if (data.containsKey(Content.EST)) {
+                                if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
+                                    final String pid = data.get(Content.PID);
+                                    checkNotNull(pid);
+                                    final String cid = data.get(Content.CID);
+                                    checkNotNull(cid);
+                                    final String peer = data.get(Content.PEER);
 
+
+                                    final String est = data.get(Content.EST);
+
+                                    if (est.equals(Service.OFFER)) {
+                                        Log.e(TAG, "download!");
+                                        DownloadService.download(
+                                                getApplicationContext(), pid, cid, peer);
+                                    } else if (est.equals(Service.PROVIDE)) {
+                                        Log.e(TAG, "share");
+                                        UploadService.upload(
+                                                getApplicationContext(), pid, cid, peer);
+                                    }
+                                }
+                            }
                         }
 
                     }
