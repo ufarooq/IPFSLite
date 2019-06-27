@@ -65,8 +65,8 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 
 public class Service {
-    public static final String OFFER = "OFFER";
-    public static final String PROVIDE = "PROVIDE";
+    static final String OFFER = "OFFER";
+    static final String PROVIDE = "PROVIDE";
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(3);
@@ -387,7 +387,9 @@ public class Service {
         }
     }
 
-    static void downloadFiles(@NonNull Context context, @NonNull PID sender, @NonNull ContentFiles files) {
+    private static void downloadFiles(@NonNull Context context,
+                                      @NonNull PID sender,
+                                      @NonNull ContentFiles files) {
         for (ContentFile file : files) {
             downloadMultihash(context, sender, file.getCid(), file.getFilename(), file.getSize());
         }
