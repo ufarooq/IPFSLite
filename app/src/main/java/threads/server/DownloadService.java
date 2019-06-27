@@ -89,27 +89,30 @@ public class DownloadService extends JobService {
             try {
 
 
-                if (!threads.isAccountBlocked(PID.create(pid))) {
+                if (threads.getPeerByPID(PID.create(pid)) != null) {
+
+                    if (!threads.isAccountBlocked(PID.create(pid))) {
 
 
-                    if (peer != null) {
-                        IOTA iota = Singleton.getInstance(getApplicationContext()).getIota();
-                        checkNotNull(iota);
-                        threads.getPeerByHash(iota, PID.create(pid), peer);
+                        if (peer != null) {
+                            IOTA iota = Singleton.getInstance(getApplicationContext()).getIota();
+                            checkNotNull(iota);
+                            threads.getPeerByHash(iota, PID.create(pid), peer);
+                        }
+
+
+                        final boolean pubsubEnabled = Preferences.isPubsubEnabled(
+                                getApplicationContext());
+                        PeerService.publishPeer(getApplicationContext());
+                        ConnectService.connectUser(getApplicationContext(),
+                                PID.create(pid), pubsubEnabled);
+
+
+                        Service.downloadMultihash(getApplicationContext(),
+                                PID.create(pid), cid);
+
+
                     }
-
-
-                    final boolean pubsubEnabled = Preferences.isPubsubEnabled(
-                            getApplicationContext());
-                    PeerService.publishPeer(getApplicationContext());
-                    ConnectService.connectUser(getApplicationContext(),
-                            PID.create(pid), pubsubEnabled);
-
-
-                    Service.downloadMultihash(getApplicationContext(),
-                            PID.create(pid), cid);
-
-
                 }
 
             } catch (Throwable e) {

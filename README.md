@@ -1,6 +1,6 @@
 
-## IPFS Server
-- Android IPFS with CLI Support and WebUI
+## IPFS Lite
+- IPFS Lite node with modern UI to support standard use cases of IPFS
 
 
 ### IPFS
@@ -14,7 +14,17 @@ Official website of IPFS: https://ipfs.io/
 
 
 ### Features 
-- IPFS with CLI Support and WebUI
+Support of the standart uses cases of IPFS (like cat, get, publish, etc).
+Provide a modern UI to realize the use cases.
+Possibility to customize the configuraton of the IPFS node.
+
+#### Enhancements:
+- Enhance the pubsub feature of IPFS to automatically share files between two nodes.
+(Precondition is that both nodes using this IPFS Lite application)
+- Integration of WebRTC via the pubsub feature of IPFS to support telephony between two nodes.
+(Precondition is that both nodes using this IPFS Lite application)
+- Integration of IOTA to support faster node detection and to support a kind of offline mode
+between nodes. (Precondition is that both nodes using this IPFS Lite application)
 
 
 ### Dependencies 

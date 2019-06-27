@@ -91,30 +91,30 @@ public class UploadService extends JobService {
             executor.submit(() -> {
                 try {
 
+                    if (threads.getPeerByPID(PID.create(pid)) != null) {
+                        if (!threads.isAccountBlocked(PID.create(pid))) {
 
-                    if (!threads.isAccountBlocked(PID.create(pid))) {
+
+                            if (peer != null) {
+                                IOTA iota = Singleton.getInstance(getApplicationContext()).getIota();
+                                checkNotNull(iota);
+                                threads.getPeerByHash(iota, PID.create(pid), peer);
+                            }
 
 
-                        if (peer != null) {
-                            IOTA iota = Singleton.getInstance(getApplicationContext()).getIota();
-                            checkNotNull(iota);
-                            threads.getPeerByHash(iota, PID.create(pid), peer);
+                            final boolean pubsubEnabled = Preferences.isPubsubEnabled(
+                                    getApplicationContext());
+                            PeerService.publishPeer(getApplicationContext());
+                            boolean success = ConnectService.connectUser(getApplicationContext(),
+                                    PID.create(pid), pubsubEnabled);
+
+                            if (success) {
+                                ipfs.pubsubPub(pid, cid, 50);
+                            }
+
+
                         }
-
-
-                        final boolean pubsubEnabled = Preferences.isPubsubEnabled(
-                                getApplicationContext());
-                        PeerService.publishPeer(getApplicationContext());
-                        boolean success = ConnectService.connectUser(getApplicationContext(),
-                                PID.create(pid), pubsubEnabled);
-
-                        if (success) {
-                            ipfs.pubsubPub(pid, cid, 50);
-                        }
-
-
                     }
-
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 } finally {
