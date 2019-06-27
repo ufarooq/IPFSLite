@@ -29,13 +29,6 @@
     </notice>
 
     <notice>
-        <name>googleapis/google-auth-library-java</name>
-        <url>https://github.com/googleapis/google-auth-library-java</url>
-        <copyright />
-        <license>BSD 3-Clause License</license>
-    </notice>
-
-    <notice>
         <name>google/google-api-java-client</name>
         <url>https://github.com/google/google-api-java-client</url>
         <copyright />
