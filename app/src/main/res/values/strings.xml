@@ -83,7 +83,7 @@
     <string name="ok">OK</string>
     <string name="channel_error_title">Error Message</string>
     <string name="permission_audio_settings_denied">Permission modify audio settings denied</string>
-    <string name="abort">Abort</string>
+    <string name="cancel">Cancel</string>
     <string name="version_number">%1$s</string>
     <string name="mdns_support">MDNS Support</string>
     <string name="logs_mode_enable">Debug Mode (logs)</string>

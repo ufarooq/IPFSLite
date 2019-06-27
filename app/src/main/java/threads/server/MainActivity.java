@@ -1103,7 +1103,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 return;
             }
 
-
             FragmentManager fm = getSupportFragmentManager();
             SendDialogFragment dialogFragment = new SendDialogFragment();
             Bundle bundle = new Bundle();

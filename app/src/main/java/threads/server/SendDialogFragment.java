@@ -131,7 +131,7 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
 
 
                 })
-                .setNegativeButton(R.string.abort, (dialog, id) -> {
+                .setNegativeButton(R.string.cancel, (dialog, id) -> {
 
                     // mis-clicking prevention, using threshold of 1000 ms
                     if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
