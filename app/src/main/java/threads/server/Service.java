@@ -1296,6 +1296,27 @@ public class Service {
         }
     }
 
+
+    ArrayList<String> getEnhancedUserPIDs(@NonNull Context context) {
+        checkNotNull(context);
+
+        final THREADS threads = Singleton.getInstance(context).getThreads();
+        final PID pid = Preferences.getPID(context);
+        ArrayList<String> users = new ArrayList<>();
+        checkNotNull(pid);
+        for (User user : threads.getUsers()) {
+
+            if (!user.getPID().equals(pid)) {
+                if (user.getStatus() != UserStatus.BLOCKED) {
+                    //if(threads.getPeerByPID(user.getPID()) != null) {
+                    users.add(user.getPID().getPid());
+                    //}
+                }
+            }
+        }
+        return users;
+    }
+
     void downloadThread(@NonNull Context context, @NonNull Thread thread) {
 
         checkNotNull(context);
@@ -1335,14 +1356,12 @@ public class Service {
 
     }
 
-    private boolean shareUser(@NonNull Context context,
-                              @NonNull User user,
-                              long[] idxs) {
+    private void shareUser(@NonNull Context context, @NonNull User user, long[] idxs) {
         checkNotNull(user);
         checkNotNull(idxs);
         final THREADS threads = Singleton.getInstance(context).getThreads();
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        boolean success = false;
+
         if (ipfs != null) {
             try {
                 final boolean pubsubEnabled = Preferences.isPubsubEnabled(context);
@@ -1362,10 +1381,8 @@ public class Service {
                 checkNotNull(cid);
 
 
-                if (ConnectService.connectUserTimeout(context,
-                        user.getPID(), pubsubCheck)) {
+                if (ConnectService.connectUserTimeout(context, user.getPID(), pubsubCheck)) {
                     ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
-                    success = true;
                 } else {
                     Hashtable<String, String> params = new Hashtable<>();
                     params.put(Content.CID, cid.getCid());
@@ -1376,7 +1393,7 @@ public class Service {
                 Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
             }
         }
-        return success;
+
     }
 
     void sendThreads(@NonNull Context context, @NonNull List<User> users, long[] idxs) {
@@ -1405,24 +1422,22 @@ public class Service {
                         checkNotNull(host);
 
                         ExecutorService sharedExecutor = Executors.newFixedThreadPool(5);
-                        LinkedList<Future<Boolean>> futures = new LinkedList<>();
+                        LinkedList<Future> futures = new LinkedList<>();
                         for (User user : users) {
                             if (user.getStatus() != UserStatus.BLOCKED) {
                                 PID userPID = user.getPID();
                                 if (!userPID.equals(host)) {
 
-                                    Future<Boolean> future = sharedExecutor.submit(() ->
+                                    Future future = sharedExecutor.submit(() ->
                                             shareUser(context, user, idxs));
                                     futures.add(future);
                                 }
                             }
                         }
                         int counter = 0;
-                        for (Future<Boolean> future : futures) {
-                            Boolean send = future.get();
-                            if (send) {
-                                counter++;
-                            }
+                        for (Future future : futures) {
+                            future.get();
+                            counter++;
                         }
 
                         Preferences.warning(threads,

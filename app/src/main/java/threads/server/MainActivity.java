@@ -40,6 +40,8 @@ import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -51,6 +53,7 @@ import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.Content;
+import threads.core.api.Peer;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.api.User;
@@ -894,6 +897,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             if (value) {
                                 threads.setStatus(user, UserStatus.ONLINE);
 
+
                                 // make a connection to peer
                                 if (Preferences.isPubsubEnabled(getApplicationContext())) {
                                     checkNotNull(host);
@@ -907,6 +911,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                                     ipfs.pubsubPub(user.getPID().getPid(), gson.toJson(map), 50);
                                 }
+
+
+                                Peer peer = threads.getPeerByPID(user.getPID());
+                                if (peer != null) {
+                                    // TODO set alias for user
+                                }
+                                // TODO set public key for user
+
                             } else {
                                 threads.setStatus(user, UserStatus.OFFLINE);
                             }
@@ -1103,12 +1115,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 return;
             }
 
-            FragmentManager fm = getSupportFragmentManager();
-            SendDialogFragment dialogFragment = new SendDialogFragment();
-            Bundle bundle = new Bundle();
-            bundle.putLongArray(SendDialogFragment.IDXS, idxs);
-            dialogFragment.setArguments(bundle);
-            dialogFragment.show(fm, SendDialogFragment.TAG);
+            final THREADS threads = Singleton.getInstance(this).getThreads();
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    ArrayList<String> pids = Service.getInstance(getApplicationContext()).
+                            getEnhancedUserPIDs(getApplicationContext());
+
+                    if (pids.isEmpty()) {
+                        Preferences.error(threads,
+                                getApplicationContext().getString(R.string.no_sharing_peers));
+                    } else if (pids.size() == 1) {
+                        List<User> users = new ArrayList<>();
+                        users.add(threads.getUserByPID(PID.create(pids.get(0))));
+                        Service.getInstance(getApplicationContext()).sendThreads(
+                                getApplicationContext(), users, idxs);
+                    } else {
+                        FragmentManager fm = getSupportFragmentManager();
+                        SendDialogFragment dialogFragment = new SendDialogFragment();
+                        Bundle bundle = new Bundle();
+                        bundle.putLongArray(SendDialogFragment.IDXS, idxs);
+                        bundle.putStringArrayList(SendDialogFragment.PIDS, pids);
+                        dialogFragment.setArguments(bundle);
+                        dialogFragment.show(fm, SendDialogFragment.TAG);
+                    }
+
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            });
+
+
 
 
         } catch (Throwable e) {
@@ -1213,28 +1251,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickThreadSend(long idx) {
-
-        try {
-            // CHECKED
-            if (!Network.isConnected(getApplicationContext())) {
-                Singleton singleton = Singleton.getInstance(getApplicationContext());
-                Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
-                return;
-            }
-
-
-            FragmentManager fm = getSupportFragmentManager();
-            SendDialogFragment dialogFragment = new SendDialogFragment();
-            Bundle bundle = new Bundle();
-            long[] idxs = {idx};
-            bundle.putLongArray(SendDialogFragment.IDXS, idxs);
-            dialogFragment.setArguments(bundle);
-            dialogFragment.show(fm, SendDialogFragment.TAG);
-
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
+        long[] idxs = {idx};
+        clickThreadsSend(idxs);
     }
 
     @Override

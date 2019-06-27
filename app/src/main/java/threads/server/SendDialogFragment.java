@@ -13,19 +13,17 @@ import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
-import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.User;
-import threads.core.api.UserStatus;
-import threads.core.mdl.AccountsViewModel;
 import threads.ipfs.api.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -33,6 +31,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 public class SendDialogFragment extends DialogFragment implements ContactsViewAdapter.ValidateListener {
     public static final String TAG = SendDialogFragment.class.getSimpleName();
     public static final String IDXS = "IDXS";
+    public static final String PIDS = "PIDS";
     private long mLastClickTime = 0;
     private ContactsViewAdapter contactsViewAdapter;
     private Context mContext;
@@ -62,6 +61,7 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
         Bundle args = getArguments();
         checkNotNull(args);
         final long[] idxs = args.getLongArray(IDXS);
+        final ArrayList<String> pids = args.getStringArrayList(PIDS);
 
         @SuppressWarnings("all")
         View view = inflater.inflate(R.layout.send_view, null);
@@ -73,40 +73,21 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
         recycler_view_contact_list.setAdapter(contactsViewAdapter);
 
         final THREADS threads = Singleton.getInstance(mContext).getThreads();
-        AccountsViewModel threadsViewModel = ViewModelProviders.of(this).get(AccountsViewModel.class);
-        threadsViewModel.getUsers().observe(this, (accounts) -> {
 
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
             try {
-
-                if (accounts != null) {
-
-                    // Remove user
-                    PID pid = Preferences.getPID(getActivity());
-                    List<User> users = new ArrayList<>();
-                    checkNotNull(pid);
-                    for (User user : accounts) {
-
-                        // TODO only user which can get files
-                        if (!user.getPID().equals(pid)) {
-                            if (user.getStatus() != UserStatus.BLOCKED) {
-                                users.add(user);
-                            }
-                        }
-                    }
-                    if (users.isEmpty()) {
-                        Preferences.error(threads, mContext.getString(R.string.no_sharing_peers));
-                        dismiss();
-                    } else if (users.size() == 1) {
-                        Service.getInstance(mContext).sendThreads(mContext, users, idxs);
-                        dismiss();
-                    } else {
-                        contactsViewAdapter.setAccounts(users);
+                List<User> users = new ArrayList<>();
+                for (String pid : pids) {
+                    User user = threads.getUserByPID(PID.create(pid));
+                    if (user != null) {
+                        users.add(user);
                     }
                 }
+                contactsViewAdapter.setAccounts(users);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
-
         });
 
 
