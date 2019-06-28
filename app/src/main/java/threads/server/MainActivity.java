@@ -1300,7 +1300,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     threads.storeUser(user);
 
-                    // TODO activate threads.setSenderAlias(pid, name);
+                    threads.setThreadSenderAlias(userPID, name);
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
