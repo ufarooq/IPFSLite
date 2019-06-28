@@ -36,6 +36,25 @@ public class NotificationService extends JobService {
         if (jobScheduler != null) {
             ComponentName componentName = new ComponentName(context, NotificationService.class);
 
+            JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                    .build();
+            int resultCode = jobScheduler.schedule(jobInfo);
+            if (resultCode == JobScheduler.RESULT_SUCCESS) {
+                Log.e(TAG, "Job scheduled!");
+            } else {
+                Log.e(TAG, "Job not scheduled");
+            }
+        }
+    }
+
+    public static void periodic(@NonNull Context context) {
+        checkNotNull(context);
+        JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
+                .getSystemService(JOB_SCHEDULER_SERVICE);
+        if (jobScheduler != null) {
+            ComponentName componentName = new ComponentName(context, NotificationService.class);
+
             JobInfo jobInfo = new JobInfo.Builder(NotificationService.class.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                     .setPeriodic(JobInfo.getMinPeriodMillis(), JobInfo.getMinFlexMillis())

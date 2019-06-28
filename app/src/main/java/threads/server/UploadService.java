@@ -6,9 +6,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -39,38 +36,34 @@ public class UploadService {
 
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         if (ipfs != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
 
-                    if (threads.getPeerByPID(PID.create(pid)) != null) {
-                        if (!threads.isAccountBlocked(PID.create(pid))) {
+            try {
 
-
-                            if (peer != null) {
-                                IOTA iota = Singleton.getInstance(context).getIota();
-                                checkNotNull(iota);
-                                threads.getPeerByHash(iota, PID.create(pid), peer);
-                            }
+                if (threads.getUserByPID(PID.create(pid)) != null) {
+                    if (!threads.isAccountBlocked(PID.create(pid))) {
 
 
-                            final boolean pubsubEnabled = Preferences.isPubsubEnabled(
-                                    context);
-                            PeerService.publishPeer(context);
-                            boolean success = ConnectService.connectUser(context,
-                                    PID.create(pid), pubsubEnabled);
+                        if (peer != null) {
+                            IOTA iota = Singleton.getInstance(context).getIota();
+                            checkNotNull(iota);
+                            threads.getPeerByHash(iota, PID.create(pid), peer);
+                        }
 
-                            if (success) {
-                                ipfs.pubsubPub(pid, cid, 50);
-                            }
+
+                        final boolean pubsubEnabled = Preferences.isPubsubEnabled(
+                                context);
+                        PeerService.publishPeer(context);
+                        boolean success = ConnectService.connectUser(context,
+                                PID.create(pid), pubsubEnabled);
+
+                        if (success) {
+                            ipfs.pubsubPub(pid, cid, 50);
                         }
                     }
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
-
-            });
-
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
         }
 
     }

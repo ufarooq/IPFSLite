@@ -6,9 +6,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -38,42 +35,40 @@ public class DownloadService {
                 context).getThreads();
 
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
+        try {
 
 
-                if (threads.getPeerByPID(PID.create(pid)) != null) {
+            if (threads.getUserByPID(PID.create(pid)) != null) {
 
-                    if (!threads.isAccountBlocked(PID.create(pid))) {
-
-
-                        if (peer != null) {
-                            IOTA iota = Singleton.getInstance(context).getIota();
-                            checkNotNull(iota);
-                            threads.getPeerByHash(iota, PID.create(pid), peer);
-                        }
+                if (!threads.isAccountBlocked(PID.create(pid))) {
 
 
-                        final boolean pubsubEnabled = Preferences.isPubsubEnabled(
-                                context);
-                        PeerService.publishPeer(context);
-
-                        ConnectService.connectUser(context,
-                                PID.create(pid), pubsubEnabled);
-
-
-                        Service.downloadMultihash(context,
-                                PID.create(pid), cid);
-
-
+                    if (peer != null) {
+                        IOTA iota = Singleton.getInstance(context).getIota();
+                        checkNotNull(iota);
+                        threads.getPeerByHash(iota, PID.create(pid), peer);
                     }
-                }
 
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+
+                    final boolean pubsubEnabled = Preferences.isPubsubEnabled(
+                            context);
+                    PeerService.publishPeer(context);
+
+                    ConnectService.connectUser(context,
+                            PID.create(pid), pubsubEnabled);
+
+
+                    Service.downloadMultihash(context,
+                            PID.create(pid), cid);
+
+
+                }
             }
 
-        });
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+
+
     }
 }

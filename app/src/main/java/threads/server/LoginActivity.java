@@ -51,6 +51,7 @@ public class LoginActivity extends AppCompatActivity {
         executor.submit(() -> {
             Service.getInstance(getApplicationContext());
             NotificationService.notifications(getApplicationContext());
+            NotificationService.periodic(getApplicationContext());
 
             if (Intent.ACTION_SEND.equals(action) && type != null) {
                 if ("text/plain".equals(type)) {
