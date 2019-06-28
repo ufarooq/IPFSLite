@@ -28,7 +28,8 @@
     <string name="share_app">Share</string>
     <string name="choose_one">Choose an application</string>
     <string name="playstore_url">https://play.google.com/store/apps/details?id=threads.server</string>
-    <string name="playstore_email">Let me recommend you this application.</string>
+    <string name="fdroid_url">https://f-droid.org/packages/threads.server/</string>
+    <string name="store_mail">Let me recommend you this application.</string>
     <string name="issues">Issue Report</string>
     <string name="copy_to_clipboard">Copy to clipboard</string>
     <string name="qr_code">QR Code</string>

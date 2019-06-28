@@ -387,8 +387,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Intent i = new Intent(Intent.ACTION_SEND);
                     i.setType("text/plain");
                     i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name_full));
-                    String sAux = "\n" + getString(R.string.playstore_email) + "\n\n";
-                    sAux = sAux + getString(R.string.playstore_url) + "\n\n";
+                    String sAux = "\n" + getString(R.string.store_mail) + "\n\n";
+                    if (BuildConfig.FDroid) {
+                        sAux = sAux + getString(R.string.fdroid_url) + "\n\n";
+                    } else {
+                        sAux = sAux + getString(R.string.playstore_url) + "\n\n";
+                    }
                     i.putExtra(Intent.EXTRA_TEXT, sAux);
                     startActivity(Intent.createChooser(i, getString(R.string.choose_one)));
                 } catch (Throwable e) {
@@ -932,11 +936,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                                 // TODO set alias for user
+
                                 /*Peer peer = threads.getPeerByPID(user.getPID());
                                 if (peer != null) {
 
                                 }*/
                                 // TODO set public key for user
+                                /*
+                                int timeout = Preferences.getConnectionTimeout(
+                                        getApplicationContext());
+                                PeerInfo info = ipfs.id(user.getPID(), timeout);
+                                if(info != null){
+
+                                }*/
 
                             } else {
                                 threads.setStatus(user, UserStatus.OFFLINE);
