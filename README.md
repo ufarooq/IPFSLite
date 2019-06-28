@@ -1,6 +1,6 @@
 
 ## IPFS Lite
-- IPFS Lite node with modern UI to support standard use cases of IPFS
+IPFS Lite node with modern UI to support standard use cases of IPFS
 
 
 ### IPFS
@@ -19,12 +19,11 @@ Provide a modern UI to realize the use cases.
 Possibility to customize the configuraton of the IPFS node.
 
 #### Enhancements:
-- Enhance the pubsub feature of IPFS to automatically share files between two nodes.
-(Precondition is that both nodes using this IPFS Lite application)
-- Integration of WebRTC via the pubsub feature of IPFS to support telephony between two nodes.
-(Precondition is that both nodes using this IPFS Lite application)
+- Precondition is that communicating nodes using this IPFS Lite application
+- Enhance the pubsub feature of IPFS to automatically share files between two nodes
+- Integration of WebRTC via the pubsub feature of IPFS to support telephony between two nodes
 - Integration of IOTA to support faster node detection and to support a kind of offline mode
-between nodes. (Precondition is that both nodes using this IPFS Lite application)
+between nodes
 
 
 ### Dependencies 
