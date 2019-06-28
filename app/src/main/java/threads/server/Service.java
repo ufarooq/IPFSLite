@@ -269,6 +269,10 @@ public class Service {
 
     }
 
+    public static String getAddressLink(@NonNull String address) {
+        return "https://thetangle.org/address/" + address;
+    }
+
     private static void createUser(@NonNull Context context,
                                    @NonNull PID senderPid,
                                    @NonNull String alias,

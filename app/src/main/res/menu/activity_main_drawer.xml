@@ -12,6 +12,10 @@
             android:id="@+id/nav_config"
             android:icon="@android:drawable/ic_menu_compass"
             android:title="@string/config" />
+        <item
+            android:id="@+id/nav_notifications"
+            android:icon="@android:drawable/stat_notify_more"
+            android:title="@string/notifications" />
     </group>
     <item android:title="@string/application">
         <menu>

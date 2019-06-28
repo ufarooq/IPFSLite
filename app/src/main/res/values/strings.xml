@@ -98,4 +98,5 @@
     <string name="send_to">Send to</string>
     <string name="action_your_peer">Your Peer</string>
     <string name="unsupported_pubsub_message">Unsupported pubsub message by peer \"%1$s\"</string>
+    <string name="notifications">Notifications</string>
 </resources>
