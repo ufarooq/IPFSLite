@@ -308,6 +308,11 @@ public class Service {
                 map.put(Content.ALIAS, hostUser.getAlias());
                 map.put(Content.PKEY, hostUser.getPublicKey());
 
+
+                Singleton.getInstance(context).
+                        getConsoleListener().info(
+                        "Send Notification to PID :" + senderPid);
+
                 ipfs.pubsubPub(senderPid.getPid(), gson.toJson(map), 50);
 
 
@@ -317,7 +322,10 @@ public class Service {
         }
     }
 
-    private static void replySender(@NonNull IPFS ipfs, @NonNull PID sender, @NonNull Thread thread) {
+    private static void replySender(@NonNull Context context,
+                                    @NonNull IPFS ipfs,
+                                    @NonNull PID sender,
+                                    @NonNull Thread thread) {
         try {
             CID cid = thread.getCid();
             checkNotNull(cid);
@@ -327,7 +335,9 @@ public class Service {
             map.put(Content.CID, cid.getCid());
 
 
-            Log.e(TAG, "Send : " + map.toString());
+            Singleton.getInstance(context).getConsoleListener().info(
+                    "Send Notification to PID :" + sender);
+
             ipfs.pubsubPub(sender.getPid(), gson.toJson(map), 50);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -588,7 +598,7 @@ public class Service {
                             if (entry.getStatus() == ThreadStatus.DELETING ||
                                     entry.getStatus() == ThreadStatus.ONLINE ||
                                     entry.getStatus() == ThreadStatus.PUBLISHING) {
-                                replySender(ipfs, sender, entry);
+                                replySender(context, ipfs, sender, entry);
                                 return;
                             } else {
                                 downloadMultihash(context, threads, ipfs, entry, sender);
@@ -1065,7 +1075,7 @@ public class Service {
                 if (result) {
                     threads.setStatus(thread, ThreadStatus.ONLINE);
                     if (sender != null) {
-                        replySender(ipfs, sender, thread);
+                        replySender(context, ipfs, sender, thread);
                     }
                 } else {
                     threads.setStatus(thread, ThreadStatus.ERROR);
@@ -1091,7 +1101,7 @@ public class Service {
                 if (result) {
                     threads.setStatus(thread, ThreadStatus.ONLINE);
                     if (sender != null) {
-                        replySender(ipfs, sender, thread);
+                        replySender(context, ipfs, sender, thread);
                     }
                 } else {
                     threads.setStatus(thread, ThreadStatus.ERROR);
@@ -1397,6 +1407,11 @@ public class Service {
 
 
                 if (ConnectService.connectUser(context, user.getPID())) {
+
+                    Singleton.getInstance(context).
+                            getConsoleListener().info(
+                            "Send Notification to PID :" + user.getPID());
+
                     ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
                 } else {
 

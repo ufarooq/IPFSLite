@@ -918,6 +918,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 map.put(Content.ALIAS, threads.getUserAlias(host));
                                 map.put(Content.PKEY, threads.getUserPublicKey(host));
 
+                                Singleton.getInstance(getApplicationContext()).
+                                        getConsoleListener().info(
+                                        "Send Notification to PID :" + user.getPID().getPid());
+
+
                                 ipfs.pubsubPub(user.getPID().getPid(), gson.toJson(map), 50);
 
 
