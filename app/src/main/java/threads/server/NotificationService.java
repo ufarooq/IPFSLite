@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.Preferences;
+import threads.core.Singleton;
 import threads.core.api.AddressType;
 import threads.core.api.Content;
 import threads.core.api.Server;
@@ -81,7 +82,6 @@ public class NotificationService extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
-
         Log.e(TAG, "onStartJob!");
         final PID host = Preferences.getPID(getApplicationContext());
         final String privateKey = Service.getPrivateKey(getApplicationContext());
@@ -109,6 +109,7 @@ public class NotificationService extends JobService {
                                         final String pid = Encryption.decryptRSA(
                                                 data.get(Content.PID), privateKey);
                                         checkNotNull(pid);
+
                                         final String cid = Encryption.decryptRSA(
                                                 data.get(Content.CID), privateKey);
                                         checkNotNull(cid);
@@ -116,14 +117,16 @@ public class NotificationService extends JobService {
                                         final Integer est = Integer.valueOf(data.get(Content.EST));
                                         checkNotNull(est);
 
+                                        Singleton.getInstance(
+                                                getApplicationContext()).getConsoleListener().info(
+                                                "Receive Inbox Notification from PID :" + pid);
+
                                         switch (NotificationType.toNotificationType(est)) {
                                             case OFFER:
-                                                Log.e(TAG, "download!");
                                                 DownloadService.download(
                                                         getApplicationContext(), pid, cid);
                                                 break;
                                             case PROVIDE:
-                                                Log.e(TAG, "share");
                                                 UploadService.upload(
                                                         getApplicationContext(), pid, cid);
                                                 break;

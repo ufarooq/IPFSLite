@@ -87,7 +87,7 @@ public class NotifyService extends JobService {
 
                     Content content = new Content();
 
-                    content.put(Content.PID, Encryption.encryptRSA(pid, publicKey));
+                    content.put(Content.PID, Encryption.encryptRSA(host.getPid(), publicKey));
                     content.put(Content.CID, Encryption.encryptRSA(cid, publicKey));
                     content.put(Content.EST, NotificationType.toNotificationType(est).toString());
 
