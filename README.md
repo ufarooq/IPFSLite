@@ -14,9 +14,9 @@ Official website of IPFS: https://ipfs.io/
 
 
 ### Features 
-Support of the standart uses cases of IPFS (like cat, get, publish, etc).
-Provide a modern UI to realize the use cases.
-Possibility to customize the configuraton of the IPFS node.
+Support of the standard uses cases of IPFS (like add, cat, get, publish, etc).
+Provide a modern UI to realize this common use cases.
+Possibility to customize the configuration of the IPFS node.
 
 #### Enhancements:
 - Precondition is that communicating nodes using this IPFS Lite application
@@ -24,7 +24,7 @@ Possibility to customize the configuraton of the IPFS node.
 - Integration of WebRTC via the pubsub feature of IPFS to support telephony between two nodes
 - Integration of IOTA to support faster node detection and to support a kind of offline mode
 between nodes
-- A Inbox contains all Notifications from other nodes which send you data while your node
+- A Inbox contains all notifications from other nodes which were send while your node
 was offline (Stored on the Tangle, Data is encrypted)
 
 
