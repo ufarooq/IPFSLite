@@ -5,7 +5,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.ipfs.api.PID;
@@ -38,11 +37,10 @@ public class DownloadService {
 
                 if (!threads.isAccountBlocked(PID.create(pid))) {
 
-                    final boolean pubsubEnabled = Preferences.isPubsubEnabled(context);
 
                     PeerService.publishPeer(context);
 
-                    ConnectService.connectUser(context, PID.create(pid), pubsubEnabled);
+                    ConnectService.connectUser(context, PID.create(pid));
 
                     Service.downloadMultihash(context, PID.create(pid), cid);
 

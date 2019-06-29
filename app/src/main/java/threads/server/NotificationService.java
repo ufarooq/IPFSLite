@@ -23,6 +23,7 @@ import threads.core.api.Content;
 import threads.core.api.Server;
 import threads.iota.Entity;
 import threads.iota.EntityService;
+import threads.ipfs.api.Encryption;
 import threads.ipfs.api.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -84,7 +85,7 @@ public class NotificationService extends JobService {
 
         Log.e(TAG, "onStartJob!");
         final PID host = Preferences.getPID(getApplicationContext());
-        final String privateKey = Service.getPrivateKey(getApplicationContext());
+        final String privateKey = Preferences.getPrivateKey(getApplicationContext());
         if (host != null && !privateKey.isEmpty()) {
 
             final int timeout = Preferences.getTangleTimeout(getApplicationContext());

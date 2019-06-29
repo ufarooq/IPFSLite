@@ -93,16 +93,16 @@ dependencies {
     //implementation 'threads.pow:pow:1.0.9'
 
     // UI+API (LICENSE done)
-    implementation 'threads.core:share:0.0.5'
+    implementation 'threads.core:share:0.0.6'
 
     // API (LICENSE done)
-    implementation 'threads.core:api:0.0.5'
+    implementation 'threads.core:api:0.0.6'
 
     // API (LICENSE done)
     implementation 'threads.core:iota:0.0.4'
 
     // API (LICENSE done)
-    implementation 'threads.core:ipfs:0.0.2'
+    implementation 'threads.core:ipfs:0.0.3'
 
     // API (LICENSE done)
     implementation 'threads.mobile:ipfs:0.1.6'

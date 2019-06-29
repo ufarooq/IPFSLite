@@ -586,15 +586,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             try {
                                 threads.setStatus(user, UserStatus.DIALING);
 
-                                final boolean pubsubEnabled = Preferences.isPubsubEnabled(
-                                        getApplicationContext());
-                                final boolean pubsubCheck = pubsubEnabled && !
-                                        user.getPublicKey().isEmpty();
-
                                 boolean value = ConnectService.connectUserTimeout(
                                         getApplicationContext(),
-                                        user.getPID(), pubsubCheck);
-
+                                        user.getPID());
 
                                 if (value) {
                                     threads.setStatus(user, UserStatus.ONLINE);
@@ -837,13 +831,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             Preferences.warning(threads, getString(R.string.peer_is_blocked));
                         } else {
 
-                            final boolean pubsubEnabled = Preferences.isPubsubEnabled(
-                                    getApplicationContext());
-                            final boolean pubsubCheck = pubsubEnabled &&
-                                    !user.getPublicKey().isEmpty();
-
                             Intent intent = RTCCallActivity.createIntent(MainActivity.this,
-                                    pid, user.getAlias(), null, true, pubsubCheck);
+                                    pid, user.getAlias(), null, true);
                             intent.setAction(RTCCallActivity.ACTION_OUTGOING_CALL);
                             MainActivity.this.startActivity(intent);
                         }
@@ -918,40 +907,36 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             PeerService.publishPeer(getApplicationContext());
 
                             boolean value = ConnectService.connectUser(getApplicationContext(),
-                                    user.getPID(), false); // no pubsub check
+                                    user.getPID()); // no pubsub check
                             if (value) {
                                 threads.setStatus(user, UserStatus.ONLINE);
 
+                                checkNotNull(host);
 
-                                // make a connection to peer
-                                if (Preferences.isPubsubEnabled(getApplicationContext())) {
-                                    checkNotNull(host);
-                                    User hostUser = threads.getUserByPID(host);
-                                    checkNotNull(hostUser);
+                                Content map = new Content();
+                                map.put(Content.EST, "CONNECT");
+                                map.put(Content.ALIAS, threads.getUserAlias(host));
+                                map.put(Content.PKEY, threads.getUserPublicKey(host));
 
-                                    Content map = new Content();
-                                    map.put(Content.EST, "CONNECT");
-                                    map.put(Content.ALIAS, hostUser.getAlias());
-                                    map.put(Content.PKEY, hostUser.getPublicKey());
-
-                                    ipfs.pubsubPub(user.getPID().getPid(), gson.toJson(map), 50);
-                                }
+                                ipfs.pubsubPub(user.getPID().getPid(), gson.toJson(map), 50);
 
 
                                 // TODO set alias for user
-
                                 /*Peer peer = threads.getPeerByPID(user.getPID());
                                 if (peer != null) {
 
                                 }*/
-                                // TODO set public key for user
-                                // TODO  threads.getUserPublicKey(pid).isEmpty();
+
+
                                 if (threads.getUserPublicKey(pid).isEmpty()) {
                                     int timeout = Preferences.getConnectionTimeout(
                                             getApplicationContext());
                                     PeerInfo info = ipfs.id(user.getPID(), timeout);
                                     if (info != null) {
-                                        threads.setUserPublicKey(pid, info.getPublicKey());
+                                        String key = info.getPublicKey();
+                                        if (key != null) {
+                                            threads.setUserPublicKey(pid, key);
+                                        }
                                     }
                                 }
 

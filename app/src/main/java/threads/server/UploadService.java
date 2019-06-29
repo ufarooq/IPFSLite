@@ -5,7 +5,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.ipfs.IPFS;
@@ -36,12 +35,9 @@ public class UploadService {
 
                     if (!threads.isAccountBlocked(PID.create(pid))) {
 
-                        final boolean pubsubEnabled = Preferences.isPubsubEnabled(context);
-
                         PeerService.publishPeer(context);
 
-                        boolean success = ConnectService.connectUser(context,
-                                PID.create(pid), pubsubEnabled);
+                        boolean success = ConnectService.connectUser(context, PID.create(pid));
 
                         if (success) {
                             ipfs.pubsubPub(pid, cid, 50);

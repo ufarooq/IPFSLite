@@ -23,7 +23,6 @@
     <string name="privacy_policy">Privacy Policy</string>
     <string name="quic_support">QUIC Support</string>
     <string name="pubsub_router">Enable Gossipsub</string>
-    <string name="pubsub_support">Pubsub Support</string>
     <string name="commands">Commands</string>
     <string name="share_app">Share</string>
     <string name="choose_one">Choose an application</string>

@@ -22,7 +22,10 @@ import threads.core.THREADS;
 import threads.core.api.AddressType;
 import threads.core.api.Content;
 import threads.iota.IOTA;
+import threads.ipfs.IPFS;
+import threads.ipfs.api.Encryption;
 import threads.ipfs.api.PID;
+import threads.ipfs.api.PeerInfo;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -83,6 +86,20 @@ public class NotifyService extends JobService {
                         PID.create(pid), AddressType.NOTIFICATION);
 
                 String publicKey = threads.getUserPublicKey(pid);
+                if (publicKey.isEmpty()) {
+                    IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+                    checkNotNull(ipfs);
+                    int timeout = Preferences.getConnectionTimeout(
+                            getApplicationContext());
+                    PeerInfo info = ipfs.id(PID.create(pid), timeout);
+                    if (info != null) {
+                        String key = info.getPublicKey();
+                        if (key != null) {
+                            threads.setUserPublicKey(pid, key);
+                            publicKey = key;
+                        }
+                    }
+                }
                 if (!publicKey.isEmpty()) {
 
                     Content content = new Content();

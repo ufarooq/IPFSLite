@@ -222,19 +222,6 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
         });
 
 
-        Switch pubsub_support = view.findViewById(R.id.pubsub_support);
-        pubsub_support.setChecked(Preferences.isPubsubEnabled(activity));
-        pubsub_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Preferences.setPubsubEnabled(activity, isChecked);
-
-            Toast.makeText(getContext(),
-                    R.string.daemon_restart_config_changed,
-                    Toast.LENGTH_LONG).show();
-
-
-        });
-
-
         Switch pubsub_router = view.findViewById(R.id.pubsub_router);
         pubsub_router.setChecked(Preferences.getPubsubRouter(activity)
                 == PubsubConfig.RouterEnum.gossipsub);

@@ -71,32 +71,13 @@ public class Service {
     private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(2);
     private static final String APP_KEY = "AppKey";
     private static final String UPDATE = "UPDATE";
-    private static final String PRIVATE_KEY = "privateKey";
+
     private static Service SINGLETON = null;
     private final AtomicBoolean peerCheckFlag = new AtomicBoolean(false);
 
     private Service() {
     }
 
-    @Deprecated
-    @NonNull
-    public static String getPrivateKey(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                APP_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getString(PRIVATE_KEY, "");
-    }
-
-    @Deprecated
-    public static void setPrivateKey(@NonNull Context context, @NonNull String privateKey) {
-        checkNotNull(context);
-        checkNotNull(privateKey);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                APP_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(PRIVATE_KEY, privateKey);
-        editor.apply();
-    }
 
     @NonNull
     static Service getInstance(@NonNull Context context) {
@@ -149,7 +130,6 @@ public class Service {
                     APP_KEY, Context.MODE_PRIVATE);
             if (prefs.getInt(UPDATE, 0) != versionCode) {
 
-                Preferences.setPubsubEnabled(context, true);
 
                 // Experimental Features
                 Preferences.setQUICEnabled(context, true);
@@ -1381,16 +1361,7 @@ public class Service {
             PID sender = thread.getSenderPid();
             if (!host.equals(sender)) {
 
-                final boolean pubsubEnabled = Preferences.isPubsubEnabled(context);
-                boolean pubsubCheck = false;
-                if (pubsubEnabled) {
-                    User user = threads.getUserByPID(sender);
-                    if (user != null) {
-                        pubsubCheck = !user.getPublicKey().isEmpty(); // TODO not valid anymore
-                    }
-                }
-
-                if (!ConnectService.connectUser(context, sender, pubsubCheck)) {
+                if (!ConnectService.connectUser(context, sender)) {
 
                     CID cid = thread.getCid();
                     checkNotNull(cid);
@@ -1416,12 +1387,6 @@ public class Service {
 
         if (ipfs != null) {
             try {
-                final boolean pubsubEnabled = Preferences.isPubsubEnabled(context);
-
-                final boolean pubsubCheck = pubsubEnabled && !
-                        user.getPublicKey().isEmpty();
-
-
                 ContentFiles files = new ContentFiles();
                 for (long idx : idxs) {
                     Thread threadObject = threads.getThreadByIdx(idx);
@@ -1433,7 +1398,7 @@ public class Service {
                 checkNotNull(cid);
 
 
-                if (ConnectService.connectUser(context, user.getPID(), pubsubCheck)) {
+                if (ConnectService.connectUser(context, user.getPID())) {
                     ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
                 } else {
 
@@ -1619,9 +1584,14 @@ public class Service {
                             Log.e(TAG, "Receive : " + message.getMessage());
                         }
 
-                    }, Preferences.isPubsubEnabled(context), false);
+                    }, true, false);
 
-                    setPrivateKey(context, ipfs.getRawPrivateKey()); // TODO remove
+                    String privateKey = ipfs.getRawPrivateKey();
+                    try {
+                        Preferences.setPrivateKey(context, privateKey);
+                    } catch (Throwable e) {
+                        Preferences.error(threads, "PrivateKey is not available yet.");
+                    }
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(threads, Preferences.IPFS_START_FAILURE, e);

@@ -51,7 +51,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private static final String DIRECTORY = "DIRECTORY";
     private static final String IDXS = "IDXS";
     private static final String SELECTION = "SELECTION";
-    private final AtomicBoolean pubsubEnabled = new AtomicBoolean(true);
+
 
     @NonNull
     private final List<Long> threads = new ArrayList<>();
@@ -205,8 +205,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         super.onViewCreated(view, savedInstanceState);
 
 
-        pubsubEnabled.set(Preferences.isPubsubEnabled(mContext));
-
         threadViewModel = ViewModelProviders.of(this).get(ThreadViewModel.class);
 
         RecyclerView mRecyclerView = view.findViewById(R.id.recycler_view_message_list);
@@ -352,11 +350,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 } else {
                     view.findViewById(R.id.fab_delete).setVisibility(View.INVISIBLE);
                 }
-                if (pubsubEnabled.get()) {
-                    view.findViewById(R.id.fab_send).setVisibility(View.VISIBLE);
-                } else {
-                    view.findViewById(R.id.fab_send).setVisibility(View.INVISIBLE);
-                }
+                view.findViewById(R.id.fab_send).setVisibility(View.VISIBLE);
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -490,7 +484,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void invokeGeneralAction(@NonNull Thread thread) {
         try {
             if (getActivity() != null) {
-                boolean sendActive = Preferences.isPubsubEnabled(mContext);
+                boolean sendActive = true;
                 boolean online = thread.getStatus() == ThreadStatus.ONLINE;
 
                 FragmentManager fm = getActivity().getSupportFragmentManager();
