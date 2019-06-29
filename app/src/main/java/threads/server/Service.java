@@ -27,12 +27,10 @@ import org.iota.jota.pow.pearldiver.PearlDiverLocalPoW;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -1439,29 +1437,15 @@ public class Service {
                     } else {
                         checkNotNull(host);
 
-                        ExecutorService sharedExecutor = Executors.newFixedThreadPool(5);
-                        LinkedList<Future> futures = new LinkedList<>();
                         for (User user : users) {
-                            if (user.getStatus() != UserStatus.BLOCKED) {
-                                PID userPID = user.getPID();
-                                if (!userPID.equals(host)) {
+                            new java.lang.Thread(() -> shareUser(context, user, idxs)).start();
+                        }
 
-                                    Future future = sharedExecutor.submit(() ->
-                                            shareUser(context, user, idxs));
-                                    futures.add(future);
-                                }
-                            }
-                        }
-                        int counter = 0;
-                        for (Future future : futures) {
-                            future.get();
-                            counter++;
-                        }
+                        int counter = users.size();
 
                         Preferences.warning(threads,
                                 context.getString(R.string.data_shared_with_peers,
                                         String.valueOf(counter)));
-
 
                     }
 
