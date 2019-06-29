@@ -20,7 +20,7 @@ Possibility to customize the configuraton of the IPFS node.
 
 #### Enhancements:
 - Precondition is that communicating nodes using this IPFS Lite application
-- Enhance the pubsub feature of IPFS to automatically share files between two nodes
+- Enhance the pubsub feature of IPFS to share files between two nodes (Send Option)
 - Integration of WebRTC via the pubsub feature of IPFS to support telephony between two nodes
 - Integration of IOTA to support faster node detection and to support a kind of offline mode
 between nodes
