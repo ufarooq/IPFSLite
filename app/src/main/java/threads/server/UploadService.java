@@ -4,12 +4,10 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
-import threads.iota.IOTA;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
@@ -21,16 +19,11 @@ public class UploadService {
 
     private static final String TAG = UploadService.class.getSimpleName();
 
-    static void upload(@NonNull Context context,
-                       @NonNull String pid,
-                       @NonNull String cid,
-                       @Nullable String peer) {
-
+    static void upload(@NonNull Context context, @NonNull String pid, @NonNull String cid) {
         checkNotNull(context);
         checkNotNull(pid);
         checkNotNull(cid);
         Service.getInstance(context);
-
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
 
@@ -40,19 +33,13 @@ public class UploadService {
             try {
 
                 if (threads.getUserByPID(PID.create(pid)) != null) {
+
                     if (!threads.isAccountBlocked(PID.create(pid))) {
 
+                        final boolean pubsubEnabled = Preferences.isPubsubEnabled(context);
 
-                        if (peer != null) {
-                            IOTA iota = Singleton.getInstance(context).getIota();
-                            checkNotNull(iota);
-                            threads.getPeerByHash(iota, PID.create(pid), peer);
-                        }
-
-
-                        final boolean pubsubEnabled = Preferences.isPubsubEnabled(
-                                context);
                         PeerService.publishPeer(context);
+
                         boolean success = ConnectService.connectUser(context,
                                 PID.create(pid), pubsubEnabled);
 

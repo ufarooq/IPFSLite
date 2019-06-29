@@ -65,6 +65,7 @@ import threads.ipfs.api.CID;
 import threads.ipfs.api.IpnsInfo;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
+import threads.ipfs.api.PeerInfo;
 import threads.share.ConnectService;
 import threads.share.IPFSAudioDialogFragment;
 import threads.share.IPFSVideoActivity;
@@ -364,7 +365,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 break;
             }
-            case R.id.nav_notifications: {
+            case R.id.nav_inbox: {
                 try {
                     PID pid = Preferences.getPID(this);
                     checkNotNull(pid);
@@ -914,6 +915,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             threads.setStatus(user, UserStatus.DIALING);
 
                             PeerService.publishPeer(getApplicationContext());
+
                             boolean value = ConnectService.connectUser(getApplicationContext(),
                                     user.getPID(), false); // no pubsub check
                             if (value) {
@@ -942,13 +944,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                                 }*/
                                 // TODO set public key for user
-                                /*
-                                int timeout = Preferences.getConnectionTimeout(
-                                        getApplicationContext());
-                                PeerInfo info = ipfs.id(user.getPID(), timeout);
-                                if(info != null){
-
-                                }*/
+                                // TODO  threads.getUserPublicKey(pid).isEmpty();
+                                if (threads.getUserPublicKey(pid).isEmpty()) {
+                                    int timeout = Preferences.getConnectionTimeout(
+                                            getApplicationContext());
+                                    PeerInfo info = ipfs.id(user.getPID(), timeout);
+                                    if (info != null) {
+                                        threads.setUserPublicKey(pid, info.getPublicKey());
+                                    }
+                                }
 
                             } else {
                                 threads.setStatus(user, UserStatus.OFFLINE);

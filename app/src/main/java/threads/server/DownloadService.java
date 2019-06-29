@@ -4,12 +4,10 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
-import threads.iota.IOTA;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
 import threads.share.PeerService;
@@ -22,8 +20,7 @@ public class DownloadService {
 
     static void download(@NonNull Context context,
                          @NonNull String pid,
-                         @NonNull String cid,
-                         @Nullable String peer) {
+                         @NonNull String cid) {
         checkNotNull(context);
         checkNotNull(pid);
         checkNotNull(cid);
@@ -37,30 +34,17 @@ public class DownloadService {
 
         try {
 
-
             if (threads.getUserByPID(PID.create(pid)) != null) {
 
                 if (!threads.isAccountBlocked(PID.create(pid))) {
 
+                    final boolean pubsubEnabled = Preferences.isPubsubEnabled(context);
 
-                    if (peer != null) {
-                        IOTA iota = Singleton.getInstance(context).getIota();
-                        checkNotNull(iota);
-                        threads.getPeerByHash(iota, PID.create(pid), peer);
-                    }
-
-
-                    final boolean pubsubEnabled = Preferences.isPubsubEnabled(
-                            context);
                     PeerService.publishPeer(context);
 
-                    ConnectService.connectUser(context,
-                            PID.create(pid), pubsubEnabled);
+                    ConnectService.connectUser(context, PID.create(pid), pubsubEnabled);
 
-
-                    Service.downloadMultihash(context,
-                            PID.create(pid), cid);
-
+                    Service.downloadMultihash(context, PID.create(pid), cid);
 
                 }
             }

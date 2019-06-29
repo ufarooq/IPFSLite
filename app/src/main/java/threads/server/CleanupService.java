@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import threads.iota.EntityService;
 import threads.iota.HashDatabase;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -60,9 +61,9 @@ public class CleanupService extends JobService {
             try {
 
                 // FIRST remove all old hashes from hash database
-                final threads.iota.NotificationService notificationService =
-                        threads.iota.NotificationService.getInstance(getApplicationContext());
-                HashDatabase hashDatabase = notificationService.getHashDatabase();
+                final EntityService entityService =
+                        EntityService.getInstance(getApplicationContext());
+                HashDatabase hashDatabase = entityService.getHashDatabase();
                 long timestamp = getDaysAgo(28);
                 hashDatabase.hashDao().removeAllHashesWithSmallerTimestamp(timestamp);
 

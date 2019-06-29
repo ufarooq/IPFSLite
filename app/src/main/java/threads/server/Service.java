@@ -27,7 +27,6 @@ import org.iota.jota.pow.pearldiver.PearlDiverLocalPoW;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -65,18 +64,38 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 
 public class Service {
-    static final String OFFER = "OFFER";
-    static final String PROVIDE = "PROVIDE";
+
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(3);
     private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(2);
     private static final String APP_KEY = "AppKey";
     private static final String UPDATE = "UPDATE";
+    private static final String PRIVATE_KEY = "privateKey";
     private static Service SINGLETON = null;
     private final AtomicBoolean peerCheckFlag = new AtomicBoolean(false);
 
     private Service() {
+    }
+
+    @Deprecated
+    @NonNull
+    public static String getPrivateKey(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                APP_KEY, Context.MODE_PRIVATE);
+        return sharedPref.getString(PRIVATE_KEY, "");
+    }
+
+    @Deprecated
+    public static void setPrivateKey(@NonNull Context context, @NonNull String privateKey) {
+        checkNotNull(context);
+        checkNotNull(privateKey);
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                APP_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(PRIVATE_KEY, privateKey);
+        editor.apply();
     }
 
     @NonNull
@@ -92,7 +111,6 @@ public class Service {
 
             Singleton singleton = Singleton.getInstance(context);
             singleton.setAesKey(() -> "");
-            singleton.setNotificationServer(NotificationServer.getInstance());
 
             SINGLETON = new Service();
             SINGLETON.startDaemon(context);
@@ -269,7 +287,8 @@ public class Service {
 
     }
 
-    public static String getAddressLink(@NonNull String address) {
+
+    static String getAddressLink(@NonNull String address) {
         return "https://thetangle.org/address/" + address;
     }
 
@@ -1106,6 +1125,7 @@ public class Service {
 
     }
 
+
     void storeData(@NonNull Context context, @NonNull String text) {
         checkNotNull(context);
         checkNotNull(text);
@@ -1327,7 +1347,6 @@ public class Service {
         }
     }
 
-
     ArrayList<String> getEnhancedUserPIDs(@NonNull Context context) {
         checkNotNull(context);
 
@@ -1367,17 +1386,19 @@ public class Service {
                 if (pubsubEnabled) {
                     User user = threads.getUserByPID(sender);
                     if (user != null) {
-                        pubsubCheck = !user.getPublicKey().isEmpty();
+                        pubsubCheck = !user.getPublicKey().isEmpty(); // TODO not valid anymore
                     }
                 }
 
-                if (!ConnectService.connectUserTimeout(context, sender, pubsubCheck)) {
-                    Hashtable<String, String> params = new Hashtable<>();
+                if (!ConnectService.connectUser(context, sender, pubsubCheck)) {
+
                     CID cid = thread.getCid();
                     checkNotNull(cid);
-                    params.put(Content.CID, cid.getCid());
-                    params.put(Content.EST, Service.PROVIDE);
-                    ConnectService.notifyUser(context, thread.getSenderPid(), params, pubsubCheck);
+
+                    NotifyService.notify(context, thread.getSenderPid().getPid(), cid.getCid(),
+                            NotificationType.PROVIDE.getCode());
+
+                    PeerService.publishPeer(context);
                 }
 
             }
@@ -1412,13 +1433,14 @@ public class Service {
                 checkNotNull(cid);
 
 
-                if (ConnectService.connectUserTimeout(context, user.getPID(), pubsubCheck)) {
+                if (ConnectService.connectUser(context, user.getPID(), pubsubCheck)) {
                     ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
                 } else {
-                    Hashtable<String, String> params = new Hashtable<>();
-                    params.put(Content.CID, cid.getCid());
-                    params.put(Content.EST, Service.OFFER);
-                    ConnectService.notifyUser(context, user.getPID(), params, pubsubCheck);
+
+                    NotifyService.notify(context, user.getPID().getPid(), cid.getCid(),
+                            NotificationType.OFFER.getCode());
+
+                    PeerService.publishPeer(context);
                 }
             } catch (Throwable e) {
                 Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
@@ -1598,6 +1620,8 @@ public class Service {
                         }
 
                     }, Preferences.isPubsubEnabled(context), false);
+
+                    setPrivateKey(context, ipfs.getRawPrivateKey()); // TODO remove
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(threads, Preferences.IPFS_START_FAILURE, e);
