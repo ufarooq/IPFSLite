@@ -24,6 +24,8 @@ Possibility to customize the configuraton of the IPFS node.
 - Integration of WebRTC via the pubsub feature of IPFS to support telephony between two nodes
 - Integration of IOTA to support faster node detection and to support a kind of offline mode
 between nodes
+- A Inbox contains all Notifications from other nodes which send you data while your node
+was offline (Stored on the Tangle, Data is encrypted)
 
 
 ### Dependencies 
