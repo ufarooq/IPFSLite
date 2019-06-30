@@ -180,7 +180,8 @@ public class NotificationService extends JobService {
                                                                     pid, timestamp, false);
 
                                                     for (threads.server.Content entry : contents) {
-                                                        DownloadService.download(getApplicationContext(),
+                                                        Service.downloadMultihash(
+                                                                getApplicationContext(),
                                                                 entry.getPid(), entry.getCID());
                                                     }
                                                 }

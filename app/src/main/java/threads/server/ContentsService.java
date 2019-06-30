@@ -92,7 +92,7 @@ public class ContentsService extends JobService {
                                     user.getPID(), timestamp, false);
 
                             for (Content content : contents) {
-                                DownloadService.download(getApplicationContext(),
+                                Service.downloadMultihash(getApplicationContext(),
                                         content.getPid(), content.getCID());
                             }
                         }
