@@ -102,6 +102,9 @@ public class NotificationService extends JobService {
                     String address = AddressType.getAddress(host, AddressType.NOTIFICATION);
                     List<Entity> entities = entityService.loadEntities(address,
                             server.getProtocol(), server.getHost(), server.getPort(), timeout);
+
+                    Log.e(TAG, "Received " + entities.size() + " incoming messages");
+
                     for (Entity entity : entities) {
                         String notification = entity.getContent();
                         Content data;
