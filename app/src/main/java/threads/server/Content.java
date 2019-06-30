@@ -25,28 +25,29 @@ public class Content {
     private final PID pid;
     @ColumnInfo(name = "timestamp")
     private long timestamp;
-    @ColumnInfo(name = "finsihed")
-    private boolean finsihed;
 
-    Content(@NonNull PID pid, @NonNull String cid, long timestamp, boolean finsihed) {
+    @ColumnInfo(name = "finished")
+    private boolean finished;
+
+    Content(@NonNull PID pid, @NonNull String cid, long timestamp, boolean finished) {
         this.pid = pid;
         this.cid = cid;
         this.timestamp = timestamp;
-        this.finsihed = finsihed;
+        this.finished = finished;
+    }
+
+    public boolean isFinished() {
+        return finished;
+    }
+
+    public void setFinished(boolean finished) {
+        this.finished = finished;
     }
 
     public static Content create(@NonNull PID pid, @NonNull CID cid, boolean finished) {
         checkNotNull(pid);
         checkNotNull(cid);
         return new Content(pid, cid.getCid(), System.currentTimeMillis(), finished);
-    }
-
-    public boolean isFinsihed() {
-        return finsihed;
-    }
-
-    public void setFinsihed(boolean finsihed) {
-        this.finsihed = finsihed;
     }
 
     @NonNull

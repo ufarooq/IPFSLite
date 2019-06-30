@@ -31,6 +31,6 @@ public interface ContentDao {
     List<Content> getContentWithSmallerTimestamp(long timestamp);
 
 
-    @Query("UPDATE Content SET finsihed = :finished  WHERE cid = :cid")
+    @Query("UPDATE Content SET finished = :finished  WHERE cid = :cid")
     void setFinished(String cid, boolean finished);
 }
