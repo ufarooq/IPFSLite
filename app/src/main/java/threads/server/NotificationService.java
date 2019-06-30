@@ -104,9 +104,14 @@ public class NotificationService extends JobService {
                             server.getProtocol(), server.getHost(), server.getPort(), timeout);
                     for (Entity entity : entities) {
                         String notification = entity.getContent();
-                        Content data = gson.fromJson(notification, Content.class);
+                        Content data;
+                        try {
+                            data = gson.fromJson(notification, Content.class);
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                            continue;
+                        }
                         if (data != null) {
-
                             if (data.containsKey(Content.EST)) {
                                 if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
                                     try {
