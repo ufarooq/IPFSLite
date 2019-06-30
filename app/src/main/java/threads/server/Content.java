@@ -28,7 +28,7 @@ public class Content {
     @ColumnInfo(name = "finsihed")
     private boolean finsihed;
 
-    private Content(@NonNull PID pid, @NonNull String cid, long timestamp, boolean finsihed) {
+    Content(@NonNull PID pid, @NonNull String cid, long timestamp, boolean finsihed) {
         this.pid = pid;
         this.cid = cid;
         this.timestamp = timestamp;
