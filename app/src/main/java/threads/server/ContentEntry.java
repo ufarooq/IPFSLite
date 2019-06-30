@@ -6,14 +6,14 @@ import java.util.Objects;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class ContentFile {
+public class ContentEntry {
     private final String filename;
     private final String size;
     private final String cid;
 
-    public ContentFile(@NonNull String cid,
-                       @NonNull String filename,
-                       @NonNull String size) {
+    public ContentEntry(@NonNull String cid,
+                        @NonNull String filename,
+                        @NonNull String size) {
         checkNotNull(cid);
         checkNotNull(filename);
         checkNotNull(size);
@@ -34,7 +34,7 @@ public class ContentFile {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ContentFile file = (ContentFile) o;
+        ContentEntry file = (ContentEntry) o;
         return Objects.equals(filename, file.filename) &&
                 Objects.equals(size, file.size) &&
                 Objects.equals(cid, file.cid);
@@ -47,7 +47,7 @@ public class ContentFile {
 
     @Override
     public String toString() {
-        return "ContentFile{" +
+        return "ContentEntry{" +
                 "filename='" + filename + '\'' +
                 ", size='" + size + '\'' +
                 ", cid='" + cid + '\'' +

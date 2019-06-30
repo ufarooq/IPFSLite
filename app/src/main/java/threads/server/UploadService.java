@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.ipfs.IPFS;
+import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
 import threads.share.PeerService;
@@ -18,7 +19,7 @@ public class UploadService {
 
     private static final String TAG = UploadService.class.getSimpleName();
 
-    static void upload(@NonNull Context context, @NonNull String pid, @NonNull String cid) {
+    static void upload(@NonNull Context context, @NonNull PID pid, @NonNull CID cid) {
         checkNotNull(context);
         checkNotNull(pid);
         checkNotNull(cid);
@@ -31,16 +32,16 @@ public class UploadService {
 
             try {
 
-                if (threads.getUserByPID(PID.create(pid)) != null) {
+                if (threads.getUserByPID(pid) != null) {
 
-                    if (!threads.isAccountBlocked(PID.create(pid))) {
+                    if (!threads.isAccountBlocked(pid)) {
 
                         PeerService.publishPeer(context);
 
-                        boolean success = ConnectService.connectUser(context, PID.create(pid));
+                        boolean success = ConnectService.connectUser(context, pid);
 
                         if (success) {
-                            ipfs.pubsubPub(pid, cid, 50);
+                            ipfs.pubsubPub(pid.getPid(), cid.getCid(), 50);
                         }
                     }
                 }

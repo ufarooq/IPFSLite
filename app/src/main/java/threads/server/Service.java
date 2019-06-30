@@ -352,36 +352,36 @@ public class Service {
         checkNotNull(context);
         checkNotNull(sender);
         checkNotNull(multihash);
+        final THREADS threads = Singleton.getInstance(context).getThreads();
+        // check if multihash is valid
+        try {
+            Multihash.fromBase58(multihash);
+        } catch (Throwable e) {
+            Preferences.error(threads, context.getString(R.string.multihash_not_valid));
+            return;
+        }
 
         DOWNLOAD_SERVICE.submit(() -> {
-            downloadMultihash(context, sender, multihash);
+            downloadMultihash(context, sender, CID.create(multihash));
         });
     }
 
     static void downloadMultihash(@NonNull Context context,
                                   @NonNull PID sender,
-                                  @NonNull String multihash) {
+                                  @NonNull CID cid) {
 
         checkNotNull(context);
         checkNotNull(sender);
-        checkNotNull(multihash);
+        checkNotNull(cid);
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
-
-        final PID pid = Preferences.getPID(context);
-        checkNotNull(pid);
         final int timeout = Preferences.getConnectionTimeout(context);
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final ContentService contentService = ContentService.getInstance(context);
         if (ipfs != null) {
 
             try {
-                // check if multihash is valid
-                try {
-                    Multihash.fromBase58(multihash);
-                } catch (Throwable e) {
-                    Preferences.error(threads, context.getString(R.string.multihash_not_valid));
-                    return;
-                }
+
 
                 User user = threads.getUserByPID(sender);
                 if (user == null) {
@@ -390,15 +390,19 @@ public class Service {
                 }
 
 
-                CID cid = CID.create(multihash);
-
                 byte[] content = ipfs.get(cid, "", timeout, false);
+
                 try {
-                    ContentFiles files = gson.fromJson(new String(content), ContentFiles.class);
-                    checkNotNull(files);
-                    downloadFiles(context, sender, files);
+                    if (content.length > 0) {
+                        Contents files = gson.fromJson(new String(content), Contents.class);
+                        checkNotNull(files);
+
+                        contentService.finishContent(cid);
+
+                        downloadContents(context, sender, files);
+                    }
                 } catch (JsonSyntaxException jse) {
-                    downloadMultihash(context, sender, multihash, null, null);
+                    downloadMultihash(context, sender, cid, null, null);
                 }
 
 
@@ -409,11 +413,21 @@ public class Service {
 
     }
 
-    private static void downloadFiles(@NonNull Context context,
-                                      @NonNull PID sender,
-                                      @NonNull ContentFiles files) {
-        for (ContentFile file : files) {
-            downloadMultihash(context, sender, file.getCid(), file.getFilename(), file.getSize());
+    private static void downloadContents(@NonNull Context context,
+                                         @NonNull PID sender,
+                                         @NonNull Contents files) {
+        for (ContentEntry file : files) {
+
+            String cidStr = file.getCid();
+            try {
+                Multihash.fromBase58(cidStr);
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                continue;
+            }
+
+            downloadMultihash(context, sender,
+                    CID.create(cidStr), file.getFilename(), file.getSize());
         }
 
     }
@@ -527,14 +541,14 @@ public class Service {
 
     static void deleteThread(@NonNull Context context, @NonNull IPFS ipfs, long idx) {
         checkNotNull(ipfs);
-        final THREADS threadsAPI = Singleton.getInstance(context).getThreads();
+        final THREADS threads = Singleton.getInstance(context).getThreads();
         try {
-            Thread thread = threadsAPI.getThreadByIdx(idx);
+            Thread thread = threads.getThreadByIdx(idx);
             if (thread != null) {
-                threadsAPI.removeThread(ipfs, thread);
+                threads.removeThread(ipfs, thread);
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
+            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
         }
     }
 
@@ -547,22 +561,30 @@ public class Service {
         checkNotNull(context);
         checkNotNull(sender);
         checkNotNull(multihash);
+        final THREADS threads = Singleton.getInstance(context).getThreads();
+        // check if multihash is valid
+        try {
+            Multihash.fromBase58(multihash);
+        } catch (Throwable e) {
+            Preferences.error(threads, context.getString(R.string.multihash_not_valid));
+            return;
+        }
 
         DOWNLOAD_SERVICE.submit(() -> {
-            downloadMultihash(context, sender, multihash, filename, filesize);
+            downloadMultihash(context, sender, CID.create(multihash), filename, filesize);
         });
 
     }
 
     private static void downloadMultihash(@NonNull Context context,
                                           @NonNull PID sender,
-                                          @NonNull String multihash,
+                                          @NonNull CID cid,
                                           @Nullable String filename,
                                           @Nullable String filesize) {
 
         checkNotNull(context);
         checkNotNull(sender);
-        checkNotNull(multihash);
+        checkNotNull(cid);
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
 
@@ -572,15 +594,8 @@ public class Service {
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         if (ipfs != null) {
 
-
             try {
-                // check if multihash is valid
-                try {
-                    Multihash.fromBase58(multihash);
-                } catch (Throwable e) {
-                    Preferences.error(threads, context.getString(R.string.multihash_not_valid));
-                    return;
-                }
+
 
                 User user = threads.getUserByPID(sender);
                 if (user == null) {
@@ -588,8 +603,6 @@ public class Service {
                     return;
                 }
 
-
-                CID cid = CID.create(multihash);
                 List<Thread> entries = threads.getThreadsByCID(cid);
 
                 if (!entries.isEmpty()) {
@@ -1392,10 +1405,11 @@ public class Service {
         checkNotNull(idxs);
         final THREADS threads = Singleton.getInstance(context).getThreads();
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-
+        final ContentService contentService = ContentService.getInstance(context);
+        final PID host = Preferences.getPID(context);
         if (ipfs != null) {
             try {
-                ContentFiles files = new ContentFiles();
+                Contents files = new Contents();
                 for (long idx : idxs) {
                     Thread threadObject = threads.getThreadByIdx(idx);
                     checkNotNull(threadObject);
@@ -1404,6 +1418,9 @@ public class Service {
 
                 CID cid = ipfs.add(gson.toJson(files), "", true);
                 checkNotNull(cid);
+
+                checkNotNull(host);
+                contentService.insertContent(host, cid, true);
 
 
                 if (ConnectService.connectUser(context, user.getPID())) {

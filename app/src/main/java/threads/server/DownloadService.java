@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 
 import threads.core.Singleton;
 import threads.core.THREADS;
+import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
 import threads.share.PeerService;
@@ -18,8 +19,8 @@ public class DownloadService {
     private static final String TAG = DownloadService.class.getSimpleName();
 
     static void download(@NonNull Context context,
-                         @NonNull String pid,
-                         @NonNull String cid) {
+                         @NonNull PID pid,
+                         @NonNull CID cid) {
         checkNotNull(context);
         checkNotNull(pid);
         checkNotNull(cid);
@@ -33,16 +34,15 @@ public class DownloadService {
 
         try {
 
-            if (threads.getUserByPID(PID.create(pid)) != null) {
+            if (threads.getUserByPID(pid) != null) {
 
-                if (!threads.isAccountBlocked(PID.create(pid))) {
-
+                if (!threads.isAccountBlocked(pid)) {
 
                     PeerService.publishPeer(context);
 
-                    ConnectService.connectUser(context, PID.create(pid));
+                    ConnectService.connectUser(context, pid);
 
-                    Service.downloadMultihash(context, PID.create(pid), cid);
+                    Service.downloadMultihash(context, pid, cid);
 
                 }
             }

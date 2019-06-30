@@ -23,7 +23,9 @@ import threads.core.api.Content;
 import threads.core.api.Server;
 import threads.iota.Entity;
 import threads.iota.EntityService;
+import threads.ipfs.api.CID;
 import threads.ipfs.api.Encryption;
+import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -86,6 +88,7 @@ public class NotificationService extends JobService {
         Log.e(TAG, "onStartJob!");
         final PID host = Preferences.getPID(getApplicationContext());
         final String privateKey = Preferences.getPrivateKey(getApplicationContext());
+        final ContentService contentService = ContentService.getInstance(getApplicationContext());
         if (host != null && !privateKey.isEmpty()) {
 
             final int timeout = Preferences.getTangleTimeout(getApplicationContext());
@@ -107,13 +110,35 @@ public class NotificationService extends JobService {
                             if (data.containsKey(Content.EST)) {
                                 if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
                                     try {
-                                        final String pid = Encryption.decryptRSA(
+                                        final String pidStr = Encryption.decryptRSA(
                                                 data.get(Content.PID), privateKey);
-                                        checkNotNull(pid);
+                                        checkNotNull(pidStr);
 
-                                        final String cid = Encryption.decryptRSA(
+                                        final String cidStr = Encryption.decryptRSA(
                                                 data.get(Content.CID), privateKey);
-                                        checkNotNull(cid);
+                                        checkNotNull(cidStr);
+
+                                        // check if cid is valid
+                                        try {
+                                            Multihash.fromBase58(cidStr);
+                                        } catch (Throwable e) {
+                                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                                            continue;
+                                        }
+
+                                        // check if pid is valid
+                                        try {
+                                            Multihash.fromBase58(pidStr);
+                                        } catch (Throwable e) {
+                                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                                            continue;
+                                        }
+
+                                        PID pid = PID.create(pidStr);
+                                        CID cid = CID.create(cidStr);
+
+                                        contentService.insertContent(pid, cid, false);
+
 
                                         final Integer est = Integer.valueOf(data.get(Content.EST));
                                         checkNotNull(est);
