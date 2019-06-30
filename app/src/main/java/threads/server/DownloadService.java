@@ -17,9 +17,9 @@ public class DownloadService {
 
     private static final String TAG = DownloadService.class.getSimpleName();
 
-    static void download(@NonNull Context context,
-                         @NonNull PID pid,
-                         @NonNull CID cid) {
+    static boolean download(@NonNull Context context,
+                            @NonNull PID pid,
+                            @NonNull CID cid) {
         checkNotNull(context);
         checkNotNull(pid);
         checkNotNull(cid);
@@ -30,14 +30,14 @@ public class DownloadService {
         final THREADS threads = Singleton.getInstance(
                 context).getThreads();
 
-
+        boolean success = false;
         try {
 
             if (threads.getUserByPID(pid) != null) {
 
                 if (!threads.isAccountBlocked(pid)) {
 
-                    boolean success = ConnectService.connectUser(context, pid);
+                    success = ConnectService.connectUser(context, pid);
 
                     if (success) {
                         Service.downloadMultihash(context, pid, cid);
@@ -52,7 +52,7 @@ public class DownloadService {
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-
+        return success;
 
     }
 }

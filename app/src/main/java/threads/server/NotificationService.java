@@ -15,6 +15,7 @@ import com.google.gson.Gson;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
@@ -73,6 +74,10 @@ public class NotificationService extends JobService {
                 Log.e(TAG, "Job not scheduled");
             }
         }
+    }
+
+    public static long getMinutesAgo(int minutes) {
+        return System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(minutes);
     }
 
 
@@ -162,8 +167,23 @@ public class NotificationService extends JobService {
 
                                         switch (NotificationType.toNotificationType(est)) {
                                             case OFFER:
-                                                DownloadService.download(
+                                                boolean connected = DownloadService.download(
                                                         getApplicationContext(), pid, cid);
+
+                                                if (connected) {
+                                                    // load old entries when connected
+                                                    long timestamp = getMinutesAgo(30);
+
+                                                    List<threads.server.Content> contents =
+                                                            contentService.getContentDatabase().
+                                                                    contentDao().getContents(
+                                                                    pid, timestamp, false);
+
+                                                    for (threads.server.Content entry : contents) {
+                                                        DownloadService.download(getApplicationContext(),
+                                                                entry.getPid(), entry.getCID());
+                                                    }
+                                                }
                                                 break;
                                             case PROVIDE:
                                                 UploadService.upload(
