@@ -49,10 +49,13 @@ public class LoginActivity extends AppCompatActivity {
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
+
+
             Service.getInstance(getApplicationContext());
             NotificationService.notifications(getApplicationContext());
             NotificationService.periodic(getApplicationContext());
             CleanupService.cleanup(getApplicationContext());
+            ContentsService.downloadContents(getApplicationContext());
 
             if (Intent.ACTION_SEND.equals(action) && type != null) {
                 if ("text/plain".equals(type)) {

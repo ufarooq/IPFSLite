@@ -36,18 +36,18 @@ public class Content {
         this.finished = finished;
     }
 
+    public static Content create(@NonNull PID pid, @NonNull CID cid, boolean finished) {
+        checkNotNull(pid);
+        checkNotNull(cid);
+        return new Content(pid, cid.getCid(), System.currentTimeMillis(), finished);
+    }
+
     public boolean isFinished() {
         return finished;
     }
 
     public void setFinished(boolean finished) {
         this.finished = finished;
-    }
-
-    public static Content create(@NonNull PID pid, @NonNull CID cid, boolean finished) {
-        checkNotNull(pid);
-        checkNotNull(cid);
-        return new Content(pid, cid.getCid(), System.currentTimeMillis(), finished);
     }
 
     @NonNull

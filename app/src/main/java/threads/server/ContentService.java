@@ -3,6 +3,7 @@ package threads.server;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.Room;
 
 import threads.ipfs.api.CID;
@@ -39,6 +40,11 @@ public class ContentService {
     }
 
 
+    @Nullable
+    public Content getContent(@NonNull CID cid) {
+        checkNotNull(cid);
+        return getContentDatabase().contentDao().getContent(cid.getCid());
+    }
     @NonNull
     public Content insertContent(@NonNull PID pid, @NonNull CID cid, boolean finished) {
         checkNotNull(pid);

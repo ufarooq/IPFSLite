@@ -111,6 +111,12 @@
             tools:replace="screenOrientation" />
 
         <service
+            android:name=".ContentsService"
+            android:enabled="true"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <service
             android:name=".NotificationService"
             android:enabled="true"
             android:exported="false"

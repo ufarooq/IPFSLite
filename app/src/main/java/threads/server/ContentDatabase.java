@@ -8,7 +8,4 @@ public abstract class ContentDatabase extends RoomDatabase {
 
     public abstract ContentDao contentDao();
 
-    public void clear() {
-        contentDao().clear();
-    }
 }

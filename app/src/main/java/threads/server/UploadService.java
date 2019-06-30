@@ -11,7 +11,6 @@ import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
-import threads.share.PeerService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -36,12 +35,15 @@ public class UploadService {
 
                     if (!threads.isAccountBlocked(pid)) {
 
-                        PeerService.publishPeer(context);
-
                         boolean success = ConnectService.connectUser(context, pid);
 
                         if (success) {
+                            Thread.sleep(1000);
                             ipfs.pubsubPub(pid.getPid(), cid.getCid(), 50);
+                            Thread.sleep(120000); // wait for 120 sec
+                        } else {
+                            Singleton.getInstance(context).getConsoleListener().info(
+                                    "Can't connect to PID :" + pid);
                         }
                     }
                 }

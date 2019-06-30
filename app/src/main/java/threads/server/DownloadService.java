@@ -10,7 +10,6 @@ import threads.core.THREADS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
-import threads.share.PeerService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -38,11 +37,14 @@ public class DownloadService {
 
                 if (!threads.isAccountBlocked(pid)) {
 
-                    PeerService.publishPeer(context);
+                    boolean success = ConnectService.connectUser(context, pid);
 
-                    ConnectService.connectUser(context, pid);
-
-                    Service.downloadMultihash(context, pid, cid);
+                    if (success) {
+                        Service.downloadMultihash(context, pid, cid);
+                    } else {
+                        Singleton.getInstance(context).getConsoleListener().info(
+                                "Can't connect to PID :" + pid);
+                    }
 
                 }
             }

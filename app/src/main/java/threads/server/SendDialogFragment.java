@@ -16,6 +16,8 @@ import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.common.collect.Iterables;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -24,7 +26,6 @@ import java.util.concurrent.Executors;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.User;
-import threads.ipfs.api.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -62,6 +63,7 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
         checkNotNull(args);
         final long[] idxs = args.getLongArray(IDXS);
         final ArrayList<String> pids = args.getStringArrayList(PIDS);
+        checkNotNull(pids);
 
         @SuppressWarnings("all")
         View view = inflater.inflate(R.layout.send_view, null);
@@ -77,13 +79,7 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                List<User> users = new ArrayList<>();
-                for (String pid : pids) {
-                    User user = threads.getUserByPID(PID.create(pid));
-                    if (user != null) {
-                        users.add(user);
-                    }
-                }
+                List<User> users = threads.getUsersByPID(Iterables.toArray(pids, String.class));
                 contactsViewAdapter.setAccounts(users);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

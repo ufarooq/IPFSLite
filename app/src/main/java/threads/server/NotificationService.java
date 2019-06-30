@@ -145,7 +145,12 @@ public class NotificationService extends JobService {
                                         PID pid = PID.create(pidStr);
                                         CID cid = CID.create(cidStr);
 
-                                        contentService.insertContent(pid, cid, false);
+
+                                        threads.server.Content content =
+                                                contentService.getContent(cid);
+                                        if (content == null) {
+                                            contentService.insertContent(pid, cid, false);
+                                        }
 
 
                                         final Integer est = Integer.valueOf(data.get(Content.EST));
