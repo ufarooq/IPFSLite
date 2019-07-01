@@ -8,8 +8,6 @@ The InterPlanetary File System "is a peer-to-peer (p2p) filesharing system that 
 <br>
 "It attempts to address the deficiencies of the client-server model and HTTP web through a novel p2p file sharing system."
 <br>
-Source: https://hackernoon.com/a-beginners-guide-to-ipfs-20673fedd3f
-<br>
 Official website of IPFS: https://ipfs.io/
 
 
