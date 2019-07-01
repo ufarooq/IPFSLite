@@ -95,6 +95,7 @@ public class NotifyService extends JobService {
                     if (info != null) {
                         String key = info.getPublicKey();
                         if (key != null) {
+                            key = ipfs.getRawPublicKey(info);
                             threads.setUserPublicKey(pid, key);
                             publicKey = key;
                         }
