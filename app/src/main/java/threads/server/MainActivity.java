@@ -54,12 +54,14 @@ import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.AddressType;
 import threads.core.api.Content;
+import threads.core.api.Peer;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.api.User;
 import threads.core.api.UserStatus;
 import threads.core.api.UserType;
 import threads.core.mdl.EventViewModel;
+import threads.iota.IOTA;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.IpnsInfo;
@@ -879,6 +881,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(multihash);
         try {
             final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+            final IOTA iota = Singleton.getInstance(getApplicationContext()).getIota();
             final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
             if (ipfs != null) {
                 ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -887,11 +890,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         User user = threads.getUserByPID(pid);
                         if (user == null) {
+
+                            String alias = pid.getPid();
+
+                            Peer peer = threads.getPeer(iota, pid);
+                            if (peer != null) {
+                                String name = peer.getAdditional(Content.ALIAS);
+                                if (!name.isEmpty()) {
+                                    alias = name;
+                                }
+                            }
+
                             byte[] data = THREADS.getImage(getApplicationContext(),
-                                    pid.getPid(), R.drawable.server_network);
+                                    alias, R.drawable.server_network);
                             CID image = ipfs.add(data, "", true);
                             user = threads.createUser(pid, "", // not yet known TODO
-                                    pid.getPid(), UserType.VERIFIED, image);
+                                    alias, UserType.VERIFIED, image);
                             user.setStatus(UserStatus.OFFLINE);
                             threads.storeUser(user);
 
@@ -906,8 +920,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             PeerService.publishPeer(getApplicationContext());
 
-                            boolean value = ConnectService.connectUser(getApplicationContext(),
-                                    user.getPID()); // no pubsub check
+                            boolean value = ConnectService.connectUser(
+                                    getApplicationContext(), user.getPID());
                             if (value) {
                                 threads.setStatus(user, UserStatus.ONLINE);
 
@@ -925,12 +939,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                                 ipfs.pubsubPub(user.getPID().getPid(), gson.toJson(map), 50);
 
-
-                                // TODO set alias for user
-                                /*Peer peer = threads.getPeerByPID(user.getPID());
-                                if (peer != null) {
-
-                                }*/
 
 
                                 if (threads.getUserPublicKey(pid).isEmpty()) {

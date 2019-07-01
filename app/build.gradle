@@ -8,10 +8,10 @@ ext {
     bintrayName = 'threads-server'
 
     publishedGroupId = 'threads.server'
-    libraryName = 'IPFS'
+    libraryName = 'IPFS Lite'
     artifact = 'app'
 
-    libraryDescription = 'Android IPFS Node.'
+    libraryDescription = 'Android IPFS Lite Node'
 
     siteUrl = 'https://gitlab.com/remmer.wilts/threads-server'
     gitUrl = 'git@gitlab.com:remmer.wilts/threads-server.git'
@@ -42,13 +42,13 @@ android {
     }
     buildTypes {
         debug {
-            buildConfigField "boolean", "FDroid", "true"
+            buildConfigField "boolean", "FDroid", "false"
         }
 
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            buildConfigField "boolean", "FDroid", "true"
+            buildConfigField "boolean", "FDroid", "false"
         }
     }
     configurations.all {
@@ -86,7 +86,7 @@ dependencies {
     // UI (for showing a letter as icon) (LICENSE done)
     implementation 'com.amulyakhare:com.amulyakhare.textdrawable:1.0.1'
 
-    // ANDROID Architecture (LICENSE done)
+    // API (LICENSE done)
     implementation 'androidx.room:room-runtime:2.1.0'
 
     // API (LICENSE done)
@@ -96,10 +96,10 @@ dependencies {
     //implementation 'threads.pow:pow:1.0.9'
 
     // UI+API (LICENSE done)
-    implementation 'threads.core:share:0.0.7'
+    implementation 'threads.core:share:0.0.8'
 
     // API (LICENSE done)
-    implementation 'threads.core:api:0.0.9'
+    implementation 'threads.core:api:0.1.0'
 
     // API (LICENSE done)
     implementation 'threads.core:iota:0.0.4'
