@@ -674,7 +674,7 @@ public class Service {
         checkNotNull(user);
 
         Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
-                "", cid, parent, false);
+                "", cid, parent);
 
         if (link.isDirectory()) {
             thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.NODE.name(), false);
@@ -736,7 +736,7 @@ public class Service {
         checkNotNull(user);
 
         Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
-                "", cid, 0L, false);
+                "", cid, 0L);
         thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false); // not known yet
         if (filename != null) {
             thread.addAdditional(Content.FILENAME, filename, false);
@@ -1151,7 +1151,7 @@ public class Service {
                     long size = text.length();
 
                     Thread thread = threads.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
-                            "", null, 0L, false);
+                            "", null, 0L);
                     thread.addAdditional(Content.FILENAME, name, false);
                     thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
                     thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
@@ -1237,7 +1237,7 @@ public class Service {
                     long size = fileDetails.getFileSize();
 
                     Thread thread = threads.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
-                            "", null, 0L, false);
+                            "", null, 0L);
                     thread.addAdditional(Content.FILENAME, name, false);
                     thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
                     thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);

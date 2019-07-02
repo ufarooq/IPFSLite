@@ -52,6 +52,8 @@ public class LoginActivity extends AppCompatActivity {
 
 
             Service.getInstance(getApplicationContext());
+
+
             NotificationService.notifications(getApplicationContext());
             NotificationService.periodic(getApplicationContext());
             CleanupService.cleanup(getApplicationContext());
