@@ -233,6 +233,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
+        final Singleton singleton = Singleton.getInstance(this);
         try {
             CodecDecider codecDecider = CodecDecider.evaluate(codec);
             if (codecDecider.getCodex() == CodecDecider.Codec.MULTIHASH ||
@@ -241,10 +242,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 PID host = Preferences.getPID(getApplicationContext());
                 checkNotNull(host);
                 String multihash = codecDecider.getMultihash();
+
+                // check if multihash is valid
+                try {
+                    Multihash.fromBase58(codec);
+                } catch (Throwable e) {
+                    Preferences.error(singleton.getThreads(),
+                            this.getString(R.string.multihash_not_valid));
+                    return;
+                }
+
                 Service.downloadMultihashService(
                         getApplicationContext(), host, multihash, null, null);
             } else {
-                Singleton singleton = Singleton.getInstance(getApplicationContext());
+
                 Preferences.error(singleton.getThreads(),
                         getString(R.string.codec_not_supported));
             }
@@ -259,7 +270,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-    private void serverStatus() {
+    private void daemonStatus() {
 
         try {
             if (!DaemonService.DAEMON_RUNNING.get()) {
@@ -685,10 +696,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 DaemonService.DAEMON_RUNNING.set(true);
             }
             DaemonService.invoke(getApplicationContext());
-            serverStatus();
+            daemonStatus();
 
         });
-        serverStatus();
+        daemonStatus();
 
 
         EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
@@ -876,7 +887,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-
+        // TODO add logic in Service
         checkNotNull(multihash);
         try {
             final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
@@ -892,6 +903,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             String alias = pid.getPid();
 
+                            // TODO rethink maybe do it afterwards
                             Peer peer = threads.getPeer(iota, pid);
                             if (peer != null) {
                                 String name = peer.getAdditional(Content.ALIAS);
@@ -937,7 +949,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                                 ipfs.pubsubPub(user.getPID().getPid(), gson.toJson(map), 50);
-
 
 
                                 if (threads.getUserPublicKey(pid).isEmpty()) {
@@ -991,6 +1002,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     threads.setThreadStatus(idx, ThreadStatus.PUBLISHING);
 
                     try {
+                        // TODO add new function threads.getThreadCid(idx)
                         Thread thread = threads.getThreadByIdx(idx);
                         checkNotNull(thread);
                         CID cid = thread.getCid();
@@ -1027,6 +1039,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() -> {
                     try {
+                        // TODO use function threads.getThreadCid(idx)
                         Thread threadObject = threads.getThreadByIdx(idx);
                         checkNotNull(threadObject);
 
@@ -1194,9 +1207,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    Service.deleteThread(getApplicationContext(), ipfs, idx);
+                    Service.deleteThreads(getApplicationContext(), ipfs, idx);
                 } catch (Throwable e) {
-                    // ignore exception for now
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
             });
         }
@@ -1211,6 +1224,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
+
+                    // TODO use threads.getThreadCID
                     Thread threadObject = threadsAPI.getThreadByIdx(idx);
                     checkNotNull(threadObject);
 
@@ -1241,6 +1256,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
+
+                    // TODO use threads.getThreadCID
                     Thread thread = threads.getThreadByIdx(idx);
                     checkNotNull(thread);
 
@@ -1326,12 +1343,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     User user = threads.getUserByPID(userPID);
                     checkNotNull(user);
 
+                    // TODO activate threads.setUserAlias(pid, name);
                     user.setAlias(name);
                     byte[] data = THREADS.getImage(getApplicationContext(),
                             name, R.drawable.server_network);
                     CID image = ipfs.add(data, "", true);
                     user.setImage(image);
 
+                    // TODO create function threads.setUserImage(pid, image);
                     threads.storeUser(user);
 
                     threads.setThreadSenderAlias(userPID, name);

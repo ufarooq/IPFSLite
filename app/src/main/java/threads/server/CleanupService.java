@@ -10,16 +10,9 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import threads.core.Singleton;
-import threads.iota.EntityService;
-import threads.iota.HashDatabase;
-import threads.ipfs.IPFS;
-import threads.ipfs.api.CID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -48,9 +41,6 @@ public class CleanupService extends JobService {
         }
     }
 
-    public static long getDaysAgo(int days) {
-        return System.currentTimeMillis() - TimeUnit.DAYS.toMillis(days);
-    }
 
     @Override
     public boolean onStopJob(JobParameters jobParameters) {
@@ -60,43 +50,21 @@ public class CleanupService extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
-        Service.getInstance(getApplicationContext());
-        final ContentService contentService = ContentService.getInstance(getApplicationContext());
-        final EntityService entityService = EntityService.getInstance(getApplicationContext());
-        final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-        if (ipfs != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
 
-                    // remove all old hashes from hash database
-                    HashDatabase hashDatabase = entityService.getHashDatabase();
-                    long timestamp = getDaysAgo(28);
-                    hashDatabase.hashDao().removeAllHashesWithSmallerTimestamp(timestamp);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                Service.getInstance(getApplicationContext());
 
+                Service.cleanup(getApplicationContext());
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            } finally {
+                jobFinished(jobParameters, false);
+            }
+        });
+        return true;
 
-                    // remove all content
-                    timestamp = getDaysAgo(14);
-                    ContentDatabase contentDatabase = contentService.getContentDatabase();
-                    List<Content> entries = contentDatabase.contentDao().
-                            getContentWithSmallerTimestamp(timestamp);
-                    for (Content content : entries) {
-
-                        contentDatabase.contentDao().removeContent(content);
-
-                        CID cid = content.getCID();
-                        ipfs.rm(cid);
-                    }
-
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                } finally {
-                    jobFinished(jobParameters, false);
-                }
-            });
-            return true;
-        }
-        return false;
 
     }
 }

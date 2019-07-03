@@ -433,8 +433,12 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     }
 
     private void deleteAction() {
-
-        Service.deleteThreads(mContext, new ArrayList<>(threads));
+        // TODO rething type of threads
+        long[] deleteEntries = new long[threads.size()];
+        for (int i = 0; i < threads.size(); i++) {
+            deleteEntries[i] = threads.get(i);
+        }
+        Service.deleteThreads(mContext, deleteEntries);
         try {
             if (threads.contains(threadIdx)) {
                 threadIdx = -1;
@@ -484,7 +488,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void invokeGeneralAction(@NonNull Thread thread) {
         try {
             if (getActivity() != null) {
-                boolean sendActive = true;
+                boolean sendActive = true; // TODO should be rethought
                 boolean online = thread.getStatus() == ThreadStatus.ONLINE;
 
                 FragmentManager fm = getActivity().getSupportFragmentManager();
@@ -520,7 +524,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void onClick(@NonNull Thread thread) {
         checkNotNull(thread);
         try {
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) { // TODO rethink time here
                 return;
             }
             mLastClickTime = SystemClock.elapsedRealtime();

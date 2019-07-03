@@ -135,7 +135,7 @@
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name="threads.server.DaemonService"
+            android:name=".DaemonService"
             android:enabled="true"
             android:exported="false" />
 

@@ -16,16 +16,7 @@ import com.google.gson.Gson;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.Preferences;
-import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.AddressType;
 import threads.core.api.Content;
-import threads.iota.IOTA;
-import threads.ipfs.IPFS;
-import threads.ipfs.api.Encryption;
-import threads.ipfs.api.PID;
-import threads.ipfs.api.PeerInfo;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -74,48 +65,11 @@ public class NotifyService extends JobService {
         checkNotNull(cid);
         final Integer est = bundle.getInt(Content.EST);
         checkNotNull(est);
-        final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-        final PID host = Preferences.getPID(getApplicationContext());
-        checkNotNull(host);
-        final IOTA iota = Singleton.getInstance(getApplicationContext()).getIota();
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                String address = AddressType.getAddress(
-                        PID.create(pid), AddressType.NOTIFICATION);
-
-                String publicKey = threads.getUserPublicKey(pid);
-                if (publicKey.isEmpty()) {
-                    IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-                    checkNotNull(ipfs);
-                    int timeout = Preferences.getConnectionTimeout(
-                            getApplicationContext());
-                    PeerInfo info = ipfs.id(PID.create(pid), timeout);
-                    if (info != null) {
-                        String key = info.getPublicKey();
-                        if (key != null) {
-                            key = ipfs.getRawPublicKey(info);
-                            threads.setUserPublicKey(pid, key);
-                            publicKey = key;
-                        }
-                    }
-                }
-                if (!publicKey.isEmpty()) {
-
-                    Content content = new Content();
-
-                    content.put(Content.PID, Encryption.encryptRSA(host.getPid(), publicKey));
-                    content.put(Content.CID, Encryption.encryptRSA(cid, publicKey));
-                    content.put(Content.EST, NotificationType.toNotificationType(est).toString());
-
-                    String json = gson.toJson(content);
-                    iota.insertTransaction(address, json);
-
-                    Singleton.getInstance(getApplicationContext()).getConsoleListener().info(
-                            "Send Notification to PID Inbox :" + pid);
-
-                }
+                Service.notitfy(getApplicationContext(), pid, cid, est);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {

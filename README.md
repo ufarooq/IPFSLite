@@ -27,9 +27,9 @@ was offline (Stored on the Tangle, Data is encrypted)
 
 
 ### Dependencies 
-- go-ipfs (IPFS node implementation)
-<br>Source : https://github.com/ipfs/go-ipfs
-- threads-ipfs (CLI interface)
+- threads-iota (Wrapper implementation around a IOTA light node)
+<br>Source : https://gitlab.com/remmer.wilts/threads-iri
+- threads-ipfs (Wrapper implementation around a IPFS node)
 <br>Source : https://gitlab.com/remmer.wilts/threads-ipfs
 - MinSdkVersion 24 (Android 7.0)
 

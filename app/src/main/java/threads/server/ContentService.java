@@ -45,6 +45,7 @@ public class ContentService {
         checkNotNull(cid);
         return getContentDatabase().contentDao().getContent(cid.getCid());
     }
+
     @NonNull
     public Content insertContent(@NonNull PID pid, @NonNull CID cid, boolean finished) {
         checkNotNull(pid);

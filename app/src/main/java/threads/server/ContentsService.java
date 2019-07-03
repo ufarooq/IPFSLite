@@ -10,18 +10,9 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import threads.core.Preferences;
-import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.User;
-import threads.ipfs.api.PID;
-import threads.share.ConnectService;
-import threads.share.PeerService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -52,52 +43,16 @@ public class ContentsService extends JobService {
         }
     }
 
-    public static long getMinutesAgo(int minutes) {
-        return System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(minutes);
-    }
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
-        Log.e(TAG, "onStartJob!");
-
-        Service.getInstance(getApplicationContext());
-        final ContentService contentService = ContentService.getInstance(getApplicationContext());
-        final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-        final PID pid = Preferences.getPID(getApplicationContext());
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
+                Service.getInstance(getApplicationContext());
 
-                PeerService.publishPeer(getApplicationContext());
-
-                for (User user : threads.getUsers()) {
-
-                    if (pid != null) {
-                        if (user.getPID().equals(pid)) {
-                            continue;
-                        }
-                    }
-
-                    if (!threads.isAccountBlocked(user.getPID())) {
-
-                        boolean success = ConnectService.connectUser(
-                                getApplicationContext(), user.getPID());
-
-                        if (success) {
-                            long timestamp = getMinutesAgo(30);
-
-                            List<Content> contents = contentService.getContentDatabase().
-                                    contentDao().getContents(
-                                    user.getPID(), timestamp, false);
-
-                            for (Content content : contents) {
-                                Service.downloadMultihash(getApplicationContext(),
-                                        content.getPid(), content.getCID());
-                            }
-                        }
-                    }
-                }
+                Service.downloadContents(getApplicationContext());
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

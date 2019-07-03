@@ -123,6 +123,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                 mLastClickTime = SystemClock.elapsedRealtime();
 
 
+                // TODO make as Service function (or remove not necessary)
                 final THREADS threads = Singleton.getInstance(mContext).getThreads();
                 final IPFS ipfs = Singleton.getInstance(mContext).getIpfs();
                 if (ipfs != null) {
@@ -192,11 +193,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         usersViewAdapter = new UsersViewAdapter(mContext, this);
         mRecyclerView.setAdapter(usersViewAdapter);
 
-        PID host = null;
-        if (getActivity() != null) {
-            host = Preferences.getPID(getActivity());
-        }
-        PID hostPid = host;
+        final PID host = Preferences.getPID(mContext);
         UsersViewModel messagesViewModel = ViewModelProviders.of(this).get(UsersViewModel.class);
         messagesViewModel.getUsers().observe(this, (users) -> {
 
@@ -204,7 +201,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                 if (users != null) {
                     List<User> peers = new ArrayList<>();
                     for (User user : users) {
-                        if (!user.getPID().equals(hostPid)) {
+                        if (!user.getPID().equals(host)) {
                             peers.add(user);
                         }
 
