@@ -401,16 +401,6 @@ public class Service {
         if (!threads.existsUser(user)) {
 
             String alias = user.getPid();
-
-            // TODO rethink maybe do it afterwards
-            Peer peer = threads.getPeer(iota, user);
-            if (peer != null) {
-                String name = peer.getAdditional(Content.ALIAS);
-                if (!name.isEmpty()) {
-                    alias = name;
-                }
-            }
-
             byte[] data = THREADS.getImage(context, alias, R.drawable.server_network);
             checkNotNull(ipfs, "IPFS is not valid");
             CID image = ipfs.add(data, "", true);
@@ -458,6 +448,15 @@ public class Service {
                             key = ipfs.getRawPublicKey(info);
                             threads.setUserPublicKey(user, key);
                         }
+                    }
+                }
+
+                // TODO make it dependent of a a preference
+                Peer peer = threads.getPeer(iota, user);
+                if (peer != null) {
+                    String name = peer.getAdditional(Content.ALIAS);
+                    if (!name.isEmpty()) {
+                        threads.setUserAlias(user, name);
                     }
                 }
 
