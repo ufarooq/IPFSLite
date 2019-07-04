@@ -344,10 +344,21 @@ public class Service {
                 content.put(Content.EST, NotificationType.toNotificationType(est).toString());
 
                 String json = gson.toJson(content);
-                iota.insertTransaction(address, json);
+                long start = System.currentTimeMillis();
+                try {
+                    iota.insertTransaction(address, json);
+                    long time = (System.currentTimeMillis() - start) / 1000;
+                    Singleton.getInstance(context).getConsoleListener().info(
+                            "Sucess sending notification to PID Inbox : "
+                                    + pid + " Time : " + time + "[s]");
 
-                Singleton.getInstance(context).getConsoleListener().info(
-                        "Send Notification to PID Inbox :" + pid);
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    long time = (System.currentTimeMillis() - start) / 1000;
+                    Singleton.getInstance(context).getConsoleListener().error(
+                            "Failed sending notification to PID Inbox :"
+                                    + pid + " Time : " + time + "[s]");
+                }
 
             }
         } catch (Throwable e) {
@@ -395,12 +406,23 @@ public class Service {
         checkNotNull(user);
 
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        final IOTA iota = Singleton.getInstance(context).getIota();
+
         final THREADS threads = Singleton.getInstance(context).getThreads();
 
         if (!threads.existsUser(user)) {
 
             String alias = user.getPid();
+
+            // TODO make it dependent of a a preference (use peerservice)
+            Peer peer = PeerService.getPeer(context, user);
+            if (peer != null) {
+                String name = peer.getAdditional(Content.ALIAS);
+                if (!name.isEmpty()) {
+                    alias = name;
+                }
+            }
+
+
             byte[] data = THREADS.getImage(context, alias, R.drawable.server_network);
             checkNotNull(ipfs, "IPFS is not valid");
             CID image = ipfs.add(data, "", true);
@@ -448,15 +470,6 @@ public class Service {
                             key = ipfs.getRawPublicKey(info);
                             threads.setUserPublicKey(user, key);
                         }
-                    }
-                }
-
-                // TODO make it dependent of a a preference
-                Peer peer = threads.getPeer(iota, user);
-                if (peer != null) {
-                    String name = peer.getAdditional(Content.ALIAS);
-                    if (!name.isEmpty()) {
-                        threads.setUserAlias(user, name);
                     }
                 }
 

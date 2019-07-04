@@ -135,7 +135,7 @@ public class EditMultihashDialogFragment extends DialogFragment {
                     dismiss();
 
                 })
-                .setTitle(getString(R.string.multihash));
+                .setTitle(getString(R.string.content_id));
 
 
         Dialog dialog = builder.create();
