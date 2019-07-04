@@ -398,7 +398,7 @@ public class Service {
         final IOTA iota = Singleton.getInstance(context).getIota();
         final THREADS threads = Singleton.getInstance(context).getThreads();
 
-        if (threads.existsUser(user)) {
+        if (!threads.existsUser(user)) {
 
             String alias = user.getPid();
 
