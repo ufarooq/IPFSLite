@@ -33,7 +33,7 @@ public class DownloadService {
         boolean success = false;
         try {
 
-            if (threads.getUserByPID(pid) != null) {
+            if (threads.existsUser(pid)) {
 
                 if (!threads.isAccountBlocked(pid)) {
 

@@ -123,7 +123,6 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                 mLastClickTime = SystemClock.elapsedRealtime();
 
 
-                // TODO make as Service function (or remove not necessary)
                 final THREADS threads = Singleton.getInstance(mContext).getThreads();
                 final IPFS ipfs = Singleton.getInstance(mContext).getIpfs();
                 if (ipfs != null) {

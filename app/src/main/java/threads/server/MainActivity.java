@@ -588,27 +588,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 executor.submit(() -> {
                     try {
 
+                        PID user = PID.create(pid);
 
-                        User user = threads.getUserByPID(PID.create(pid));
-                        checkNotNull(user);
-
-                        if (threads.isAccountBlocked(user.getPID())) {
+                        if (threads.isAccountBlocked(user)) {
                             Preferences.warning(threads, getString(R.string.peer_is_blocked));
                         } else {
 
                             try {
-                                threads.setStatus(user, UserStatus.DIALING);
+                                threads.setUserStatus(user, UserStatus.DIALING);
 
-                                boolean value = ConnectService.connectUser(getApplicationContext(),
-                                        user.getPID());
+                                boolean value = ConnectService.connectUser(
+                                        getApplicationContext(), user);
 
                                 if (value) {
-                                    threads.setStatus(user, UserStatus.ONLINE);
+                                    threads.setUserStatus(user, UserStatus.ONLINE);
                                 } else {
-                                    threads.setStatus(user, UserStatus.OFFLINE);
+                                    threads.setUserStatus(user, UserStatus.OFFLINE);
                                 }
                             } catch (Throwable e) {
-                                threads.setStatus(user, UserStatus.OFFLINE);
+                                threads.setUserStatus(user, UserStatus.OFFLINE);
                             }
                         }
                     } catch (Throwable e) {
@@ -898,7 +896,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 executor.submit(() -> {
                     try {
 
-                        User user = threads.getUserByPID(pid);
+                        User user = threads.getUserByPID(pid); // TODO remove user
                         if (user == null) {
 
                             String alias = pid.getPid();
@@ -915,7 +913,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             byte[] data = THREADS.getImage(getApplicationContext(),
                                     alias, R.drawable.server_network);
                             CID image = ipfs.add(data, "", true);
-                            user = threads.createUser(pid, "", // not yet known TODO
+                            user = threads.createUser(pid, "",
                                     alias, UserType.VERIFIED, image);
                             user.setStatus(UserStatus.OFFLINE);
                             threads.storeUser(user);
@@ -1002,10 +1000,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     threads.setThreadStatus(idx, ThreadStatus.PUBLISHING);
 
                     try {
-                        // TODO add new function threads.getThreadCid(idx)
-                        Thread thread = threads.getThreadByIdx(idx);
-                        checkNotNull(thread);
-                        CID cid = thread.getCid();
+                        CID cid = threads.getThreadCID(idx);
                         checkNotNull(cid);
 
                         IpnsInfo info = ipfs.name_publish(cid);
@@ -1039,11 +1034,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() -> {
                     try {
-                        // TODO use function threads.getThreadCid(idx)
-                        Thread threadObject = threads.getThreadByIdx(idx);
-                        checkNotNull(threadObject);
-
-                        CID cid = threadObject.getCid();
+                        CID cid = threads.getThreadCID(idx);
                         checkNotNull(cid);
                         String multihash = cid.getCid();
 
@@ -1202,34 +1193,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadDelete(long idx) {
 
-        final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-        if (ipfs != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    Service.deleteThreads(getApplicationContext(), ipfs, idx);
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-            });
-        }
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                Service.removeThreads(getApplicationContext(), idx);
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        });
+
     }
 
     @Override
     public void clickThreadView(long idx) {
 
-        final THREADS threadsAPI = Singleton.getInstance(getApplicationContext()).getThreads();
+        final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
         final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
 
-                    // TODO use threads.getThreadCID
-                    Thread threadObject = threadsAPI.getThreadByIdx(idx);
-                    checkNotNull(threadObject);
-
-                    CID cid = threadObject.getCid();
+                    CID cid = threads.getThreadCID(idx);
                     checkNotNull(cid);
                     String multihash = cid.getCid();
 
@@ -1241,7 +1226,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     startActivity(intent);
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                 }
             });
         }
@@ -1256,12 +1241,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-
-                    // TODO use threads.getThreadCID
-                    Thread thread = threads.getThreadByIdx(idx);
-                    checkNotNull(thread);
-
-                    CID cid = thread.getCid();
+                    CID cid = threads.getThreadCID(idx);
                     checkNotNull(cid);
                     String multihash = cid.getCid();
 
@@ -1339,21 +1319,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             executor.submit(() -> {
                 try {
 
-                    PID userPID = PID.create(pid);
-                    User user = threads.getUserByPID(userPID);
-                    checkNotNull(user);
+                    PID user = PID.create(pid);
 
-                    // TODO activate threads.setUserAlias(pid, name);
-                    user.setAlias(name);
+                    threads.setUserAlias(user, name);
+
                     byte[] data = THREADS.getImage(getApplicationContext(),
                             name, R.drawable.server_network);
                     CID image = ipfs.add(data, "", true);
-                    user.setImage(image);
 
-                    // TODO create function threads.setUserImage(pid, image);
-                    threads.storeUser(user);
+                    threads.setUserImage(user, image);
 
-                    threads.setThreadSenderAlias(userPID, name);
+                    threads.setThreadSenderAlias(user, name);
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(threads, Preferences.EXCEPTION, e);

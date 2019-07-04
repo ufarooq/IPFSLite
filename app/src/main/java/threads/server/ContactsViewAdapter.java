@@ -119,10 +119,9 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
                                 holder.account_icon.setVisibility(View.GONE);
                             }
                         } else {
-                            // TODO add right color here
                             v.setBackgroundColor(Color.LTGRAY);
                             TextDrawable drawable = TextDrawable.builder()
-                                    .buildRound("\u2713", Color.GRAY);
+                                    .buildRound("\u2713", R.color.colorMarkDrawable);
                             holder.account_icon.setImageDrawable(drawable);
                         }
                         selected.set(!selected.get());

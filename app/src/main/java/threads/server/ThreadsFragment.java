@@ -438,7 +438,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         for (int i = 0; i < threads.size(); i++) {
             deleteEntries[i] = threads.get(i);
         }
-        Service.deleteThreads(mContext, deleteEntries);
+        Service.removeThreads(mContext, deleteEntries);
         try {
             if (threads.contains(threadIdx)) {
                 threadIdx = -1;
