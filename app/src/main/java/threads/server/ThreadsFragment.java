@@ -51,6 +51,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private static final String DIRECTORY = "DIRECTORY";
     private static final String IDXS = "IDXS";
     private static final String SELECTION = "SELECTION";
+    private static final int CLICK_OFFSET = 500;
 
 
     @NonNull
@@ -112,7 +113,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         switch (item.getItemId()) {
             case R.id.action_mark_all: {
 
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
                     break;
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
@@ -123,7 +124,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             }
             case R.id.action_unmark_all: {
 
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
                     break;
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
@@ -223,7 +224,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
             if (topLevel.get()) {
 
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
                     return;
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
@@ -235,7 +236,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
             } else {
 
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 500) {
+                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
                     return;
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
@@ -251,7 +252,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         FloatingActionButton fab_delete = view.findViewById(R.id.fab_delete);
         fab_delete.setOnClickListener((v) -> {
 
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 750) {
+            if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
                 return;
             }
             mLastClickTime = SystemClock.elapsedRealtime();
@@ -264,7 +265,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         FloatingActionButton fab_send = view.findViewById(R.id.fab_send);
         fab_send.setOnClickListener((v) -> {
 
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 750) {
+            if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
                 return;
             }
             mLastClickTime = SystemClock.elapsedRealtime();
@@ -438,7 +439,15 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         for (int i = 0; i < threads.size(); i++) {
             deleteEntries[i] = threads.get(i);
         }
-        Service.removeThreads(mContext, deleteEntries);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                Service.removeThreads(mContext, deleteEntries);
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        });
+
         try {
             if (threads.contains(threadIdx)) {
                 threadIdx = -1;
@@ -524,7 +533,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void onClick(@NonNull Thread thread) {
         checkNotNull(thread);
         try {
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) { // TODO rethink time here
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 500) {
                 return;
             }
             mLastClickTime = SystemClock.elapsedRealtime();

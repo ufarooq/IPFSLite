@@ -54,20 +54,16 @@ import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.AddressType;
 import threads.core.api.Content;
-import threads.core.api.Peer;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.api.User;
 import threads.core.api.UserStatus;
-import threads.core.api.UserType;
 import threads.core.mdl.EventViewModel;
-import threads.iota.IOTA;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.IpnsInfo;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
-import threads.ipfs.api.PeerInfo;
 import threads.share.ConnectService;
 import threads.share.IPFSAudioDialogFragment;
 import threads.share.IPFSVideoActivity;
@@ -233,8 +229,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-        final Singleton singleton = Singleton.getInstance(this);
         try {
+            final Singleton singleton = Singleton.getInstance(this);
             CodecDecider codecDecider = CodecDecider.evaluate(codec);
             if (codecDecider.getCodex() == CodecDecider.Codec.MULTIHASH ||
                     codecDecider.getCodex() == CodecDecider.Codec.URI) {
@@ -252,8 +248,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     return;
                 }
 
-                Service.downloadMultihashService(
-                        getApplicationContext(), host, multihash, null, null);
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(() -> {
+                    try {
+                        Service.downloadMultihash(getApplicationContext(), host,
+                                CID.create(multihash), null, null);
+                    } catch (Throwable e) {
+                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    }
+                });
             } else {
 
                 Preferences.error(singleton.getThreads(),
@@ -859,12 +862,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     @Override
-    public void clickConnectPeer(@NonNull String multihash) {
+    public void clickConnectPeer(@NonNull String pid) {
+        checkNotNull(pid);
 
-        // CHECKED if multihash is valid
+        // CHECKED if pid is valid
         Singleton singleton = Singleton.getInstance(getApplicationContext());
         try {
-            Multihash.fromBase58(multihash);
+            Multihash.fromBase58(pid);
         } catch (Throwable e) {
             Preferences.error(singleton.getThreads(), getString(R.string.multihash_not_valid));
             return;
@@ -872,12 +876,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // CHECKED
         PID host = Preferences.getPID(getApplicationContext());
-        PID pid = PID.create(multihash);
+        PID user = PID.create(pid);
 
-        if (pid.equals(host)) {
+        if (user.equals(host)) {
             Preferences.error(singleton.getThreads(), getString(R.string.same_pid_like_host));
             return;
         }
+
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
 
@@ -885,96 +890,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        // TODO add logic in Service
-        checkNotNull(multihash);
+
         try {
-            final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-            final IOTA iota = Singleton.getInstance(getApplicationContext()).getIota();
-            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-            if (ipfs != null) {
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.submit(() -> {
-                    try {
 
-                        User user = threads.getUserByPID(pid); // TODO remove user
-                        if (user == null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    Service.connectUser(getApplicationContext(), user);
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            });
 
-                            String alias = pid.getPid();
-
-                            // TODO rethink maybe do it afterwards
-                            Peer peer = threads.getPeer(iota, pid);
-                            if (peer != null) {
-                                String name = peer.getAdditional(Content.ALIAS);
-                                if (!name.isEmpty()) {
-                                    alias = name;
-                                }
-                            }
-
-                            byte[] data = THREADS.getImage(getApplicationContext(),
-                                    alias, R.drawable.server_network);
-                            CID image = ipfs.add(data, "", true);
-                            user = threads.createUser(pid, "",
-                                    alias, UserType.VERIFIED, image);
-                            user.setStatus(UserStatus.OFFLINE);
-                            threads.storeUser(user);
-
-                        } else {
-                            Preferences.warning(threads, getString(R.string.peer_exists_with_pid));
-                            return;
-                        }
-                        checkNotNull(user);
-
-                        try {
-                            threads.setStatus(user, UserStatus.DIALING);
-
-                            PeerService.publishPeer(getApplicationContext());
-
-                            boolean value = ConnectService.connectUser(
-                                    getApplicationContext(), user.getPID());
-                            if (value) {
-                                threads.setStatus(user, UserStatus.ONLINE);
-
-                                checkNotNull(host);
-
-                                Content map = new Content();
-                                map.put(Content.EST, "CONNECT");
-                                map.put(Content.ALIAS, threads.getUserAlias(host));
-                                map.put(Content.PKEY, threads.getUserPublicKey(host));
-
-                                Singleton.getInstance(getApplicationContext()).
-                                        getConsoleListener().info(
-                                        "Send Notification to PID :" + user.getPID().getPid());
-
-
-                                ipfs.pubsubPub(user.getPID().getPid(), gson.toJson(map), 50);
-
-
-                                if (threads.getUserPublicKey(pid).isEmpty()) {
-                                    int timeout = Preferences.getConnectionTimeout(
-                                            getApplicationContext());
-                                    PeerInfo info = ipfs.id(user.getPID(), timeout);
-                                    if (info != null) {
-                                        String key = info.getPublicKey();
-                                        if (key != null) {
-                                            key = ipfs.getRawPublicKey(info);
-                                            threads.setUserPublicKey(pid, key);
-                                        }
-                                    }
-                                }
-
-                            } else {
-                                threads.setStatus(user, UserStatus.OFFLINE);
-                            }
-                        } catch (Throwable e) {
-                            threads.setStatus(user, UserStatus.OFFLINE);
-                        }
-
-
-                    } catch (Throwable e) {
-                        Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-                    }
-                });
-            }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -1066,8 +993,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Thread thread = threads.getThreadByIdx(idx);
                     checkNotNull(thread);
                     ThreadStatus status = thread.getStatus();
-                    if (status == ThreadStatus.ONLINE ||
-                            status == ThreadStatus.PUBLISHING) {
+                    if (status == ThreadStatus.ONLINE || status == ThreadStatus.PUBLISHING) {
 
                         CID cid = thread.getCid();
                         checkNotNull(cid);

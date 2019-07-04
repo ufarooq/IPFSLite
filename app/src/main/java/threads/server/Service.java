@@ -43,6 +43,7 @@ import threads.core.THREADS;
 import threads.core.api.AddressType;
 import threads.core.api.Content;
 import threads.core.api.Kind;
+import threads.core.api.Peer;
 import threads.core.api.Server;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
@@ -75,7 +76,6 @@ public class Service {
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(3);
-    private static final ExecutorService DOWNLOAD_SERVICE = Executors.newFixedThreadPool(2);
     private static final String APP_KEY = "AppKey";
     private static final String UPDATE = "UPDATE";
 
@@ -373,6 +373,85 @@ public class Service {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
+    }
+
+    public static void connectUser(@NonNull Context context, @NonNull PID user) throws Exception {
+        checkNotNull(context);
+        checkNotNull(user);
+
+        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final IOTA iota = Singleton.getInstance(context).getIota();
+        final THREADS threads = Singleton.getInstance(context).getThreads();
+
+        if (threads.existsUser(user)) {
+
+            String alias = user.getPid();
+
+            // TODO rethink maybe do it afterwards
+            Peer peer = threads.getPeer(iota, user);
+            if (peer != null) {
+                String name = peer.getAdditional(Content.ALIAS);
+                if (!name.isEmpty()) {
+                    alias = name;
+                }
+            }
+
+            byte[] data = THREADS.getImage(context, alias, R.drawable.server_network);
+            checkNotNull(ipfs, "IPFS is not valid");
+            CID image = ipfs.add(data, "", true);
+            User newUser = threads.createUser(user, "",
+                    alias, UserType.VERIFIED, image);
+            newUser.setStatus(UserStatus.OFFLINE);
+            threads.storeUser(newUser);
+
+        } else {
+            Preferences.warning(threads, context.getString(R.string.peer_exists_with_pid));
+            return;
+        }
+
+
+        try {
+            threads.setUserStatus(user, UserStatus.DIALING);
+
+            PeerService.publishPeer(context);
+
+            boolean value = ConnectService.connectUser(context, user);
+            if (value) {
+                threads.setUserStatus(user, UserStatus.ONLINE);
+                PID host = Preferences.getPID(context);
+                checkNotNull(host);
+
+                Content map = new Content();
+                map.put(Content.EST, "CONNECT");
+                map.put(Content.ALIAS, threads.getUserAlias(host));
+                map.put(Content.PKEY, threads.getUserPublicKey(host));
+
+                Singleton.getInstance(context).
+                        getConsoleListener().info(
+                        "Send Notification to PID :" + user);
+
+
+                ipfs.pubsubPub(user.getPid(), gson.toJson(map), 50);
+
+
+                if (threads.getUserPublicKey(user).isEmpty()) {
+                    int timeout = Preferences.getConnectionTimeout(context);
+                    PeerInfo info = ipfs.id(user, timeout);
+                    if (info != null) {
+                        String key = info.getPublicKey();
+                        if (key != null) {
+                            key = ipfs.getRawPublicKey(info);
+                            threads.setUserPublicKey(user, key);
+                        }
+                    }
+                }
+
+            } else {
+                threads.setUserStatus(user, UserStatus.OFFLINE);
+            }
+        } catch (Throwable e) {
+            threads.setUserStatus(user, UserStatus.OFFLINE);
+        }
     }
 
     private static void runUpdatesIfNecessary(@NonNull Context context) {
@@ -728,47 +807,27 @@ public class Service {
         checkNotNull(context);
         checkNotNull(idxs);
         final THREADS threads = Singleton.getInstance(context).getThreads();
-
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        if (ipfs != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
 
-                try {
-                    threads.setThreadsStatus(ThreadStatus.DELETING, idxs);
+        try {
+            checkNotNull(ipfs, "IPFS is not valid");
+            threads.setThreadsStatus(ThreadStatus.DELETING, idxs);
 
-                    threads.removeThreads(ipfs, idxs);
+            threads.removeThreads(ipfs, idxs);
 
-                } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-                }
-            });
+        } catch (Throwable e) {
+            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
         }
+
+
     }
 
 
-    static void downloadMultihashService(@NonNull Context context,
+    public static void downloadMultihash(@NonNull Context context,
                                          @NonNull PID sender,
-                                         @NonNull String multihash,
+                                         @NonNull CID cid,
                                          @Nullable String filename,
                                          @Nullable String filesize) {
-
-        checkNotNull(context);
-        checkNotNull(sender);
-        checkNotNull(multihash);
-
-
-        DOWNLOAD_SERVICE.submit(() -> {
-            downloadMultihash(context, sender, CID.create(multihash), filename, filesize);
-        });
-
-    }
-
-    private static void downloadMultihash(@NonNull Context context,
-                                          @NonNull PID sender,
-                                          @NonNull CID cid,
-                                          @Nullable String filename,
-                                          @Nullable String filesize) {
 
         checkNotNull(context);
         checkNotNull(sender);
@@ -1722,14 +1781,27 @@ public class Service {
                                 CodecDecider result = CodecDecider.evaluate(code);
 
                                 if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
-                                    // TODO check if DOWNLOAD Service can be more
-                                    DOWNLOAD_SERVICE.submit(() ->
+                                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                                    executor.submit(() -> {
+                                        try {
                                             downloadMultihash(context, senderPid,
-                                                    CID.create(result.getMultihash()))
-                                    );
+                                                    CID.create(result.getMultihash()));
+                                        } catch (Throwable e) {
+                                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                                        }
+                                    });
                                 } else if (result.getCodex() == CodecDecider.Codec.URI) {
-                                    Service.downloadMultihashService(context, senderPid,
-                                            result.getMultihash(), null, null);
+                                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                                    executor.submit(() -> {
+                                        try {
+                                            Service.downloadMultihash(context, senderPid,
+                                                    CID.create(result.getMultihash()),
+                                                    null, null);
+                                        } catch (Throwable e) {
+                                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                                        }
+                                    });
+
                                 } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {
                                     Content content = result.getContent();
                                     checkNotNull(content);
@@ -1763,8 +1835,20 @@ public class Service {
                                                 checkNotNull(cid);
                                                 String filename = content.get(Content.FILENAME);
                                                 String filesize = content.get(Content.FILESIZE);
-                                                Service.downloadMultihashService(context,
-                                                        senderPid, cid, filename, filesize);
+
+
+                                                ExecutorService executor = Executors.newSingleThreadExecutor();
+                                                executor.submit(() -> {
+                                                    try {
+                                                        Service.downloadMultihash(context,
+                                                                senderPid, CID.create(cid),
+                                                                filename, filesize);
+                                                    } catch (Throwable e) {
+                                                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                                                    }
+                                                });
+
+
                                             }
 
                                         } else if ("REPLY".equals(est)) {
