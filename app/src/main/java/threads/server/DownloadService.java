@@ -24,11 +24,8 @@ public class DownloadService {
         checkNotNull(pid);
         checkNotNull(cid);
 
-        Service.getInstance(context);
 
-
-        final THREADS threads = Singleton.getInstance(
-                context).getThreads();
+        final THREADS threads = Singleton.getInstance(context).getThreads();
 
         boolean success = false;
         try {

@@ -74,6 +74,7 @@ public class NotificationService extends JobService {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
+
                 Service.getInstance(getApplicationContext());
 
                 Service.notifications(getApplicationContext());

@@ -138,31 +138,29 @@ public class Service {
 
         final ContentService contentService = ContentService.getInstance(context);
         final THREADS threads = Singleton.getInstance(context).getThreads();
-        final PID pid = Preferences.getPID(context);
+        final PID host = Preferences.getPID(context);
         try {
-            PeerService.publishPeer(context);
 
-            for (User user : threads.getUsers()) {
+            for (PID user : threads.getUsersPIDs()) {
 
-                if (pid != null) {
-                    if (user.getPID().equals(pid)) {
-                        continue;
-                    }
+                if (user.equals(host)) {
+                    continue;
                 }
 
-                if (!threads.isAccountBlocked(user.getPID())) {
+                if (!threads.isAccountBlocked(user)) {
 
-                    boolean success = ConnectService.connectUser(context, user.getPID());
+                    long timestamp = getMinutesAgo(30);
 
-                    if (success) {
-                        long timestamp = getMinutesAgo(30);
+                    List<threads.server.Content> contents = contentService.getContentDatabase().
+                            contentDao().getContents(user, timestamp, false);
 
-                        List<threads.server.Content> contents = contentService.getContentDatabase().
-                                contentDao().getContents(
-                                user.getPID(), timestamp, false);
+                    if (!contents.isEmpty()) {
+                        boolean success = ConnectService.connectUser(context, user);
 
-                        for (threads.server.Content content : contents) {
-                            Service.downloadMultihash(context, content.getPid(), content.getCID());
+                        if (success) {
+                            for (threads.server.Content content : contents) {
+                                Service.downloadMultihash(context, content.getPid(), content.getCID());
+                            }
                         }
                     }
                 }
