@@ -4,14 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="4dp"
-    android:layout_marginBottom="4dp"
+    android:paddingTop="@dimen/users_paddingTop"
+    android:paddingBottom="@dimen/users_paddingBottom"
     android:orientation="horizontal">
 
     <ImageView
         android:id="@+id/account_icon"
-        android:layout_width="60dp"
-        android:layout_height="60dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:layout_weight="0"
         android:padding="8dp"
         app:srcCompat="@android:drawable/ic_lock_lock"
@@ -19,12 +19,11 @@
 
     <TextView
         android:id="@+id/account_name"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_gravity="start|center"
         android:layout_weight="1"
-        android:maxLines="1"
-        android:padding="2dp"
-        android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+        tools:ignore="ContentDescription" />
 
 </LinearLayout>

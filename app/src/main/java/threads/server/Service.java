@@ -112,6 +112,9 @@ public class Service {
             ProgressChannel.createProgressChannel(context);
             RTCSession.createRTCChannel(context);
 
+            Service.setSupportOfflineNotification(context, false); // TODO remove
+            PeerService.setSupportPeerStorage(context, false); // TODO remove
+
             Singleton.getInstance(context);
 
             SINGLETON = new Service();
@@ -678,7 +681,7 @@ public class Service {
 
 
             Singleton.getInstance(context).getConsoleListener().info(
-                    "Send Notification to PID :" + sender);
+                    "Send Pubsub Notification to PID :" + sender);
 
             ipfs.pubsubPub(sender.getPid(), gson.toJson(map), 50);
         } catch (Throwable e) {
