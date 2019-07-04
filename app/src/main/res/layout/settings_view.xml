@@ -175,6 +175,16 @@
             android:padding="8dp"
             android:text="@string/auto_relay_connect_support" />
 
+        <Switch
+            android:id="@+id/support_offline_notifications"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginRight="16dp"
+            android:padding="8dp"
+            android:text="@string/support_offline_notificationt" />
+
         <TextView
             android:id="@+id/connection_timeout_text"
             android:layout_width="match_parent"

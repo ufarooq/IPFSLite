@@ -293,11 +293,15 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
         connect_relay_support.setChecked(Preferences.isAutoConnectRelay(activity));
         connect_relay_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Preferences.setAutoConnectRelay(activity, isChecked);
-            Toast.makeText(getContext(),
-                    R.string.daemon_restart_config_changed,
-                    Toast.LENGTH_LONG).show();
-
         });
+
+
+        Switch support_offline_notifications = view.findViewById(R.id.support_offline_notifications);
+        support_offline_notifications.setChecked(Service.isSupportOfflineNotification(activity));
+        support_offline_notifications.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Service.setSupportOfflineNotification(activity, isChecked);
+        });
+
 
         TextView connection_timeout_text = view.findViewById(R.id.connection_timeout_text);
         SeekBar connection_timeout = view.findViewById(R.id.connection_timeout);

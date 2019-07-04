@@ -78,6 +78,21 @@ public class Service {
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(3);
     private static final String APP_KEY = "AppKey";
     private static final String UPDATE = "UPDATE";
+    private static final String SUPPORT_OFFLINE_NOTIFICATION_KEY = "supportOfflineNotificationKey";
+
+    public static boolean isSupportOfflineNotification(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
+        return sharedPref.getBoolean(SUPPORT_OFFLINE_NOTIFICATION_KEY, true);
+    }
+
+    public static void setSupportOfflineNotification(@NonNull Context context, boolean enable) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean(SUPPORT_OFFLINE_NOTIFICATION_KEY, enable);
+        editor.apply();
+    }
 
     private static Service SINGLETON = null;
     private final AtomicBoolean peerCheckFlag = new AtomicBoolean(false);
@@ -1760,6 +1775,7 @@ public class Service {
         checkNotNull(context);
         try {
             final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+            final ContentService contentService = ContentService.getInstance(context);
             final THREADS threads = Singleton.getInstance(context).getThreads();
             if (ipfs != null) {
 
@@ -1784,8 +1800,10 @@ public class Service {
                                     ExecutorService executor = Executors.newSingleThreadExecutor();
                                     executor.submit(() -> {
                                         try {
-                                            downloadMultihash(context, senderPid,
-                                                    CID.create(result.getMultihash()));
+                                            CID cid = CID.create(result.getMultihash());
+                                            contentService.insertContent(
+                                                    senderPid, cid, false);
+                                            downloadMultihash(context, senderPid, cid);
                                         } catch (Throwable e) {
                                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
                                         }

@@ -11,8 +11,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.google.gson.Gson;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -23,7 +21,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 public class NotifyService extends JobService {
 
     private static final String TAG = NotifyService.class.getSimpleName();
-    private final Gson gson = new Gson();
+
 
     public static void notify(@NonNull Context context,
                               @NonNull String pid,
@@ -65,6 +63,10 @@ public class NotifyService extends JobService {
         checkNotNull(cid);
         final Integer est = bundle.getInt(Content.EST);
         checkNotNull(est);
+
+        if (!Service.isSupportOfflineNotification(getApplicationContext())) {
+            return false;
+        }
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {

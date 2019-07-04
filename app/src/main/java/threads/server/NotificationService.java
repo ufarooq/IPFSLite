@@ -70,6 +70,9 @@ public class NotificationService extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
+        if (!Service.isSupportOfflineNotification(getApplicationContext())) {
+            return false;
+        }
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
