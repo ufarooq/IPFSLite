@@ -53,13 +53,17 @@ IPFS "standard" (see Limitation)
 
 
 ### **IPFS Lite** versus **IPFS**
-This section describes the differences between an **IPFS Lite** node and **IPFS** node.
+This section describes the differences between an **IPFS Lite** node and an regular **IPFS** node.
 <br>
 Despite the not official enhancements of the **IPFS Lite** application (like IOTA and WebRTC)
 there are some general differences between such node kinds.
 <br>
-In general  
-
+In general an **IPFS Lite** has the same functionality like an regular node.
+There are some differences which are described here. The reasons are in outlined in brackets.
+- **No** Gateway Support
+<br> An IPFS gateway is not supported [AndroidQ]
+- **No** CLI and HTTP API Support
+- **No** WebUI Support
 
 
 ### Limitation
