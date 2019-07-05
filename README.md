@@ -62,7 +62,7 @@ in the future such feature will not be supported anymore.
 <br>Another reason is that a feature is "enabled" by default.
 For example the IPFS pubsub feature is right now, enable by default, there is no way to deactivate
 it. (see Limitation) 
-<br>But the main reason for a lack of configuration is, that such options are not yet implemented. 
+<br>But the main reason for the lack of configuration is, that such options are not yet implemented. 
 
 
 ### Enhancements
@@ -94,15 +94,16 @@ The following settings are supported:
     <br>When the timeout is reached and the content is not found, the process will be aborted
 - Support Offline Notification
 <br>When "offline notification" is turned off, no notification will be stored or read from the 
-IOTA tangle (database). The **Inbox** might be still filled by other peers, but **IPFS Lite**
+IOTA Tangle database. The **Inbox** might be still filled by other peers, but **IPFS Lite**
 does not read out such information. But more important is that **IPFS Lite** does not write
 any notification on the IOTA tangle anymore.
 - Support Peer Discovery
 <br>When "peer discovery" is turned off, no peer information will be stored or read out from
-IOTA tangle (database).  The **Outbox** will be not filled anymore and other peers can not read
+IOTA Tangle database.  The **Outbox** will be not filled anymore and other peers can not read
 out the information for faster peer access.
-<br>
-**Important** When both options **Support Offline Notification** and **Support Peer Discovery**
+
+#### Important
+When both options **Support Offline Notification** and **Support Peer Discovery**
 are turned off, the **IPFS Lite** application behaves more like a regular IPFS node.
 It has a positive effect on energy consumption. Downside might be that the "Send Data" 
 feature does not work offline and the peer discovery might be not working for peers behind NATs.
