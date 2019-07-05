@@ -19,7 +19,6 @@ Possibility to customize the configuration of the IPFS node.
 
 
 
-
 ## Documentation
 
 **IPFS Lite** is a decentralized file-sharing and communication application which based on
@@ -32,10 +31,10 @@ in the later sections.
     - Offline Mode 
     - Faster Node Access
 - WebRTC (https://webrtc.org/) 
-<br>The WebRTC component is just required to establish a telephony functionality within
+<br>The WebRTC component is required to establish a telephony functionality within
 this application. Consider this feature as a proof of concept (PoC). Communicating via WebRTC 
-requires that such nodes must use the **IPFS Lite** application, because the integration is not 
-IPFS "standard" (see Limitation)
+requires, that communicating nodes must use all the **IPFS Lite** application,  
+because the integration is **not** IPFS "standard" (see Limitation)
 
 
 ### **IPFS Lite** versus **IPFS**
@@ -56,9 +55,11 @@ There are some differences which are described here. The reasons are outlined in
 <br>In the current **IPFS Lite** version under "Settings" the node itself can be configured.
 <br>Only a subset of possibilities of a node configuration (**config** file) can be done now. 
 <br>The reason is that some of the options might be not valid for an **IPFS Lite** node, because
-the feature will not be supported anymore. Another reason is that a feature is "enabled" by default.
+in the future such feature will not be supported anymore. 
+<br>Another reason is that a feature is "enabled" by default.
 For example the IPFS pubsub feature is right now, enable by default, there is no way to deactivate
-it. But the main reason so a lack of configuration is, that such options are not yet implemented. 
+it. (see Limitation) 
+<br>But the main reason for a lack of configuration is, that such options are not yet implemented. 
 
 
 ### Enhancements
@@ -78,11 +79,18 @@ In the current version of this application it is required that both communicatin
 this app to communicate successfully over WebRTC. In a later version of this tool an official 
 enhancement of the IPFS technology should be used.
 More information on https://github.com/libp2p/specs/pull/159
-
+* Disable Pubsub Feature (Note Configuration)
+In the current version of the application the pubsub feature of IPFS is enabled by default,
+even when the user does not require it. Reason is, that the pubsub feature is required by
+the application features "Send Data" and "WebRTC Telephony". Nevertheless the user should
+have the possibility to switch off "pubsub" with the consequence that unofficial IPFS features
+do not work anymore.
 
 ### Issues
 This section contains a set of current issues.
 * Official WebRTC Integration of IPFS, when it is ready
+<br>More information on https://github.com/libp2p/specs/pull/159
+
 
 ### Dependencies 
 - threads-iota (Wrapper implementation around a IOTA light node)

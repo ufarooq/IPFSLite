@@ -340,6 +340,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
                 break;
             }
+            case R.id.nav_documentation: {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse("https://gitlab.com/remmer.wilts/threads-server"));
+                    startActivity(intent);
+
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+                break;
+            }
             case R.id.nav_licences: {
                 try {
 
@@ -386,6 +397,24 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     PID pid = Preferences.getPID(this);
                     checkNotNull(pid);
                     String address = AddressType.getAddress(pid, AddressType.NOTIFICATION);
+                    Uri uri = Uri.parse(Service.getAddressLink(address));
+
+                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+                break;
+            }
+
+            case R.id.nav_outbox: {
+                try {
+                    PID pid = Preferences.getPID(this);
+                    checkNotNull(pid);
+                    String address = AddressType.getAddress(pid, AddressType.PEER);
                     Uri uri = Uri.parse(Service.getAddressLink(address));
 
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);

@@ -102,4 +102,6 @@
     <string name="unsupported_pubsub_message">Unsupported pubsub message by peer \"%1$s\"</string>
     <string name="inbox">Inbox</string>
     <string name="support_offline_notificationt">Support Offline Notifications</string>
+    <string name="documentation">Documentation</string>
+    <string name="outbox">Outbox</string>
 </resources>

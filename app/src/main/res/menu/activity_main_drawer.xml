@@ -14,8 +14,12 @@
             android:title="@string/config" />
         <item
             android:id="@+id/nav_inbox"
-            android:icon="@android:drawable/stat_notify_more"
+            android:icon="@drawable/mailbox_outline"
             android:title="@string/inbox" />
+        <item
+            android:id="@+id/nav_outbox"
+            android:icon="@android:drawable/stat_notify_more"
+            android:title="@string/outbox" />
     </group>
     <item android:title="@string/application">
         <menu>
@@ -23,7 +27,14 @@
                 android:id="@+id/nav_share"
                 android:icon="@android:drawable/ic_menu_share"
                 android:title="@string/share_app" />
-
+            <item
+                android:id="@+id/nav_documentation"
+                android:icon="@drawable/book_open_outline"
+                android:title="@string/documentation" />
+            <item
+                android:id="@+id/nav_issues"
+                android:icon="@drawable/bug_outline"
+                android:title="@string/issues" />
             <item
                 android:id="@+id/nav_licences"
                 android:icon="@drawable/information_variant"
@@ -32,11 +43,6 @@
                 android:id="@+id/nav_privacy_policy"
                 android:icon="@drawable/security"
                 android:title="@string/privacy_policy" />
-
-            <item
-                android:id="@+id/nav_issues"
-                android:icon="@drawable/bug_outline"
-                android:title="@string/issues" />
 
         </menu>
     </item>
