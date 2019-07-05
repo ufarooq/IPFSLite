@@ -118,7 +118,7 @@ Example:
 ```
 
 The "peers" section are relays peers which were automatically detected.
-The have an address and a Peer ID (PID).
+Each of the peers have an address and a Peer ID (PID).
 The "adds" section contains a fast "peer" address with the given PID ("pid").
 The "alias" is the name of the **IPFS Lite** node.
 **Note:**
@@ -126,14 +126,48 @@ The "alias" has nothing to do with the "peer" and "pid". ("peer" and "pid" belon
 the fast gateway peer)
 
 ### Features
-This section contains the description of the main features of **IPFS Lite**
+This section contains the description of the main features of the **IPFS Lite** application.
+- Share Content
+<br>The **Send Data** (Share Content) feature is the main feature of this application.
+<br>A regular IPFS node support does **not** support a share content feature in a way that
+a node "A" tells another node "B", that it can download data from node "A".
+To support this feature in an **IPFS Lite** node some adoptions has to be made.
+    - Enable Pubsub
+    <br>Each **IPFS Lite** node enables the IPFS Pubsub feature by default.
+    - Communication via Pubsub
+    <br>So when a node "A" tells another node "B" that it can download content data, then
+    it is basically a pubsub message from "A" to "B" with the given information.
+    In this case it is just a CID object which should be downloaded.
+    **ToDo:** 
+    In the current implementation the CID object is not yet encrypted (but can easily be done).
+    But the topic which is used for the 
+    - Whitelist of Peers
+    <br>Each **IPFS Lite** node has a list of peers which are allowed to send data.
+    <br>Basically such peers which are listed in the section "Peers" and which are not blocked
+    by the user manually.
+- Transparency
+<br>The **IPFS Lite** application itself should be transparent as possible for the user.
+<br>To reach this goal several aspects are handled
+    -  Open Source and Free
+    <br>All the source code of the **IPFS Lite** application is open source.
+    <br>**IPFS Lite** application is available on FDroid, which is an indicator for good free software. 
+    (No malware has yet be found on FDroid)
+    <br>The app is free and therefore decentralized, that ensures that no specific server are running which costs money for the provider.
+    - Transparency Information
+    <br>**IPFS Lite** application contains functionality which are only there for transparency.
+    <br>The **Console** prints out messages from the underlying IPFS node. Besides for debug reason, 
+    the user should also get trust in the application. The **Settings** of the application offers 
+    a debug flag, where even more output can be retrieved from the underlying IPFS node.
+    <br>The **Inbox** and **Outbox** have no real value for the user of the application, it should
+    only show how, where and what kind of information are stored.
 
+    
 ### Settings
-As mentioned before the application offers under "Naviagation/Settings" the configuration 
-of the running IPFS node. The IPFS settings will not be desribed here.
+As mentioned before the application offers under "Navigation/Settings" the configuration 
+of the running IPFS node. The IPFS settings will not be described here.
 <br>See https://github.com/ipfs/go-ipfs/blob/master/docs/config.md for further information.
 <br>This section describes the settings **Application Settings** which are located under
-"Naviagation/Settings".
+"Navigation/Settings".
 The following settings are supported:
 - Connection Timeout
 <br>The connection timeout defines the timeout of the following operations
@@ -213,6 +247,12 @@ This makes the feature **Send Data** sometimes not very reliable
 fully decentralized (Hope for a better version and better access to IOTA gateways)
 * Sometimes connection are not valid, thought they appear to be online, they are actually offline
 (Hope for a better IPFS core API, maybe IPFS eventbus seems to be a solution)
+* In the current implementation when an **IPFS Lite** node sends data to another **IPFS Lite** node,
+the download is triggered automatically. Even when the user is connected over a mobile connection.
+That might not be wished, can be somehow expensive for the receiving node.
+Better solution would be, that the user trigger the download manually when the connection is a 
+mobile connection. A notification would also be nice in such circumstances.
+* Encrypt the Pubsub messages between **IPFS Lite** nodes [low hanging fruit]
 * General issues are: https://gitlab.com/remmer.wilts/threads-server/issues
 
 ### Dependencies 
