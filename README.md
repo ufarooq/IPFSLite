@@ -52,6 +52,13 @@ requires that such nodes must use the **IPFS Lite** application, because the int
 IPFS "standard" (see Limitation)
 
 
+### **IPFS Lite** versus **IPFS**
+This section describes the differences between an **IPFS Lite** node and **IPFS** node.
+<br>
+Despite the not official enhancements of the **IPFS Lite** application (like IOTA and WebRTC)
+there are some general differences between such node kinds.
+<br>
+In general  
 
 
 
