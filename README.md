@@ -102,7 +102,8 @@ any notification on the IOTA tangle anymore.
 IOTA Tangle database.  The **Outbox** will be not filled anymore and other peers can not read
 out the information for faster peer access.
 
-#### Important
+
+**Important**
 When both options **Support Offline Notification** and **Support Peer Discovery**
 are turned off, the **IPFS Lite** application behaves more like a regular IPFS node.
 It has a positive effect on energy consumption. Downside might be that the "Send Data" 
