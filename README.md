@@ -11,11 +11,12 @@ The InterPlanetary File System "is a peer-to-peer (p2p) filesharing system that 
 Official website of IPFS: https://ipfs.io/
 
 
-## Features 
-Support of the standard uses cases of IPFS (like add, cat, get, publish, etc).
-Provide a modern UI to realize this common use cases.
-Possibility to customize the configuration of the IPFS node.
-
+## General 
+**IPFS Lite** supports the standard uses cases of IPFS (like add, cat, get, publish, etc).
+It rovides a modern UI to realize this common use cases and has
+the possibility to customize the configuration of the IPFS node.
+The basic characteristics of the app are decentralized, respect of personal data,
+open source, free of charge, transparent, free of advertising and legally impeccable.
 
 
 
@@ -29,7 +30,9 @@ in the later sections.
 - IOTA (https://www.iota.org/)
 <br>The IOTA technology is used to support two use-cases of this application.
     - Offline Mode 
+    <br>TODO
     - Faster Node Access
+    <br>TODO
 - WebRTC (https://webrtc.org/) 
 <br>The WebRTC component is required to establish a telephony functionality within
 this application. Consider this feature as a proof of concept (PoC). Communicating via WebRTC 
@@ -46,11 +49,11 @@ there are some general differences between such node kinds.
 In general an **IPFS Lite** has the same functionality like an regular node.
 There are some differences which are described here. The reasons are outlined in brackets.
 - **No** Gateway Support
-<br>An IPFS gateway is not supported [Performance,Security,AndroidQ-Support]
+<br>An IPFS gateway is not supported [Performance,Security,AndroidQ]
 - **No** CLI and HTTP API Support
-<br>No public API is supported, the API based on the internal IPFS Core API [AndroidQ-Support]
+<br>No public API is supported, the application itself based on the internal IPFS Core API [AndroidQ]
 - **No** WebUI Support
-<br>An IPFS gateway is not supported [Performance,Security,AndroidQ-Support]
+<br>An IPFS gateway is not supported [Performance,Security,AndroidQ]
 - Limited Node Configuration
 <br>In the current **IPFS Lite** version under "Settings" the node itself can be configured.
 <br>Only a subset of possibilities of a node configuration (**config** file) can be done now. 
@@ -72,6 +75,38 @@ between nodes
 was offline (Stored on the Tangle, Data is encrypted)
 
 
+
+### Features
+This section contains the description of the main features of **IPFS Lite**
+
+### Settings
+As mentioned before the application offers under "Naviagation/Settings" the configuration 
+of the running IPFS node. The IPFS settings will not be desribed here.
+<br>See https://github.com/ipfs/go-ipfs/blob/master/docs/config.md for further information.
+<br>This section describes the settings **Application Settings** which are located under
+"Naviagation/Settings".
+The following settings are supported:
+- Connection Timeout
+<br>The connection timeout defines the timeout of the following operations
+    - Peer Connect
+    <br>When the timeout is reached and not connection is made to a peer, the process will be aborted
+    - Find Content
+    <br>When the timeout is reached and the content is not found, the process will be aborted
+- Support Offline Notification
+<br>When "offline notification" is turned off, no notification will be stored or read from the 
+IOTA tangle (database). The **Inbox** might be still filled by other peers, but **IPFS Lite**
+does not read out such information. But more important is that **IPFS Lite** does not write
+any notification on the IOTA tangle anymore.
+- Support Peer Discovery
+<br>When "peer discovery" is turned off, no peer information will be stored or read out from
+IOTA tangle (database).  The **Outbox** will be not filled anymore and other peers can not read
+out the information for faster peer access.
+<br>
+**Important** When both options **Support Offline Notification** and **Support Peer Discovery**
+are turned off, the **IPFS Lite** application behaves more like a regular IPFS node.
+It has a positive effect on energy consumption. Downside might be that the "Send Data" 
+feature does not work offline and the peer discovery might be not working for peers behind NATs.
+
 ### Limitation
 This section contains a set of current limitations.
 * WebRTC Integration
@@ -88,9 +123,12 @@ do not work anymore.
 
 ### Issues
 This section contains a set of current issues.
+* 
+
+### Todos
+This section contains a set of current and future todos.
 * Official WebRTC Integration of IPFS, when it is ready
 <br>More information on https://github.com/libp2p/specs/pull/159
-
 
 ### Dependencies 
 - threads-iota (Wrapper implementation around a IOTA light node)
