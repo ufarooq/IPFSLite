@@ -148,7 +148,7 @@ To support this feature in an **IPFS Lite** node, some adoptions has to be made.
 <br>The **IPFS Lite** application itself should be transparent as possible for the user.
 <br>To reach this goal several aspects are handled
     -  Open Source and Free
-    <br>All the source code of the **IPFS Lite** application is open source.
+    <br>The **IPFS Lite** application is a open source project and also all its dependencies are open source.
     <br>**IPFS Lite** application is available on FDroid, which is an indicator for good free software. 
     (No malware has yet be found on FDroid)
     <br>The app is free and therefore decentralized, that ensures that no specific server are running which costs money for the provider.

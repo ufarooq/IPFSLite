@@ -517,8 +517,6 @@ public class Service {
 
 
                 Preferences.setConnectionTimeout(context, 45000);
-                Preferences.setAutoConnectRelay(context, true);
-
                 Preferences.setTangleTimeout(context, 15);
 
                 Preferences.setMdnsEnabled(context, true);
