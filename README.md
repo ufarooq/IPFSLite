@@ -129,13 +129,23 @@ do not work anymore.
 
 ### Issues
 This section contains a set of general issues handling with IPFS.
-- Can not connect to "my" node (Assume that "my" node is a regular IPFS node)
+- Can not connect to "my" node (Assume that "my" node is a **regular** IPFS node)
 <br> This kind of issue can have lots of reasons (here only some ideas)
     - Validate that your node has a static public IP address
     <br>Check that you can connect with another regular IPFS node to "your" node
-    <br>**Important:** "your" node should not be behind a router (NAT)
+    <br>**Important:** "your" node should not be behind a router (NAT). But when "your" node
+    is behind a router, your need a "third" node which behaves like a "relay" node. Both
+    "your" node and also your **IPFS Lite** node should be connected before to the "relay" node.
+    Then a successful communication can take place.
     - IPFS Lite has a Timeout Setting under "Navigation/Settings", increase the timeout
-
+- Can not connect to "my" node (Assume that "my" node is also a **IPFS Lite** node)
+<br> This kind of issue should in theory not happen, when both  **IPFS Lite** nodes are online and
+the options **Support Offline Notification** and **Support Peer Discovery** in the settings are 
+activated on both machines.
+    - Verify that on the "Console" no errors are printed
+    - Verify that the "Navigation/Outbox" has peer information about the access
+    <br>Date of the transaction might be useful, information is not yet decrypted, see json output
+    of the transaction, might be difficult to understand in the first shot
 ### Todo's
 This section contains a set of current and future todo's.
 * Official WebRTC Integration of IPFS, when it is ready
