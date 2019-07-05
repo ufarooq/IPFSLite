@@ -103,11 +103,14 @@ IOTA Tangle database.  The **Outbox** will be not filled anymore and other peers
 out the information for faster peer access.
 
 
-**Important**
+**Important:**
 When both options **Support Offline Notification** and **Support Peer Discovery**
 are turned off, the **IPFS Lite** application behaves more like a regular IPFS node.
-It has a positive effect on energy consumption. Downside might be that the "Send Data" 
+Switching off might a positive effect on the energy consumption. Downside might be that the "Send Data" 
 feature does not work offline and the peer discovery might be not working for peers behind NATs.
+But one thing is for sure, when you just connecting to nodes which have static public IP addresses
+and your node also have this properties and you are all the time online, it definitely makes
+sense to deactivate the options.
 
 ### Limitation
 This section contains a set of current limitations.
@@ -124,11 +127,16 @@ have the possibility to switch off "pubsub" with the consequence that unofficial
 do not work anymore.
 
 ### Issues
-This section contains a set of current issues.
-* 
+This section contains a set of general issues handling with IPFS.
+- Can not connect to "my" node (Assume that "my" node is a regular IPFS node)
+<br> This kind of issue can have lots of reasons (here only some ideas)
+    - Validate that your node has a static public IP address
+    <br>Check that you can connect with another regular IPFS node to "your" node
+    <br>**Important:** "your" node should not be behind a router (NAT)
+    - IPFS Lite has a Timeout Setting under "Navigation/Settings", increase the timeout
 
-### Todos
-This section contains a set of current and future todos.
+### Todo's
+This section contains a set of current and future todo's.
 * Official WebRTC Integration of IPFS, when it is ready
 <br>More information on https://github.com/libp2p/specs/pull/159
 
