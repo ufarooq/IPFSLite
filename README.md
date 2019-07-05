@@ -41,14 +41,15 @@ three core technologies.
 * IPFS (https://ipfs.io/) 
 * IOTA (https://www.iota.org/)
 * WebRTC (https://webrtc.org/) 
+<br/>
 The main component is here the IPFS technology and will be described a little bit more in detail
 in the later sections. 
-</br>
+<br>
 The WebRTC component is just required to establish a telephony functionality within
 this application. Consider this feature as a proof of concept (PoC). Communicating via WebRTC 
 requires that such nodes must use the **IPFS Lite** application, because the integration is not 
 IPFS "standard" (see Limitation)
-</br>
+<br>
 The IOTA technology is used to support two use-cases of this application.
 * Offline Mode 
 * Faster Node Access
