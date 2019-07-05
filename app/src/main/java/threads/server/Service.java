@@ -112,9 +112,6 @@ public class Service {
             ProgressChannel.createProgressChannel(context);
             RTCSession.createRTCChannel(context);
 
-            //Service.setSupportOfflineNotification(context, false); // TODO remove
-            //PeerService.setSupportPeerStorage(context, false); // TODO remove
-
             Singleton.getInstance(context);
 
             SINGLETON = new Service();
@@ -138,7 +135,7 @@ public class Service {
                         iota.setLocalPoW(new PearlDiverLocalPoW());
                     }
                 } catch (Throwable e) {
-                    // TODO IOTA not running
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
 
             }
@@ -196,14 +193,11 @@ public class Service {
     public static void notifications(@NonNull Context context) {
 
         final PID host = Preferences.getPID(context);
-        // TODO remove Preferences.getPrivateKey
-        final String privateKey = Preferences.getPrivateKey(context); // TODO private key from ipfs
-        final ContentService contentService = ContentService.getInstance(context);
-        if (host != null && !privateKey.isEmpty()) {
+        if (host != null) {
             final int timeout = Preferences.getTangleTimeout(context);
             final Server server = Preferences.getTangleServer(context);
             final EntityService entityService = EntityService.getInstance(context);
-
+            final ContentService contentService = ContentService.getInstance(context);
             try {
                 String address = AddressType.getAddress(host, AddressType.NOTIFICATION);
                 List<Entity> entities = entityService.loadEntities(address,
@@ -222,8 +216,15 @@ public class Service {
                     }
                     if (data != null) {
                         if (data.containsKey(Content.EST)) {
+
+                            Service.getInstance(context); // now time to load instance
+
+                            IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                            checkNotNull(ipfs, "IPFS not valid");
                             if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
                                 try {
+                                    String privateKey = ipfs.getRawPrivateKey();
+                                    checkNotNull(privateKey, "Private Key not valid");
                                     final String pidStr = Encryption.decryptRSA(
                                             data.get(Content.PID), privateKey);
                                     checkNotNull(pidStr);
@@ -416,15 +417,6 @@ public class Service {
 
             String alias = user.getPid();
 
-            Peer peer = PeerService.getPeer(context, user);
-            if (peer != null) {
-                String name = peer.getAdditional(Content.ALIAS);
-                if (!name.isEmpty()) {
-                    alias = name;
-                }
-            }
-
-
             byte[] data = THREADS.getImage(context, alias, R.drawable.server_network);
             checkNotNull(ipfs, "IPFS is not valid");
             CID image = ipfs.add(data, "", true);
@@ -478,6 +470,16 @@ public class Service {
             } else {
                 threads.setUserStatus(user, UserStatus.OFFLINE);
             }
+
+            Peer peer = PeerService.getPeer(context, user);
+            if (peer != null) {
+                String name = peer.getAdditional(Content.ALIAS);
+                if (!name.isEmpty()) {
+                    threads.setUserAlias(user, name);
+                }
+            }
+
+
         } catch (Throwable e) {
             threads.setUserStatus(user, UserStatus.OFFLINE);
         }
@@ -665,7 +667,6 @@ public class Service {
         }
     }
 
-    // TODO rethink if necessary at all, or can be changed
     private static void replySender(@NonNull Context context,
                                     @NonNull IPFS ipfs,
                                     @NonNull PID sender,
@@ -1914,14 +1915,6 @@ public class Service {
                         }
 
                     }, false);
-
-                    // TODO public and private key should be available when ipfs is ready
-                    String privateKey = ipfs.getRawPrivateKey();
-                    try {
-                        Preferences.setPrivateKey(context, privateKey);
-                    } catch (Throwable e) {
-                        Preferences.error(threads, "PrivateKey is not available yet.");
-                    }
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(threads, Preferences.IPFS_START_FAILURE, e);

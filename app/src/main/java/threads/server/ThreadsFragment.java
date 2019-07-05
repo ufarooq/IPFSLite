@@ -146,11 +146,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         try {
-            long[] storedEntries = new long[threads.size()];
-            for (int i = 0; i < threads.size(); i++) {
-                storedEntries[i] = threads.get(i);
-            }
-            outState.putLongArray(IDXS, storedEntries);
+            long[] entries = convert(threads);
+            outState.putLongArray(IDXS, entries);
             outState.putLong(SELECTION, threadIdx);
             Long dir = directory.get();
             if (dir != null) {
@@ -361,12 +358,9 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private void sendAction() {
         try {
 
+            long[] entries = convert(threads);
 
-            long[] sendEntries = new long[threads.size()];
-            for (int i = 0; i < threads.size(); i++) {
-                sendEntries[i] = threads.get(i);
-            }
-            mListener.clickThreadsSend(sendEntries);
+            mListener.clickThreadsSend(entries);
 
             unmarkThreads();
         } catch (Throwable e) {
@@ -433,16 +427,22 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         }
     }
 
-    private void deleteAction() {
-        // TODO rething type of threads
-        long[] deleteEntries = new long[threads.size()];
-        for (int i = 0; i < threads.size(); i++) {
-            deleteEntries[i] = threads.get(i);
+    private long[] convert(List<Long> entries) {
+        long[] basic = new long[entries.size()];
+        for (int i = 0; i < entries.size(); i++) {
+            basic[i] = entries.get(i);
         }
+        return basic;
+    }
+
+    private void deleteAction() {
+
+        long[] entries = convert(threads);
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                Service.removeThreads(mContext, deleteEntries);
+                Service.removeThreads(mContext, entries);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
@@ -497,14 +497,14 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void invokeGeneralAction(@NonNull Thread thread) {
         try {
             if (getActivity() != null) {
-                boolean sendActive = true; // TODO should be rethought
+
                 boolean online = thread.getStatus() == ThreadStatus.ONLINE;
 
                 FragmentManager fm = getActivity().getSupportFragmentManager();
 
                 ThreadActionDialogFragment.newInstance(
                         thread.getIdx(), true, true,
-                        topLevel.get(), online, true, sendActive, true)
+                        topLevel.get(), online, true, true, true)
                         .show(fm, ThreadActionDialogFragment.TAG);
             }
         } catch (Throwable e) {
