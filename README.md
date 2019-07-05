@@ -28,11 +28,16 @@ the following core technologies.
 <br>The main component is here the IPFS technology and will be described in detail
 in the later sections. 
 - IOTA (https://www.iota.org/)
-<br>The IOTA technology is used to support two use-cases of this application.
+<br>The IOTA technology is used to support two main use-cases of this application.
     - Offline Mode 
-    <br>TODO
-    - Faster Node Access
-    <br>TODO
+    <br>When an **IPFS Lite** node is not online or reachable by another **IPFS Lite** node, then such
+    a node can send a "offline" notification to the "offline" node. The "offline" node can later
+    retrieve the information and tries to react on it.
+    - Peer Discovery
+    <br>When an **IPFS Lite** node is behind a NAT, the official IPFS peer discovery mechanism fails very often.
+    <br>Therefore this temporary mechanism was develop to establish a connection between nodes,
+    even when both nodes are behind NAT's.
+    <br>Still even with this solution, the connection is not always succeeded. Just to keep that in mind.
 - WebRTC (https://webrtc.org/) 
 <br>The WebRTC component is required to establish a telephony functionality within
 this application. Consider this feature as a proof of concept (PoC). Communicating via WebRTC 
@@ -77,17 +82,19 @@ a kind of offline mode between nodes (**Support Offline Notification**)
 was offline (Stored on the Tangle, Data is encrypted)
 
 Example:
-'''
+```
 "pid": "WlI6VDdzIARqhk4kDYXMjHAFOGnLEcloFNjvh224L/Qdm3tZ7yPjJlzFRmJMl0rBtjn8p629+rV5 sw7pLU5UEJBLJcOpLDSOw9Yn3wuyJw/bkkRHUQGeksWVXxLkU2zD9W7r7rdEng0mjGvJZ44K5Ufj NHEXaVJKD8VU9h4+blEWy2SQlOVw/WSL3u+wqupruLZ26uGUIrstEij7VxAhlyq8BfM9GwwdsbmW DOCLK1g8Ew+r/KI+vFCgo5KI4bCEc9mnv7UqOdEyPWaiF6c1E4hN7hsQxIThwH6rt6zfIYEW/ubT wApwcBN2djiUx+2lUTUZY0NvHpbzgOOrkcyxQg== "
 "est": "1"
 "cid": "pUxf4KXU9Bbt/PGK/GqIylrehiyfpUNIMKB1vN0QMvw708jMoPvGhaEbylONZ/hxqNjtrpVm8Sok FeFGKl5S0EeexmxQ3j/r3dkQDxbRakfm6waRXiC1QM+HcHIUsOKbqEXCYQHMb5gowSPQjVFcBFZA pLsjGZ/0RXwZ5xd8Zf87hqtsj7gsTlsRmujZAmDobtTmgI8b2P+7K597oP37v2VbY1EaXp3QMzmO TvYzdaI48/hRBGEZrBKuBbFPTYdJFgHCJix1MBo8xe9qYaW+sRKERCb2xvA4ynhJGPH+OKMM95LK cCpdr57yBHs6fIS51RERqTN2M49IV3JDVPekWA== "
-'''
+```
 The "pid" is the Peer ID (PID) encrypted.
 The "cid" is the Content ID (CID) encrypted.
 The "est" is the command to execute.  When "est" is "1", then the **IPFS Lite** node can download
 the CID from the given PID.
 **Note:** The data is encrypted with the public key of the **IPFS Lite** node. Only the owner
 of the **IPFS Lite** node can with its private key decrypt the real CID and PID value.
+**Important:** When a peer sends e.g. multiple files to another peer, then the data will be stored
+into a single CID object and be stored on the tangle.
 
 - The **Outbox** contains all peer discovery information of an **IPFS Lite** node. The data
 is not yet encrypted on the Tangle. There is no need so far, because no "important" data
@@ -96,7 +103,7 @@ is stored in such a transaction. The data contains the name of the  **IPFS Lite*
 
 
 Example:
-'''
+```
 "peers": 
     "{
         "QmdGQoGuK3pao6bRDqGSDvux5SFHa4kC2XNFfHFcvcbydY":"/ip4/139.178.69.3/udp/4001/quic",
@@ -108,8 +115,8 @@ Example:
         "alias":"Xiaomi Mi A2",
         "pid":"Qmf6KmrY8WRishWYvAsyJJ2NcfDCqGGtAE47srYR7fqKFj
     "}"
-    
- '''
+```
+
 The "peers" section are relays peers which were automatically detected.
 The have an address and a Peer ID (PID).
 The "adds" section contains a fast "peer" address with the given PID ("pid").
