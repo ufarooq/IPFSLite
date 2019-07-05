@@ -333,6 +333,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
                     intent.setData(Uri.parse("https://gitlab.com/remmer.wilts/threads-server/issues"));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
 
                 } catch (Throwable e) {
@@ -344,6 +346,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
                     intent.setData(Uri.parse("https://gitlab.com/remmer.wilts/threads-server"));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
 
                 } catch (Throwable e) {
