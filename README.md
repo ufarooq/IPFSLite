@@ -39,20 +39,19 @@ was offline (Stored on the Tangle, Data is encrypted)
 **IPFS Lite** is a decentralized file-sharing and communication application which based on
 the following core technologies.
 * IPFS (https://ipfs.io/) 
-* IOTA (https://www.iota.org/)
-* WebRTC (https://webrtc.org/) 
-<br>
-The main component is here the IPFS technology and will be described a little bit more in detail
+The main component is here the IPFS technology and will be described in detail
 in the later sections. 
-<br>
+* IOTA (https://www.iota.org/)
+The IOTA technology is used to support two use-cases of this application.
+- Offline Mode 
+- Faster Node Access
+* WebRTC (https://webrtc.org/) 
 The WebRTC component is just required to establish a telephony functionality within
 this application. Consider this feature as a proof of concept (PoC). Communicating via WebRTC 
 requires that such nodes must use the **IPFS Lite** application, because the integration is not 
 IPFS "standard" (see Limitation)
-<br>
-The IOTA technology is used to support two use-cases of this application.
-* Offline Mode 
-* Faster Node Access
+
+
 
 
 
