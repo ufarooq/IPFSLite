@@ -54,7 +54,7 @@
     <string name="action_select_all">Select All</string>
     <string name="action_clear_selection">Clear Selection</string>
     <string name="auto_relay_support">Enable Auto Relay</string>
-    <string name="auto_relay_connect_support">Automatic Connection to a Relay</string>
+    <string name="support_peer_discovery">Support Peer Discovery</string>
     <string name="application_settings">Application Settings</string>
     <string name="general_settings">General Settings</string>
     <string name="file_not_supported">File not supported.</string>

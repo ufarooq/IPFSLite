@@ -20,6 +20,7 @@ import androidx.fragment.app.DialogFragment;
 import threads.core.Preferences;
 import threads.ipfs.api.PubsubConfig;
 import threads.ipfs.api.RoutingConfig;
+import threads.share.PeerService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -289,10 +290,10 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
         });
 
 
-        Switch connect_relay_support = view.findViewById(R.id.connect_relay_support);
-        connect_relay_support.setChecked(Preferences.isAutoConnectRelay(activity));
-        connect_relay_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Preferences.setAutoConnectRelay(activity, isChecked);
+        Switch support_peer_discovery = view.findViewById(R.id.support_peer_discovery);
+        support_peer_discovery.setChecked(PeerService.isSupportPeerStorage(activity));
+        support_peer_discovery.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            PeerService.setSupportPeerStorage(activity, isChecked);
         });
 
 
