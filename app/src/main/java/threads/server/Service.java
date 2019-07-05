@@ -112,8 +112,8 @@ public class Service {
             ProgressChannel.createProgressChannel(context);
             RTCSession.createRTCChannel(context);
 
-            Service.setSupportOfflineNotification(context, false); // TODO remove
-            PeerService.setSupportPeerStorage(context, false); // TODO remove
+            //Service.setSupportOfflineNotification(context, false); // TODO remove
+            //PeerService.setSupportPeerStorage(context, false); // TODO remove
 
             Singleton.getInstance(context);
 
@@ -416,7 +416,6 @@ public class Service {
 
             String alias = user.getPid();
 
-            // TODO make it dependent of a a preference (use peerservice)
             Peer peer = PeerService.getPeer(context, user);
             if (peer != null) {
                 String name = peer.getAdditional(Content.ALIAS);
