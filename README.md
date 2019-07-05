@@ -13,8 +13,8 @@ Official website of IPFS: https://ipfs.io/
 
 ## General 
 **IPFS Lite** supports the standard uses cases of IPFS (like add, cat, get, publish, etc).
-It rovides a modern UI to realize this common use cases and has
-the possibility to customize the configuration of the IPFS node.
+It provides a modern UI to realize such use cases and has in addition
+the possibility to customize the configuration of the node.
 The basic characteristics of the app are decentralized, respect of personal data,
 open source, free of charge, transparent, free of advertising and legally impeccable.
 
@@ -131,19 +131,18 @@ This section contains the description of the main features of the **IPFS Lite** 
 <br>The **Send Data** (Share Content) feature is the main feature of this application.
 <br>A regular IPFS node support does **not** support a share content feature in a way that
 a node "A" tells another node "B", that it can download data from node "A".
-To support this feature in an **IPFS Lite** node some adoptions has to be made.
+To support this feature in an **IPFS Lite** node, some adoptions has to be made.
     - Enable Pubsub
     <br>Each **IPFS Lite** node enables the IPFS Pubsub feature by default.
     - Communication via Pubsub
     <br>So when a node "A" tells another node "B" that it can download content data, then
     it is basically a pubsub message from "A" to "B" with the given information.
-    In this case it is just a CID object which should be downloaded.
+    <br>In this case, it is just a CID multihash which contains the information what to download.
     **ToDo:** 
-    In the current implementation the CID object is not yet encrypted (but can easily be done).
-    But the topic which is used for the 
-    - Whitelist of Peers
+    In the current implementation, the CID multihash is not yet encrypted (but can easily be done).
+    - Peers Whitelist 
     <br>Each **IPFS Lite** node has a list of peers which are allowed to send data.
-    <br>Basically such peers which are listed in the section "Peers" and which are not blocked
+    <br>Such whitelisted peers are in the application section "Peers" and which are not blocked
     by the user manually.
 - Transparency
 <br>The **IPFS Lite** application itself should be transparent as possible for the user.
@@ -160,6 +159,9 @@ To support this feature in an **IPFS Lite** node some adoptions has to be made.
     a debug flag, where even more output can be retrieved from the underlying IPFS node.
     <br>The **Inbox** and **Outbox** have no real value for the user of the application, it should
     only show how, where and what kind of information are stored.
+    - Personal Data
+    <br>No personal data are required to run the application. 
+    <br>The name of the peer is simply the brand name of the phone.
 
     
 ### Settings
