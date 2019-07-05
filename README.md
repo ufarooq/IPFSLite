@@ -106,11 +106,12 @@ out the information for faster peer access.
 **Important:**
 When both options **Support Offline Notification** and **Support Peer Discovery**
 are turned off, the **IPFS Lite** application behaves more like a regular IPFS node.
-Switching off might a positive effect on the energy consumption. Downside might be that the "Send Data" 
-feature does not work offline and the peer discovery might be not working for peers behind NATs.
-But one thing is for sure, when you just connecting to nodes which have static public IP addresses
-and your node also have this properties and you are all the time online, it definitely makes
-sense to deactivate the options.
+Switching off might have a positive effect on the overall energy consumption. 
+Downside might be that the "Send Data" feature does not work offline and the peer discovery might be not working for peers behind NATs.
+For sure is, when you just connecting to nodes which have static public IP addresses
+and your **IPFS Lite** node also have this properties and 
+additionally you and your connecting peers are all the time online, it definitely makes
+sense to deactivate the two options.
 
 ### Limitation
 This section contains a set of current limitations.
