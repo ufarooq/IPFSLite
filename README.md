@@ -66,15 +66,57 @@ it. (see Limitation)
 
 
 ### Enhancements
-- Precondition is that communicating nodes using this IPFS Lite application
-- Enhance the pubsub feature of IPFS to share files between two nodes (Send Option)
-- Integration of WebRTC via the pubsub feature of IPFS to support telephony between two nodes
-- Integration of IOTA to support faster node detection and to support a kind of offline mode
-between nodes
-- Inbox contains all notifications from other nodes which were sent while your node
+This section describes the enhancements of an **IPFS Lite** node.
+Precondition for using this enhancements is, that all participants using this application
+The enhancements are:
+- Using the Pubsub feature of IPFS to share files between two nodes (**Send Data** Option)
+- Integration of WebRTC via the Pubsub feature of IPFS to support telephony between two nodes
+- Integration of IOTA to support faster node detection (**Support Peer Discovery**) and to support 
+a kind of offline mode between nodes (**Support Offline Notification**)
+- The **Inbox** contains all notifications from other nodes which were sent while your node
 was offline (Stored on the Tangle, Data is encrypted)
 
+Example:
+'''
+"pid": "WlI6VDdzIARqhk4kDYXMjHAFOGnLEcloFNjvh224L/Qdm3tZ7yPjJlzFRmJMl0rBtjn8p629+rV5 sw7pLU5UEJBLJcOpLDSOw9Yn3wuyJw/bkkRHUQGeksWVXxLkU2zD9W7r7rdEng0mjGvJZ44K5Ufj NHEXaVJKD8VU9h4+blEWy2SQlOVw/WSL3u+wqupruLZ26uGUIrstEij7VxAhlyq8BfM9GwwdsbmW DOCLK1g8Ew+r/KI+vFCgo5KI4bCEc9mnv7UqOdEyPWaiF6c1E4hN7hsQxIThwH6rt6zfIYEW/ubT wApwcBN2djiUx+2lUTUZY0NvHpbzgOOrkcyxQg== "
+"est": "1"
+"cid": "pUxf4KXU9Bbt/PGK/GqIylrehiyfpUNIMKB1vN0QMvw708jMoPvGhaEbylONZ/hxqNjtrpVm8Sok FeFGKl5S0EeexmxQ3j/r3dkQDxbRakfm6waRXiC1QM+HcHIUsOKbqEXCYQHMb5gowSPQjVFcBFZA pLsjGZ/0RXwZ5xd8Zf87hqtsj7gsTlsRmujZAmDobtTmgI8b2P+7K597oP37v2VbY1EaXp3QMzmO TvYzdaI48/hRBGEZrBKuBbFPTYdJFgHCJix1MBo8xe9qYaW+sRKERCb2xvA4ynhJGPH+OKMM95LK cCpdr57yBHs6fIS51RERqTN2M49IV3JDVPekWA== "
+'''
+The "pid" is the Peer ID (PID) encrypted.
+The "cid" is the Content ID (CID) encrypted.
+The "est" is the command to execute.  When "est" is "1", then the **IPFS Lite** node can download
+the CID from the given PID.
+**Note:** The data is encrypted with the public key of the **IPFS Lite** node. Only the owner
+of the **IPFS Lite** node can with its private key decrypt the real CID and PID value.
 
+- The **Outbox** contains all peer discovery information of an **IPFS Lite** node. The data
+is not yet encrypted on the Tangle. There is no need so far, because no "important" data
+is stored in such a transaction. The data contains the name of the  **IPFS Lite** node
+(the brand name of the phone) and network access data. 
+
+
+Example:
+'''
+"peers": 
+    "{
+        "QmdGQoGuK3pao6bRDqGSDvux5SFHa4kC2XNFfHFcvcbydY":"/ip4/139.178.69.3/udp/4001/quic",
+        "QmRdjvsyoNjA2ZfAQBtQ7A2m5NmtSXLgxE55Brn1AUjZ1v":"/ip4/147.75.106.163/udp/4001/quic
+    "}"
+"adds": 
+    "{
+        "peer":"/ip4/104.248.37.1/tcp/4001",
+        "alias":"Xiaomi Mi A2",
+        "pid":"Qmf6KmrY8WRishWYvAsyJJ2NcfDCqGGtAE47srYR7fqKFj
+    "}"
+    
+ '''
+The "peers" section are relays peers which were automatically detected.
+The have an address and a Peer ID (PID).
+The "adds" section contains a fast "peer" address with the given PID ("pid").
+The "alias" is the name of the **IPFS Lite** node.
+**Note:**
+The "alias" has nothing to do with the "peer" and "pid". ("peer" and "pid" belong the
+the fast gateway peer)
 
 ### Features
 This section contains the description of the main features of **IPFS Lite**
@@ -107,7 +149,8 @@ out the information for faster peer access.
 When both options **Support Offline Notification** and **Support Peer Discovery**
 are turned off, the **IPFS Lite** application behaves more like a regular IPFS node.
 Switching off might have a positive effect on the overall energy consumption. 
-Downside might be that the "Send Data" feature does not work offline and the peer discovery might be not working for peers behind NATs.
+Downside might be that the **Send Data** feature does not work offline and the peer discovery 
+might be not working for peers behind NATs.
 For sure is, when you just connecting to nodes which have static public IP addresses
 and your **IPFS Lite** node also have this properties and 
 additionally you and your connecting peers are all the time online, it definitely makes
@@ -123,9 +166,10 @@ More information on https://github.com/libp2p/specs/pull/159
 * Disable Pubsub Feature (Note Configuration)
 In the current version of the application the pubsub feature of IPFS is enabled by default,
 even when the user does not require it. Reason is, that the pubsub feature is required by
-the application features "Send Data" and "WebRTC Telephony". Nevertheless the user should
+the application features **Send Data** and "WebRTC Telephony". Nevertheless the user should
 have the possibility to switch off "pubsub" with the consequence that unofficial IPFS features
 do not work anymore.
+
 
 ### Issues
 This section contains a set of general issues handling with IPFS.
@@ -143,13 +187,26 @@ This section contains a set of general issues handling with IPFS.
 the options **Support Offline Notification** and **Support Peer Discovery** in the settings are 
 activated on both machines.
     - Verify that on the "Console" no errors are printed
-    - Verify that the "Navigation/Outbox" has peer information about the access
-    <br>Date of the transaction might be useful, information is not yet decrypted, see json output
-    of the transaction, might be difficult to understand in the first shot
+    - Verify that the "Navigation/Outbox" has peer access information 
+    <br>Date of the transaction might be a useful information.
+    <br>Thought in the current implementation the data is not decrypted, see json output
+    of the transaction. The data itself might be difficult to understand at first glance.
+    
+
+
 ### Todo's
 This section contains a set of current and future todo's.
 * Official WebRTC Integration of IPFS, when it is ready
 <br>More information on https://github.com/libp2p/specs/pull/159
+* Deactivate the temporary feature **Support Peer Discovery**, when IPFS finally can better handle
+nodes behind NAT's (IPFS feature Relay, RelayHop, AutoNat etc.)
+* Pubsub Messages sometimes get lost (or at least do not arrive to the final peer destination).
+This makes the feature **Send Data** sometimes not very reliable
+* Storing data on IOTA Tangle is sometimes very time expensive and in general IOTA is not yet
+fully decentralized (Hope for a better version and better access to IOTA gateways)
+* Sometimes connection are not valid, thought they appear to be online, they are actually offline
+(Hope for a better IPFS core API, maybe IPFS eventbus seems to be a solution)
+* General issues are: https://gitlab.com/remmer.wilts/threads-server/issues
 
 ### Dependencies 
 - threads-iota (Wrapper implementation around a IOTA light node)
