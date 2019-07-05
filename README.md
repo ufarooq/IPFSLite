@@ -36,12 +36,12 @@ was offline (Stored on the Tangle, Data is encrypted)
 
 ## Documentation
 
-**IPFS Lite** is a decentralized file-sharing and communication application which based on the
-three core technologies.
+**IPFS Lite** is a decentralized file-sharing and communication application which based on
+the following core technologies.
 * IPFS (https://ipfs.io/) 
 * IOTA (https://www.iota.org/)
 * WebRTC (https://webrtc.org/) 
-<br/>
+<br>
 The main component is here the IPFS technology and will be described a little bit more in detail
 in the later sections. 
 <br>
