@@ -1,7 +1,8 @@
 <resources>
 
-    <style name="ThreadsTheme" parent="Theme.AppCompat.NoActionBar">
+    <style name="ThreadsTheme" parent="Theme.AppCompat.Light.NoActionBar">
 
+        <item name="colorAccent">@color/colorPrimary</item>
         <!--item name="colorPrimary">#FFF</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorPrimaryLight</item-->
