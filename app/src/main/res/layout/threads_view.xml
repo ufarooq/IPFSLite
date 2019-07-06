@@ -3,7 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
     app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
 
@@ -27,7 +26,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="6dp"
-            app:backgroundTint="@color/lightGray"
             app:srcCompat="@drawable/send_fab" />
 
 
@@ -36,7 +34,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="6dp"
-            app:backgroundTint="@color/lightGray"
             app:srcCompat="@drawable/delete_fab" />
 
     </LinearLayout>

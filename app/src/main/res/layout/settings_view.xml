@@ -15,8 +15,7 @@
             android:layout_margin="16dp"
             android:text="@string/general_settings"
             android:textAlignment="center"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textColor="@color/colorPrimary" />
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1" />
 
         <Switch
             android:id="@+id/dht_support"
@@ -80,8 +79,7 @@
             android:layout_margin="16dp"
             android:text="@string/swarm_settings"
             android:textAlignment="center"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textColor="@color/colorPrimary" />
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1" />
 
         <Switch
             android:id="@+id/auto_relay_support"
@@ -125,8 +123,7 @@
             android:layout_margin="16dp"
             android:text="@string/experimental_settings"
             android:textAlignment="center"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textColor="@color/colorPrimary" />
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1" />
 
         <Switch
             android:id="@+id/tls_prefer"
@@ -162,8 +159,7 @@
             android:layout_margin="16dp"
             android:text="@string/application_settings"
             android:textAlignment="center"
-            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textColor="@color/colorPrimary" />
+            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1" />
 
         <Switch
             android:id="@+id/support_peer_discovery"
@@ -191,8 +187,7 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/fab_margin"
             android:layout_marginTop="16dp"
-            android:layout_marginRight="@dimen/fab_margin"
-            android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+            android:layout_marginRight="@dimen/fab_margin" />
 
         <SeekBar
             android:id="@+id/connection_timeout"

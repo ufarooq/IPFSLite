@@ -40,11 +40,9 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
-        android:theme="@style/ThreadsServerTheme">
+        android:theme="@style/Theme.MaterialComponents.NoActionBar">
 
-        <activity
-            android:name=".LoginActivity"
-            android:theme="@style/ThreadsServerTheme">
+        <activity android:name=".LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -60,14 +58,12 @@
             android:name=".MainActivity"
             android:launchMode="singleInstance"
             android:configChanges="orientation|keyboard"
-            android:label="@string/app_name"
-            android:theme="@style/ThreadsServerTheme" />
+            android:label="@string/app_name" />
 
         <activity
             android:name="threads.share.PDFViewActivity"
             android:parentActivityName=".MainActivity"
-            android:screenOrientation="fullUser"
-            android:theme="@style/ThreadsServerTheme">
+            android:screenOrientation="fullUser">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
@@ -77,8 +73,7 @@
             android:configChanges="orientation|smallestScreenSize|screenSize|screenLayout"
             android:launchMode="singleTop"
             android:screenOrientation="fullUser"
-            android:parentActivityName=".MainActivity"
-            android:theme="@style/ThreadsServerTheme">
+            android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
@@ -87,8 +82,7 @@
             android:name="threads.share.IPFSVideoActivity"
             android:configChanges="orientation|smallestScreenSize|screenSize|screenLayout"
             android:screenOrientation="fullUser"
-            android:parentActivityName=".MainActivity"
-            android:theme="@style/ThreadsServerTheme">
+            android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
@@ -98,8 +92,7 @@
             android:configChanges="orientation|smallestScreenSize|screenSize|screenLayout"
             android:launchMode="singleTop"
             android:parentActivityName=".MainActivity"
-            android:screenOrientation="fullUser"
-            android:theme="@style/ThreadsServerTheme">
+            android:screenOrientation="fullUser">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />

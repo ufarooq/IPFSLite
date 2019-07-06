@@ -9,8 +9,6 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Base64;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -277,9 +275,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         try {
             if (!DaemonService.DAEMON_RUNNING.get()) {
-                fab_daemon.setImageDrawable(getDrawable(R.drawable.play_circle_outline));
+                fab_daemon.setImageDrawable(getDrawable(R.drawable.play));
             } else {
-                fab_daemon.setImageDrawable(getDrawable(R.drawable.stop_circle_outline));
+                fab_daemon.setImageDrawable(getDrawable(R.drawable.stop));
             }
             findViewById(R.id.fab_daemon).setVisibility(View.VISIBLE);
         } catch (Throwable e) {
@@ -288,14 +286,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_main_activity, menu);
-
-        return true;
-    }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -999,7 +989,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         String multihash = cid.getCid();
 
                         InfoDialogFragment.show(this, multihash,
-                                getString(R.string.multihash),
+                                getString(R.string.content_id),
                                 getString(R.string.multihash_access, multihash));
 
 

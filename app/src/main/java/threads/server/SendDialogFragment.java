@@ -1,7 +1,6 @@
 package threads.server;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -12,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -108,7 +108,7 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
 
 
                 })
-                .setNegativeButton(R.string.cancel, (dialog, id) -> {
+                .setNeutralButton(R.string.cancel, (dialog, id) -> {
 
                     // mis-clicking prevention, using threshold of 1000 ms
                     if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {

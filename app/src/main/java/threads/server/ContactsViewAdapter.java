@@ -36,6 +36,7 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
         this.listener = listener;
     }
 
+
     public void setAccounts(@NonNull List<User> accounts) {
         this.accounts.clear();
         for (User account : accounts) {
@@ -90,7 +91,6 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
 
                 try {
 
-                    holder.view.setBackgroundColor(Color.WHITE);
                     holder.account_name.setText(account.getAlias());
 
 
@@ -108,7 +108,7 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
                     holder.view.setOnClickListener((v) -> {
 
                         if (selected.get()) {
-                            v.setBackgroundColor(Color.WHITE);
+                            v.setBackgroundColor(android.R.drawable.list_selector_background);
 
                             if (account.getImage() != null) {
                                 Singleton singleton = Singleton.getInstance(activity);
@@ -119,7 +119,7 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
                                 holder.account_icon.setVisibility(View.GONE);
                             }
                         } else {
-                            v.setBackgroundColor(Color.LTGRAY);
+                            v.setBackgroundColor(Color.GRAY);
                             TextDrawable drawable = TextDrawable.builder()
                                     .buildRound("\u2713", R.color.colorMarkDrawable);
                             holder.account_icon.setImageDrawable(drawable);

@@ -12,15 +12,13 @@
         android:layout_height="wrap_content"
         android:id="@+id/app_toolbar"
         android:background="@drawable/side_nav_bar"
-        android:fitsSystemWindows="false"
-        android:theme="@style/ThreadsServerAppBarOverlay">
+        android:fitsSystemWindows="false">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:elevation="4dp"
-            app:popupTheme="@style/ThreadsServerPopupOverlay" />
+            android:elevation="4dp" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tabLayout"
@@ -61,11 +59,10 @@
         android:id="@+id/fab_daemon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:backgroundTint="@android:color/transparent"
         app:layout_anchor="@id/toolbar"
         app:layout_anchorGravity="center"
-        app:maxImageSize="@android:dimen/app_icon_size"
-        app:srcCompat="@drawable/play_circle_outline" />
+        app:fabSize="mini"
+        app:srcCompat="@drawable/play" />
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

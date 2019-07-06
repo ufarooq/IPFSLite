@@ -151,7 +151,7 @@ public class PeersDialogFragment extends DialogFragment {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         Window window = dialog.getWindow();
         if (window != null) {
-            window.getAttributes().windowAnimations = R.style.ActionDialogAnimation;
+            window.getAttributes().windowAnimations = threads.share.R.style.DialogBottomAnimation;
             window.getAttributes().gravity = Gravity.BOTTOM | Gravity.CENTER;
             window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             window.setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));

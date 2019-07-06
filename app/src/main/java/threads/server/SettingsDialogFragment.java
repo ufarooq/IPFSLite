@@ -291,7 +291,7 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
 
 
         Switch support_peer_discovery = view.findViewById(R.id.support_peer_discovery);
-        support_peer_discovery.setChecked(PeerService.isSupportPeerDiscovera(activity));
+        support_peer_discovery.setChecked(PeerService.isSupportPeerDiscovery(activity));
         support_peer_discovery.setOnCheckedChangeListener((buttonView, isChecked) -> {
             PeerService.setSupportPeerDiscovery(activity, isChecked);
         });

@@ -1,7 +1,6 @@
 package threads.server;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -19,6 +18,7 @@ import android.view.Window;
 import android.view.inputmethod.InputMethodManager;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
 import com.google.android.material.textfield.TextInputEditText;
@@ -54,8 +54,8 @@ public class EditPeerDialogFragment extends DialogFragment {
 
 
     private void isValidMultihash(Dialog dialog) {
-        if (dialog instanceof android.app.AlertDialog) {
-            android.app.AlertDialog alertDialog = (android.app.AlertDialog) dialog;
+        if (dialog instanceof AlertDialog) {
+            AlertDialog alertDialog = (AlertDialog) dialog;
             Editable text = multihash.getText();
             checkNotNull(text);
             String multi = text.toString();
@@ -73,7 +73,7 @@ public class EditPeerDialogFragment extends DialogFragment {
             }
 
 
-            alertDialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setEnabled(result);
+            alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(result);
 
 
             if (!notPrintErrorMessages.get()) {
@@ -152,7 +152,7 @@ public class EditPeerDialogFragment extends DialogFragment {
                     mListener.clickConnectPeer(hash);
 
 
-                })
+                })/*
                 .setNegativeButton(android.R.string.cancel, (dialog, id) -> {
 
                     if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
@@ -164,7 +164,7 @@ public class EditPeerDialogFragment extends DialogFragment {
                     removeKeyboards();
                     dismiss();
 
-                })
+                })*/
                 .setTitle(getString(R.string.peer_id));
 
 

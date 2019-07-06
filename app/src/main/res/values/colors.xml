@@ -1,8 +1,16 @@
 <!--?xml version="1.0" encoding="UTF-8"?-->
 <resources>
-    <color name="colorPrimary">#1a237e</color>
-    <color name="colorPrimaryLight">#534bae</color>
-    <color name="colorPrimaryDark">#000051</color>
-    <color name="lightGray">#f1f8f8</color>
-    <color name="colorTab">#FFF</color>
+    <color name="colorPrimary">#000</color>
+    <color name="colorPrimaryLight">#000</color>
+    <color name="colorPrimaryDark">#000</color>
+
+    <color name="colorTab">#000</color>
+
+    <color name="colorDrawable">#FFF</color>
+    <color name="colorUnreadDrawable">#6a99bc</color>
+    <color name="colorMarkDrawable">#718792</color>
+
+    <color name="colorContentDate">#FFF</color>
+    <color name="colorContentTitle">#FFF</color>
+    <color name="colorContentSubtitle">#FFF</color>
 </resources>
