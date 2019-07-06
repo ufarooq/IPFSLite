@@ -5,10 +5,7 @@
     <color name="colorPrimaryDark">#000</color>
 
     <color name="colorTab">#000</color>
-
     <color name="colorDrawable">#FFF</color>
-    <color name="colorUnreadDrawable">#6a99bc</color>
-    <color name="colorMarkDrawable">#718792</color>
 
     <color name="colorContentDate">#FFF</color>
     <color name="colorContentTitle">#FFF</color>

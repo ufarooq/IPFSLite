@@ -1,11 +1,10 @@
 <resources>
-    <!-- Base application theme. -->
+
     <style name="ThreadsTheme" parent="Theme.AppCompat.NoActionBar">
-        <!-- Customize your theme here. -->
-        <!--item name="colorPrimary">#FFF</item-->
-        <!--item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+
+        <!--item name="colorPrimary">#FFF</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorPrimaryLight</item-->
     </style>
-
 
 </resources>
