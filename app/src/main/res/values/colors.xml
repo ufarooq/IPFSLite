@@ -1,14 +1,8 @@
 <!--?xml version="1.0" encoding="UTF-8"?-->
 <resources>
     <color name="colorPrimary">#396b8c</color>
-    <color name="colorPrimaryLight">#6a99bc</color>
-    <color name="colorPrimaryDark">#00405f</color>
 
     <color name="colorDrawable">#396b8c</color>
-    <!--color name="colorTab">#000</color>
-    <color name="colorDrawable">#FFF</color-->
+    <!--color name="colorTab">#000</color-->
 
-    <!--color name="colorContentDate">#FFF</color>
-    <color name="colorContentTitle">#FFF</color>
-    <color name="colorContentSubtitle">#FFF</color-->
 </resources>
