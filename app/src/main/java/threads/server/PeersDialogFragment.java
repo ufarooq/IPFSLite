@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,7 +26,7 @@ public class PeersDialogFragment extends DialogFragment {
     private static final String EDIT_PEER_ACTIVE = "EDIT_PEER_ACTIVE";
     private static final String SCAN_PEER_ACTIVE = "SCAN_PEER_ACTIVE";
     private static final String YOUR_PEER_ACTIVE = "YOUR_PEER_ACTIVE";
-
+    private int backgroundColor;
     private ActionListener actionListener;
     private long mLastClickTime = 0;
 
@@ -43,12 +44,21 @@ public class PeersDialogFragment extends DialogFragment {
         return fragment;
     }
 
+    public static int getThemeBackgroundColor(final Context context) {
+        final TypedValue value = new TypedValue();
+        context.getTheme().resolveAttribute(android.R.attr.windowBackground, value, true);
+        return value.data;
+    }
+
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
 
+
         try {
             actionListener = (ActionListener) getActivity();
+
+            backgroundColor = getThemeBackgroundColor(context);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -74,6 +84,8 @@ public class PeersDialogFragment extends DialogFragment {
 
         @SuppressWarnings("all")
         View view = inflater.inflate(R.layout.peers_action_view, null);
+
+        view.setBackgroundColor(backgroundColor);
 
         TextView menu_scan_peer = view.findViewById(R.id.menu_scan_pid);
         if (!scanPeerActive) {

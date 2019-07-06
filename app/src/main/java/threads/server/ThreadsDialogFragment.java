@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,7 +30,7 @@ public class ThreadsDialogFragment extends DialogFragment {
 
     private ThreadsDialogFragment.ActionListener actionListener;
     private long mLastClickTime = 0;
-
+    private int backgroundColor;
     static ThreadsDialogFragment newInstance(boolean editActive,
                                              boolean scanActive,
                                              boolean fileActive) {
@@ -44,12 +45,21 @@ public class ThreadsDialogFragment extends DialogFragment {
         return fragment;
     }
 
+    public static int getThemeBackgroundColor(final Context context) {
+        final TypedValue value = new TypedValue();
+        context.getTheme().resolveAttribute(android.R.attr.windowBackground, value, true);
+        return value.data;
+    }
+
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
 
+
         try {
             actionListener = (ThreadsDialogFragment.ActionListener) getActivity();
+
+            backgroundColor = getThemeBackgroundColor(context);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -75,6 +85,8 @@ public class ThreadsDialogFragment extends DialogFragment {
 
         @SuppressWarnings("all")
         View view = inflater.inflate(R.layout.threads_action_view, null);
+
+        view.setBackgroundColor(backgroundColor);
 
 
         TextView menu_file_cid = view.findViewById(R.id.menu_file_cid);
