@@ -5,6 +5,7 @@
     <item
         android:id="@+id/action_info"
         android:icon="@drawable/server_network"
+        app:iconTint="?android:textColorSecondary"
         android:orderInCategory="50"
         android:title="@string/action_info"
         android:visible="true"

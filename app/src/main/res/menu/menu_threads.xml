@@ -6,6 +6,7 @@
     <item
         android:id="@+id/action_mark_all"
         android:icon="@drawable/expand_all_outline"
+        app:iconTint="?android:textColorSecondary"
         android:orderInCategory="55"
         android:title="@string/action_select_all"
         android:visible="true"
@@ -14,6 +15,7 @@
     <item
         android:id="@+id/action_unmark_all"
         android:icon="@drawable/expand_all_outline"
+        app:iconTint="?android:textColorSecondary"
         android:orderInCategory="55"
         android:title="@string/action_clear_selection"
         android:visible="true"

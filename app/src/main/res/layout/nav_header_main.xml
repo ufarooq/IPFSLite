@@ -15,6 +15,7 @@
         android:layout_gravity="center|start"
         android:layout_marginStart="@dimen/fab_margin"
         app:srcCompat="@drawable/server_network"
+        android:tint="@color/colorAccent"
         tools:ignore="ContentDescription" />
 
     <TextView
