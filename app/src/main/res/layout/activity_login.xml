@@ -1,5 +1,4 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/login_layout"
     android:layout_width="match_parent"
@@ -20,8 +19,8 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:padding="64dp"
-        app:srcCompat="@drawable/server_network"
-        android:tint="@color/colorAccent"
+        android:src="@drawable/server_network"
+        android:tint="?android:colorAccent"
         tools:ignore="ContentDescription" />
 
     <TextView
