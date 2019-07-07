@@ -339,8 +339,11 @@ public class Service {
                     }
                 }
             }
-            if (!publicKey.isEmpty()) {
-
+            if (publicKey.isEmpty()) {
+                Singleton.getInstance(context).getConsoleListener().error(
+                        "Failed sending notification to PID Inbox :"
+                                + pid + " Reason : Public Key not available");
+            } else {
                 Content content = new Content();
 
                 content.put(Content.PID, Encryption.encryptRSA(host.getPid(), publicKey));

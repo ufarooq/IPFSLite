@@ -41,7 +41,6 @@ import threads.core.mdl.EventViewModel;
 import threads.core.mdl.ThreadViewModel;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThreadsViewAdapter;
-import threads.share.UtilityService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -642,7 +641,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public int getMediaResource(@NonNull Thread thread) {
         checkNotNull(thread);
-        return UtilityService.getMediaResource(thread.getMimeType(), false);
+        return -1;
     }
 
     @NonNull

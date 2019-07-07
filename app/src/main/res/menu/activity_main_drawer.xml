@@ -30,7 +30,7 @@
         <menu>
             <item
                 android:id="@+id/nav_share"
-                android:icon="@android:drawable/ic_menu_share"
+                android:icon="@drawable/share"
                 app:iconTint="?android:textColorSecondary"
                 android:title="@string/share_app" />
             <item
