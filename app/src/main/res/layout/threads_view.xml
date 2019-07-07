@@ -26,7 +26,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="6dp"
-            app:srcCompat="@drawable/send_fab" />
+            android:src="@drawable/send"
+            android:tint="?android:colorBackground" />
 
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -34,7 +35,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="6dp"
-            app:srcCompat="@drawable/delete_fab" />
+            android:src="@drawable/delete"
+            android:tint="?android:colorBackground" />
 
     </LinearLayout>
 
@@ -45,6 +47,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        app:srcCompat="@drawable/dots" />
+        android:src="@drawable/dots"
+        android:tint="?android:colorBackground" />
 
 </FrameLayout>

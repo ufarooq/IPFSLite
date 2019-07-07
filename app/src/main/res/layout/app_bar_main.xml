@@ -60,7 +60,8 @@
         app:layout_anchor="@id/toolbar"
         app:layout_anchorGravity="center"
         app:fabSize="mini"
-        app:srcCompat="@drawable/play" />
+        android:src="@drawable/play"
+        android:tint="?android:colorBackground" />
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
