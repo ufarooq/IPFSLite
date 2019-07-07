@@ -3,8 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/login_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/colorPrimary">
+    android:layout_height="match_parent">
 
     <TextView
         android:layout_width="wrap_content"
@@ -16,11 +15,12 @@
 
     <ImageView
         android:id="@+id/app_image"
-        android:layout_width="256dp"
-        android:layout_height="256dp"
+        android:layout_width="240dp"
+        android:layout_height="240dp"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        app:srcCompat="@drawable/ic_launcher_foreground"
+        android:padding="64dp"
+        app:srcCompat="@drawable/server_network"
         tools:ignore="ContentDescription" />
 
     <TextView
