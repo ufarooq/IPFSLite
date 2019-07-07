@@ -44,7 +44,7 @@ public class PeersDialogFragment extends DialogFragment {
         return fragment;
     }
 
-    public static int getThemeBackgroundColor(final Context context) {
+    private static int getThemeBackgroundColor(final Context context) {
         final TypedValue value = new TypedValue();
         context.getTheme().resolveAttribute(android.R.attr.windowBackground, value, true);
         return value.data;
