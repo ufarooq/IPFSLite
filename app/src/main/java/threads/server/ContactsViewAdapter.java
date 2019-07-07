@@ -1,11 +1,9 @@
 package threads.server;
 
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
 import android.util.Pair;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,20 +30,14 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
     private final ValidateListener listener;
     private final List<Pair<User, AtomicBoolean>> accounts = new ArrayList<>();
     private final Activity activity;
-    private final int accentColor;
+
 
     public ContactsViewAdapter(@NonNull Activity activity, @NonNull ValidateListener listener) {
         this.activity = activity;
         this.listener = listener;
-        accentColor = getThemeAccentColor(activity);
     }
 
 
-    public static int getThemeAccentColor(final Context context) {
-        final TypedValue value = new TypedValue();
-        context.getTheme().resolveAttribute(threads.share.R.attr.colorAccent, value, true);
-        return value.data;
-    }
 
     public void setAccounts(@NonNull List<User> accounts) {
         this.accounts.clear();
@@ -131,7 +123,7 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
                         } else {
                             v.setBackgroundColor(Color.GRAY);
                             TextDrawable drawable = TextDrawable.builder()
-                                    .buildRound("\u2713", accentColor);
+                                    .buildRound("\u2713", Color.DKGRAY);
                             holder.account_icon.setImageDrawable(drawable);
                         }
                         selected.set(!selected.get());

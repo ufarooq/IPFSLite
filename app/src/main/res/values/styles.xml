@@ -1,6 +1,6 @@
 <resources>
 
-    <style name="ThreadsTheme" parent="Theme.AppCompat.NoActionBar">
+    <style name="ThreadsTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
