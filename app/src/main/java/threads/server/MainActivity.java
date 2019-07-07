@@ -1270,13 +1270,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     PID user = PID.create(pid);
 
-                    threads.setUserAlias(user, name);
-
                     byte[] data = THREADS.getImage(getApplicationContext(),
                             name, R.drawable.server_network);
                     CID image = ipfs.add(data, "", true);
-
+                    checkNotNull(image);
                     threads.setUserImage(user, image);
+
+                    threads.setUserAlias(user, name);
+
+
 
                     threads.setThreadSenderAlias(user, name);
 
