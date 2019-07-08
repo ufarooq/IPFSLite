@@ -40,7 +40,7 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
-        android:theme="@style/ThreadsTheme">
+        android:theme="@style/Theme.MaterialComponents.NoActionBar">
 
         <activity android:name=".LoginActivity">
             <intent-filter>
