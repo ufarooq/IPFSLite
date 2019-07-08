@@ -103,6 +103,10 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.menu_threads, menu);
+        MenuItem action_delete = menu.findItem(R.id.action_delete);
+        action_delete.setVisible(!threads.isEmpty());
+        MenuItem action_send = menu.findItem(R.id.action_send);
+        action_send.setVisible(!threads.isEmpty());
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -335,6 +339,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 fab_action.setImageResource(R.drawable.arrow_left);
             }
 
+            mListener.invalidateOptionsMenu();
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -411,6 +417,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 threadsViewAdapter.setState(idx, ThreadsViewAdapter.State.NONE);
             }
             threads.clear();
+
             threadIdx = -1;
             threadsViewAdapter.notifyDataSetChanged();
         } catch (Throwable e) {
@@ -461,6 +468,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 threadIdx = -1;
             }
             threads.clear();
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {
@@ -682,5 +690,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
         void clickThreadsSend(long[] idxs);
 
+        void invalidateOptionsMenu();
     }
 }
