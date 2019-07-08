@@ -38,7 +38,6 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
     }
 
 
-
     public void setAccounts(@NonNull List<User> accounts) {
         this.accounts.clear();
         for (User account : accounts) {

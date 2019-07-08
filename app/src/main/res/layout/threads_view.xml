@@ -13,34 +13,6 @@
         android:scrollbars="vertical" />
 
 
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top|end"
-        android:layout_margin="10dp"
-        android:background="@android:color/transparent"
-        android:orientation="vertical">
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_send"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="6dp"
-            android:src="@drawable/send"
-            android:tint="?android:colorBackground" />
-
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_delete"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="6dp"
-            android:src="@drawable/delete"
-            android:tint="?android:colorBackground" />
-
-    </LinearLayout>
-
-
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_action"
         android:layout_width="wrap_content"

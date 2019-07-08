@@ -104,4 +104,7 @@
     <string name="support_offline_notificationt">Support Offline Notifications</string>
     <string name="documentation">Documentation</string>
     <string name="outbox">Outbox</string>
+    <string name="deleting_files_within_directory_not_supported">Delecting files within a directory is currently not supported</string>
+    <string name="no_marked_file_delete">No files marked for deleting</string>
+    <string name="no_marked_file_send">No marked files for sending</string>
 </resources>

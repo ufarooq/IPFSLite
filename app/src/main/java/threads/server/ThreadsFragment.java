@@ -121,6 +121,29 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
                 return true;
             }
+            case R.id.action_delete: {
+
+                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                    break;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+                deleteAction();
+
+                return true;
+            }
+
+            case R.id.action_send: {
+
+                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                    break;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+                sendAction();
+
+                return true;
+            }
             case R.id.action_unmark_all: {
 
                 if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
@@ -245,32 +268,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         });
 
 
-        FloatingActionButton fab_delete = view.findViewById(R.id.fab_delete);
-        fab_delete.setOnClickListener((v) -> {
-
-            if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
-                return;
-            }
-            mLastClickTime = SystemClock.elapsedRealtime();
-
-            deleteAction();
-
-        });
-
-
-        FloatingActionButton fab_send = view.findViewById(R.id.fab_send);
-        fab_send.setOnClickListener((v) -> {
-
-            if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
-                return;
-            }
-            mLastClickTime = SystemClock.elapsedRealtime();
-
-            sendAction();
-
-        });
-
-
         EventViewModel eventViewModel =
                 ViewModelProviders.of(this).get(EventViewModel.class);
 
@@ -338,23 +335,20 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 fab_action.setImageResource(R.drawable.arrow_left);
             }
 
-            if (threads.isEmpty()) {
-                view.findViewById(R.id.fab_delete).setVisibility(View.INVISIBLE);
-                view.findViewById(R.id.fab_send).setVisibility(View.INVISIBLE);
-            } else {
-                if (topLevel.get()) {
-                    view.findViewById(R.id.fab_delete).setVisibility(View.VISIBLE);
-                } else {
-                    view.findViewById(R.id.fab_delete).setVisibility(View.INVISIBLE);
-                }
-                view.findViewById(R.id.fab_send).setVisibility(View.VISIBLE);
-            }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
     private void sendAction() {
+
+        if (threads.isEmpty()) {
+            THREADS threads = Singleton.getInstance(mContext).getThreads();
+            Preferences.warning(threads,
+                    mContext.getString(R.string.no_marked_file_send));
+            return;
+        }
+
         try {
 
             long[] entries = convert(threads);
@@ -435,6 +429,21 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     }
 
     private void deleteAction() {
+
+
+        if (!topLevel.get()) {
+            THREADS threads = Singleton.getInstance(mContext).getThreads();
+            Preferences.warning(threads,
+                    mContext.getString(R.string.deleting_files_within_directory_not_supported));
+            return;
+        }
+
+        if (threads.isEmpty()) {
+            THREADS threads = Singleton.getInstance(mContext).getThreads();
+            Preferences.warning(threads,
+                    mContext.getString(R.string.no_marked_file_delete));
+            return;
+        }
 
         long[] entries = convert(threads);
 

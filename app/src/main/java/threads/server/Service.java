@@ -79,6 +79,11 @@ public class Service {
     private static final String APP_KEY = "AppKey";
     private static final String UPDATE = "UPDATE";
     private static final String SUPPORT_OFFLINE_NOTIFICATION_KEY = "supportOfflineNotificationKey";
+    private static Service SINGLETON = null;
+    private final AtomicBoolean peerCheckFlag = new AtomicBoolean(false);
+
+    private Service() {
+    }
 
     public static boolean isSupportOfflineNotification(@NonNull Context context) {
         checkNotNull(context);
@@ -93,13 +98,6 @@ public class Service {
         editor.putBoolean(SUPPORT_OFFLINE_NOTIFICATION_KEY, enable);
         editor.apply();
     }
-
-    private static Service SINGLETON = null;
-    private final AtomicBoolean peerCheckFlag = new AtomicBoolean(false);
-
-    private Service() {
-    }
-
 
     @NonNull
     static Service getInstance(@NonNull Context context) {

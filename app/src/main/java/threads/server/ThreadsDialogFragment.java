@@ -31,6 +31,7 @@ public class ThreadsDialogFragment extends DialogFragment {
     private ThreadsDialogFragment.ActionListener actionListener;
     private long mLastClickTime = 0;
     private int backgroundColor;
+
     static ThreadsDialogFragment newInstance(boolean editActive,
                                              boolean scanActive,
                                              boolean fileActive) {

@@ -297,7 +297,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.action_mark_all: {
                 return false;
             }
-
+            case R.id.action_delete: {
+                return false;
+            }
+            case R.id.action_send: {
+                return false;
+            }
         }
 
         return super.onOptionsItemSelected(item);
@@ -1277,7 +1282,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     threads.setUserImage(user, image);
 
                     threads.setUserAlias(user, name);
-
 
 
                     threads.setThreadSenderAlias(user, name);
