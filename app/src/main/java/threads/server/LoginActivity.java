@@ -43,7 +43,7 @@ public class LoginActivity extends AppCompatActivity {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
-
+        onLoad();
     }
 
 
@@ -69,9 +69,9 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+
+    public void onLoad() {
+
         Intent intent = getIntent();
         final String action = intent.getAction();
         final String type = intent.getType();
@@ -103,7 +103,7 @@ public class LoginActivity extends AppCompatActivity {
             main.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             main.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(main);
-
+            finish();
 
         });
     }

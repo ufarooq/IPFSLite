@@ -56,7 +56,6 @@
 
         <activity
             android:name=".MainActivity"
-            android:launchMode="singleInstance"
             android:configChanges="orientation|keyboard"
             android:label="@string/app_name" />
 
