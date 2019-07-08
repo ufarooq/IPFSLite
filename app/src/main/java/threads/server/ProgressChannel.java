@@ -46,14 +46,14 @@ class ProgressChannel {
         checkNotNull(context);
         checkNotNull(content);
 
-        Intent notifyIntent = new Intent(context, MainActivity.class);
-
-        notifyIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        Intent main = new Intent(context, LoginActivity.class);
+        main.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        main.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        main.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
         int requestID = (int) System.currentTimeMillis();
         PendingIntent pendingIntent = PendingIntent.getActivity(context, requestID,
-                notifyIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                main, PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID);
         builder.setContentIntent(pendingIntent);

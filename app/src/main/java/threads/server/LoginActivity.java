@@ -18,9 +18,9 @@ import java.util.concurrent.Executors;
 public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = LoginActivity.class.getSimpleName();
-
+    private ProgressBar progress_bar;
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -31,7 +31,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
 
-        ProgressBar progress_bar = findViewById(R.id.progress_bar);
+        progress_bar = findViewById(R.id.progress_bar);
 
         progress_bar.setVisibility(View.VISIBLE);
 
@@ -43,35 +43,9 @@ public class LoginActivity extends AppCompatActivity {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
-        Intent intent = getIntent();
-        final String action = intent.getAction();
-        final String type = intent.getType();
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-
-
-            Service.getInstance(getApplicationContext());
-
-
-            NotificationService.notifications(getApplicationContext());
-            NotificationService.periodic(getApplicationContext());
-            CleanupService.cleanup(getApplicationContext());
-            ContentsService.downloadContents(getApplicationContext());
-
-            if (Intent.ACTION_SEND.equals(action) && type != null) {
-                if ("text/plain".equals(type)) {
-                    handleSendText(intent);
-                } else {
-                    handleSend(intent);
-                }
-            }
-            runOnUiThread(() -> progress_bar.setVisibility(View.GONE));
-            runOnUiThread(this::login);
-        });
-
 
     }
+
 
     void handleSendText(Intent intent) {
         try {
@@ -95,19 +69,44 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private void login() {
-        Intent intent = new Intent(getApplicationContext(),
-                MainActivity.class);
-        startActivity(intent);
-        finish();
-
-    }
-
-
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onStart() {
+        super.onStart();
+        Intent intent = getIntent();
+        final String action = intent.getAction();
+        final String type = intent.getType();
 
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                Service.getInstance(getApplicationContext());
+
+
+                NotificationService.notifications(getApplicationContext());
+                NotificationService.periodic(getApplicationContext());
+                CleanupService.cleanup(getApplicationContext());
+                ContentsService.downloadContents(getApplicationContext());
+
+                if (Intent.ACTION_SEND.equals(action) && type != null) {
+                    if ("text/plain".equals(type)) {
+                        handleSendText(intent);
+                    } else {
+                        handleSend(intent);
+                    }
+                }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage());
+            }
+
+            Intent main = new Intent(getApplicationContext(), MainActivity.class);
+            main.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            main.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            main.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(main);
+
+
+        });
     }
+
 }
 

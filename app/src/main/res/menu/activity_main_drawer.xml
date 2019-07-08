@@ -1,58 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
-    <group android:checkableBehavior="single">
-        <item
-            android:id="@+id/nav_settings"
-            android:icon="@android:drawable/ic_menu_preferences"
-            app:iconTint="?android:textColorSecondary"
-            android:title="@string/settings" />
-        <item
-            android:id="@+id/nav_config"
-            android:icon="@android:drawable/ic_menu_compass"
-            app:iconTint="?android:textColorSecondary"
-            android:title="@string/config" />
-        <item
-            android:id="@+id/nav_inbox"
-            android:icon="@drawable/mailbox_outline"
-            app:iconTint="?android:textColorSecondary"
-            android:title="@string/inbox" />
-        <item
-            android:id="@+id/nav_outbox"
-            android:icon="@android:drawable/stat_notify_more"
-            app:iconTint="?android:textColorSecondary"
-            android:title="@string/outbox" />
-    </group>
+    <item android:title="@string/general">
+        <menu>
+            <item
+                android:id="@+id/nav_settings"
+                android:icon="@android:drawable/ic_menu_preferences"
+                android:title="@string/settings"
+                app:iconTint="?android:textColorSecondary" />
+            <item
+                android:id="@+id/nav_config"
+                android:icon="@android:drawable/ic_menu_compass"
+                android:title="@string/config"
+                app:iconTint="?android:textColorSecondary" />
+            <item
+                android:id="@+id/nav_inbox"
+                android:icon="@drawable/mailbox_outline"
+                android:title="@string/inbox"
+                app:iconTint="?android:textColorSecondary" />
+            <item
+                android:id="@+id/nav_outbox"
+                android:icon="@android:drawable/stat_notify_more"
+                android:title="@string/outbox"
+                app:iconTint="?android:textColorSecondary" />
+        </menu>
+    </item>
+
+
     <item android:title="@string/application">
         <menu>
             <item
                 android:id="@+id/nav_share"
                 android:icon="@drawable/share"
-                app:iconTint="?android:textColorSecondary"
-                android:title="@string/share_app" />
+                android:title="@string/share_app"
+                app:iconTint="?android:textColorSecondary" />
             <item
                 android:id="@+id/nav_documentation"
                 android:icon="@drawable/book_open_outline"
-                app:iconTint="?android:textColorSecondary"
-                android:title="@string/documentation" />
+                android:title="@string/documentation"
+                app:iconTint="?android:textColorSecondary" />
             <item
                 android:id="@+id/nav_issues"
                 android:icon="@drawable/bug_outline"
-                app:iconTint="?android:textColorSecondary"
-                android:title="@string/issues" />
+                android:title="@string/issues"
+                app:iconTint="?android:textColorSecondary" />
             <item
                 android:id="@+id/nav_licences"
                 android:icon="@drawable/information_variant"
-                app:iconTint="?android:textColorSecondary"
-                android:title="@string/licences" />
+                android:title="@string/licences"
+                app:iconTint="?android:textColorSecondary" />
             <item
                 android:id="@+id/nav_privacy_policy"
                 android:icon="@drawable/security"
-                app:iconTint="?android:textColorSecondary"
-                android:title="@string/privacy_policy" />
+                android:title="@string/privacy_policy"
+                app:iconTint="?android:textColorSecondary" />
 
         </menu>
     </item>

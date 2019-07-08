@@ -874,6 +874,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             Intent intent = RTCCallActivity.createIntent(MainActivity.this,
                                     pid, user.getAlias(), null, true);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                             intent.setAction(RTCCallActivity.ACTION_OUTGOING_CALL);
                             MainActivity.this.startActivity(intent);
                         }
@@ -1037,8 +1038,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         } else if (mimeType.startsWith("video")) {
 
-                            Intent intent = new Intent(MainActivity.this,
+                            Intent intent = new Intent(getApplicationContext(),
                                     IPFSVideoActivity.class);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                             intent.putExtra(IPFSVideoActivity.CID_ID, cid.getCid());
                             intent.putExtra(IPFSVideoActivity.KEY, thread.getSesKey());
                             intent.putExtra(IPFSVideoActivity.SIZE, Long.valueOf(filesize));
