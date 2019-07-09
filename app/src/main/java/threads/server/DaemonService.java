@@ -104,7 +104,7 @@ public class DaemonService extends Service {
             IntentFilter intentFilter = new IntentFilter();
             intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
             registerReceiver(broadcastReceiver, intentFilter);
-            threads.server.Service.cleanup(getApplicationContext());
+            CleanupService.cleanup(getApplicationContext());
             ContentsService.downloadContents(getApplicationContext());
         } else {
             try {
