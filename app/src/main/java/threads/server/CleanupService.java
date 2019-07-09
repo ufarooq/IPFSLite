@@ -10,12 +10,12 @@ import java.util.concurrent.Executors;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class CleanupService {
+class CleanupService {
 
     private static final String TAG = CleanupService.class.getSimpleName();
 
 
-    public static void cleanup(@NonNull Context context) {
+    static void cleanup(@NonNull Context context) {
         checkNotNull(context);
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
