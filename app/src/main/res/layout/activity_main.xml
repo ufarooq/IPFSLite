@@ -66,7 +66,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/play"
-            android:tint="?android:colorBackground"
+            app:tint="@android:color/black"
             app:fabSize="mini"
             app:layout_anchor="@id/toolbar"
             app:layout_anchorGravity="center" />
