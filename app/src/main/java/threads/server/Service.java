@@ -215,77 +215,77 @@ public class Service {
                     if (data != null) {
 
 
-                            Service.getInstance(context); // now time to load instance
+                        Service.getInstance(context); // now time to load instance
 
-                            IPFS ipfs = Singleton.getInstance(context).getIpfs();
-                            checkNotNull(ipfs, "IPFS not valid");
-                            if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
+                        IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                        checkNotNull(ipfs, "IPFS not valid");
+                        if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
+                            try {
+                                String privateKey = ipfs.getRawPrivateKey();
+                                checkNotNull(privateKey, "Private Key not valid");
+                                final String pidStr = Encryption.decryptRSA(
+                                        data.get(Content.PID), privateKey);
+                                checkNotNull(pidStr);
+
+                                final String cidStr = Encryption.decryptRSA(
+                                        data.get(Content.CID), privateKey);
+                                checkNotNull(cidStr);
+
+                                // check if cid is valid
                                 try {
-                                    String privateKey = ipfs.getRawPrivateKey();
-                                    checkNotNull(privateKey, "Private Key not valid");
-                                    final String pidStr = Encryption.decryptRSA(
-                                            data.get(Content.PID), privateKey);
-                                    checkNotNull(pidStr);
-
-                                    final String cidStr = Encryption.decryptRSA(
-                                            data.get(Content.CID), privateKey);
-                                    checkNotNull(cidStr);
-
-                                    // check if cid is valid
-                                    try {
-                                        Multihash.fromBase58(cidStr);
-                                    } catch (Throwable e) {
-                                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                                        continue;
-                                    }
-
-                                    // check if pid is valid
-                                    try {
-                                        Multihash.fromBase58(pidStr);
-                                    } catch (Throwable e) {
-                                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                                        continue;
-                                    }
-
-                                    PID pid = PID.create(pidStr);
-                                    CID cid = CID.create(cidStr);
-
-
-                                    threads.server.Content content =
-                                            contentService.getContent(cid);
-                                    if (content == null) {
-                                        contentService.insertContent(pid, cid, false);
-                                    }
-
-
-                                    Singleton.getInstance(context).getConsoleListener().info(
-                                            "Receive Inbox Notification from PID :" + pid);
-
-
-                                            boolean connected = DownloadService.download(
-                                                    context, pid, cid);
-
-                                            if (connected) {
-                                                // load old entries when connected
-                                                long timestamp = getMinutesAgo(30);
-
-                                                List<threads.server.Content> contents =
-                                                        contentService.getContentDatabase().
-                                                                contentDao().getContents(
-                                                                pid, timestamp, false);
-
-                                                for (threads.server.Content entry : contents) {
-                                                    Service.downloadMultihash(
-                                                            context,
-                                                            entry.getPid(), entry.getCID());
-                                                }
-                                            }
-
-
+                                    Multihash.fromBase58(cidStr);
                                 } catch (Throwable e) {
                                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                                    continue;
                                 }
+
+                                // check if pid is valid
+                                try {
+                                    Multihash.fromBase58(pidStr);
+                                } catch (Throwable e) {
+                                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                                    continue;
+                                }
+
+                                PID pid = PID.create(pidStr);
+                                CID cid = CID.create(cidStr);
+
+
+                                threads.server.Content content =
+                                        contentService.getContent(cid);
+                                if (content == null) {
+                                    contentService.insertContent(pid, cid, false);
+                                }
+
+
+                                Singleton.getInstance(context).getConsoleListener().info(
+                                        "Receive Inbox Notification from PID :" + pid);
+
+
+                                boolean connected = DownloadService.download(
+                                        context, pid, cid);
+
+                                if (connected) {
+                                    // load old entries when connected
+                                    long timestamp = getMinutesAgo(30);
+
+                                    List<threads.server.Content> contents =
+                                            contentService.getContentDatabase().
+                                                    contentDao().getContents(
+                                                    pid, timestamp, false);
+
+                                    for (threads.server.Content entry : contents) {
+                                        Service.downloadMultihash(
+                                                context,
+                                                entry.getPid(), entry.getCID());
+                                    }
+                                }
+
+
+                            } catch (Throwable e) {
+                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
                             }
+                        }
 
                     }
                 }
