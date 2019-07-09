@@ -30,8 +30,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="top|end"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/delete"
-        app:tint="@android:color/black" />
+        android:src="@drawable/delete" />
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
