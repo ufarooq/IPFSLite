@@ -67,6 +67,7 @@ import threads.ipfs.api.RoutingConfig;
 import threads.share.ConnectService;
 import threads.share.PeerService;
 import threads.share.RTCSession;
+import threads.share.UtilityService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -973,7 +974,7 @@ public class Service {
         } else {
             try {
                 byte[] image = THREADS.getImage(context.getApplicationContext(),
-                        user.getAlias(), R.drawable.file_document);
+                        user.getAlias(), R.drawable.file);
                 thread.setImage(ipfs.add(image, "", true));
             } catch (Throwable e) {
                 Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
@@ -1018,8 +1019,12 @@ public class Service {
 
 
         try {
+            int resource = UtilityService.getMediaResource(thread.getMimeType(), false);
+            if (resource <= 0) {
+                resource = R.drawable.file;
+            }
             byte[] image = THREADS.getImage(context.getApplicationContext(),
-                    user.getAlias(), R.drawable.file_document);
+                    user.getAlias(), resource);
             thread.setImage(ipfs.add(image, "", true));
         } catch (Throwable e) {
             Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
@@ -1218,7 +1223,7 @@ public class Service {
                 success = false;
                 try {
                     CID image = THREADS.createResourceImage(
-                            context, threads, ipfs, R.drawable.file_document, "");
+                            context, threads, ipfs, R.drawable.file, "");
                     checkNotNull(image);
                     threads.setImage(thread, image);
                 } catch (Throwable e) {
@@ -1422,7 +1427,7 @@ public class Service {
                     thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
 
                     byte[] bytes = THREADS.getImage(context, host.getAlias(),
-                            R.drawable.file_document);
+                            R.drawable.file);
                     CID image = ipfs.add(bytes, "", true);
                     thread.setImage(image);
                     thread.setMimeType(Preferences.PLAIN_MIME_TYPE);
@@ -1489,13 +1494,18 @@ public class Service {
                     try {
                         bytes = THREADS.getPreviewImage(context, uri);
                         if (bytes == null) {
-                            bytes = THREADS.getImage(context, host.getAlias(),
-                                    R.drawable.file_document);
+
+                            int resource = UtilityService.getMediaResource(
+                                    fileDetails.getMimeType(), false);
+                            if (resource <= 0) {
+                                resource = R.drawable.file;
+                            }
+
+                            bytes = THREADS.getImage(context, host.getAlias(), resource);
                         }
                     } catch (Throwable e) {
                         // ignore exception
-                        bytes = THREADS.getImage(context, host.getAlias(),
-                                R.drawable.file_document);
+                        bytes = THREADS.getImage(context, host.getAlias(), R.drawable.file);
                     }
 
                     String name = fileDetails.getFileName();
