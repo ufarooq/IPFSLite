@@ -75,7 +75,7 @@ public class Service {
 
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
-    private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(3);
+    private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(10);
     private static final String APP_KEY = "AppKey";
     private static final String UPDATE = "UPDATE";
     private static final String SUPPORT_OFFLINE_NOTIFICATION_KEY = "supportOfflineNotificationKey";
@@ -871,7 +871,6 @@ public class Service {
         if (ipfs != null) {
 
             try {
-
 
                 User user = threads.getUserByPID(sender);
                 if (user == null) {
