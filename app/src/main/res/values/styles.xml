@@ -3,9 +3,9 @@
 
     <style name="ThreadsTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorSecondary">@color/colorPrimary</item>
+        <item name="colorSecondary">@color/colorAccent</item>
         <item name="colorPrimary">@color/colorAccent</item>
         <item name="colorPrimaryDark">@color/colorAccent</item>
-        <item name="colorOnSecondary">@android:color/white</item>
+        <item name="colorOnSecondary">@android:color/black</item>
     </style>
 </resources>
