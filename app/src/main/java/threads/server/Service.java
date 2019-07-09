@@ -213,7 +213,7 @@ public class Service {
                         continue;
                     }
                     if (data != null) {
-                        if (data.containsKey(Content.EST)) {
+
 
                             Service.getInstance(context); // now time to load instance
 
@@ -258,15 +258,10 @@ public class Service {
                                     }
 
 
-                                    final Integer est = Integer.valueOf(data.get(Content.EST));
-                                    checkNotNull(est);
-
-                                    Singleton.getInstance(
-                                            context).getConsoleListener().info(
+                                    Singleton.getInstance(context).getConsoleListener().info(
                                             "Receive Inbox Notification from PID :" + pid);
 
-                                    switch (NotificationType.toNotificationType(est)) {
-                                        case OFFER:
+
                                             boolean connected = DownloadService.download(
                                                     context, pid, cid);
 
@@ -285,17 +280,13 @@ public class Service {
                                                             entry.getPid(), entry.getCID());
                                                 }
                                             }
-                                            break;
-                                        case PROVIDE:
-                                            UploadService.upload(context, pid, cid);
-                                            break;
-                                    }
+
 
                                 } catch (Throwable e) {
                                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                                 }
                             }
-                        }
+
                     }
                 }
             } catch (Throwable e) {
@@ -306,13 +297,11 @@ public class Service {
 
     public static void notitfy(@NonNull Context context,
                                @NonNull String pid,
-                               @NonNull String cid,
-                               @NonNull Integer est) {
+                               @NonNull String cid) {
 
         checkNotNull(context);
         checkNotNull(pid);
         checkNotNull(cid);
-        checkNotNull(est);
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
         final PID host = Preferences.getPID(context);
@@ -346,7 +335,6 @@ public class Service {
 
                 content.put(Content.PID, Encryption.encryptRSA(host.getPid(), publicKey));
                 content.put(Content.CID, Encryption.encryptRSA(cid, publicKey));
-                content.put(Content.EST, NotificationType.toNotificationType(est).toString());
 
                 String json = gson.toJson(content);
                 long start = System.currentTimeMillis();
@@ -373,10 +361,12 @@ public class Service {
 
     public static void cleanup(@NonNull Context context) {
 
-        final ContentService contentService = ContentService.getInstance(context);
-        final EntityService entityService = EntityService.getInstance(context);
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+
         try {
+            final ContentService contentService = ContentService.getInstance(context);
+            final EntityService entityService = EntityService.getInstance(context);
+            final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+
             // remove all old hashes from hash database
             HashDatabase hashDatabase = entityService.getHashDatabase();
             long timestamp = getDaysAgo(28);
@@ -1663,9 +1653,7 @@ public class Service {
 
                     PeerService.publishPeer(context);
 
-                    NotifyService.notify(context, thread.getSenderPid().getPid(), cid.getCid(),
-                            NotificationType.PROVIDE.getCode());
-
+                    // TODO handling what to do
 
                 }
 
@@ -1708,8 +1696,7 @@ public class Service {
 
                     PeerService.publishPeer(context);
 
-                    NotifyService.notify(context, user.getPID().getPid(), cid.getCid(),
-                            NotificationType.OFFER.getCode());
+                    NotifyService.notify(context, user.getPID().getPid(), cid.getCid());
                 }
             } catch (Throwable e) {
                 Preferences.evaluateException(threads, Preferences.EXCEPTION, e);

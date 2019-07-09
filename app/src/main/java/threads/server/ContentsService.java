@@ -12,7 +12,6 @@ import androidx.annotation.NonNull;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -30,9 +29,7 @@ public class ContentsService extends JobService {
 
             JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                    .setPeriodic(TimeUnit.HOURS.toMillis(12))
                     .setRequiresCharging(true)
-                    .setPersisted(true)
                     .build();
             int resultCode = jobScheduler.schedule(jobInfo);
             if (resultCode == JobScheduler.RESULT_SUCCESS) {

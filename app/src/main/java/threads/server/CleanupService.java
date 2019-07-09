@@ -30,7 +30,6 @@ public class CleanupService extends JobService {
 
             JobInfo jobInfo = new JobInfo.Builder(CleanupService.class.hashCode(), componentName)
                     .setPeriodic(TimeUnit.HOURS.toMillis(12))
-                    .setPersisted(true)
                     .build();
             int resultCode = jobScheduler.schedule(jobInfo);
             if (resultCode == JobScheduler.RESULT_SUCCESS) {
@@ -56,7 +55,7 @@ public class CleanupService extends JobService {
             try {
                 Service.getInstance(getApplicationContext());
 
-                Service.cleanup(getApplicationContext());
+
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {

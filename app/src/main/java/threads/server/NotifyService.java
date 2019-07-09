@@ -25,12 +25,10 @@ public class NotifyService extends JobService {
 
     public static void notify(@NonNull Context context,
                               @NonNull String pid,
-                              @NonNull String cid,
-                              @NonNull Integer est) {
+                              @NonNull String cid) {
         checkNotNull(context);
         checkNotNull(pid);
         checkNotNull(cid);
-        checkNotNull(est);
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
@@ -39,7 +37,7 @@ public class NotifyService extends JobService {
             PersistableBundle bundle = new PersistableBundle();
             bundle.putString(Content.PID, pid);
             bundle.putString(Content.CID, cid);
-            bundle.putInt(Content.EST, est);
+
             JobInfo jobInfo = new JobInfo.Builder(cid.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                     .setExtras(bundle)
@@ -61,8 +59,6 @@ public class NotifyService extends JobService {
         checkNotNull(pid);
         final String cid = bundle.getString(Content.CID);
         checkNotNull(cid);
-        final Integer est = bundle.getInt(Content.EST);
-        checkNotNull(est);
 
         if (!Service.isSupportOfflineNotification(getApplicationContext())) {
             return false;
@@ -71,7 +67,7 @@ public class NotifyService extends JobService {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                Service.notitfy(getApplicationContext(), pid, cid, est);
+                Service.notitfy(getApplicationContext(), pid, cid);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {
