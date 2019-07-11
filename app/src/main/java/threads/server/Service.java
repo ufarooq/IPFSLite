@@ -161,7 +161,7 @@ public class Service {
                     continue;
                 }
 
-                if (!threads.isAccountBlocked(user)) {
+                if (!threads.isUserBlocked(user)) {
 
                     long timestamp = getMinutesAgo(30);
 
@@ -628,9 +628,9 @@ public class Service {
                     CID image = ipfs.add(data, "", true);
 
                     sender = threads.createUser(senderPid, pubKey, alias, userType, image);
+                    sender.setBlocked(true);
                     threads.storeUser(sender);
 
-                    threads.blockUserByPID(senderPid); // block user from the beginning
                     Preferences.error(threads, context.getString(R.string.user_connect_try, alias));
                 }
 
@@ -811,11 +811,12 @@ public class Service {
 
                     CID image = ipfs.add(data, "", true);
 
-                    user = threads.createUser(pid, publicKey,
-                            getDeviceName(), UserType.VERIFIED, image);
-
+                    user = threads.createUser(pid, publicKey, getDeviceName(),
+                            UserType.VERIFIED, image);
+                    user.setBlocked(true);
                     threads.storeUser(user);
-                    threads.blockUserByPID(pid);
+                } else {
+                    threads.blockUser(pid);
                 }
             } catch (Throwable e) {
                 Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
@@ -1588,28 +1589,28 @@ public class Service {
 
 
                 for (PID user : users) {
-                    UserStatus currentStatus = threads.getUserStatus(user);
-                    if (currentStatus != UserStatus.BLOCKED &&
-                            currentStatus != UserStatus.DIALING) {
-                        try {
-                            boolean value = ipfs.isConnected(user);
+                    if (!threads.isUserBlocked(user)) {
+                        UserStatus currentStatus = threads.getUserStatus(user);
+                        if (currentStatus != UserStatus.DIALING) {
+                            try {
+                                boolean value = ipfs.isConnected(user);
 
-                            currentStatus = threads.getUserStatus(user);
-                            if (currentStatus != UserStatus.BLOCKED &&
-                                    currentStatus != UserStatus.DIALING) {
-                                if (value) {
-                                    if (currentStatus != UserStatus.ONLINE) {
-                                        threads.setUserStatus(user, UserStatus.ONLINE);
-                                    }
-                                } else {
-                                    if (currentStatus != UserStatus.OFFLINE) {
-                                        threads.setUserStatus(user, UserStatus.OFFLINE);
+                                currentStatus = threads.getUserStatus(user);
+                                if (currentStatus != UserStatus.DIALING) {
+                                    if (value) {
+                                        if (currentStatus != UserStatus.ONLINE) {
+                                            threads.setUserStatus(user, UserStatus.ONLINE);
+                                        }
+                                    } else {
+                                        if (currentStatus != UserStatus.OFFLINE) {
+                                            threads.setUserStatus(user, UserStatus.OFFLINE);
+                                        }
                                     }
                                 }
-                            }
-                        } catch (Throwable e) {
-                            if (threads.getUserStatus(user) != UserStatus.DIALING) {
-                                threads.setUserStatus(user, UserStatus.OFFLINE);
+                            } catch (Throwable e) {
+                                if (threads.getUserStatus(user) != UserStatus.DIALING) {
+                                    threads.setUserStatus(user, UserStatus.OFFLINE);
+                                }
                             }
                         }
                     }
@@ -1632,7 +1633,7 @@ public class Service {
         for (User user : threads.getUsers()) {
 
             if (!user.getPID().equals(pid)) {
-                if (!threads.isAccountBlocked(user.getPID())) {
+                if (!threads.isUserBlocked(user.getPID())) {
                     //if(threads.getPeerByPID(user.getPID()) != null) {
                     users.add(user.getPID().getPid());
                     //}
@@ -1800,7 +1801,7 @@ public class Service {
                             PID senderPid = PID.create(sender);
 
 
-                            if (!threads.isAccountBlocked(senderPid)) {
+                            if (!threads.isUserBlocked(senderPid)) {
 
                                 String code = message.getMessage().trim();
 

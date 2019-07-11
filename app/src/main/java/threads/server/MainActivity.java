@@ -545,8 +545,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     User user = threads.getUserByPID(PID.create(pid));
                     checkNotNull(user);
 
-                    if (user.getStatus() == UserStatus.BLOCKED) {
-                        threads.unblockUser(user, UserStatus.OFFLINE);
+                    if (user.isBlocked()) {
+                        threads.unblockUser(user);
                     } else {
                         threads.blockUser(user);
                     }
@@ -622,7 +622,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         PID user = PID.create(pid);
 
-                        if (threads.isAccountBlocked(user)) {
+                        if (threads.isUserBlocked(user)) {
                             Preferences.warning(threads, getString(R.string.peer_is_blocked));
                         } else {
 
@@ -869,7 +869,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         User user = threads.getUserByPID(PID.create(pid));
                         checkNotNull(user);
 
-                        if (threads.isAccountBlocked(user.getPID())) {
+                        if (threads.isUserBlocked(user.getPID())) {
                             Preferences.warning(threads, getString(R.string.peer_is_blocked));
                         } else {
 

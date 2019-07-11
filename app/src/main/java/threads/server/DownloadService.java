@@ -32,7 +32,7 @@ public class DownloadService {
 
             if (threads.existsUser(pid)) {
 
-                if (!threads.isAccountBlocked(pid)) {
+                if (!threads.isUserBlocked(pid)) {
 
                     success = ConnectService.connectUser(context, pid);
 
