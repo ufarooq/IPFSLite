@@ -97,7 +97,7 @@ dependencies {
     implementation 'threads.core:share:0.3.2'
 
     // API (LICENSE done)
-    implementation 'threads.core:api:0.1.5'
+    implementation 'threads.core:api:0.1.6'
 
     // API (LICENSE done)
     implementation 'threads.core:iota:0.0.4'
