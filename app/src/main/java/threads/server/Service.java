@@ -814,8 +814,10 @@ public class Service {
                     user = threads.createUser(pid, publicKey, getDeviceName(),
                             UserType.VERIFIED, image);
                     user.setBlocked(true);
+                    user.setStatus(UserStatus.ONLINE);
                     threads.storeUser(user);
                 } else {
+                    threads.setUserStatus(pid, UserStatus.ONLINE);
                     threads.blockUser(pid);
                 }
             } catch (Throwable e) {
