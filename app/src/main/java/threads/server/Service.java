@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import threads.core.MimeType;
 import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
@@ -65,9 +66,9 @@ import threads.ipfs.api.PeerInfo;
 import threads.ipfs.api.PubsubConfig;
 import threads.ipfs.api.RoutingConfig;
 import threads.share.ConnectService;
+import threads.share.MimeTypeService;
 import threads.share.PeerService;
 import threads.share.RTCSession;
-import threads.share.UtilityService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -920,7 +921,7 @@ public class Service {
         } catch (Throwable e) {
             Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
         }
-        return Preferences.OCTET_MIME_TYPE;
+        return MimeType.OCTET_MIME_TYPE;
     }
 
     private static long createThread(@NonNull Context context,
@@ -1011,7 +1012,7 @@ public class Service {
             thread.addAdditional(Content.FILENAME, filename, false);
             thread.setMimeType(evaluateMimeType(context, filename));
         } else {
-            thread.setMimeType(Preferences.OCTET_MIME_TYPE); // not known yet
+            thread.setMimeType(MimeType.OCTET_MIME_TYPE); // not known yet
             thread.addAdditional(Content.FILENAME, cid.getCid(), false);
         }
         if (filesize != null) {
@@ -1022,7 +1023,7 @@ public class Service {
 
 
         try {
-            int resource = UtilityService.getMediaResource(thread.getMimeType(), false);
+            int resource = MimeTypeService.getMediaResource(thread.getMimeType(), false);
             if (resource <= 0) {
                 resource = R.drawable.file;
             }
@@ -1204,7 +1205,7 @@ public class Service {
 
 
                 // Now check if MIME TYPE of thread can be re-evaluated
-                if (threads.getMimeType(thread).equals(Preferences.OCTET_MIME_TYPE)) {
+                if (threads.getMimeType(thread).equals(MimeType.OCTET_MIME_TYPE)) {
                     ContentInfo contentInfo = ipfs.getContentInfo(file);
                     if (contentInfo != null) {
                         String mimeType = contentInfo.getMimeType();
@@ -1419,6 +1420,7 @@ public class Service {
                     User host = threads.getUserByPID(pid);
                     checkNotNull(host);
 
+
                     // TODO when text is a link (html etc)
                     String name = StringUtils.substring(text, 0, 20);
                     long size = text.length();
@@ -1429,11 +1431,10 @@ public class Service {
                     thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
                     thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
 
-                    byte[] bytes = THREADS.getImage(context, host.getAlias(),
-                            R.drawable.file);
+                    byte[] bytes = THREADS.getImage(context, host.getAlias(), R.drawable.link_variant);
                     CID image = ipfs.add(bytes, "", true);
                     thread.setImage(image);
-                    thread.setMimeType(Preferences.PLAIN_MIME_TYPE);
+                    thread.setMimeType(MimeType.LINK_MIME_TYPE);
                     long idx = threads.storeThread(thread);
 
                     Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
@@ -1498,7 +1499,7 @@ public class Service {
                         bytes = THREADS.getPreviewImage(context, uri);
                         if (bytes == null) {
 
-                            int resource = UtilityService.getMediaResource(
+                            int resource = MimeTypeService.getMediaResource(
                                     fileDetails.getMimeType(), false);
                             if (resource <= 0) {
                                 resource = R.drawable.file;

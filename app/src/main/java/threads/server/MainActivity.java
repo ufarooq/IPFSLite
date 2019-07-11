@@ -47,6 +47,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.psdev.licensesdialog.LicensesDialogFragment;
+import threads.core.MimeType;
 import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
@@ -1063,7 +1064,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     .show(MainActivity.this.getSupportFragmentManager(),
                                             IPFSAudioDialogFragment.TAG);
 
-                        } else if (mimeType.startsWith(Preferences.PDF_MIME_TYPE)) {
+                        } else if (mimeType.startsWith(MimeType.PDF_MIME_TYPE)) {
 
                             File file = new File(ipfs.getCacheDir(), cid.getCid());
                             if (!file.exists()) {
@@ -1083,7 +1084,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                         show(MainActivity.this.getSupportFragmentManager(),
                                                 WebViewDialogFragment.TAG);
                             }
-                        } else if (mimeType.equals(Preferences.OCTET_MIME_TYPE)) {
+                        } else if (mimeType.equals(MimeType.OCTET_MIME_TYPE)) {
                             // TODO improve this (should show text)
                             byte[] data = ipfs.get(cid, "", -1, true);
                             int length = data.length;
