@@ -18,7 +18,8 @@ public class Contents extends ArrayList<ContentEntry> {
         checkNotNull(cid);
         String filename = thread.getAdditional(Content.FILENAME);
         String filesize = thread.getAdditional(Content.FILESIZE);
-        this.add(new ContentEntry(cid.getCid(), filename, filesize));
+        String mimeType = thread.getMimeType();
+        this.add(new ContentEntry(cid.getCid(), filename, filesize, mimeType));
     }
 
     public void add(@NonNull List<Thread> threads) {

@@ -26,6 +26,8 @@ import org.iota.jota.pow.pearldiver.PearlDiverLocalPoW;
 
 import java.io.File;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -715,7 +717,7 @@ public class Service {
                         downloadContents(context, sender, files);
                     }
                 } catch (JsonSyntaxException jse) {
-                    downloadMultihash(context, sender, cid, null, null);
+                    downloadMultihash(context, sender, cid, null, null, null);
                 }
 
 
@@ -740,7 +742,7 @@ public class Service {
             }
 
             downloadMultihash(context, sender,
-                    CID.create(cidStr), file.getFilename(), file.getSize());
+                    CID.create(cidStr), file.getFilename(), file.getSize(), file.getMimeType());
         }
 
     }
@@ -851,7 +853,8 @@ public class Service {
                                          @NonNull PID sender,
                                          @NonNull CID cid,
                                          @Nullable String filename,
-                                         @Nullable String filesize) {
+                                         @Nullable String filesize,
+                                         @Nullable String mimType) {
 
         checkNotNull(context);
         checkNotNull(sender);
@@ -876,7 +879,7 @@ public class Service {
                 List<Thread> entries = threads.getThreadsByCIDAndThread(cid, 0L);
 
                 if (!entries.isEmpty()) {
-                    for (Thread entry : entries) {
+                    Thread entry = entries.get(0);
 
                         if (entry.getStatus() == ThreadStatus.DELETING ||
                                 entry.getStatus() == ThreadStatus.ONLINE ||
@@ -888,10 +891,10 @@ public class Service {
                             return;
                         }
 
-                    }
+
 
                 }
-                long idx = createThread(context, ipfs, sender, cid, filename, filesize);
+                long idx = createThread(context, ipfs, sender, cid, filename, filesize, mimType);
 
                 Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
                 Thread thread = threads.getThreadByIdx(idx);
@@ -992,7 +995,8 @@ public class Service {
                                      @NonNull PID creator,
                                      @NonNull CID cid,
                                      @Nullable String filename,
-                                     @Nullable String filesize) {
+                                     @Nullable String filesize,
+                                     @Nullable String mimeType) {
 
         checkNotNull(context);
         checkNotNull(ipfs);
@@ -1012,7 +1016,11 @@ public class Service {
             thread.addAdditional(Content.FILENAME, filename, false);
             thread.setMimeType(evaluateMimeType(context, filename));
         } else {
-            thread.setMimeType(MimeType.OCTET_MIME_TYPE); // not known yet
+            if (mimeType != null) {
+                thread.setMimeType(mimeType);
+            } else {
+                thread.setMimeType(MimeType.OCTET_MIME_TYPE); // not known yet
+            }
             thread.addAdditional(Content.FILENAME, cid.getCid(), false);
         }
         if (filesize != null) {
@@ -1023,7 +1031,8 @@ public class Service {
 
 
         try {
-            int resource = MimeTypeService.getMediaResource(thread.getMimeType(), false);
+            int resource = MimeTypeService.getMediaResource(thread.getMimeType(),
+                    false);
             if (resource <= 0) {
                 resource = R.drawable.file;
             }
@@ -1420,21 +1429,33 @@ public class Service {
                     User host = threads.getUserByPID(pid);
                     checkNotNull(host);
 
+                    String content;
+                    String mimeType = MimeType.PLAIN_MIME_TYPE;
+                    try {
 
-                    // TODO when text is a link (html etc)
-                    String name = StringUtils.substring(text, 0, 20);
+                        URL url = new URL(text);
+                        mimeType = MimeType.LINK_MIME_TYPE;
+                        content = url.getPath();
+                    } catch (MalformedURLException e) {
+                        content = StringUtils.substring(text, 0, 80);
+                    }
+
                     long size = text.length();
 
                     Thread thread = threads.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
                             "", null, 0L);
-                    thread.addAdditional(Content.FILENAME, name, false);
+                    thread.addAdditional(Content.FILENAME, content, false);
                     thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
                     thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
 
-                    byte[] bytes = THREADS.getImage(context, host.getAlias(), R.drawable.link_variant);
+                    int resource = MimeTypeService.getMediaResource(
+                            mimeType, false);
+
+                    byte[] bytes = THREADS.getImage(context, host.getAlias(), resource);
                     CID image = ipfs.add(bytes, "", true);
                     thread.setImage(image);
-                    thread.setMimeType(MimeType.LINK_MIME_TYPE);
+                    thread.setMimeType(mimeType);
+
                     long idx = threads.storeThread(thread);
 
                     Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
@@ -1828,7 +1849,7 @@ public class Service {
                                         try {
                                             Service.downloadMultihash(context, senderPid,
                                                     CID.create(result.getMultihash()),
-                                                    null, null);
+                                                    null, null, null);
                                         } catch (Throwable e) {
                                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
                                         }
@@ -1874,7 +1895,7 @@ public class Service {
                                                     try {
                                                         Service.downloadMultihash(context,
                                                                 senderPid, CID.create(cid),
-                                                                filename, filesize);
+                                                                filename, filesize, null);
                                                     } catch (Throwable e) {
                                                         Log.e(TAG, "" + e.getLocalizedMessage(), e);
                                                     }

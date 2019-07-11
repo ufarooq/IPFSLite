@@ -252,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 executor.submit(() -> {
                     try {
                         Service.downloadMultihash(getApplicationContext(), host,
-                                CID.create(multihash), null, null);
+                                CID.create(multihash), null, null, null);
                     } catch (Throwable e) {
                         Log.e(TAG, "" + e.getLocalizedMessage(), e);
                     }
@@ -1074,6 +1074,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     .fromfilepath(file.getAbsolutePath())
                                     .swipeHorizontal(true)
                                     .start();
+
+                        } else if (mimeType.equals(MimeType.LINK_MIME_TYPE)) {
+                            byte[] data = ipfs.get(cid, "", -1, true);
+                            Uri uri = Uri.parse(new String(data));
+
+                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
 
                         } else if (mimeType.startsWith("text")) {
 
