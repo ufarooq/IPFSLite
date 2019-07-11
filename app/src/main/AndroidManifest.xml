@@ -76,15 +76,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
-        <activity
-            android:name="threads.share.IPFSVideoActivity"
-            android:configChanges="orientation|smallestScreenSize|screenSize|screenLayout"
-            android:screenOrientation="fullUser"
-            android:parentActivityName=".MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
-        </activity>
+
         <activity
             android:name="threads.share.RTCVideoCallActivity"
             android:configChanges="orientation|smallestScreenSize|screenSize|screenLayout"
