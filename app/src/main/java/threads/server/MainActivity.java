@@ -26,6 +26,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
 
@@ -64,7 +65,6 @@ import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.share.ConnectService;
 import threads.share.IPFSAudioDialogFragment;
-import threads.share.IPFSVideoActivity;
 import threads.share.ImageDialogFragment;
 import threads.share.InfoDialogFragment;
 import threads.share.NameDialogFragment;
@@ -74,6 +74,7 @@ import threads.share.PermissionAction;
 import threads.share.RTCCallActivity;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.UserActionDialogFragment;
+import threads.share.VideoDialogFragment;
 import threads.share.WebViewDialogFragment;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -1034,17 +1035,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         if (mimeType.startsWith("image")) {
                             ImageDialogFragment.newInstance(cid.getCid(), thread.getSesKey()).show(
-                                    MainActivity.this.getSupportFragmentManager(), ImageDialogFragment.TAG);
+                                    getSupportFragmentManager(), ImageDialogFragment.TAG);
 
                         } else if (mimeType.startsWith("video")) {
 
-                            Intent intent = new Intent(getApplicationContext(),
-                                    IPFSVideoActivity.class);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                            intent.putExtra(IPFSVideoActivity.CID_ID, cid.getCid());
-                            intent.putExtra(IPFSVideoActivity.KEY, thread.getSesKey());
-                            intent.putExtra(IPFSVideoActivity.SIZE, Long.valueOf(filesize));
-                            startActivity(intent);
+
+                            FragmentManager fm = getSupportFragmentManager();
+                            VideoDialogFragment dialogFragment = VideoDialogFragment.newInstance(
+                                    cid.getCid(), thread.getSesKey(), Long.valueOf(filesize));
+
+                            FragmentTransaction ft = fm.beginTransaction();
+                            ft.add(dialogFragment, VideoDialogFragment.TAG);
+                            ft.commitAllowingStateLoss();
+
 
                         } else if (mimeType.startsWith("audio")) {
                             File file = new File(ipfs.getCacheDir(), cid.getCid());
