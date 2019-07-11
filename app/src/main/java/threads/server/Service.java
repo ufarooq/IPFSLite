@@ -1014,7 +1014,11 @@ public class Service {
         thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false); // not known yet
         if (filename != null) {
             thread.addAdditional(Content.FILENAME, filename, false);
-            thread.setMimeType(evaluateMimeType(context, filename));
+            if (mimeType != null) {
+                thread.setMimeType(mimeType);
+            } else {
+                thread.setMimeType(evaluateMimeType(context, filename));
+            }
         } else {
             if (mimeType != null) {
                 thread.setMimeType(mimeType);
