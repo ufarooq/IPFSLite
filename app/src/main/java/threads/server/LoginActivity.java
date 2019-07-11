@@ -70,7 +70,16 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-
+    void handleView(Intent intent) {
+        try {
+            Uri uri = intent.getData();
+            if (uri != null) {
+                Service.getInstance(this).storeData(getApplicationContext(), uri.toString());
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
     public void onLoad() {
 
         Intent intent = getIntent();
@@ -91,6 +100,9 @@ public class LoginActivity extends AppCompatActivity {
                     } else {
                         handleSend(intent);
                     }
+                }
+                if (Intent.ACTION_VIEW.equals(action)) {
+                    handleView(intent);
                 }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage());

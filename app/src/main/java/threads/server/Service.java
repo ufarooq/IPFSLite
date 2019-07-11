@@ -1439,7 +1439,7 @@ public class Service {
 
                         URL url = new URL(text);
                         mimeType = MimeType.LINK_MIME_TYPE;
-                        content = url.getPath();
+                        content = url.toString();
                     } catch (MalformedURLException e) {
                         content = StringUtils.substring(text, 0, 80);
                     }
