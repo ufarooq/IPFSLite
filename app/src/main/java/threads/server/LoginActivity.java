@@ -70,21 +70,10 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    void handleView(Intent intent) {
-        try {
-            Uri uri = intent.getData();
-            if (uri != null) {
-                Service.getInstance(this).storeData(getApplicationContext(), uri.toString());
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
     public void onLoad() {
 
-        Intent intent = getIntent();
+        final Intent intent = getIntent();
         final String action = intent.getAction();
-        final String type = intent.getType();
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -94,16 +83,15 @@ public class LoginActivity extends AppCompatActivity {
 
                 NotificationService.notifications(getApplicationContext());
 
-                if (Intent.ACTION_SEND.equals(action) && type != null) {
+                if (Intent.ACTION_SEND.equals(action)) {
+                    String type = intent.getType();
                     if ("text/plain".equals(type)) {
                         handleSendText(intent);
                     } else {
                         handleSend(intent);
                     }
                 }
-                if (Intent.ACTION_VIEW.equals(action)) {
-                    handleView(intent);
-                }
+
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage());
             }
