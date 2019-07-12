@@ -64,8 +64,8 @@ import threads.ipfs.api.CID;
 import threads.ipfs.api.IpnsInfo;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
+import threads.share.AudioDialogFragment;
 import threads.share.ConnectService;
-import threads.share.IPFSAudioDialogFragment;
 import threads.share.ImageDialogFragment;
 import threads.share.InfoDialogFragment;
 import threads.share.NameDialogFragment;
@@ -1040,7 +1040,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         } else if (mimeType.startsWith("video")) {
 
-
                             FragmentManager fm = getSupportFragmentManager();
                             VideoDialogFragment dialogFragment = VideoDialogFragment.newInstance(
                                     cid.getCid(), thread.getSesKey(), Long.valueOf(filesize));
@@ -1056,13 +1055,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 ipfs.store(file, cid, "");
                             }
 
-
+                            FragmentManager fm = getSupportFragmentManager();
                             Uri uri = Uri.fromFile(file);
-                            IPFSAudioDialogFragment.newInstance(uri,
-                                    filename,
-                                    thread.getSenderAlias(), thread.getSesKey())
-                                    .show(MainActivity.this.getSupportFragmentManager(),
-                                            IPFSAudioDialogFragment.TAG);
+                            AudioDialogFragment audioDialogFragment =
+                                    AudioDialogFragment.newInstance(uri, filename,
+                                            thread.getSenderAlias(), thread.getSesKey());
+
+                            FragmentTransaction ft = fm.beginTransaction();
+                            ft.add(audioDialogFragment, AudioDialogFragment.TAG);
+                            ft.commitAllowingStateLoss();
 
                         } else if (mimeType.startsWith(MimeType.PDF_MIME_TYPE)) {
 
