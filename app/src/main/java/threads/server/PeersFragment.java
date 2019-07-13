@@ -229,14 +229,14 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
     public void invokeGeneralAction(@NonNull User user) {
         checkNotNull(user);
         try {
-            if (getActivity() != null) {
-                FragmentManager fm = getActivity().getSupportFragmentManager();
 
-                UserActionDialogFragment.newInstance(
-                        user.getPID().getPid(), true, true,
-                        true, true, true, true)
-                        .show(fm, UserActionDialogFragment.TAG);
-            }
+            FragmentManager fm = getChildFragmentManager();
+
+            UserActionDialogFragment.newInstance(
+                    user.getPID().getPid(), true, true,
+                    true, true, true, true)
+                    .show(fm, UserActionDialogFragment.TAG);
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }

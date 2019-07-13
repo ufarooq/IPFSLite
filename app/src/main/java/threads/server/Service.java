@@ -881,16 +881,15 @@ public class Service {
                 if (!entries.isEmpty()) {
                     Thread entry = entries.get(0);
 
-                        if (entry.getStatus() == ThreadStatus.DELETING ||
-                                entry.getStatus() == ThreadStatus.ONLINE ||
-                                entry.getStatus() == ThreadStatus.PUBLISHING) {
-                            replySender(context, ipfs, sender, entry);
-                            return;
-                        } else {
-                            downloadMultihash(context, threads, ipfs, entry, sender);
-                            return;
-                        }
-
+                    if (entry.getStatus() == ThreadStatus.DELETING ||
+                            entry.getStatus() == ThreadStatus.ONLINE ||
+                            entry.getStatus() == ThreadStatus.PUBLISHING) {
+                        replySender(context, ipfs, sender, entry);
+                        return;
+                    } else {
+                        downloadMultihash(context, threads, ipfs, entry, sender);
+                        return;
+                    }
 
 
                 }
@@ -1969,6 +1968,5 @@ public class Service {
     public enum ThreadKind {
         LEAF, NODE
     }
-
 
 }

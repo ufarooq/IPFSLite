@@ -37,6 +37,7 @@ android {
         versionCode 97
         versionName "0.9.7"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
     }
     buildTypes {
         debug {
@@ -49,9 +50,12 @@ android {
             buildConfigField "boolean", "FDroid", "false"
         }
     }
-    configurations.all {
-        exclude group: 'com.google.guava', module: 'listenablefuture'
-    }
+
+
+
+
+
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8

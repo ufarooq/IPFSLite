@@ -254,7 +254,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
                 if (getActivity() != null) {
                     ThreadsDialogFragment.newInstance(true, true, true)
-                            .show(getActivity().getSupportFragmentManager(), ThreadsDialogFragment.TAG);
+                            .show(getChildFragmentManager(), ThreadsDialogFragment.TAG);
                 }
 
             } else {
@@ -512,17 +512,16 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void invokeGeneralAction(@NonNull Thread thread) {
         try {
-            if (getActivity() != null) {
 
-                boolean online = thread.getStatus() == ThreadStatus.ONLINE;
+            boolean online = thread.getStatus() == ThreadStatus.ONLINE;
 
-                FragmentManager fm = getActivity().getSupportFragmentManager();
+            FragmentManager fm = getChildFragmentManager();
 
-                ThreadActionDialogFragment.newInstance(
-                        thread.getIdx(), true, true,
-                        topLevel.get(), online, true, true, true)
-                        .show(fm, ThreadActionDialogFragment.TAG);
-            }
+            ThreadActionDialogFragment.newInstance(
+                    thread.getIdx(), true, true,
+                    topLevel.get(), online, true, true, true)
+                    .show(fm, ThreadActionDialogFragment.TAG);
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }

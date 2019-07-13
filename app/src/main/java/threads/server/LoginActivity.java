@@ -49,31 +49,40 @@ public class LoginActivity extends AppCompatActivity {
 
 
     void handleSendText(Intent intent) {
-        try {
-            String text = intent.getStringExtra(Intent.EXTRA_TEXT);
-            if (text != null) {
-                Service.getInstance(this).storeData(getApplicationContext(), text);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+
+            try {
+                String text = intent.getStringExtra(Intent.EXTRA_TEXT);
+                if (text != null) {
+                    Service.getInstance(this).storeData(getApplicationContext(), text);
+                }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
+        });
     }
 
     void handleSend(Intent intent) {
-        try {
-            Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-            if (uri != null) {
-                Service.getInstance(this).storeData(getApplicationContext(), uri);
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                if (uri != null) {
+                    Service.getInstance(this).storeData(getApplicationContext(), uri);
+                }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
+        });
     }
 
     public void onLoad() {
 
-        final Intent intent = getIntent();
+        Intent intent = getIntent();
         final String action = intent.getAction();
+        final String type = intent.getType();
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -83,8 +92,7 @@ public class LoginActivity extends AppCompatActivity {
 
                 NotificationService.notifications(getApplicationContext());
 
-                if (Intent.ACTION_SEND.equals(action)) {
-                    String type = intent.getType();
+                if (Intent.ACTION_SEND.equals(action) && type != null) {
                     if ("text/plain".equals(type)) {
                         handleSendText(intent);
                     } else {
