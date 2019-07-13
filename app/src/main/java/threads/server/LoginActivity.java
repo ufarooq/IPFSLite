@@ -1,5 +1,6 @@
 package threads.server;
 
+import android.content.ClipData;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -72,6 +73,14 @@ public class LoginActivity extends AppCompatActivity {
                 if (uri != null) {
                     Service.getInstance(this).storeData(getApplicationContext(), uri);
                 }
+
+                ClipData mClipData = intent.getClipData();
+                if (mClipData != null) {
+                    for (int i = 0; i < mClipData.getItemCount(); i++) {
+                        ClipData.Item item = mClipData.getItemAt(i);
+                        Service.getInstance(this).storeData(getApplicationContext(), item.getUri());
+                    }
+                }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
@@ -82,7 +91,6 @@ public class LoginActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         final String action = intent.getAction();
-        final String type = intent.getType();
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -92,11 +100,23 @@ public class LoginActivity extends AppCompatActivity {
 
                 NotificationService.notifications(getApplicationContext());
 
-                if (Intent.ACTION_SEND.equals(action) && type != null) {
+                if (Intent.ACTION_SEND.equals(action)) {
+                    String type = intent.getType();
                     if ("text/plain".equals(type)) {
                         handleSendText(intent);
                     } else {
                         handleSend(intent);
+                    }
+                } else if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
+                    if (intent.hasExtra(Intent.EXTRA_STREAM)) {
+                        handleSend(intent);
+                    } else {
+                        String type = intent.getType();
+                        if ("text/plain".equals(type)) {
+                            handleSendText(intent);
+                        } else {
+                            handleSend(intent);
+                        }
                     }
                 }
 

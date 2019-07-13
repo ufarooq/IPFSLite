@@ -180,17 +180,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Uri uri = data.getData();
                     Service.getInstance(
                             getApplicationContext()).storeData(getApplicationContext(), uri);
-                } else {
-                    if (data.getClipData() != null) {
-                        ClipData mClipData = data.getClipData();
-                        for (int i = 0; i < mClipData.getItemCount(); i++) {
-                            ClipData.Item item = mClipData.getItemAt(i);
-                            Uri uri = item.getUri();
-                            Service.getInstance(
-                                    getApplicationContext()).storeData(getApplicationContext(), uri);
-                        }
+                }
+                if (data.getClipData() != null) {
+                    ClipData mClipData = data.getClipData();
+                    for (int i = 0; i < mClipData.getItemCount(); i++) {
+                        ClipData.Item item = mClipData.getItemAt(i);
+                        Uri uri = item.getUri();
+                        Service.getInstance(
+                                getApplicationContext()).storeData(getApplicationContext(), uri);
                     }
                 }
+
             } else {
                 IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
                 if (result != null) {
