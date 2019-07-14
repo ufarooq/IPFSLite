@@ -225,7 +225,7 @@ public class Service {
                         checkNotNull(ipfs, "IPFS not valid");
                         if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
                             try {
-                                String privateKey = ipfs.getRawPrivateKey();
+                                String privateKey = ipfs.getPrivateKey();
                                 checkNotNull(privateKey, "Private Key not valid");
                                 final String pidStr = Encryption.decryptRSA(
                                         data.get(Content.PID), privateKey);
@@ -324,7 +324,6 @@ public class Service {
                 if (info != null) {
                     String key = info.getPublicKey();
                     if (key != null) {
-                        key = ipfs.getRawPublicKey(info);
                         threads.setUserPublicKey(pid, key);
                         publicKey = key;
                     }
@@ -456,7 +455,6 @@ public class Service {
                     if (info != null) {
                         String key = info.getPublicKey();
                         if (key != null) {
-                            key = ipfs.getRawPublicKey(info);
                             threads.setUserPublicKey(user, key);
                         }
                     }
@@ -809,7 +807,7 @@ public class Service {
 
                 User user = threads.getUserByPID(pid);
                 if (user == null) {
-                    String publicKey = ipfs.getRawPublicKey();
+                    String publicKey = ipfs.getPublicKey();
                     byte[] data = THREADS.getImage(context, pid.getPid(), R.drawable.server_network);
 
                     CID image = ipfs.add(data, "", true);
