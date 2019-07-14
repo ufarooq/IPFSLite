@@ -1,4 +1,3 @@
-
 # IPFS Lite
 IPFS Lite node with modern UI to support standard use cases of IPFS
 
@@ -18,7 +17,12 @@ the possibility to customize the configuration of the node.
 The basic characteristics of the app are decentralized, respect of personal data,
 open source, free of charge, transparent, free of advertising and legally impeccable.
 
-
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
+     alt="Get it on F-Droid"
+     height="80">](https://f-droid.org/packages/threads.server/)
+[<img src="https://play.google.com/intl/en_us/badges/images/generic/en-play-badge.png"
+     alt="Get it on Google Play"
+     height="80">](https://play.google.com/store/apps/details?id=threads.server)
 
 ## Documentation
 
