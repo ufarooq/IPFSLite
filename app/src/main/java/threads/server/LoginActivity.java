@@ -97,7 +97,8 @@ public class LoginActivity extends AppCompatActivity {
             try {
                 Service.getInstance(getApplicationContext());
 
-
+                CleanupService.cleanup(getApplicationContext());
+                ContentsService.contents(getApplicationContext());
                 NotificationService.notifications(getApplicationContext());
 
                 if (Intent.ACTION_SEND.equals(action)) {

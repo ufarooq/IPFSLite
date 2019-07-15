@@ -20,6 +20,8 @@ import androidx.core.content.ContextCompat;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.core.Network;
@@ -45,6 +47,8 @@ public class DaemonService extends Service {
                     executor.submit(() -> {
                         try {
                             PeerService.publishPeer(getApplicationContext());
+                            ContentsService.contents(getApplicationContext());
+                            NotificationService.notifications(getApplicationContext());
                         } catch (Throwable e) {
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
                         }
@@ -55,6 +59,9 @@ public class DaemonService extends Service {
             }
         }
     };
+    private Future workService;
+    private Future cleanService;
+
 
     public static void invoke(@NonNull Context context) {
         checkNotNull(context);
@@ -65,7 +72,6 @@ public class DaemonService extends Service {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
-
 
     private static void createChannel(@NonNull Context context) {
         checkNotNull(context);
@@ -104,12 +110,17 @@ public class DaemonService extends Service {
             IntentFilter intentFilter = new IntentFilter();
             intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
             registerReceiver(broadcastReceiver, intentFilter);
-            CleanupService.cleanup(getApplicationContext());
-            ContentsService.downloadContents(getApplicationContext());
+            run();
         } else {
             try {
                 stopForeground(true);
                 unregisterReceiver(broadcastReceiver);
+                if (workService != null) {
+                    workService.cancel(true);
+                }
+                if (cleanService != null) {
+                    cleanService.cancel(true);
+                }
             } finally {
                 stopSelf();
             }
@@ -117,7 +128,6 @@ public class DaemonService extends Service {
 
         return START_NOT_STICKY;
     }
-
 
     @Override
     public void onCreate() {
@@ -127,6 +137,46 @@ public class DaemonService extends Service {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
         super.onCreate();
+    }
+
+    private void run() {
+        ExecutorService work = Executors.newSingleThreadExecutor();
+        workService = work.submit(() -> {
+            try {
+                threads.server.Service.getInstance(getApplicationContext());
+
+                while (DAEMON_RUNNING.get()) {
+                    java.lang.Thread.sleep(TimeUnit.MINUTES.toMillis(5));
+                    PeerService.publishPeer(getApplicationContext());
+                    ContentsService.contents(getApplicationContext());
+                    NotificationService.notifications(getApplicationContext());
+                }
+
+            } catch (InterruptedException e) {
+                Log.e(TAG, "Daemon Work Service has been successfully stopped");
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+
+        });
+
+        ExecutorService clean = Executors.newSingleThreadExecutor();
+        cleanService = clean.submit(() -> {
+            try {
+                threads.server.Service.getInstance(getApplicationContext());
+
+                while (DAEMON_RUNNING.get()) {
+                    java.lang.Thread.sleep(TimeUnit.HOURS.toMillis(12));
+                    CleanupService.cleanup(getApplicationContext());
+                }
+
+            } catch (InterruptedException e) {
+                Log.e(TAG, "Daemon Clean Service has been successfully stopped");
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+
+        });
     }
 
     private Notification buildNotification() {

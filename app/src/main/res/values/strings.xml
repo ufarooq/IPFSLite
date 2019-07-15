@@ -5,7 +5,7 @@
     <string name="channel_description">For normal notifications like download</string>
     <string name="daemon_channel_name">Daemon Notifications</string>
     <string name="daemon_channel_description">Notification that the daemon has started</string>
-    <string name="daemon_title">IPFS daemon is running forever &#8230;</string>
+    <string name="daemon_title">IPFS Lite daemon is running forever &#8230;</string>
     <string name="navigation_drawer_open">Navigation open</string>
     <string name="navigation_drawer_close">Navigation close</string>
     <string name="action_info">Info</string>
@@ -66,9 +66,9 @@
     <string name="unknown_peer_sends_data">An unknown peer sends data.</string>
     <string name="peer_info">Peer Info</string>
     <string name="info">Info</string>
-    <string name="ipfs_daemon_start_failure">IPFS failed during startup</string>
+    <string name="ipfs_daemon_start_failure">IPFS Lite failed during startup</string>
     <string name="ipfs_no_data">No data communication between users  can be received nor send.</string>
-    <string name="ipfs_daemon_install_failure">IPFS installation failed</string>
+    <string name="ipfs_daemon_install_failure">IPFS Lite installation failed</string>
     <string name="app_settings">Settings</string>
     <string name="permission_camera_denied">Permission camera denied</string>
     <string name="permission_audio_denied">Permission audio denied</string>

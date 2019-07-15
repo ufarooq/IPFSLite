@@ -14,20 +14,19 @@ class CleanupService {
 
     private static final String TAG = CleanupService.class.getSimpleName();
 
-
     static void cleanup(@NonNull Context context) {
         checkNotNull(context);
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
                 Service.getInstance(context);
-                threads.server.Service.cleanup(context);
-
+                Log.e(TAG, "Run cleanup service");
+                Service.cleanup(context);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
         });
-    }
 
+    }
 
 }
