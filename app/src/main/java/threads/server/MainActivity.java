@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.util.Base64;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,7 +25,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.viewpager.widget.ViewPager;
 
@@ -47,14 +45,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.psdev.licensesdialog.LicensesDialogFragment;
-import threads.core.MimeType;
 import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.AddressType;
-import threads.core.api.Content;
-import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.api.User;
 import threads.core.api.UserStatus;
@@ -64,18 +59,14 @@ import threads.ipfs.api.CID;
 import threads.ipfs.api.IpnsInfo;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
-import threads.share.AudioDialogFragment;
 import threads.share.ConnectService;
-import threads.share.ImageDialogFragment;
 import threads.share.InfoDialogFragment;
 import threads.share.NameDialogFragment;
-import threads.share.PDFView;
 import threads.share.PeerService;
 import threads.share.PermissionAction;
 import threads.share.RTCCallActivity;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.UserActionDialogFragment;
-import threads.share.VideoDialogFragment;
 import threads.share.WebViewDialogFragment;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -1012,106 +1003,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    @Override
-    public void clickThreadPlay(long idx) {
-
-        final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-        final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-        if (ipfs != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    Thread thread = threads.getThreadByIdx(idx);
-                    checkNotNull(thread);
-                    ThreadStatus status = thread.getStatus();
-                    if (status == ThreadStatus.ONLINE || status == ThreadStatus.PUBLISHING) {
-
-                        CID cid = thread.getCid();
-                        checkNotNull(cid);
-
-                        String filename = thread.getAdditional(Content.FILENAME);
-                        String filesize = thread.getAdditional(Content.FILESIZE);
-                        String mimeType = thread.getMimeType();
-
-
-                        if (mimeType.startsWith("image")) {
-                            ImageDialogFragment.newInstance(cid.getCid(), thread.getSesKey()).show(
-                                    getSupportFragmentManager(), ImageDialogFragment.TAG);
-
-                        } else if (mimeType.startsWith("video")) {
-
-                            FragmentManager fm = getSupportFragmentManager();
-                            VideoDialogFragment dialogFragment = VideoDialogFragment.newInstance(
-                                    cid.getCid(), thread.getSesKey(), Long.valueOf(filesize));
-
-                            FragmentTransaction ft = fm.beginTransaction();
-                            ft.add(dialogFragment, VideoDialogFragment.TAG);
-                            ft.commitAllowingStateLoss();
-
-
-                        } else if (mimeType.startsWith("audio")) {
-                            File file = new File(ipfs.getCacheDir(), cid.getCid());
-                            if (!file.exists()) {
-                                ipfs.store(file, cid, "");
-                            }
-
-                            FragmentManager fm = getSupportFragmentManager();
-                            Uri uri = Uri.fromFile(file);
-                            AudioDialogFragment audioDialogFragment =
-                                    AudioDialogFragment.newInstance(uri, filename,
-                                            thread.getSenderAlias(), thread.getSesKey());
-
-                            FragmentTransaction ft = fm.beginTransaction();
-                            ft.add(audioDialogFragment, AudioDialogFragment.TAG);
-                            ft.commitAllowingStateLoss();
-
-                        } else if (mimeType.startsWith(MimeType.PDF_MIME_TYPE)) {
-
-                            File file = new File(ipfs.getCacheDir(), cid.getCid());
-                            if (!file.exists()) {
-                                ipfs.store(file, cid, "");
-                            }
-                            PDFView.with(MainActivity.this)
-                                    .fromfilepath(file.getAbsolutePath())
-                                    .swipeHorizontal(true)
-                                    .start();
-
-                        } else if (mimeType.equals(MimeType.LINK_MIME_TYPE)) {
-                            byte[] data = ipfs.get(cid, "", -1, true);
-                            Uri uri = Uri.parse(new String(data));
-
-                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
-
-                        } else if (mimeType.startsWith("text")) {
-
-                            byte[] data = ipfs.get(cid, "", -1, true);
-                            if (data.length > 0) {
-                                String content = Base64.encodeToString(data, Base64.NO_PADDING);
-                                WebViewDialogFragment.newInstance(mimeType, content, "base64").
-                                        show(MainActivity.this.getSupportFragmentManager(),
-                                                WebViewDialogFragment.TAG);
-                            }
-                        } else if (mimeType.equals(MimeType.OCTET_MIME_TYPE)) {
-                            // TODO improve this (should show text)
-                            byte[] data = ipfs.get(cid, "", -1, true);
-                            int length = data.length;
-                            if (length > 0 && length < 64000) { // TODO 64kb (better check if content is text)
-                                String content = new String(data);
-                                WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.TEXT, content).
-                                        show(MainActivity.this.getSupportFragmentManager(),
-                                                WebViewDialogFragment.TAG);
-                            }
-                        }
-                    }
-                } catch (Throwable ex) {
-                    Preferences.error(threads, getString(R.string.no_activity_found_to_handle_uri));
-                }
-            });
-        }
-    }
 
     @Override
     public void clickThreadsSend(final long[] idxs) {

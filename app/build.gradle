@@ -71,7 +71,7 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
     // Android (LICENSE done)
-    implementation 'com.google.android.material:material:1.1.0-alpha07'
+    implementation 'com.google.android.material:material:1.1.0-alpha08'
 
     // API (LICENSE done)
     implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
@@ -98,7 +98,7 @@ dependencies {
     //implementation 'threads.pow:pow:1.0.9'
 
     // UI+API (LICENSE done)
-    implementation 'threads.core:share:0.3.4'
+    implementation 'threads.core:share:0.4.1'
 
     // API (LICENSE done)
     implementation 'threads.core:api:0.1.7'

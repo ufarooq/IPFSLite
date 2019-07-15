@@ -43,16 +43,16 @@ public class DaemonService extends Service {
             try {
                 if (Network.isNetworkAvailable(context)) {
 
-                    ExecutorService executor = Executors.newSingleThreadExecutor();
-                    executor.submit(() -> {
+                    ExecutorService service = Executors.newSingleThreadExecutor();
+                    service.submit(() -> {
                         try {
                             PeerService.publishPeer(getApplicationContext());
-                            ContentsService.contents(getApplicationContext());
-                            NotificationService.notifications(getApplicationContext());
                         } catch (Throwable e) {
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
                         }
+
                     });
+
                 }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -60,8 +60,8 @@ public class DaemonService extends Service {
         }
     };
     private Future workService;
-    private Future cleanService;
-
+    private Future slowService;
+    private Future fastService;
 
     public static void invoke(@NonNull Context context) {
         checkNotNull(context);
@@ -118,8 +118,11 @@ public class DaemonService extends Service {
                 if (workService != null) {
                     workService.cancel(true);
                 }
-                if (cleanService != null) {
-                    cleanService.cancel(true);
+                if (slowService != null) {
+                    slowService.cancel(true);
+                }
+                if (fastService != null) {
+                    fastService.cancel(true);
                 }
             } finally {
                 stopSelf();
@@ -140,6 +143,25 @@ public class DaemonService extends Service {
     }
 
     private void run() {
+
+        ExecutorService fast = Executors.newSingleThreadExecutor();
+        fastService = fast.submit(() -> {
+            try {
+                threads.server.Service.getInstance(getApplicationContext());
+
+                while (DAEMON_RUNNING.get()) {
+                    java.lang.Thread.sleep(TimeUnit.SECONDS.toMillis(30));
+                    NotificationService.notifications(getApplicationContext());
+                }
+
+            } catch (InterruptedException e) {
+                Log.e(TAG, "Daemon Fast Service has been successfully stopped");
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+
+        });
+
         ExecutorService work = Executors.newSingleThreadExecutor();
         workService = work.submit(() -> {
             try {
@@ -148,8 +170,7 @@ public class DaemonService extends Service {
                 while (DAEMON_RUNNING.get()) {
                     java.lang.Thread.sleep(TimeUnit.MINUTES.toMillis(5));
                     PeerService.publishPeer(getApplicationContext());
-                    ContentsService.contents(getApplicationContext());
-                    NotificationService.notifications(getApplicationContext());
+
                 }
 
             } catch (InterruptedException e) {
@@ -161,17 +182,18 @@ public class DaemonService extends Service {
         });
 
         ExecutorService clean = Executors.newSingleThreadExecutor();
-        cleanService = clean.submit(() -> {
+        slowService = clean.submit(() -> {
             try {
                 threads.server.Service.getInstance(getApplicationContext());
 
                 while (DAEMON_RUNNING.get()) {
                     java.lang.Thread.sleep(TimeUnit.HOURS.toMillis(12));
                     CleanupService.cleanup(getApplicationContext());
+                    ContentsService.contents(getApplicationContext());
                 }
 
             } catch (InterruptedException e) {
-                Log.e(TAG, "Daemon Clean Service has been successfully stopped");
+                Log.e(TAG, "Daemon Slow Service has been successfully stopped");
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }

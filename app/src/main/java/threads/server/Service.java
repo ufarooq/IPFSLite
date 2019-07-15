@@ -304,9 +304,7 @@ public class Service {
         }
     }
 
-    public static void notitfy(@NonNull Context context,
-                               @NonNull String pid,
-                               @NonNull String cid) {
+    public static void notify(@NonNull Context context, @NonNull String pid, @NonNull String cid) {
 
         checkNotNull(context);
         checkNotNull(pid);

@@ -1,8 +1,11 @@
 package threads.server;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -22,6 +25,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -30,6 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+import threads.core.MimeType;
 import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
@@ -39,8 +44,15 @@ import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.mdl.EventViewModel;
 import threads.core.mdl.ThreadViewModel;
+import threads.ipfs.IPFS;
+import threads.ipfs.api.CID;
+import threads.share.AudioDialogFragment;
+import threads.share.ImageDialogFragment;
+import threads.share.PDFView;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThreadsViewAdapter;
+import threads.share.VideoDialogFragment;
+import threads.share.WebViewDialogFragment;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -563,13 +575,106 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                     long idx = thread.getIdx();
                     update(idx);
                 } else {
-                    mListener.clickThreadPlay(threadIdx);
+                    clickThreadPlay(threadIdx);
                 }
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
+    }
+
+
+    public void clickThreadPlay(long idx) {
+
+        final THREADS threads = Singleton.getInstance(mContext).getThreads();
+        final IPFS ipfs = Singleton.getInstance(mContext).getIpfs();
+        if (ipfs != null) {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    Thread thread = threads.getThreadByIdx(idx);
+                    checkNotNull(thread);
+                    ThreadStatus status = thread.getStatus();
+                    if (status == ThreadStatus.ONLINE || status == ThreadStatus.PUBLISHING) {
+
+                        CID cid = thread.getCid();
+                        checkNotNull(cid);
+
+                        String filename = thread.getAdditional(Content.FILENAME);
+                        String filesize = thread.getAdditional(Content.FILESIZE);
+                        String mimeType = thread.getMimeType();
+
+
+                        if (mimeType.startsWith("image")) {
+                            ImageDialogFragment.newInstance(cid.getCid(), thread.getSesKey()).show(
+                                    getChildFragmentManager(), ImageDialogFragment.TAG);
+
+                        } else if (mimeType.startsWith("video")) {
+
+                            VideoDialogFragment dialogFragment = VideoDialogFragment.newInstance(
+                                    cid.getCid(), thread.getSesKey(), Long.valueOf(filesize));
+
+                            getChildFragmentManager().beginTransaction().
+                                    add(dialogFragment, VideoDialogFragment.TAG).
+                                    commitAllowingStateLoss();
+
+                        } else if (mimeType.startsWith("audio")) {
+                            File file = new File(ipfs.getCacheDir(), cid.getCid());
+                            if (!file.exists()) {
+                                ipfs.store(file, cid, "");
+                            }
+
+                            Uri uri = Uri.fromFile(file);
+                            AudioDialogFragment.newInstance(uri, filename,
+                                    thread.getSenderAlias(), thread.getSesKey())
+                                    .show(getChildFragmentManager(), AudioDialogFragment.TAG);
+
+
+                        } else if (mimeType.startsWith(MimeType.PDF_MIME_TYPE)) {
+
+                            File file = new File(ipfs.getCacheDir(), cid.getCid());
+                            if (!file.exists()) {
+                                ipfs.store(file, cid, "");
+                            }
+                            PDFView.with(getActivity())
+                                    .fromfilepath(file.getAbsolutePath())
+                                    .swipeHorizontal(true)
+                                    .start();
+
+                        } else if (mimeType.equals(MimeType.LINK_MIME_TYPE)) {
+                            byte[] data = ipfs.get(cid, "", -1, true);
+                            Uri uri = Uri.parse(new String(data));
+
+                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+
+                        } else if (mimeType.startsWith("text")) {
+
+                            byte[] data = ipfs.get(cid, "", -1, true);
+                            if (data.length > 0) {
+                                String content = Base64.encodeToString(data, Base64.NO_PADDING);
+                                WebViewDialogFragment.newInstance(mimeType, content, "base64").
+                                        show(getChildFragmentManager(), WebViewDialogFragment.TAG);
+                            }
+                        } else if (mimeType.equals(MimeType.OCTET_MIME_TYPE)) {
+                            // TODO improve this (should show text)
+                            byte[] data = ipfs.get(cid, "", -1, true);
+                            int length = data.length;
+                            if (length > 0 && length < 64000) { // TODO 64kb (better check if content is text)
+                                String content = new String(data);
+                                WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.TEXT, content).
+                                        show(getChildFragmentManager(), WebViewDialogFragment.TAG);
+                            }
+                        }
+                    }
+                } catch (Throwable ex) {
+                    Preferences.error(threads, getString(R.string.no_activity_found_to_handle_uri));
+                }
+            });
+        }
     }
 
     @Override
@@ -684,8 +789,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
 
     public interface ActionListener {
-
-        void clickThreadPlay(long idx);
 
         void clickThreadsSend(long[] idxs);
 
