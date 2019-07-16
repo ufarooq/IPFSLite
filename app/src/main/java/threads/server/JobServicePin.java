@@ -15,6 +15,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -43,6 +44,7 @@ public class JobServicePin extends JobService {
                     .setRequiresCharging(true)
                     .setExtras(bundle)
                     .build();
+            jobScheduler.cancel(cid.hashCode());
             int resultCode = jobScheduler.schedule(jobInfo);
             if (resultCode == JobScheduler.RESULT_SUCCESS) {
                 Log.e(TAG, "Job scheduled!");
@@ -52,9 +54,12 @@ public class JobServicePin extends JobService {
         }
     }
 
-    private static boolean pinContent(@NonNull URL url) {
+    private static boolean pinContent(@NonNull URL url) throws IOException {
         checkNotNull(url);
-        try (InputStream stream = url.openStream()) {
+        URLConnection con = url.openConnection();
+        con.setConnectTimeout(15000);
+        con.setReadTimeout(120000);
+        try (InputStream stream = con.getInputStream()) {
             while (stream.read() != -1) {
             }
             return true;
@@ -101,6 +106,13 @@ public class JobServicePin extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters jobParameters) {
+
+        PersistableBundle bundle = jobParameters.getExtras();
+
+        final String cid = bundle.getString(Content.CID);
+        checkNotNull(cid);
+
+        Log.e(TAG, "onStopJob " + cid);
         return false;
     }
 }

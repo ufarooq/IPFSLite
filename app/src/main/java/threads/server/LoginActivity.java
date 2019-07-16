@@ -85,8 +85,6 @@ public class LoginActivity extends AppCompatActivity {
                 }
 
 
-
-
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }

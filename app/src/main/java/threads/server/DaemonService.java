@@ -210,7 +210,7 @@ public class DaemonService extends Service {
                 threads.server.Service.getInstance(getApplicationContext());
 
                 while (DAEMON_RUNNING.get()) {
-                    java.lang.Thread.sleep(TimeUnit.MINUTES.toMillis(1));
+                    java.lang.Thread.sleep(TimeUnit.HOURS.toMillis(3));
                     PinService.pin(getApplicationContext());
                 }
 
