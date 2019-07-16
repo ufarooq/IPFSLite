@@ -17,10 +17,10 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
 
+import threads.core.PeerService;
 import threads.core.Preferences;
 import threads.ipfs.api.PubsubConfig;
 import threads.ipfs.api.RoutingConfig;
-import threads.share.PeerService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

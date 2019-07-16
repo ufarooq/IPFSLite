@@ -38,8 +38,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import threads.core.ConnectService;
 import threads.core.MimeType;
 import threads.core.Network;
+import threads.core.PeerService;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -67,9 +69,7 @@ import threads.ipfs.api.PID;
 import threads.ipfs.api.PeerInfo;
 import threads.ipfs.api.PubsubConfig;
 import threads.ipfs.api.RoutingConfig;
-import threads.share.ConnectService;
 import threads.share.MimeTypeService;
-import threads.share.PeerService;
 import threads.share.RTCSession;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -175,7 +175,8 @@ public class Service {
                             contentDao().getContents(user, timestamp, false);
 
                     if (!contents.isEmpty()) {
-                        boolean success = ConnectService.connectUser(context, user);
+                        boolean success = ConnectService.connectUser(
+                                context, user, BuildConfig.ApiAesKey);
 
                         if (success) {
                             for (threads.server.Content content : contents) {
@@ -431,9 +432,9 @@ public class Service {
         try {
             threads.setUserStatus(user, UserStatus.DIALING);
 
-            PeerService.publishPeer(context);
+            PeerService.publishPeer(context, BuildConfig.ApiAesKey);
 
-            boolean value = ConnectService.connectUser(context, user);
+            boolean value = ConnectService.connectUser(context, user, BuildConfig.ApiAesKey);
             if (value) {
                 threads.setUserStatus(user, UserStatus.ONLINE);
                 PID host = Preferences.getPID(context);
@@ -467,7 +468,7 @@ public class Service {
                 threads.setUserStatus(user, UserStatus.OFFLINE);
             }
 
-            Peer peer = PeerService.getPeer(context, user);
+            Peer peer = PeerService.getPeer(context, user, BuildConfig.ApiAesKey);
             if (peer != null) {
                 String name = peer.getAdditional(Content.ALIAS);
                 if (!name.isEmpty()) {
@@ -1685,12 +1686,12 @@ public class Service {
             PID sender = thread.getSenderPid();
             if (!host.equals(sender)) {
 
-                if (!ConnectService.connectUser(context, sender)) {
+                if (!ConnectService.connectUser(context, sender, BuildConfig.ApiAesKey)) {
 
                     CID cid = thread.getCid();
                     checkNotNull(cid);
 
-                    PeerService.publishPeer(context);
+                    PeerService.publishPeer(context, BuildConfig.ApiAesKey);
 
                     // TODO handling what to do
 
@@ -1724,7 +1725,7 @@ public class Service {
                 contentService.insertContent(host, cid, true);
 
 
-                if (ConnectService.connectUser(context, user.getPID())) {
+                if (ConnectService.connectUser(context, user.getPID(), BuildConfig.ApiAesKey)) {
 
                     Singleton.getInstance(context).
                             getConsoleListener().info(
@@ -1733,7 +1734,7 @@ public class Service {
                     ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
                 } else {
 
-                    PeerService.publishPeer(context);
+                    PeerService.publishPeer(context, BuildConfig.ApiAesKey);
 
                     NotifyService.notify(context, user.getPID().getPid(), cid.getCid());
                 }
@@ -1917,7 +1918,8 @@ public class Service {
                                             }
                                         } else {
 
-                                            RTCSession.handleContent(context, senderPid, content);
+                                            RTCSession.handleContent(context,
+                                                    BuildConfig.ApiAesKey, senderPid, content);
                                         }
                                     } else {
                                         Preferences.error(threads, context.getString(

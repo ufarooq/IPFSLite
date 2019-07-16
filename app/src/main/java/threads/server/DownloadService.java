@@ -5,11 +5,11 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import threads.core.ConnectService;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
-import threads.share.ConnectService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -34,7 +34,7 @@ public class DownloadService {
 
                 if (!threads.isUserBlocked(pid)) {
 
-                    success = ConnectService.connectUser(context, pid);
+                    success = ConnectService.connectUser(context, pid, BuildConfig.ApiAesKey);
 
                     if (success) {
                         Service.downloadMultihash(context, pid, cid);

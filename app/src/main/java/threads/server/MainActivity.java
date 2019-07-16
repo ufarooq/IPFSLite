@@ -45,7 +45,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.psdev.licensesdialog.LicensesDialogFragment;
+import threads.core.ConnectService;
 import threads.core.Network;
+import threads.core.PeerService;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -59,10 +61,8 @@ import threads.ipfs.api.CID;
 import threads.ipfs.api.IpnsInfo;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
-import threads.share.ConnectService;
 import threads.share.InfoDialogFragment;
 import threads.share.NameDialogFragment;
-import threads.share.PeerService;
 import threads.share.PermissionAction;
 import threads.share.RTCCallActivity;
 import threads.share.ThreadActionDialogFragment;
@@ -560,7 +560,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    PeerService.publishPeer(getApplicationContext());
+                    PeerService.publishPeer(getApplicationContext(), BuildConfig.ApiAesKey);
                 } catch (Throwable e) {
                     Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                 }
@@ -622,7 +622,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 threads.setUserStatus(user, UserStatus.DIALING);
 
                                 boolean value = ConnectService.connectUser(
-                                        getApplicationContext(), user);
+                                        getApplicationContext(), user, BuildConfig.ApiAesKey);
 
                                 if (value) {
                                     threads.setUserStatus(user, UserStatus.ONLINE);

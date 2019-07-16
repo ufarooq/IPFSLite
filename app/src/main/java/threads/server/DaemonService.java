@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.core.Network;
-import threads.share.PeerService;
+import threads.core.PeerService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -46,7 +46,7 @@ public class DaemonService extends Service {
                     ExecutorService service = Executors.newSingleThreadExecutor();
                     service.submit(() -> {
                         try {
-                            PeerService.publishPeer(getApplicationContext());
+                            PeerService.publishPeer(getApplicationContext(), BuildConfig.ApiAesKey);
                         } catch (Throwable e) {
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
                         }
@@ -169,7 +169,7 @@ public class DaemonService extends Service {
 
                 while (DAEMON_RUNNING.get()) {
                     java.lang.Thread.sleep(TimeUnit.MINUTES.toMillis(5));
-                    PeerService.publishPeer(getApplicationContext());
+                    PeerService.publishPeer(getApplicationContext(), BuildConfig.ApiAesKey);
 
                 }
 
