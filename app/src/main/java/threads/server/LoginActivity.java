@@ -19,7 +19,6 @@ import java.util.concurrent.Executors;
 public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = LoginActivity.class.getSimpleName();
-    private ProgressBar progress_bar;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -33,7 +32,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
 
-        progress_bar = findViewById(R.id.progress_bar);
+        ProgressBar progress_bar = findViewById(R.id.progress_bar);
 
         progress_bar.setVisibility(View.VISIBLE);
 
@@ -64,23 +63,30 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    void handleSend(Intent intent) {
+    void handleSend(Intent intent, boolean multi) {
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
                 Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-                if (uri != null) {
+                if (multi) {
+                    ClipData mClipData = intent.getClipData();
+                    if (mClipData != null) {
+                        for (int i = 0; i < mClipData.getItemCount(); i++) {
+                            ClipData.Item item = mClipData.getItemAt(i);
+                            Service.getInstance(this).storeData(getApplicationContext(), item.getUri());
+                        }
+                    } else if (uri != null) {
+                        Service.getInstance(this).storeData(getApplicationContext(), uri);
+                    }
+
+                } else if (uri != null) {
                     Service.getInstance(this).storeData(getApplicationContext(), uri);
                 }
 
-                ClipData mClipData = intent.getClipData();
-                if (mClipData != null) {
-                    for (int i = 0; i < mClipData.getItemCount(); i++) {
-                        ClipData.Item item = mClipData.getItemAt(i);
-                        Service.getInstance(this).storeData(getApplicationContext(), item.getUri());
-                    }
-                }
+
+
+
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
@@ -106,17 +112,17 @@ public class LoginActivity extends AppCompatActivity {
                     if ("text/plain".equals(type)) {
                         handleSendText(intent);
                     } else {
-                        handleSend(intent);
+                        handleSend(intent, false);
                     }
                 } else if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
                     if (intent.hasExtra(Intent.EXTRA_STREAM)) {
-                        handleSend(intent);
+                        handleSend(intent, true);
                     } else {
                         String type = intent.getType();
                         if ("text/plain".equals(type)) {
                             handleSendText(intent);
                         } else {
-                            handleSend(intent);
+                            handleSend(intent, true);
                         }
                     }
                 }

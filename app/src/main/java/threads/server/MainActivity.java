@@ -167,11 +167,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         try {
             if (requestCode == REQUEST_SELECT_FILES && resultCode == RESULT_OK && data != null) {
 
-                if (data.getData() != null) {
-                    Uri uri = data.getData();
-                    Service.getInstance(
-                            getApplicationContext()).storeData(getApplicationContext(), uri);
-                }
+
                 if (data.getClipData() != null) {
                     ClipData mClipData = data.getClipData();
                     for (int i = 0; i < mClipData.getItemCount(); i++) {
@@ -180,6 +176,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         Service.getInstance(
                                 getApplicationContext()).storeData(getApplicationContext(), uri);
                     }
+                } else if (data.getData() != null) {
+                    Uri uri = data.getData();
+                    Service.getInstance(
+                            getApplicationContext()).storeData(getApplicationContext(), uri);
                 }
 
             } else {
