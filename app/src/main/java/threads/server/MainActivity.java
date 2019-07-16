@@ -955,7 +955,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         IpnsInfo info = ipfs.name_publish(cid);
 
                         if (info != null) {
-                            Uri uri = Uri.parse("https://ipfs.io" + info.getValue());
+                            Uri uri = Uri.parse("https://ipfs.io/ipns/" + info.getName());
 
                             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
