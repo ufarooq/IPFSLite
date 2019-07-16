@@ -531,7 +531,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
             ThreadActionDialogFragment.newInstance(
                     thread.getIdx(), true, true,
-                    topLevel.get(), online, true, true, true)
+                    topLevel.get(), online, true, true,
+                    true, true)
                     .show(fm, ThreadActionDialogFragment.TAG);
 
         } catch (Throwable e) {

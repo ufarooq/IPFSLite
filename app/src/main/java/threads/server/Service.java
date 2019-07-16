@@ -1736,7 +1736,7 @@ public class Service {
 
                     PeerService.publishPeer(context, BuildConfig.ApiAesKey);
 
-                    NotifyService.notify(context, user.getPID().getPid(), cid.getCid());
+                    JobServiceNotify.notify(context, user.getPID().getPid(), cid.getCid());
                 }
             } catch (Throwable e) {
                 Preferences.evaluateException(threads, Preferences.EXCEPTION, e);

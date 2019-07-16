@@ -1168,6 +1168,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
+    public void clickThreadPinner(long idx) {
+        final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+
+                threads.setThreadPinned(idx, true);
+
+            } catch (Throwable e) {
+                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+            }
+        });
+
+    }
+
+    @Override
     public void name(@NonNull String pid, @NonNull String name) {
         checkNotNull(pid);
         checkNotNull(name);
