@@ -72,6 +72,7 @@ import threads.ipfs.api.RoutingConfig;
 import threads.share.MimeTypeService;
 import threads.share.RTCSession;
 
+import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 
@@ -82,6 +83,8 @@ public class Service {
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(10);
     private static final String APP_KEY = "AppKey";
     public static final String PIN_SERVICE_KEY = "pinServiceKey";
+    private static final String PIN_SERICE_TIME_KEY = "pinServiceTimeKey";
+    private static final String GATEWAY_KEY = "gatewayKey";
     private static final String UPDATE = "UPDATE";
     private static final String SUPPORT_OFFLINE_NOTIFICATION_KEY = "supportOfflineNotificationKey";
     private static Service SINGLETON = null;
@@ -90,6 +93,39 @@ public class Service {
     private Service() {
     }
 
+    @NonNull
+    public static String getGateway(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                APP_KEY, Context.MODE_PRIVATE);
+        return sharedPref.getString(GATEWAY_KEY, "https://ipfs.io");
+    }
+
+    public static void setGateway(@NonNull Context context, @NonNull String gateway) {
+        checkNotNull(context);
+        checkNotNull(gateway);
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                APP_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(GATEWAY_KEY, gateway);
+        editor.apply();
+
+    }
+
+    public static int getPinServiceTime(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
+        return sharedPref.getInt(PIN_SERICE_TIME_KEY, 6);
+    }
+
+    public static void setPinServiceTime(@NonNull Context context, int timeout) {
+        checkNotNull(context);
+        checkArgument(timeout >= 0);
+        SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt(PIN_SERICE_TIME_KEY, timeout);
+        editor.apply();
+    }
     public static boolean getDontShowAgain(@NonNull Context context, @NonNull String key) {
         checkNotNull(context);
         checkNotNull(key);
@@ -129,6 +165,7 @@ public class Service {
 
             runUpdatesIfNecessary(context);
 
+            setDontShowAgain(context, Service.PIN_SERVICE_KEY, false);
 
             ProgressChannel.createProgressChannel(context);
             RTCSession.createRTCChannel(context);

@@ -4,18 +4,25 @@ import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.DialogFragment;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import threads.core.PeerService;
 import threads.core.Preferences;
@@ -29,7 +36,19 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
     static final String TAG = SettingsDialogFragment.class.getSimpleName();
 
     private float downX, downY, upX, upY;
+    private Context mContext;
 
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mContext = null;
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        mContext = context;
+    }
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
@@ -287,6 +306,65 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
                     Toast.LENGTH_LONG).show();
 
 
+        });
+
+
+        Spinner pin_gateways = view.findViewById(R.id.pin_gateways);
+        List<String> list = new ArrayList<>();
+        list.add("https://ipfs.io");
+        list.add("https://cloudflare-ipfs.com");
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<>(mContext,
+                android.R.layout.simple_spinner_item, list);
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        pin_gateways.setAdapter(dataAdapter);
+
+        int pos = list.indexOf(Service.getGateway(mContext));
+        pin_gateways.setSelection(pos);
+        pin_gateways.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int pos, long l) {
+                Service.setGateway(parent.getContext(), parent.getItemAtPosition(pos).toString());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+
+        TextView pin_service_time_text = view.findViewById(R.id.pin_service_time_text);
+        SeekBar pin_service_time = view.findViewById(R.id.pin_service_time);
+
+
+        pin_service_time.setMax(12);
+        int time = 0;
+        int pinServiceTime = Service.getPinServiceTime(activity);
+        if (pinServiceTime > 0) {
+            time = (pinServiceTime);
+        }
+        pin_service_time_text.setText(getString(R.string.pin_service_time,
+                String.valueOf(time)));
+        pin_service_time.setProgress(time);
+        pin_service_time.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+
+                Service.setPinServiceTime(activity, progress);
+                pin_service_time_text.setText(
+                        getString(R.string.pin_service_time,
+                                String.valueOf(progress)));
+
+            }
+
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // ignore, not used
+            }
+
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // ignore, not used
+            }
         });
 
 

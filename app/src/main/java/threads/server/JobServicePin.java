@@ -79,13 +79,14 @@ public class JobServicePin extends JobService {
         final String cid = bundle.getString(Content.CID);
         checkNotNull(cid);
 
+        String gateway = Service.getGateway(getApplicationContext());
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
 
             long start = System.currentTimeMillis();
             try {
-                URL url = new URL("https://ipfs.io/ipfs/" + cid);
+                URL url = new URL(gateway + "/ipfs/" + cid);
                 boolean success = pinContent(url);
                 long time = (System.currentTimeMillis() - start) / 1000;
 

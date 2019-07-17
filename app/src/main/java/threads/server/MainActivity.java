@@ -954,10 +954,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         CID cid = threads.getThreadCID(idx);
                         checkNotNull(cid);
 
+                        String gateway = Service.getGateway(getApplicationContext());
                         IpnsInfo info = ipfs.name_publish(cid);
 
                         if (info != null) {
-                            Uri uri = Uri.parse("https://ipfs.io/ipns/" + info.getName());
+                            Uri uri = Uri.parse(gateway + "/ipns/" + info.getName());
 
                             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -1080,8 +1081,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     CID cid = threads.getThreadCID(idx);
                     checkNotNull(cid);
                     String multihash = cid.getCid();
-
-                    Uri uri = Uri.parse("https://ipfs.io/ipfs/" + multihash);
+                    String gateway = Service.getGateway(getApplicationContext());
+                    Uri uri = Uri.parse(gateway + "/ipfs/" + multihash);
 
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);

@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.core.Network;
 import threads.core.PeerService;
+import threads.core.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -204,23 +205,27 @@ public class DaemonService extends Service {
 
         });
 
-        ExecutorService pin = Executors.newSingleThreadExecutor();
-        pinService = pin.submit(() -> {
-            try {
-                threads.server.Service.getInstance(getApplicationContext());
+        String reprovider = Preferences.getReproviderInterval(getApplicationContext());
+        if (!reprovider.equals("0")) {
+            ExecutorService pin = Executors.newSingleThreadExecutor();
+            pinService = pin.submit(() -> {
+                try {
+                    threads.server.Service.getInstance(getApplicationContext());
+                    int time = threads.server.Service.getPinServiceTime(getApplicationContext());
 
-                while (DAEMON_RUNNING.get()) {
-                    PinService.pin(getApplicationContext());
-                    java.lang.Thread.sleep(TimeUnit.HOURS.toMillis(3));
+                    while (DAEMON_RUNNING.get() && time > 0) {
+                        PinService.pin(getApplicationContext());
+                        java.lang.Thread.sleep(TimeUnit.HOURS.toMillis(time));
+                    }
+
+                } catch (InterruptedException e) {
+                    Log.e(TAG, "Daemon Slow Service has been successfully stopped");
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
 
-            } catch (InterruptedException e) {
-                Log.e(TAG, "Daemon Slow Service has been successfully stopped");
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-
-        });
+            });
+        }
     }
 
     private Notification buildNotification() {
