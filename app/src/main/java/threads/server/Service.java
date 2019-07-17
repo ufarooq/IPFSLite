@@ -81,6 +81,7 @@ public class Service {
     private static final Gson gson = new Gson();
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(10);
     private static final String APP_KEY = "AppKey";
+    public static final String PIN_SERVICE_KEY = "pinServiceKey";
     private static final String UPDATE = "UPDATE";
     private static final String SUPPORT_OFFLINE_NOTIFICATION_KEY = "supportOfflineNotificationKey";
     private static Service SINGLETON = null;
@@ -89,6 +90,24 @@ public class Service {
     private Service() {
     }
 
+    public static boolean getDontShowAgain(@NonNull Context context, @NonNull String key) {
+        checkNotNull(context);
+        checkNotNull(key);
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                APP_KEY, Context.MODE_PRIVATE);
+        return sharedPref.getBoolean(key, false);
+    }
+
+    public static void setDontShowAgain(@NonNull Context context, @NonNull String key, boolean value) {
+        checkNotNull(context);
+        checkNotNull(key);
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                APP_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean(key, value);
+        editor.apply();
+
+    }
     public static boolean isSupportOfflineNotification(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);

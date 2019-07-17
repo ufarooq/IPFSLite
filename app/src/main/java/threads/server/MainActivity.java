@@ -61,6 +61,7 @@ import threads.ipfs.api.CID;
 import threads.ipfs.api.IpnsInfo;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
+import threads.share.DontShowAgainDialog;
 import threads.share.InfoDialogFragment;
 import threads.share.NameDialogFragment;
 import threads.share.PermissionAction;
@@ -80,7 +81,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         EditPeerDialogFragment.ActionListener,
         PeersFragment.ActionListener,
         ThreadsFragment.ActionListener,
-        NameDialogFragment.ActionListener {
+        NameDialogFragment.ActionListener,
+        DontShowAgainDialog.ActionListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final Gson gson = new Gson();
@@ -1168,7 +1170,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
+    public void dontShowAgain(@NonNull String key, boolean dontShowAgain) {
+        Service.setDontShowAgain(this, key, dontShowAgain);
+    }
+
+    @Override
     public void clickThreadPin(long idx, boolean pinned) {
+
+        if (pinned) {
+            if (!Service.getDontShowAgain(this, Service.PIN_SERVICE_KEY)) {
+                try {
+                    DontShowAgainDialog.newInstance(
+                            getString(R.string.pin_service_notice), Service.PIN_SERVICE_KEY).show(
+                            getSupportFragmentManager(), DontShowAgainDialog.TAG);
+
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            }
+        }
         final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
