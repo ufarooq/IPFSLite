@@ -120,5 +120,5 @@
     <br><br>In <strong>Pin Service</strong> Settings additional behavioral adoptions can be made
     ]]></string>
     <string name="pin_service_settings">Pin Service</string>
-    <string name="gateways">Gateways</string>
+    <string name="gateway">Gateway</string>
 </resources>

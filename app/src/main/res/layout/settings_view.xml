@@ -168,10 +168,11 @@
             android:layout_marginLeft="@dimen/fab_margin"
             android:layout_marginTop="16dp"
             android:layout_marginRight="@dimen/fab_margin"
-            android:text="@string/gateways" />
+            android:text="@string/gateway" />
 
         <Spinner
             android:id="@+id/pin_gateways"
+            android:layout_margin="16dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
