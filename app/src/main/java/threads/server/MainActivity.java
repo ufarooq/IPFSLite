@@ -868,7 +868,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         } else {
 
                             Intent intent = RTCCallActivity.createIntent(MainActivity.this,
-                                    pid, user.getAlias(), null, true);
+                                    BuildConfig.ApiAesKey, pid, user.getAlias(), null, true);
                             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                             intent.setAction(RTCCallActivity.ACTION_OUTGOING_CALL);
                             MainActivity.this.startActivity(intent);

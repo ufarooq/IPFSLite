@@ -1760,7 +1760,7 @@ public class Service {
 
     }
 
-    private void shareUser(@NonNull Context context, @NonNull User user, long[] idxs) {
+    private void sharePeer(@NonNull Context context, @NonNull User user, long[] idxs) {
         checkNotNull(user);
         checkNotNull(idxs);
         final THREADS threads = Singleton.getInstance(context).getThreads();
@@ -1834,7 +1834,7 @@ public class Service {
 
                         for (User user : users) {
                             futures.add(executorService.submit(() ->
-                                    shareUser(context, user, idxs)));
+                                    sharePeer(context, user, idxs)));
                         }
 
 

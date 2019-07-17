@@ -42,14 +42,14 @@ android {
     buildTypes {
         debug {
             buildConfigField "boolean", "FDroid", "false"
-            buildConfigField 'String', "ApiAesKey", '""'
+            buildConfigField 'String', "ApiAesKey", ApiAesKey
         }
 
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             buildConfigField "boolean", "FDroid", "false"
-            buildConfigField 'String', "ApiAesKey", '""'
+            buildConfigField 'String', "ApiAesKey", ApiAesKey
         }
     }
 
@@ -100,10 +100,10 @@ dependencies {
     //implementation 'threads.pow:pow:1.0.9'
 
     // UI+API (LICENSE done)
-    implementation 'threads.core:share:0.4.7'
+    implementation 'threads.core:share:0.4.8'
 
     // API (LICENSE done)
-    implementation 'threads.core:api:0.2.0'
+    implementation 'threads.core:api:0.2.2'
 
     // API (LICENSE done)
     implementation 'threads.core:iota:0.0.4'
