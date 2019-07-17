@@ -526,13 +526,14 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         try {
 
             boolean online = thread.getStatus() == ThreadStatus.ONLINE;
+            boolean pinned = thread.isPinned();
 
             FragmentManager fm = getChildFragmentManager();
 
             ThreadActionDialogFragment.newInstance(
                     thread.getIdx(), true, true,
                     topLevel.get(), online, true, true,
-                    true, true)
+                    true, !pinned, pinned)
                     .show(fm, ThreadActionDialogFragment.TAG);
 
         } catch (Throwable e) {
