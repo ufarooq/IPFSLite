@@ -67,6 +67,8 @@ public class JobServiceNotify extends JobService {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
+                Service.getInstance(getApplicationContext());
+
                 Service.notify(getApplicationContext(), pid, cid);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

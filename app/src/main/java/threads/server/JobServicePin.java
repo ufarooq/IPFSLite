@@ -84,8 +84,11 @@ public class JobServicePin extends JobService {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
 
+
             long start = System.currentTimeMillis();
             try {
+                Service.getInstance(getApplicationContext());
+
                 URL url = new URL(gateway + "/ipfs/" + cid);
                 boolean success = pinContent(url);
                 long time = (System.currentTimeMillis() - start) / 1000;
