@@ -116,7 +116,7 @@
     <br><strong>2. IPFS Lite</strong> daemon must run [Limitation]
     <br><strong>3. Reprovider</strong> must be activated in Settings [Limitation]
     <br><strong>4. Charging</strong> Android device must currently be charged [Limitation]
-    <br><strong>5. Public IP Address</strong>, e.g. router port forwarding in Wifi mode
+    <br><strong>5. Public IP Address</strong>
     <br><br>In <strong>Pin Service</strong> Settings additional behavioral adoptions can be made
     ]]></string>
     <string name="pin_service_settings">Pin Service</string>
