@@ -45,9 +45,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.psdev.licensesdialog.LicensesDialogFragment;
-import threads.core.ConnectService;
+import threads.core.IdentityService;
 import threads.core.Network;
-import threads.core.PeerService;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -67,6 +66,7 @@ import threads.share.NameDialogFragment;
 import threads.share.PermissionAction;
 import threads.share.RTCCallActivity;
 import threads.share.ThreadActionDialogFragment;
+import threads.share.ThumbnailService;
 import threads.share.UserActionDialogFragment;
 import threads.share.WebViewDialogFragment;
 
@@ -241,15 +241,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     return;
                 }
 
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.submit(() -> {
-                    try {
-                        Service.downloadMultihash(getApplicationContext(), host,
-                                CID.create(multihash), null, null, null);
-                    } catch (Throwable e) {
-                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    }
-                });
+                JobServiceMultihash.download(getApplicationContext(),
+                        host, CID.create(multihash));
             } else {
 
                 Preferences.error(singleton.getThreads(),
@@ -559,6 +552,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(pid);
         try {
             final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+            /*
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
@@ -566,7 +560,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 } catch (Throwable e) {
                     Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                 }
-            });
+            });*/
 
             InfoDialogFragment.show(this, pid,
                     getString(R.string.peer_id),
@@ -607,39 +601,39 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         try {
-            final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+
             final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-            if (ipfs != null) {
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.submit(() -> {
-                    try {
 
-                        PID user = PID.create(pid);
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
 
-                        if (threads.isUserBlocked(user)) {
-                            Preferences.warning(threads, getString(R.string.peer_is_blocked));
-                        } else {
+                    PID user = PID.create(pid);
 
-                            try {
-                                threads.setUserStatus(user, UserStatus.DIALING);
+                    if (threads.isUserBlocked(user)) {
+                        Preferences.warning(threads, getString(R.string.peer_is_blocked));
+                    } else {
 
-                                boolean value = ConnectService.connectUser(
-                                        getApplicationContext(), user, BuildConfig.ApiAesKey);
+                        try {
+                            threads.setUserStatus(user, UserStatus.DIALING);
 
-                                if (value) {
-                                    threads.setUserStatus(user, UserStatus.ONLINE);
-                                } else {
-                                    threads.setUserStatus(user, UserStatus.OFFLINE);
-                                }
-                            } catch (Throwable e) {
+                            boolean value = IdentityService.connectPeer(getApplicationContext(),
+                                    user, BuildConfig.ApiAesKey, true, true);
+
+                            if (value) {
+                                threads.setUserStatus(user, UserStatus.ONLINE);
+                            } else {
                                 threads.setUserStatus(user, UserStatus.OFFLINE);
                             }
+                        } catch (Throwable e) {
+                            threads.setUserStatus(user, UserStatus.OFFLINE);
                         }
-                    } catch (Throwable e) {
-                        Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                     }
-                });
-            }
+                } catch (Throwable e) {
+                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                }
+            });
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -920,7 +914,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    Service.connectUser(getApplicationContext(), user);
+                    Service.connectPeer(getApplicationContext(), user);
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
@@ -1217,10 +1211,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     PID user = PID.create(pid);
 
-                    byte[] data = THREADS.getImage(getApplicationContext(),
-                            name, R.drawable.server_network);
-                    CID image = ipfs.add(data, "", true);
-                    checkNotNull(image);
+                    CID image = ThumbnailService.getImage(getApplicationContext(),
+                            name, "", R.drawable.server_network);
                     threads.setUserImage(user, image);
 
                     threads.setUserAlias(user, name);

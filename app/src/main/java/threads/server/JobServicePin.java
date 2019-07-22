@@ -19,12 +19,16 @@ import java.net.URLConnection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import threads.core.Singleton;
 import threads.core.api.Content;
+import threads.ipfs.IPFS;
+import threads.ipfs.api.CID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class JobServicePin extends JobService {
 
+    private static final int TIMEOUT = 120000;
     private static final String TAG = JobServicePin.class.getSimpleName();
 
 
@@ -58,7 +62,7 @@ public class JobServicePin extends JobService {
         checkNotNull(url);
         URLConnection con = url.openConnection();
         con.setConnectTimeout(15000);
-        con.setReadTimeout(120000);
+        con.setReadTimeout(TIMEOUT);
         try (InputStream stream = con.getInputStream()) {
             while (stream.read() != -1) {
             }
@@ -88,6 +92,11 @@ public class JobServicePin extends JobService {
             long start = System.currentTimeMillis();
             try {
                 Service.getInstance(getApplicationContext());
+
+                final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+
+                checkNotNull(ipfs, "IPFS not valid");
+                ipfs.dhtPublish(CID.create(cid), true, TIMEOUT);
 
                 URL url = new URL(gateway + "/ipfs/" + cid);
                 boolean success = pinContent(url);

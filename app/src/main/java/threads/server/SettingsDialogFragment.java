@@ -24,7 +24,6 @@ import androidx.fragment.app.DialogFragment;
 import java.util.ArrayList;
 import java.util.List;
 
-import threads.core.PeerService;
 import threads.core.Preferences;
 import threads.ipfs.api.PubsubConfig;
 import threads.ipfs.api.RoutingConfig;
@@ -369,9 +368,9 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
 
 
         Switch support_peer_discovery = view.findViewById(R.id.support_peer_discovery);
-        support_peer_discovery.setChecked(PeerService.isSupportPeerDiscovery(activity));
+        support_peer_discovery.setChecked(Preferences.isSupportPeerDiscovery(activity));
         support_peer_discovery.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            PeerService.setSupportPeerDiscovery(activity, isChecked);
+            Preferences.setSupportPeerDiscovery(activity, isChecked);
         });
 
 
@@ -416,6 +415,13 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
                 // ignore, not used
             }
         });
+
+        Switch support_automatic_download = view.findViewById(R.id.support_automatic_download);
+        support_automatic_download.setChecked(Service.isAutoDownload(activity));
+        support_automatic_download.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Service.setAutoDownload(activity, isChecked);
+        });
+
 
         return new androidx.appcompat.app.AlertDialog.Builder(activity)
                 .setView(view)

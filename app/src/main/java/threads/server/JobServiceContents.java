@@ -11,32 +11,35 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import threads.core.api.Content;
+import threads.ipfs.api.CID;
+import threads.ipfs.api.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class JobServiceNotify extends JobService {
+public class JobServiceContents extends JobService {
 
-    private static final String TAG = JobServiceNotify.class.getSimpleName();
+    private static final String TAG = JobServiceContents.class.getSimpleName();
 
-
-    public static void notify(@NonNull Context context,
-                              @NonNull String pid,
-                              @NonNull String cid) {
+    public static void contents(@NonNull Context context,
+                                @NonNull PID pid,
+                                @NonNull CID cid) {
         checkNotNull(context);
         checkNotNull(pid);
         checkNotNull(cid);
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
-            ComponentName componentName = new ComponentName(context, JobServiceNotify.class);
+            ComponentName componentName = new ComponentName(context, JobServiceContents.class);
 
             PersistableBundle bundle = new PersistableBundle();
-            bundle.putString(Content.PID, pid);
-            bundle.putString(Content.CID, cid);
+            bundle.putString(threads.core.api.Content.PID, pid.getPid());
+            bundle.putString(Content.CID, cid.getCid());
 
             JobInfo jobInfo = new JobInfo.Builder(cid.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
@@ -51,6 +54,11 @@ public class JobServiceNotify extends JobService {
         }
     }
 
+    private static long getMinutesAgo(int minutes) {
+        return System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(minutes);
+    }
+
+
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
@@ -59,17 +67,30 @@ public class JobServiceNotify extends JobService {
         checkNotNull(pid);
         final String cid = bundle.getString(Content.CID);
         checkNotNull(cid);
-
-        if (!Service.isSupportOfflineNotification(getApplicationContext())) {
-            return false;
-        }
-
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
                 Service.getInstance(getApplicationContext());
 
-                Service.notify(getApplicationContext(), pid, cid, null); // TODO
+                final ContentService contentService =
+                        ContentService.getInstance(getApplicationContext());
+                boolean connected = ContentsService.download(getApplicationContext(),
+                        PID.create(pid), CID.create(cid));
+
+                if (connected) {
+                    // load old entries when connected
+                    long timestamp = getMinutesAgo(30);
+
+                    List<threads.server.Content> contents =
+                            contentService.getContentDatabase().
+                                    contentDao().getContents(
+                                    PID.create(pid), timestamp, false);
+
+                    for (threads.server.Content entry : contents) {
+                        ContentsService.download(
+                                getApplicationContext(), entry.getPid(), entry.getCID());
+                    }
+                }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {
@@ -84,5 +105,4 @@ public class JobServiceNotify extends JobService {
     public boolean onStopJob(JobParameters jobParameters) {
         return false;
     }
-
 }

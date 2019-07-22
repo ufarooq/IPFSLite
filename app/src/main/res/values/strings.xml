@@ -114,11 +114,11 @@
     The pin service pins your content via a gateway. In order to successfully pin your data, some requirements have to be fulfilled.<br>
     <br><strong>1. Network</strong> must be available
     <br><strong>2. IPFS Lite</strong> daemon must run [Limitation]
-    <br><strong>3. Reprovider</strong> must be activated in Settings [Limitation]
-    <br><strong>4. Charging</strong> Android device must currently be charged [Limitation]
-    <br><strong>5. Public IP Address</strong>
+    <br><strong>3. Charging</strong> Android device must currently be charged [Limitation]
+    <br><strong>4. Public IP Address</strong>
     <br><br>In <strong>Pin Service</strong> Settings additional behavioral adoptions can be made
     ]]></string>
     <string name="pin_service_settings">Pin Service</string>
     <string name="gateway">Gateway</string>
+    <string name="support_automatic_download">Automatic Download</string>
 </resources>

@@ -18,7 +18,6 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import com.j256.simplemagic.ContentInfo;
 
 import org.apache.commons.lang3.StringUtils;
@@ -38,17 +37,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import threads.core.ConnectService;
+import threads.core.IdentityService;
 import threads.core.MimeType;
 import threads.core.Network;
-import threads.core.PeerService;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.AddressType;
 import threads.core.api.Content;
 import threads.core.api.Kind;
-import threads.core.api.Peer;
 import threads.core.api.Server;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
@@ -68,9 +65,12 @@ import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.PeerInfo;
 import threads.ipfs.api.PubsubConfig;
+import threads.ipfs.api.PubsubInfo;
+import threads.ipfs.api.PubsubReader;
 import threads.ipfs.api.RoutingConfig;
 import threads.share.MimeTypeService;
 import threads.share.RTCSession;
+import threads.share.ThumbnailService;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -78,19 +78,40 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class Service {
 
+    public static final int RELAYS = 5;
+    public static final String PIN_SERVICE_KEY = "pinServiceKey";
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(10);
     private static final String APP_KEY = "AppKey";
-    public static final String PIN_SERVICE_KEY = "pinServiceKey";
     private static final String PIN_SERICE_TIME_KEY = "pinServiceTimeKey";
     private static final String GATEWAY_KEY = "gatewayKey";
+    private static final String AUTO_DOWNLOAD_KEY = "autoDownloadKey";
     private static final String UPDATE = "UPDATE";
     private static final String SUPPORT_OFFLINE_NOTIFICATION_KEY = "supportOfflineNotificationKey";
     private static Service SINGLETON = null;
     private final AtomicBoolean peerCheckFlag = new AtomicBoolean(false);
 
     private Service() {
+    }
+
+
+    public static boolean isAutoDownload(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                APP_KEY, Context.MODE_PRIVATE);
+        return sharedPref.getBoolean(AUTO_DOWNLOAD_KEY, false);
+    }
+
+    public static void setAutoDownload(@NonNull Context context, boolean automaticDownload) {
+        checkNotNull(context);
+
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                APP_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean(AUTO_DOWNLOAD_KEY, automaticDownload);
+        editor.apply();
+
     }
 
     @NonNull
@@ -126,6 +147,7 @@ public class Service {
         editor.putInt(PIN_SERICE_TIME_KEY, timeout);
         editor.apply();
     }
+
     public static boolean getDontShowAgain(@NonNull Context context, @NonNull String key) {
         checkNotNull(context);
         checkNotNull(key);
@@ -144,6 +166,8 @@ public class Service {
         editor.apply();
 
     }
+
+
     public static boolean isSupportOfflineNotification(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
@@ -165,7 +189,9 @@ public class Service {
 
             runUpdatesIfNecessary(context);
 
-            setDontShowAgain(context, Service.PIN_SERVICE_KEY, false);
+            Preferences.setPubsubEnabled(context, false);
+            Preferences.setTangleTimeout(context, 30); // TODO remove
+            Preferences.setMdnsEnabled(context, true); // TODO remove
 
             ProgressChannel.createProgressChannel(context);
             RTCSession.createRTCChannel(context);
@@ -205,48 +231,6 @@ public class Service {
         }
     }
 
-    public static long getMinutesAgo(int minutes) {
-        return System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(minutes);
-    }
-
-    public static void downloadContents(@NonNull Context context) {
-        checkNotNull(context);
-
-        final ContentService contentService = ContentService.getInstance(context);
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-        final PID host = Preferences.getPID(context);
-        try {
-
-            for (PID user : threads.getUsersPIDs()) {
-
-                if (user.equals(host)) {
-                    continue;
-                }
-
-                if (!threads.isUserBlocked(user)) {
-
-                    long timestamp = getMinutesAgo(10);
-
-                    List<threads.server.Content> contents = contentService.getContentDatabase().
-                            contentDao().getContents(user, timestamp, false);
-
-                    if (!contents.isEmpty()) {
-                        boolean success = ConnectService.connectUser(
-                                context, user, BuildConfig.ApiAesKey);
-
-                        if (success) {
-                            for (threads.server.Content content : contents) {
-                                Service.downloadMultihash(context, content.getPid(), content.getCID());
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
-
 
     private static long getDaysAgo(int days) {
         return System.currentTimeMillis() - TimeUnit.DAYS.toMillis(days);
@@ -259,6 +243,7 @@ public class Service {
             if (host != null) {
                 final int timeout = Preferences.getTangleTimeout(context);
                 final Server server = Preferences.getTangleServer(context);
+
                 final EntityService entityService = EntityService.getInstance(context);
                 final ContentService contentService = ContentService.getInstance(context);
                 try {
@@ -282,7 +267,9 @@ public class Service {
 
                             Service.getInstance(context); // now time to load instance
 
-                            IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                            final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                            final THREADS threads = Singleton.getInstance(context).getThreads();
+                            final IOTA iota = Singleton.getInstance(context).getIota();
                             checkNotNull(ipfs, "IPFS not valid");
                             if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
                                 try {
@@ -323,28 +310,29 @@ public class Service {
                                     }
 
 
+                                    if (data.containsKey(Content.HASH)) {
+                                        final String hash = data.get(Content.HASH);
+
+                                        threads.core.api.PeerInfo peerInfo =
+                                                threads.loadPeerInfoByHash(
+                                                        iota, pid, hash, BuildConfig.ApiAesKey);
+                                        boolean success = false;
+                                        if (peerInfo != null) {
+                                            success = IdentityService.connectPeer(
+                                                    context, peerInfo,
+                                                    timeout, true, true);
+
+                                        }
+                                        Singleton.getInstance(context).getConsoleListener().info(
+                                                "Success Connect Hash : " + success);
+                                    }
+
+
                                     Singleton.getInstance(context).getConsoleListener().info(
                                             "Receive Inbox Notification from PID :" + pid);
 
 
-                                    boolean connected = DownloadService.download(
-                                            context, pid, cid);
-
-                                    if (connected) {
-                                        // load old entries when connected
-                                        long timestamp = getMinutesAgo(30);
-
-                                        List<threads.server.Content> contents =
-                                                contentService.getContentDatabase().
-                                                        contentDao().getContents(
-                                                        pid, timestamp, false);
-
-                                        for (threads.server.Content entry : contents) {
-                                            Service.downloadMultihash(
-                                                    context,
-                                                    entry.getPid(), entry.getCID());
-                                        }
-                                    }
+                                    JobServiceContents.contents(context, pid, cid);
 
 
                                 } catch (Throwable e) {
@@ -361,7 +349,10 @@ public class Service {
         }
     }
 
-    public static void notify(@NonNull Context context, @NonNull String pid, @NonNull String cid) {
+    public static void notify(@NonNull Context context,
+                              @NonNull String pid,
+                              @NonNull String cid,
+                              @Nullable String hash) {
 
         checkNotNull(context);
         checkNotNull(pid);
@@ -398,6 +389,9 @@ public class Service {
 
                 content.put(Content.PID, Encryption.encryptRSA(host.getPid(), publicKey));
                 content.put(Content.CID, Encryption.encryptRSA(cid, publicKey));
+                if (hash != null) {
+                    content.put(Content.HASH, hash);
+                }
 
                 String json = gson.toJson(content);
                 long start = System.currentTimeMillis();
@@ -459,7 +453,7 @@ public class Service {
 
     }
 
-    public static void connectUser(@NonNull Context context, @NonNull PID user) throws Exception {
+    public static void connectPeer(@NonNull Context context, @NonNull PID user) throws Exception {
         checkNotNull(context);
         checkNotNull(user);
 
@@ -471,9 +465,10 @@ public class Service {
 
             String alias = user.getPid();
 
-            byte[] data = THREADS.getImage(context, alias, R.drawable.server_network);
             checkNotNull(ipfs, "IPFS is not valid");
-            CID image = ipfs.add(data, "", true);
+            CID image = ThumbnailService.getImage(
+                    context, alias, "", R.drawable.server_network);
+
             User newUser = threads.createUser(user, "",
                     alias, UserType.VERIFIED, image);
             newUser.setStatus(UserStatus.OFFLINE);
@@ -488,9 +483,9 @@ public class Service {
         try {
             threads.setUserStatus(user, UserStatus.DIALING);
 
-            PeerService.publishPeer(context, BuildConfig.ApiAesKey);
-
-            boolean value = ConnectService.connectUser(context, user, BuildConfig.ApiAesKey);
+            final int timeout = Preferences.getConnectionTimeout(context);
+            boolean value = IdentityService.connectPeer(context, user,
+                    BuildConfig.ApiAesKey, true, true);
             if (value) {
                 threads.setUserStatus(user, UserStatus.ONLINE);
                 PID host = Preferences.getPID(context);
@@ -510,7 +505,7 @@ public class Service {
 
 
                 if (threads.getUserPublicKey(user).isEmpty()) {
-                    int timeout = Preferences.getConnectionTimeout(context);
+
                     PeerInfo info = ipfs.id(user, timeout);
                     if (info != null) {
                         String key = info.getPublicKey();
@@ -524,9 +519,10 @@ public class Service {
                 threads.setUserStatus(user, UserStatus.OFFLINE);
             }
 
-            Peer peer = PeerService.getPeer(context, user, BuildConfig.ApiAesKey);
-            if (peer != null) {
-                String name = peer.getAdditional(Content.ALIAS);
+            threads.core.api.PeerInfo peerInfo = IdentityService.getPeerInfo(context, user,
+                    BuildConfig.ApiAesKey);
+            if (peerInfo != null) {
+                String name = peerInfo.getAdditional(Content.ALIAS);
                 if (!name.isEmpty()) {
                     threads.setUserAlias(user, name);
                 }
@@ -564,8 +560,8 @@ public class Service {
                 Preferences.setReproviderInterval(context, "0");
 
                 Preferences.setConnMgrConfigType(context, ConnMgrConfig.TypeEnum.basic);
-                Preferences.setLowWater(context, 30);
-                Preferences.setHighWater(context, 100);
+                Preferences.setLowWater(context, 50);
+                Preferences.setHighWater(context, 200);
                 Preferences.setGracePeriod(context, "10s");
 
 
@@ -575,8 +571,10 @@ public class Service {
                 Preferences.setMdnsEnabled(context, true);
 
                 Preferences.setReportMode(context, true);
-                Preferences.setDialRelay(context, true);
                 Preferences.setDebugMode(context, false);
+
+
+                setDontShowAgain(context, Service.PIN_SERVICE_KEY, false);
 
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putInt(UPDATE, versionCode);
@@ -613,23 +611,22 @@ public class Service {
 
         try {
             final THREADS threadsAPI = Singleton.getInstance(context).getThreads();
-            final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-            if (ipfs != null) {
-                User sender = threadsAPI.getUserByPID(senderPid);
-                checkNotNull(sender);
+
+            User sender = threadsAPI.getUserByPID(senderPid);
+            checkNotNull(sender);
 
 
-                byte[] data = THREADS.getImage(context, alias, R.drawable.server_network);
-                CID image = ipfs.add(data, "", true);
+            CID image = ThumbnailService.getImage(
+                    context, alias, "", R.drawable.server_network);
 
-                sender.setPublicKey(pubKey);
-                sender.setAlias(alias);
-                sender.setImage(image);
-                sender.setType(UserType.VERIFIED);
+            sender.setPublicKey(pubKey);
+            sender.setAlias(alias);
+            sender.setImage(image);
+            sender.setType(UserType.VERIFIED);
 
-                threadsAPI.storeUser(sender);
+            threadsAPI.storeUser(sender);
 
-            }
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -685,8 +682,8 @@ public class Service {
                 if (sender == null) {
 
                     // create a new user which is blocked (User has to unblock and verified the user)
-                    byte[] data = THREADS.getImage(context, alias, R.drawable.server_network);
-                    CID image = ipfs.add(data, "", true);
+                    CID image = ThumbnailService.getImage(
+                            context, alias, "", R.drawable.server_network);
 
                     sender = threads.createUser(senderPid, pubKey, alias, userType, image);
                     sender.setBlocked(true);
@@ -718,92 +715,30 @@ public class Service {
         }
     }
 
-    private static void replySender(@NonNull Context context,
-                                    @NonNull IPFS ipfs,
-                                    @NonNull PID sender,
-                                    @NonNull Thread thread) {
+    static void replySender(@NonNull Context context,
+                            @NonNull IPFS ipfs,
+                            @NonNull PID sender,
+                            @NonNull Thread thread) {
         try {
-            CID cid = thread.getCid();
-            checkNotNull(cid);
+            if (Preferences.isPubsubEnabled(context)) {
+                CID cid = thread.getCid();
+                checkNotNull(cid);
 
-            Content map = new Content();
-            map.put(Content.EST, "REPLY");
-            map.put(Content.CID, cid.getCid());
+                Content map = new Content();
+                map.put(Content.EST, "REPLY");
+                map.put(Content.CID, cid.getCid());
 
 
-            Singleton.getInstance(context).getConsoleListener().info(
-                    "Send Pubsub Notification to PID :" + sender);
+                Singleton.getInstance(context).getConsoleListener().info(
+                        "Send Pubsub Notification to PID :" + sender);
 
-            ipfs.pubsubPub(sender.getPid(), gson.toJson(map), 50);
+                ipfs.pubsubPub(sender.getPid(), gson.toJson(map), 50);
+            }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
-
-    static void downloadMultihash(@NonNull Context context,
-                                  @NonNull PID sender,
-                                  @NonNull CID cid) {
-
-        checkNotNull(context);
-        checkNotNull(sender);
-        checkNotNull(cid);
-
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-        final int timeout = Preferences.getConnectionTimeout(context);
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        final ContentService contentService = ContentService.getInstance(context);
-        if (ipfs != null) {
-
-            try {
-
-                if (!threads.existsUser(sender)) {
-                    Preferences.error(threads, context.getString(R.string.unknown_peer_sends_data));
-                    return;
-                }
-
-
-                byte[] content = ipfs.get(cid, "", timeout, false);
-
-                try {
-                    if (content.length > 0) {
-                        Contents files = gson.fromJson(new String(content), Contents.class);
-                        checkNotNull(files);
-
-                        contentService.finishContent(cid);
-
-                        downloadContents(context, sender, files);
-                    }
-                } catch (JsonSyntaxException jse) {
-                    downloadMultihash(context, sender, cid, null, null, null);
-                }
-
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        }
-
-    }
-
-    private static void downloadContents(@NonNull Context context,
-                                         @NonNull PID sender,
-                                         @NonNull Contents files) {
-        for (ContentEntry file : files) {
-
-            String cidStr = file.getCid();
-            try {
-                Multihash.fromBase58(cidStr);
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                continue;
-            }
-
-            downloadMultihash(context, sender,
-                    CID.create(cidStr), file.getFilename(), file.getSize(), file.getMimeType());
-        }
-
-    }
 
     private static String getDeviceName() {
         try {
@@ -868,9 +803,10 @@ public class Service {
                 User user = threads.getUserByPID(pid);
                 if (user == null) {
                     String publicKey = ipfs.getPublicKey();
-                    byte[] data = THREADS.getImage(context, pid.getPid(), R.drawable.server_network);
 
-                    CID image = ipfs.add(data, "", true);
+                    CID image = ThumbnailService.getImage(
+                            context, pid.getPid(), "", R.drawable.server_network);
+
 
                     user = threads.createUser(pid, publicKey, getDeviceName(),
                             UserType.VERIFIED, image);
@@ -904,67 +840,6 @@ public class Service {
         }
 
 
-    }
-
-
-    public static void downloadMultihash(@NonNull Context context,
-                                         @NonNull PID sender,
-                                         @NonNull CID cid,
-                                         @Nullable String filename,
-                                         @Nullable String filesize,
-                                         @Nullable String mimType) {
-
-        checkNotNull(context);
-        checkNotNull(sender);
-        checkNotNull(cid);
-
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-
-        final PID pid = Preferences.getPID(context);
-        checkNotNull(pid);
-
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        if (ipfs != null) {
-
-            try {
-
-                User user = threads.getUserByPID(sender);
-                if (user == null) {
-                    Preferences.error(threads, context.getString(R.string.unknown_peer_sends_data));
-                    return;
-                }
-
-                List<Thread> entries = threads.getThreadsByCIDAndThread(cid, 0L);
-
-                if (!entries.isEmpty()) {
-                    Thread entry = entries.get(0);
-
-                    if (entry.getStatus() == ThreadStatus.DELETING ||
-                            entry.getStatus() == ThreadStatus.ONLINE ||
-                            entry.getStatus() == ThreadStatus.PUBLISHING) {
-                        replySender(context, ipfs, sender, entry);
-                        return;
-                    } else {
-                        downloadMultihash(context, threads, ipfs, entry, sender);
-                        return;
-                    }
-
-
-                }
-                long idx = createThread(context, ipfs, sender, cid, filename, filesize, mimType);
-
-                Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
-                Thread thread = threads.getThreadByIdx(idx);
-                checkNotNull(thread);
-                downloadMultihash(context, threads, ipfs, thread, sender);
-                Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
-
-
-            } catch (Throwable e) {
-                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-            }
-
-        }
     }
 
     @NonNull
@@ -1030,6 +905,7 @@ public class Service {
                 CID image = THREADS.createResourceImage(context, threads, ipfs,
                         R.drawable.folder_outline, "");
                 if (image != null) {
+                    thread.addAdditional(Content.IMG, String.valueOf(false), true);
                     thread.setImage(image);
                 }
             } catch (Throwable e) {
@@ -1037,9 +913,10 @@ public class Service {
             }
         } else {
             try {
-                byte[] image = THREADS.getImage(context.getApplicationContext(),
-                        user.getAlias(), R.drawable.file);
-                thread.setImage(ipfs.add(image, "", true));
+                CID image = ThumbnailService.getImage(context.getApplicationContext(),
+                        user.getAlias(), "", R.drawable.file);
+                thread.addAdditional(Content.IMG, String.valueOf(false), true);
+                thread.setImage(image);
             } catch (Throwable e) {
                 Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
             }
@@ -1047,26 +924,27 @@ public class Service {
         return threads.storeThread(thread);
     }
 
-    private static long createThread(@NonNull Context context,
-                                     @NonNull IPFS ipfs,
-                                     @NonNull PID creator,
-                                     @NonNull CID cid,
-                                     @Nullable String filename,
-                                     @Nullable String filesize,
-                                     @Nullable String mimeType) {
+    public static long createThread(@NonNull Context context,
+                                    @NonNull IPFS ipfs,
+                                    @NonNull User creator,
+                                    @NonNull CID cid,
+                                    @NonNull ThreadStatus threadStatus,
+                                    @Nullable String filename,
+                                    @Nullable String filesize,
+                                    @Nullable String mimeType,
+                                    @Nullable CID image) {
 
         checkNotNull(context);
         checkNotNull(ipfs);
         checkNotNull(creator);
         checkNotNull(cid);
+        checkNotNull(threadStatus);
 
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
 
-        User user = threads.getUserByPID(creator);
-        checkNotNull(user);
 
-        Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
+        Thread thread = threads.createThread(creator, threadStatus, Kind.OUT,
                 "", cid, 0L);
         thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false); // not known yet
         if (filename != null) {
@@ -1092,14 +970,19 @@ public class Service {
 
 
         try {
-            int resource = MimeTypeService.getMediaResource(thread.getMimeType(),
-                    false);
-            if (resource <= 0) {
-                resource = R.drawable.file;
+            if (image == null) {
+                int resource = MimeTypeService.getMediaResource(thread.getMimeType(),
+                        false);
+                if (resource <= 0) {
+                    resource = R.drawable.file;
+                }
+                thread.addAdditional(Content.IMG, String.valueOf(false), true);
+                thread.setImage(ThumbnailService.getImage(context.getApplicationContext(),
+                        creator.getAlias(), "", resource));
+            } else {
+                thread.addAdditional(Content.IMG, String.valueOf(true), true);
+                thread.setImage(image);
             }
-            byte[] image = THREADS.getImage(context.getApplicationContext(),
-                    user.getAlias(), resource);
-            thread.setImage(ipfs.add(image, "", true));
         } catch (Throwable e) {
             Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
         }
@@ -1213,9 +1096,6 @@ public class Service {
         CID cid = thread.getCid();
         checkNotNull(cid);
 
-        threads.setAdditional(thread, Preferences.THREAD_KIND, ThreadKind.LEAF.name(), true);
-
-
         String filename = thread.getAdditional(Content.FILENAME);
         String filesize = thread.getAdditional(Content.FILESIZE);
 
@@ -1285,24 +1165,24 @@ public class Service {
                     }
                 }
 
+                // check if image was imported
                 try {
-                    byte[] image = THREADS.getPreviewImage(context, file, filename);
-                    if (image != null) {
-                        threads.setImage(ipfs, thread, image);
+                    String img = thread.getAdditional(Content.IMG);
+                    if (img.isEmpty() || !Boolean.valueOf(img)) {
+                        ThumbnailService.Result res = ThumbnailService.getThumbnail(
+                                context, file, filename, "");
+                        threads.setAdditional(thread,
+                                Content.IMG, String.valueOf(res.isThumbnail()), true);
+                        CID image = res.getCid();
+                        if (image != null) {
+                            threads.setImage(thread, image);
+                        }
                     }
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
             } else {
                 success = false;
-                try {
-                    CID image = THREADS.createResourceImage(
-                            context, threads, ipfs, R.drawable.file, "");
-                    checkNotNull(image);
-                    threads.setImage(thread, image);
-                } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-                }
             }
         } catch (Throwable e) {
             success = false;
@@ -1407,11 +1287,11 @@ public class Service {
         return result;
     }
 
-    private static void downloadMultihash(@NonNull Context context,
-                                          @NonNull THREADS threads,
-                                          @NonNull IPFS ipfs,
-                                          @NonNull Thread thread,
-                                          @Nullable PID sender) {
+    static void downloadMultihash(@NonNull Context context,
+                                  @NonNull THREADS threads,
+                                  @NonNull IPFS ipfs,
+                                  @NonNull Thread thread,
+                                  @Nullable PID sender) {
         checkNotNull(context);
         checkNotNull(threads);
         checkNotNull(ipfs);
@@ -1441,18 +1321,22 @@ public class Service {
             } else {
 
                 // thread is directory
-                threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
-                threads.setAdditional(thread, Preferences.THREAD_KIND,
-                        ThreadKind.NODE.name(), true);
 
-                try {
-                    CID image = THREADS.createResourceImage(context, threads, ipfs,
-                            R.drawable.folder_outline, "");
-                    checkNotNull(image);
-                    threads.setImage(thread, image);
-                } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                if (!thread.getMimeType().equals(DocumentsContract.Document.MIME_TYPE_DIR)) {
+                    threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
+                    threads.setAdditional(thread, Preferences.THREAD_KIND,
+                            ThreadKind.NODE.name(), true);
+
+                    try {
+                        CID image = THREADS.createResourceImage(context, threads, ipfs,
+                                R.drawable.folder_outline, "");
+                        checkNotNull(image);
+                        threads.setImage(thread, image);
+                    } catch (Throwable e) {
+                        Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                    }
                 }
+
 
                 boolean result = downloadLinks(context, threads, ipfs, thread, links);
                 if (result) {
@@ -1505,6 +1389,7 @@ public class Service {
 
                     Thread thread = threads.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
                             "", null, 0L);
+                    thread.addAdditional(Content.IMG, String.valueOf(false), true);
                     thread.addAdditional(Content.FILENAME, content, false);
                     thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
                     thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
@@ -1512,8 +1397,8 @@ public class Service {
                     int resource = MimeTypeService.getMediaResource(
                             mimeType, false);
 
-                    byte[] bytes = THREADS.getImage(context, host.getAlias(), resource);
-                    CID image = ipfs.add(bytes, "", true);
+                    CID image = ThumbnailService.getImage(
+                            context, host.getAlias(), "", resource);
                     thread.setImage(image);
                     thread.setMimeType(mimeType);
 
@@ -1554,7 +1439,7 @@ public class Service {
         checkNotNull(uri);
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
-        THREADS.FileDetails fileDetails = THREADS.getFileDetails(context, uri);
+        ThumbnailService.FileDetails fileDetails = ThumbnailService.getFileDetails(context, uri);
         if (fileDetails == null) {
             Preferences.error(threads, context.getString(R.string.file_not_supported));
             return;
@@ -1576,35 +1461,21 @@ public class Service {
                     checkNotNull(host);
 
 
-                    byte[] bytes;
-                    try {
-                        bytes = THREADS.getPreviewImage(context, uri);
-                        if (bytes == null) {
-
-                            int resource = MimeTypeService.getMediaResource(
-                                    fileDetails.getMimeType(), false);
-                            if (resource <= 0) {
-                                resource = R.drawable.file;
-                            }
-
-                            bytes = THREADS.getImage(context, host.getAlias(), resource);
-                        }
-                    } catch (Throwable e) {
-                        // ignore exception
-                        bytes = THREADS.getImage(context, host.getAlias(), R.drawable.file);
-                    }
-
                     String name = fileDetails.getFileName();
                     long size = fileDetails.getFileSize();
 
                     Thread thread = threads.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
                             "", null, 0L);
+
+                    ThumbnailService.Result res =
+                            ThumbnailService.getThumbnail(context, uri, host.getAlias(), "");
+
+                    thread.addAdditional(Content.IMG, String.valueOf(res.isThumbnail()), true);
                     thread.addAdditional(Content.FILENAME, name, false);
                     thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
                     thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
 
-                    CID image = ipfs.add(bytes, "", true);
-                    thread.setImage(image);
+                    thread.setImage(res.getCid());
                     thread.setMimeType(fileDetails.getMimeType());
                     long idx = threads.storeThread(thread);
 
@@ -1742,23 +1613,19 @@ public class Service {
             PID sender = thread.getSenderPid();
             if (!host.equals(sender)) {
 
-                if (!ConnectService.connectUser(context, sender, BuildConfig.ApiAesKey)) {
-
-                    CID cid = thread.getCid();
-                    checkNotNull(cid);
-
-                    PeerService.publishPeer(context, BuildConfig.ApiAesKey);
-
-                    // TODO handling what to do
-
-                }
+                IdentityService.connectPeer(context, sender,
+                        BuildConfig.ApiAesKey, true, true);
 
             }
 
+            // TODO maybe also just download when connection established
+
             Service.downloadMultihash(context, threads, ipfs, thread, null);
+
         }
 
     }
+
 
     private void sharePeer(@NonNull Context context, @NonNull User user, long[] idxs) {
         checkNotNull(user);
@@ -1766,6 +1633,8 @@ public class Service {
         final THREADS threads = Singleton.getInstance(context).getThreads();
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         final ContentService contentService = ContentService.getInstance(context);
+
+        final int timeout = Preferences.getConnectionTimeout(context);
         final PID host = Preferences.getPID(context);
         if (ipfs != null) {
             try {
@@ -1780,26 +1649,28 @@ public class Service {
                 checkNotNull(host);
                 contentService.insertContent(host, cid, true);
 
+                boolean cleanStoredPeers = DaemonService.DAEMON_RUNNING.get()
+                        && Network.isConnected(context) && (DaemonService.running() > timeout);
 
-                if (ConnectService.connectUser(context, user.getPID(), BuildConfig.ApiAesKey)) {
+                boolean success = IdentityService.publishIdentity(
+                        context, BuildConfig.ApiAesKey, false,
+                        timeout, Service.RELAYS, true, cleanStoredPeers);
 
-                    Singleton.getInstance(context).
-                            getConsoleListener().info(
-                            "Send PubSub Notification to PID :" + user.getPID());
-
-                    ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
-                } else {
-
-                    PeerService.publishPeer(context, BuildConfig.ApiAesKey);
-
-                    JobServiceNotify.notify(context, user.getPID().getPid(), cid.getCid());
+                String hash = null;
+                if (success) {
+                    hash = threads.getPeerInfoHash(host);
                 }
+
+                Service.notify(context, user.getPID().getPid(), cid.getCid(), hash);
+
+
             } catch (Throwable e) {
                 Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
             }
         }
 
     }
+
 
     void sendThreads(@NonNull Context context, @NonNull List<User> users, long[] idxs) {
         checkNotNull(context);
@@ -1871,132 +1742,98 @@ public class Service {
         checkNotNull(context);
         try {
             final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-            final ContentService contentService = ContentService.getInstance(context);
             final THREADS threads = Singleton.getInstance(context).getThreads();
             if (ipfs != null) {
 
                 try {
                     Singleton.getInstance(context).getConsoleListener().debug("Start Daemon");
 
-                    ipfs.daemon((message) -> {
+                    ipfs.daemon(new PubsubReader() {
+                        @Override
+                        public void receive(@NonNull PubsubInfo message) {
+                            try {
 
-                        try {
-
-                            String sender = message.getSenderPid();
-                            PID senderPid = PID.create(sender);
-
-
-                            if (!threads.isUserBlocked(senderPid)) {
-
-                                String code = message.getMessage().trim();
-
-                                CodecDecider result = CodecDecider.evaluate(code);
-
-                                if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
-                                    ExecutorService executor = Executors.newSingleThreadExecutor();
-                                    executor.submit(() -> {
-                                        try {
-                                            CID cid = CID.create(result.getMultihash());
-                                            contentService.insertContent(
-                                                    senderPid, cid, false);
-                                            downloadMultihash(context, senderPid, cid);
-                                        } catch (Throwable e) {
-                                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                                        }
-                                    });
-                                } else if (result.getCodex() == CodecDecider.Codec.URI) {
-                                    ExecutorService executor = Executors.newSingleThreadExecutor();
-                                    executor.submit(() -> {
-                                        try {
-                                            Service.downloadMultihash(context, senderPid,
-                                                    CID.create(result.getMultihash()),
-                                                    null, null, null);
-                                        } catch (Throwable e) {
-                                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                                        }
-                                    });
-
-                                } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {
-                                    Content content = result.getContent();
-                                    checkNotNull(content);
-                                    if (content.containsKey(Content.EST)) {
-                                        String est = content.get(Content.EST);
-                                        if ("CONNECT".equals(est)) {
-                                            if (content.containsKey(Content.ALIAS)) {
-                                                String alias = content.get(Content.ALIAS);
-                                                checkNotNull(alias);
-                                                String pubKey = content.get(Content.PKEY);
-                                                if (pubKey == null) {
-                                                    pubKey = "";
-                                                }
-                                                createUser(context, senderPid,
-                                                        alias, pubKey, UserType.VERIFIED);
-                                            }
-                                        } else if ("CONNECT_REPLY".equals(est)) {
-                                            if (content.containsKey(Content.ALIAS)) {
-                                                String alias = content.get(Content.ALIAS);
-                                                checkNotNull(alias);
-                                                String pubKey = content.get(Content.PKEY);
-                                                if (pubKey == null) {
-                                                    pubKey = "";
-                                                }
-                                                adaptUser(context, senderPid, alias, pubKey);
-                                            }
-                                        } else if ("SHARE".equals(est)) {
-
-                                            if (content.containsKey(Content.CID)) {
-                                                String cid = content.get(Content.CID);
-                                                checkNotNull(cid);
-                                                String filename = content.get(Content.FILENAME);
-                                                String filesize = content.get(Content.FILESIZE);
+                                String sender = message.getSenderPid();
+                                PID senderPid = PID.create(sender);
 
 
-                                                ExecutorService executor = Executors.newSingleThreadExecutor();
-                                                executor.submit(() -> {
-                                                    try {
-                                                        Service.downloadMultihash(context,
-                                                                senderPid, CID.create(cid),
-                                                                filename, filesize, null);
-                                                    } catch (Throwable e) {
-                                                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                                if (!threads.isUserBlocked(senderPid)) {
+
+                                    String code = message.getMessage().trim();
+
+                                    CodecDecider result = CodecDecider.evaluate(code);
+
+                                    if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
+                                        JobServiceContents.contents(context,
+                                                senderPid, CID.create(result.getMultihash()));
+                                    } else if (result.getCodex() == CodecDecider.Codec.URI) {
+                                        JobServiceMultihash.download(context,
+                                                senderPid, CID.create(result.getMultihash()));
+
+                                    } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {
+                                        Content content = result.getContent();
+                                        checkNotNull(content);
+                                        if (content.containsKey(Content.EST)) {
+                                            String est = content.get(Content.EST);
+                                            if ("CONNECT".equals(est)) {
+                                                if (content.containsKey(Content.ALIAS)) {
+                                                    String alias = content.get(Content.ALIAS);
+                                                    checkNotNull(alias);
+                                                    String pubKey = content.get(Content.PKEY);
+                                                    if (pubKey == null) {
+                                                        pubKey = "";
                                                     }
-                                                });
+                                                    createUser(context, senderPid,
+                                                            alias, pubKey, UserType.VERIFIED);
+                                                }
+                                            } else if ("CONNECT_REPLY".equals(est)) {
+                                                if (content.containsKey(Content.ALIAS)) {
+                                                    String alias = content.get(Content.ALIAS);
+                                                    checkNotNull(alias);
+                                                    String pubKey = content.get(Content.PKEY);
+                                                    if (pubKey == null) {
+                                                        pubKey = "";
+                                                    }
+                                                    adaptUser(context, senderPid, alias, pubKey);
+                                                }
+                                            } else if ("REPLY".equals(est)) {
 
+                                                if (content.containsKey(Content.CID)) {
+                                                    String cid = content.get(Content.CID);
+                                                    checkNotNull(cid);
+                                                    Service.receiveReply(context, senderPid, cid);
+                                                }
+                                            } else {
 
-                                            }
-
-                                        } else if ("REPLY".equals(est)) {
-
-                                            if (content.containsKey(Content.CID)) {
-                                                String cid = content.get(Content.CID);
-                                                checkNotNull(cid);
-                                                Service.receiveReply(context, senderPid, cid);
+                                                RTCSession.handleContent(context,
+                                                        BuildConfig.ApiAesKey, senderPid, content);
                                             }
                                         } else {
-
-                                            RTCSession.handleContent(context,
-                                                    BuildConfig.ApiAesKey, senderPid, content);
+                                            Preferences.error(threads, context.getString(
+                                                    R.string.unsupported_pubsub_message,
+                                                    senderPid.getPid()));
                                         }
-                                    } else {
+                                    } else if (result.getCodex() == CodecDecider.Codec.UNKNOWN) {
+
                                         Preferences.error(threads, context.getString(
                                                 R.string.unsupported_pubsub_message,
                                                 senderPid.getPid()));
                                     }
-                                } else if (result.getCodex() == CodecDecider.Codec.UNKNOWN) {
 
-                                    Preferences.error(threads, context.getString(
-                                            R.string.unsupported_pubsub_message,
-                                            senderPid.getPid()));
                                 }
-
+                            } catch (Throwable e) {
+                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                            } finally {
+                                Log.e(TAG, "Receive : " + message.getMessage());
                             }
-                        } catch (Throwable e) {
-                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                        } finally {
-                            Log.e(TAG, "Receive : " + message.getMessage());
                         }
 
-                    }, false);
+                        @NonNull
+                        @Override
+                        public String getTopic() {
+                            return ipfs.getPid().getPid();
+                        }
+                    }, Preferences.isPubsubEnabled(context), false);
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(threads, Preferences.IPFS_START_FAILURE, e);

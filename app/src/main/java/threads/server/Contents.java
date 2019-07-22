@@ -19,7 +19,19 @@ public class Contents extends ArrayList<ContentEntry> {
         String filename = thread.getAdditional(Content.FILENAME);
         String filesize = thread.getAdditional(Content.FILESIZE);
         String mimeType = thread.getMimeType();
-        this.add(new ContentEntry(cid.getCid(), filename, filesize, mimeType));
+
+        String image = null;
+        String img = thread.getAdditional(Content.IMG);
+
+        if (Boolean.valueOf(img)) { // This means a real thumbnail image is created
+            CID imageCID = thread.getImage();
+
+            if (imageCID != null) {
+                image = imageCID.getCid();
+            }
+        }
+
+        this.add(new ContentEntry(cid.getCid(), filename, filesize, mimeType, image));
     }
 
     public void add(@NonNull List<Thread> threads) {

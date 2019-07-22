@@ -238,6 +238,15 @@
             android:layout_height="wrap_content"
             android:layout_margin="16dp" />
 
+        <Switch
+            android:id="@+id/support_automatic_download"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginRight="16dp"
+            android:padding="8dp"
+            android:text="@string/support_automatic_download" />
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"

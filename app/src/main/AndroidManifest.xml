@@ -109,6 +109,18 @@
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
+            android:name=".JobServiceContents"
+            android:enabled="true"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <service
+            android:name=".JobServiceMultihash"
+            android:enabled="true"
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <service
             android:name=".JobServicePin"
             android:enabled="true"
             android:exported="false"
