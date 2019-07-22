@@ -846,7 +846,7 @@ public class Service {
     private static String evaluateMimeType(@NonNull Context context, @NonNull String filename) {
         final THREADS threads = Singleton.getInstance(context).getThreads();
         try {
-            Optional<String> extension = THREADS.getExtension(filename);
+            Optional<String> extension = ThumbnailService.getExtension(filename);
             if (extension.isPresent()) {
                 String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.get());
                 if (mimeType != null) {
