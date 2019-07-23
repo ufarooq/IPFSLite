@@ -46,10 +46,14 @@ public class DaemonService extends Service {
             try {
                 if (Network.isNetworkAvailable(context)) {
                     RUNNING.set(System.currentTimeMillis());
-                    int timeout = Preferences.getConnectionTimeout(context);
-                    IdentityService.identity(getApplicationContext(), BuildConfig.ApiAesKey,
-                            false, timeout, threads.server.Service.RELAYS,
-                            true, false);
+                    final boolean peerDiscovery =
+                            threads.server.Service.isSupportPeerDiscovery(context);
+                    if (peerDiscovery) {
+                        int timeout = Preferences.getConnectionTimeout(context);
+                        IdentityService.identity(getApplicationContext(), BuildConfig.ApiAesKey,
+                                false, timeout, threads.server.Service.RELAYS,
+                                true, false);
+                    }
                 }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -162,7 +166,10 @@ public class DaemonService extends Service {
 
                 while (DAEMON_RUNNING.get()) {
                     java.lang.Thread.sleep(TimeUnit.SECONDS.toMillis(30));
-                    NotificationService.notifications(getApplicationContext());
+                    if (threads.server.Service.isReceiveNotificationsEnabled(
+                            getApplicationContext())) {
+                        NotificationService.notifications(getApplicationContext());
+                    }
                 }
 
             } catch (InterruptedException e) {
@@ -220,8 +227,8 @@ public class DaemonService extends Service {
                 int time = threads.server.Service.getPinServiceTime(getApplicationContext());
 
                 while (DAEMON_RUNNING.get() && time > 0) {
-                    PinService.pin(getApplicationContext());
                     java.lang.Thread.sleep(TimeUnit.HOURS.toMillis(time));
+                    PinService.pin(getApplicationContext());
                 }
 
             } catch (InterruptedException e) {

@@ -617,8 +617,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         try {
                             threads.setUserStatus(user, UserStatus.DIALING);
 
+                            boolean peerDiscovery = Service.isSupportPeerDiscovery(
+                                    getApplicationContext());
                             boolean value = IdentityService.connectPeer(getApplicationContext(),
-                                    user, BuildConfig.ApiAesKey, true, true);
+                                    user, BuildConfig.ApiAesKey,
+                                    peerDiscovery, true, true);
 
                             if (value) {
                                 threads.setUserStatus(user, UserStatus.ONLINE);

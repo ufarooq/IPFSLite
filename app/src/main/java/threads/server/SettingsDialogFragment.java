@@ -368,18 +368,23 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
 
 
         Switch support_peer_discovery = view.findViewById(R.id.support_peer_discovery);
-        support_peer_discovery.setChecked(Preferences.isSupportPeerDiscovery(activity));
+        support_peer_discovery.setChecked(Service.isSupportPeerDiscovery(activity));
         support_peer_discovery.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Preferences.setSupportPeerDiscovery(activity, isChecked);
+            Service.setSupportPeerDiscovery(activity, isChecked);
         });
 
 
-        Switch support_offline_notifications = view.findViewById(R.id.support_offline_notifications);
-        support_offline_notifications.setChecked(Service.isSupportOfflineNotification(activity));
-        support_offline_notifications.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Service.setSupportOfflineNotification(activity, isChecked);
+        Switch send_notifciations_enabled = view.findViewById(R.id.send_notifications_enabled);
+        send_notifciations_enabled.setChecked(Service.isSendNotificationsEnabled(activity));
+        send_notifciations_enabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Service.setSendNotificationsEnabled(activity, isChecked);
         });
 
+        Switch receive_notifciations_enabled = view.findViewById(R.id.receive_notifications_enabled);
+        receive_notifciations_enabled.setChecked(Service.isReceiveNotificationsEnabled(activity));
+        receive_notifciations_enabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Service.setReceiveNotificationsEnabled(activity, isChecked);
+        });
 
         TextView connection_timeout_text = view.findViewById(R.id.connection_timeout_text);
         SeekBar connection_timeout = view.findViewById(R.id.connection_timeout);

@@ -102,7 +102,8 @@
     <string name="action_your_peer">Your Peer</string>
     <string name="unsupported_pubsub_message">Unsupported pubsub message by peer \"%1$s\"</string>
     <string name="inbox">Inbox</string>
-    <string name="support_offline_notificationt">Support Offline Notifications</string>
+    <string name="send_notifications_enabled">Send Notifications Enabled</string>
+    <string name="receive_notifications_enabled">Receive Notifications Enabled</string>
     <string name="documentation">Documentation</string>
     <string name="outbox">Outbox</string>
     <string name="deleting_files_within_directory_not_supported">Delecting files within a directory is currently not supported</string>

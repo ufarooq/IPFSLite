@@ -14,7 +14,12 @@ import androidx.annotation.NonNull;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import threads.core.IdentityService;
+import threads.core.Preferences;
+import threads.core.Singleton;
+import threads.core.THREADS;
 import threads.core.api.Content;
+import threads.ipfs.api.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -60,16 +65,30 @@ public class JobServiceNotify extends JobService {
         final String cid = bundle.getString(Content.CID);
         checkNotNull(cid);
 
-        if (!Service.isSupportOfflineNotification(getApplicationContext())) {
+        if (!Service.isSendNotificationsEnabled(getApplicationContext())) {
             return false;
         }
 
+        final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
+        final PID host = Preferences.getPID(getApplication());
+        final boolean peerDiscovery = Service.isSupportPeerDiscovery(getApplicationContext());
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
                 Service.getInstance(getApplicationContext());
+                final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
 
-                Service.notify(getApplicationContext(), pid, cid, null); // TODO
+                boolean success = false;
+                if (peerDiscovery) {
+                    success = IdentityService.publishIdentity(
+                            getApplicationContext(), BuildConfig.ApiAesKey, false,
+                            timeout, Service.RELAYS, true, false);
+                }
+                String hash = null;
+                if (success) {
+                    hash = threads.getPeerInfoHash(host);
+                }
+                Service.notify(getApplicationContext(), pid, cid, hash);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {

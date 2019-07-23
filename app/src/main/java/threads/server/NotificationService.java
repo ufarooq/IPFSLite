@@ -30,7 +30,10 @@ class NotificationService {
                 if (Network.isConnected(context)) {
                     Log.e(TAG, "Run notifications service");
                     Service.notifications(context);
-                    searchAutonat(context);
+
+
+                    // TODO
+                    // searchAutonat(context);
                 }
 
             } catch (Throwable e) {

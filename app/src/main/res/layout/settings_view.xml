@@ -215,15 +215,24 @@
             android:text="@string/support_peer_discovery" />
 
         <Switch
-            android:id="@+id/support_offline_notifications"
+            android:id="@+id/send_notifications_enabled"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
             android:layout_marginTop="16dp"
             android:layout_marginRight="16dp"
             android:padding="8dp"
-            android:text="@string/support_offline_notificationt" />
+            android:text="@string/send_notifications_enabled" />
 
+        <Switch
+            android:id="@+id/receive_notifications_enabled"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginRight="16dp"
+            android:padding="8dp"
+            android:text="@string/receive_notifications_enabled" />
         <TextView
             android:id="@+id/connection_timeout_text"
             android:layout_width="match_parent"

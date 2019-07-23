@@ -88,13 +88,28 @@ public class Service {
     private static final String GATEWAY_KEY = "gatewayKey";
     private static final String AUTO_DOWNLOAD_KEY = "autoDownloadKey";
     private static final String UPDATE = "UPDATE";
-    private static final String SUPPORT_OFFLINE_NOTIFICATION_KEY = "supportOfflineNotificationKey";
+    private static final String SEND_NOTIFICATIONS_ENABLED_KEY = "sendNotificationKey";
+    private static final String RECEIVE_NOTIFICATIONS_ENABLED_KEY = "receiveNotificationKey";
+    private static final String SUPPORT_PEER_DISCOVERY_KEY = "supportPeerDiscoveryKey";
     private static Service SINGLETON = null;
     private final AtomicBoolean peerCheckFlag = new AtomicBoolean(false);
 
     private Service() {
     }
 
+    public static boolean isSupportPeerDiscovery(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
+        return sharedPref.getBoolean(SUPPORT_PEER_DISCOVERY_KEY, true);
+    }
+
+    public static void setSupportPeerDiscovery(@NonNull Context context, boolean enable) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean(SUPPORT_PEER_DISCOVERY_KEY, enable);
+        editor.apply();
+    }
 
     public static boolean isAutoDownload(@NonNull Context context) {
         checkNotNull(context);
@@ -168,17 +183,32 @@ public class Service {
     }
 
 
-    public static boolean isSupportOfflineNotification(@NonNull Context context) {
+    public static boolean isSendNotificationsEnabled(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(SUPPORT_OFFLINE_NOTIFICATION_KEY, true);
+        return sharedPref.getBoolean(SEND_NOTIFICATIONS_ENABLED_KEY, true);
     }
 
-    public static void setSupportOfflineNotification(@NonNull Context context, boolean enable) {
+    public static void setSendNotificationsEnabled(@NonNull Context context, boolean enable) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(SUPPORT_OFFLINE_NOTIFICATION_KEY, enable);
+        editor.putBoolean(SEND_NOTIFICATIONS_ENABLED_KEY, enable);
+        editor.apply();
+    }
+
+
+    public static boolean isReceiveNotificationsEnabled(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
+        return sharedPref.getBoolean(RECEIVE_NOTIFICATIONS_ENABLED_KEY, true);
+    }
+
+    public static void setReceiveNotificationsEnabled(@NonNull Context context, boolean enable) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean(RECEIVE_NOTIFICATIONS_ENABLED_KEY, enable);
         editor.apply();
     }
 
@@ -233,116 +263,115 @@ public class Service {
     }
 
     public static void notifications(@NonNull Context context) {
-        if (Service.isSupportOfflineNotification(context)) {
 
-            final PID host = Preferences.getPID(context);
-            if (host != null) {
-                final int timeout = Preferences.getTangleTimeout(context);
-                final Server server = Preferences.getTangleServer(context);
+        final PID host = Preferences.getPID(context);
+        if (host != null) {
+            final int timeout = Preferences.getTangleTimeout(context);
+            final Server server = Preferences.getTangleServer(context);
 
-                final EntityService entityService = EntityService.getInstance(context);
-                final ContentService contentService = ContentService.getInstance(context);
-                try {
-                    String address = AddressType.getAddress(host, AddressType.NOTIFICATION);
-                    List<Entity> entities = entityService.loadEntities(address,
-                            server.getProtocol(), server.getHost(), server.getPort(), timeout);
+            final EntityService entityService = EntityService.getInstance(context);
+            final ContentService contentService = ContentService.getInstance(context);
+            try {
+                String address = AddressType.getAddress(host, AddressType.NOTIFICATION);
+                List<Entity> entities = entityService.loadEntities(address,
+                        server.getProtocol(), server.getHost(), server.getPort(), timeout);
 
-                    Log.e(TAG, "Received " + entities.size() + " incoming messages");
+                Log.e(TAG, "Received " + entities.size() + " incoming messages");
 
-                    for (Entity entity : entities) {
-                        String notification = entity.getContent();
-                        Content data;
-                        try {
-                            data = gson.fromJson(notification, Content.class);
-                        } catch (Throwable e) {
-                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                            continue;
-                        }
-                        if (data != null) {
+                for (Entity entity : entities) {
+                    String notification = entity.getContent();
+                    Content data;
+                    try {
+                        data = gson.fromJson(notification, Content.class);
+                    } catch (Throwable e) {
+                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                        continue;
+                    }
+                    if (data != null) {
 
 
-                            Service.getInstance(context); // now time to load instance
+                        Service.getInstance(context); // now time to load instance
 
-                            final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-                            final THREADS threads = Singleton.getInstance(context).getThreads();
-                            final IOTA iota = Singleton.getInstance(context).getIota();
-                            checkNotNull(ipfs, "IPFS not valid");
-                            if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
+                        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                        final THREADS threads = Singleton.getInstance(context).getThreads();
+                        final IOTA iota = Singleton.getInstance(context).getIota();
+                        checkNotNull(ipfs, "IPFS not valid");
+                        if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
+                            try {
+                                String privateKey = ipfs.getPrivateKey();
+                                checkNotNull(privateKey, "Private Key not valid");
+                                final String pidStr = Encryption.decryptRSA(
+                                        data.get(Content.PID), privateKey);
+                                checkNotNull(pidStr);
+
+                                final String cidStr = Encryption.decryptRSA(
+                                        data.get(Content.CID), privateKey);
+                                checkNotNull(cidStr);
+
+                                // check if cid is valid
                                 try {
-                                    String privateKey = ipfs.getPrivateKey();
-                                    checkNotNull(privateKey, "Private Key not valid");
-                                    final String pidStr = Encryption.decryptRSA(
-                                            data.get(Content.PID), privateKey);
-                                    checkNotNull(pidStr);
-
-                                    final String cidStr = Encryption.decryptRSA(
-                                            data.get(Content.CID), privateKey);
-                                    checkNotNull(cidStr);
-
-                                    // check if cid is valid
-                                    try {
-                                        Multihash.fromBase58(cidStr);
-                                    } catch (Throwable e) {
-                                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                                        continue;
-                                    }
-
-                                    // check if pid is valid
-                                    try {
-                                        Multihash.fromBase58(pidStr);
-                                    } catch (Throwable e) {
-                                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                                        continue;
-                                    }
-
-                                    PID pid = PID.create(pidStr);
-                                    CID cid = CID.create(cidStr);
-
-
-                                    threads.server.Content content =
-                                            contentService.getContent(cid);
-                                    if (content == null) {
-                                        contentService.insertContent(pid, cid, false);
-                                    }
-
-
-                                    if (data.containsKey(Content.HASH)) {
-                                        final String hash = data.get(Content.HASH);
-
-                                        threads.core.api.PeerInfo peerInfo =
-                                                threads.loadPeerInfoByHash(
-                                                        iota, pid, hash, BuildConfig.ApiAesKey);
-                                        boolean success = false;
-                                        if (peerInfo != null) {
-                                            success = IdentityService.connectPeer(
-                                                    context, peerInfo,
-                                                    timeout, true, true);
-
-                                        }
-                                        Singleton.getInstance(context).getConsoleListener().info(
-                                                "Success Connect Hash : " + success);
-                                    }
-
-
-                                    Singleton.getInstance(context).getConsoleListener().info(
-                                            "Receive Inbox Notification from PID :" + pid);
-
-
-                                    JobServiceContents.contents(context, pid, cid);
-
-
+                                    Multihash.fromBase58(cidStr);
                                 } catch (Throwable e) {
                                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                                    continue;
                                 }
-                            }
 
+                                // check if pid is valid
+                                try {
+                                    Multihash.fromBase58(pidStr);
+                                } catch (Throwable e) {
+                                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                                    continue;
+                                }
+
+                                PID pid = PID.create(pidStr);
+                                CID cid = CID.create(cidStr);
+
+
+                                threads.server.Content content =
+                                        contentService.getContent(cid);
+                                if (content == null) {
+                                    contentService.insertContent(pid, cid, false);
+                                }
+
+
+                                if (data.containsKey(Content.HASH)) {
+                                    final String hash = data.get(Content.HASH);
+
+                                    threads.core.api.PeerInfo peerInfo =
+                                            threads.loadPeerInfoByHash(
+                                                    iota, pid, hash, BuildConfig.ApiAesKey);
+                                    boolean success = false;
+                                    if (peerInfo != null) {
+                                        success = IdentityService.connectPeer(
+                                                context, peerInfo,
+                                                timeout, true, true);
+
+                                    }
+                                    Singleton.getInstance(context).getConsoleListener().info(
+                                            "Success Connect Hash : " + success);
+                                }
+
+
+                                Singleton.getInstance(context).getConsoleListener().info(
+                                        "Receive Inbox Notification from PID :" + pid);
+
+
+                                JobServiceContents.contents(context, pid, cid);
+
+
+                            } catch (Throwable e) {
+                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                            }
                         }
+
                     }
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
         }
+
     }
 
     public static void notify(@NonNull Context context,
@@ -480,8 +509,9 @@ public class Service {
             threads.setUserStatus(user, UserStatus.DIALING);
 
             final int timeout = Preferences.getConnectionTimeout(context);
+            final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
             boolean value = IdentityService.connectPeer(context, user,
-                    BuildConfig.ApiAesKey, true, true);
+                    BuildConfig.ApiAesKey, peerDiscovery, true, true);
             if (value) {
                 threads.setUserStatus(user, UserStatus.ONLINE);
                 PID host = Preferences.getPID(context);
@@ -900,7 +930,7 @@ public class Service {
 
         if (link.isDirectory()) {
             try {
-                CID image = THREADS.createResourceImage(context, threads, ipfs,
+                CID image = ThumbnailService.createResourceImage(context, threads, ipfs,
                         R.drawable.folder_outline, "");
                 if (image != null) {
                     thread.addAdditional(Content.IMG, String.valueOf(false), true);
@@ -1326,7 +1356,7 @@ public class Service {
                             ThreadKind.NODE.name(), true);
 
                     try {
-                        CID image = THREADS.createResourceImage(context, threads, ipfs,
+                        CID image = ThumbnailService.createResourceImage(context, threads, ipfs,
                                 R.drawable.folder_outline, "");
                         checkNotNull(image);
                         threads.setImage(thread, image);
@@ -1601,7 +1631,7 @@ public class Service {
 
         checkNotNull(context);
         checkNotNull(thread);
-
+        final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
         final THREADS threads = Singleton.getInstance(context).getThreads();
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         if (ipfs != null) {
@@ -1612,7 +1642,7 @@ public class Service {
             if (!host.equals(sender)) {
 
                 IdentityService.connectPeer(context, sender,
-                        BuildConfig.ApiAesKey, true, true);
+                        BuildConfig.ApiAesKey, peerDiscovery, true, true);
 
             }
 
@@ -1631,9 +1661,11 @@ public class Service {
         final THREADS threads = Singleton.getInstance(context).getThreads();
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         final ContentService contentService = ContentService.getInstance(context);
-
+        final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
         final int timeout = Preferences.getConnectionTimeout(context);
         final PID host = Preferences.getPID(context);
+
+
         if (ipfs != null) {
             try {
                 Contents contents = new Contents();
@@ -1649,10 +1681,12 @@ public class Service {
 
                 boolean cleanStoredPeers = DaemonService.DAEMON_RUNNING.get()
                         && Network.isConnected(context) && (DaemonService.running() > timeout);
-
-                boolean success = IdentityService.publishIdentity(
-                        context, BuildConfig.ApiAesKey, false,
-                        timeout, Service.RELAYS, true, cleanStoredPeers);
+                boolean success = false;
+                if (peerDiscovery) {
+                    success = IdentityService.publishIdentity(
+                            context, BuildConfig.ApiAesKey, false,
+                            timeout, Service.RELAYS, true, cleanStoredPeers);
+                }
 
                 String hash = null;
                 if (success) {

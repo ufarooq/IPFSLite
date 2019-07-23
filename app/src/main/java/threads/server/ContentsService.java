@@ -61,6 +61,7 @@ class ContentsService {
         final THREADS threads = Singleton.getInstance(context).getThreads();
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         final PID host = Preferences.getPID(context);
+        final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
         try {
             checkNotNull(ipfs, "IPFS not valid");
             for (PID user : threads.getUsersPIDs()) {
@@ -78,8 +79,9 @@ class ContentsService {
 
                     if (!contents.isEmpty()) {
 
-                        boolean success = IdentityService.connectPeer(context,
-                                user, BuildConfig.ApiAesKey, true, true);
+                        boolean success = IdentityService.connectPeer(
+                                context, user, BuildConfig.ApiAesKey,
+                                peerDiscovery, true, true);
 
                         if (success) {
                             for (threads.server.Content entry : contents) {
@@ -252,9 +254,11 @@ class ContentsService {
 
                         if (!success) {
 
-
-                            success = IdentityService.connectPeer(context, pid,
-                                    BuildConfig.ApiAesKey, true, true);
+                            boolean peerDiscovery = Service.isSupportPeerDiscovery(
+                                    context);
+                            success = IdentityService.connectPeer(
+                                    context, pid, BuildConfig.ApiAesKey,
+                                    peerDiscovery, true, true);
 
                             if (!success) {
                                 Singleton.getInstance(context).getConsoleListener().info(

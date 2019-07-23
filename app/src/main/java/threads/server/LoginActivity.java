@@ -104,8 +104,10 @@ public class LoginActivity extends AppCompatActivity {
 
                 CleanupService.cleanup(getApplicationContext());
                 ContentsService.contents(getApplicationContext());
-                NotificationService.notifications(getApplicationContext());
-
+                if (threads.server.Service.isReceiveNotificationsEnabled(
+                        getApplicationContext())) {
+                    NotificationService.notifications(getApplicationContext());
+                }
                 if (Intent.ACTION_SEND.equals(action)) {
                     String type = intent.getType();
                     if ("text/plain".equals(type)) {
