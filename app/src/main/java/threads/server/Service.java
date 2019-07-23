@@ -189,10 +189,6 @@ public class Service {
 
             runUpdatesIfNecessary(context);
 
-            Preferences.setPubsubEnabled(context, false);
-            Preferences.setTangleTimeout(context, 30); // TODO remove
-            Preferences.setMdnsEnabled(context, true); // TODO remove
-
             ProgressChannel.createProgressChannel(context);
             RTCSession.createRTCChannel(context);
 
@@ -552,10 +548,12 @@ public class Service {
                 Preferences.setRoutingType(context, RoutingConfig.TypeEnum.dhtclient);
 
 
-                Preferences.setAutoNATServiceEnabled(context, false);
-                Preferences.setRelayHopEnabled(context, true);
+                // TODO rethink this over
+                Preferences.setAutoNATServiceEnabled(context, true);
+                Preferences.setRelayHopEnabled(context, false);
                 Preferences.setAutoRelayEnabled(context, true);
 
+                Preferences.setPubsubEnabled(context, true);
                 Preferences.setPubsubRouter(context, PubsubConfig.RouterEnum.gossipsub);
                 Preferences.setReproviderInterval(context, "0");
 
@@ -566,7 +564,7 @@ public class Service {
 
 
                 Preferences.setConnectionTimeout(context, 45000);
-                Preferences.setTangleTimeout(context, 15);
+                Preferences.setTangleTimeout(context, 30);
 
                 Preferences.setMdnsEnabled(context, true);
 

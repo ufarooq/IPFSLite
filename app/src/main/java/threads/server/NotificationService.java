@@ -5,10 +5,14 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.Network;
+import threads.core.Singleton;
+import threads.ipfs.IPFS;
+import threads.ipfs.api.Peer;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -26,6 +30,7 @@ class NotificationService {
                 if (Network.isConnected(context)) {
                     Log.e(TAG, "Run notifications service");
                     Service.notifications(context);
+                    searchAutonat(context);
                 }
 
             } catch (Throwable e) {
@@ -34,4 +39,15 @@ class NotificationService {
         });
     }
 
+    private static void searchAutonat(@NonNull Context context) {
+        IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        checkNotNull(ipfs);
+        List<Peer> peers = ipfs.swarmPeers();
+        Log.e(TAG, "Peers size : " + peers.size());
+        for (Peer peer : peers) {
+            if (peer.isAutonat()) {
+                Log.e(TAG, "Autonat : " + peer.toString());
+            }
+        }
+    }
 }
