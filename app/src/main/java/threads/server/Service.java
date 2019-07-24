@@ -115,7 +115,7 @@ public class Service {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(
                 APP_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(AUTO_DOWNLOAD_KEY, false);
+        return sharedPref.getBoolean(AUTO_DOWNLOAD_KEY, true);
     }
 
     public static void setAutoDownload(@NonNull Context context, boolean automaticDownload) {
@@ -377,7 +377,8 @@ public class Service {
     public static void notify(@NonNull Context context,
                               @NonNull String pid,
                               @NonNull String cid,
-                              @Nullable String hash) {
+                              @Nullable String hash,
+                              long startTime) {
 
         checkNotNull(context);
         checkNotNull(pid);
@@ -418,18 +419,29 @@ public class Service {
                     content.put(Content.HASH, hash);
                 }
 
+                String alias = threads.getUserAlias(pid);
                 String json = gson.toJson(content);
-                long start = System.currentTimeMillis();
+
                 try {
                     iota.insertTransaction(address, json);
-                    long time = (System.currentTimeMillis() - start) / 1000;
+                    long time = (System.currentTimeMillis() - startTime) / 1000;
+
+                    threads.invokeEvent(Preferences.INFO,
+                            context.getString(R.string.success_notification,
+                                    alias, String.valueOf(time)));
+
                     Singleton.getInstance(context).getConsoleListener().info(
                             "Sucess sending notification to PID Inbox : "
                                     + pid + " Time : " + time + "[s]");
 
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    long time = (System.currentTimeMillis() - start) / 1000;
+                    long time = (System.currentTimeMillis() - startTime) / 1000;
+
+                    threads.invokeEvent(Preferences.INFO,
+                            context.getString(R.string.failed_notification,
+                                    alias, String.valueOf(time)));
+
                     Singleton.getInstance(context).getConsoleListener().error(
                             "Failed sending notification to PID Inbox :"
                                     + pid + " Time : " + time + "[s]");
@@ -1661,9 +1673,9 @@ public class Service {
         final THREADS threads = Singleton.getInstance(context).getThreads();
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         final ContentService contentService = ContentService.getInstance(context);
-        final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
-        final int timeout = Preferences.getConnectionTimeout(context);
         final PID host = Preferences.getPID(context);
+        final int timeout = Preferences.getConnectionTimeout(context);
+        final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
 
 
         if (ipfs != null) {
@@ -1679,6 +1691,8 @@ public class Service {
                 checkNotNull(host);
                 contentService.insertContent(host, cid, true);
 
+
+                long start = System.currentTimeMillis();
                 boolean cleanStoredPeers = DaemonService.DAEMON_RUNNING.get()
                         && Network.isConnected(context) && (DaemonService.running() > timeout);
                 boolean success = false;
@@ -1692,8 +1706,15 @@ public class Service {
                 if (success) {
                     hash = threads.getPeerInfoHash(host);
                 }
+                Service.notify(context, user.getPID().getPid(), cid.getCid(), hash, start);
 
-                Service.notify(context, user.getPID().getPid(), cid.getCid(), hash);
+
+                /*
+                boolean enabled = Preferences.isPubsubEnabled(context);
+                if (enabled) {
+                    ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
+                }*/
+
 
 
             } catch (Throwable e) {
@@ -1729,10 +1750,9 @@ public class Service {
 
                         threads.setThreadsStatus(ThreadStatus.PUBLISHING, idxs);
 
-                        int size = users.size();
 
-
-                        ExecutorService executorService = Executors.newFixedThreadPool(size);
+                        // TODO maybe in the future it might sense to make it parallel
+                        ExecutorService executorService = Executors.newFixedThreadPool(1);
                         List<Future> futures = new ArrayList<>();
 
                         for (User user : users) {

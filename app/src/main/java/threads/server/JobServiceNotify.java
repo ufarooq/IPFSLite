@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.IdentityService;
+import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -72,23 +73,35 @@ public class JobServiceNotify extends JobService {
         final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
         final PID host = Preferences.getPID(getApplication());
         final boolean peerDiscovery = Service.isSupportPeerDiscovery(getApplicationContext());
+        final long startTime = System.currentTimeMillis();
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
+
             try {
+
                 Service.getInstance(getApplicationContext());
                 final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
 
+                boolean cleanStoredPeers = DaemonService.DAEMON_RUNNING.get()
+                        && Network.isConnected(getApplicationContext()) && (DaemonService.running() > timeout);
                 boolean success = false;
                 if (peerDiscovery) {
                     success = IdentityService.publishIdentity(
                             getApplicationContext(), BuildConfig.ApiAesKey, false,
-                            timeout, Service.RELAYS, true, false);
+                            timeout, Service.RELAYS, true, cleanStoredPeers);
                 }
+
                 String hash = null;
                 if (success) {
-                    hash = threads.getPeerInfoHash(host);
+                    if (host != null) {
+                        hash = threads.getPeerInfoHash(host);
+                    }
                 }
-                Service.notify(getApplicationContext(), pid, cid, hash);
+
+                Service.notify(getApplicationContext(), pid, cid, hash, startTime);
+
+
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {

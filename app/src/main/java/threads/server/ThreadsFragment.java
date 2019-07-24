@@ -118,7 +118,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         MenuItem action_delete = menu.findItem(R.id.action_delete);
         action_delete.setVisible(!threads.isEmpty());
         MenuItem action_send = menu.findItem(R.id.action_send);
-        action_send.setVisible(!threads.isEmpty());
+        boolean active = Service.isSendNotificationsEnabled(mContext);
+        action_send.setVisible(!threads.isEmpty() && active);
         super.onCreateOptionsMenu(menu, inflater);
     }
 

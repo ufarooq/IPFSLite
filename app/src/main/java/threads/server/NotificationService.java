@@ -32,8 +32,8 @@ class NotificationService {
                     Service.notifications(context);
 
 
-                    // TODO
-                    // searchAutonat(context);
+                    // TODO remove
+                    searchAutonat(context);
                 }
 
             } catch (Throwable e) {

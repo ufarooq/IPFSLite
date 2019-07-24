@@ -102,8 +102,8 @@
     <string name="action_your_peer">Your Peer</string>
     <string name="unsupported_pubsub_message">Unsupported pubsub message by peer \"%1$s\"</string>
     <string name="inbox">Inbox</string>
-    <string name="send_notifications_enabled">Send Notifications Enabled</string>
-    <string name="receive_notifications_enabled">Receive Notifications Enabled</string>
+    <string name="send_notifications_enabled">Support Sending Notifications</string>
+    <string name="receive_notifications_enabled">Support Receiving Notifications</string>
     <string name="documentation">Documentation</string>
     <string name="outbox">Outbox</string>
     <string name="deleting_files_within_directory_not_supported">Delecting files within a directory is currently not supported</string>
@@ -122,4 +122,7 @@
     <string name="pin_service_settings">Pin Service</string>
     <string name="gateway">Gateway</string>
     <string name="support_automatic_download">Automatic Download</string>
+    <string name="pubsub_support">Pubsub Support</string>
+    <string name="success_notification">Sending notification to Peer \"%1$s\" took \"%2$s\"[s]</string>
+    <string name="failed_notification">Sending notification to Peer \"%1$s\" failed in \"%2$s\"[s]</string>
 </resources>

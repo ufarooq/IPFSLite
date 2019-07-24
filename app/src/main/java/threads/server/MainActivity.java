@@ -810,6 +810,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
         });
+        eventViewModel.getInfo().observe(this, (event) -> {
+            try {
+                if (event != null) {
+                    Toast.makeText(
+                            getApplicationContext(), event.getContent(), Toast.LENGTH_LONG).show();
+                    eventViewModel.removeEvent(event);
+                }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+
+        });
 
     }
 
