@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import threads.core.GatewayService;
 import threads.core.IdentityService;
 import threads.core.Network;
 import threads.core.Preferences;
@@ -53,6 +54,7 @@ public class DaemonService extends Service {
                         IdentityService.identity(getApplicationContext(), BuildConfig.ApiAesKey,
                                 false, timeout, threads.server.Service.RELAYS,
                                 true, false);
+                        JobServiceAutonat.autonat(getApplicationContext());
                     }
                 }
             } catch (Throwable e) {
@@ -170,6 +172,7 @@ public class DaemonService extends Service {
                             getApplicationContext())) {
                         NotificationService.notifications(getApplicationContext());
                     }
+                    GatewayService.evaluatePeers(getApplicationContext());
                 }
 
             } catch (InterruptedException e) {
