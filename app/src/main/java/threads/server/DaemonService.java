@@ -54,7 +54,7 @@ public class DaemonService extends Service {
                         IdentityService.identity(getApplicationContext(), BuildConfig.ApiAesKey,
                                 false, timeout, threads.server.Service.RELAYS,
                                 true, false);
-                        JobServiceAutonat.autonat(getApplicationContext());
+                        JobServicePeers.peers(getApplicationContext());
                     }
                 }
             } catch (Throwable e) {
@@ -172,7 +172,8 @@ public class DaemonService extends Service {
                             getApplicationContext())) {
                         NotificationService.notifications(getApplicationContext());
                     }
-                    GatewayService.evaluatePeers(getApplicationContext());
+                    Log.e(TAG, "Peers : " +
+                            GatewayService.evaluatePeers(getApplicationContext()));
                 }
 
             } catch (InterruptedException e) {

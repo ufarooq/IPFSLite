@@ -18,19 +18,19 @@ import threads.core.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class JobServiceAutonat extends JobService {
+public class JobServicePeers extends JobService {
 
 
-    private static final String TAG = JobServiceAutonat.class.getSimpleName();
+    private static final String TAG = JobServicePeers.class.getSimpleName();
 
 
-    public static void autonat(@NonNull Context context) {
+    public static void peers(@NonNull Context context) {
         checkNotNull(context);
 
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
-            ComponentName componentName = new ComponentName(context, JobServiceAutonat.class);
+            ComponentName componentName = new ComponentName(context, JobServicePeers.class);
 
             JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
@@ -57,6 +57,9 @@ public class JobServiceAutonat extends JobService {
 
                 GatewayService.connectStoredAutonat(getApplicationContext(),
                         3, timeout, true);
+
+                GatewayService.connectStoredRelays(getApplicationContext(),
+                        Service.RELAYS, timeout, true);
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

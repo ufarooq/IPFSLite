@@ -101,7 +101,7 @@ public class LoginActivity extends AppCompatActivity {
             try {
                 Service.getInstance(getApplicationContext());
 
-                JobServiceAutonat.autonat(getApplicationContext());
+                JobServicePeers.peers(getApplicationContext());
                 CleanupService.cleanup(getApplicationContext());
                 ContentsService.contents(getApplicationContext());
                 if (threads.server.Service.isReceiveNotificationsEnabled(
