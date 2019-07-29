@@ -15,7 +15,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.IdentityService;
-import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -83,13 +82,11 @@ public class JobServiceNotify extends JobService {
                 Service.getInstance(getApplicationContext());
                 final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
 
-                boolean cleanStoredPeers = DaemonService.DAEMON_RUNNING.get()
-                        && Network.isConnected(getApplicationContext()) && (DaemonService.running() > timeout);
                 boolean success = false;
                 if (peerDiscovery) {
                     success = IdentityService.publishIdentity(
                             getApplicationContext(), BuildConfig.ApiAesKey, false,
-                            timeout, Service.RELAYS, true, cleanStoredPeers);
+                            timeout, Service.RELAYS, true);
                 }
 
                 String hash = null;

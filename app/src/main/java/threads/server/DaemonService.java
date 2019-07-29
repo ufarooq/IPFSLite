@@ -53,7 +53,7 @@ public class DaemonService extends Service {
                         int timeout = Preferences.getConnectionTimeout(context);
                         IdentityService.identity(getApplicationContext(), BuildConfig.ApiAesKey,
                                 false, timeout, threads.server.Service.RELAYS,
-                                true, false);
+                                true);
                         JobServicePeers.peers(getApplicationContext());
                     }
                 }

@@ -1692,13 +1692,12 @@ public class Service {
 
 
                 long start = System.currentTimeMillis();
-                boolean cleanStoredPeers = DaemonService.DAEMON_RUNNING.get()
-                        && Network.isConnected(context) && (DaemonService.running() > timeout);
+
                 boolean success = false;
                 if (peerDiscovery) {
                     success = IdentityService.publishIdentity(
                             context, BuildConfig.ApiAesKey, false,
-                            timeout, Service.RELAYS, true, cleanStoredPeers);
+                            timeout, Service.RELAYS, true);
                 }
 
                 String hash = null;
