@@ -590,7 +590,6 @@ public class Service {
                 Preferences.setRoutingType(context, RoutingConfig.TypeEnum.dhtclient);
 
 
-                // TODO rethink this over
                 Preferences.setAutoNATServiceEnabled(context, true);
                 Preferences.setRelayHopEnabled(context, false);
                 Preferences.setAutoRelayEnabled(context, true);
@@ -1709,12 +1708,12 @@ public class Service {
                 Service.notify(context, user.getPID().getPid(), cid.getCid(), hash, start);
 
 
-                /*
-                boolean enabled = Preferences.isPubsubEnabled(context);
-                if (enabled) {
-                    ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
-                }*/
-
+                if (ipfs.isConnected(user.getPID())) {
+                    boolean enabled = Preferences.isPubsubEnabled(context);
+                    if (enabled) {
+                        ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
+                    }
+                }
 
 
             } catch (Throwable e) {
