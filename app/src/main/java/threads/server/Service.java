@@ -1449,8 +1449,6 @@ public class Service {
 
                     long idx = threads.storeThread(thread);
 
-                    Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
-
 
                     try {
                         threads.setThreadStatus(idx, ThreadStatus.LEACHING);
@@ -1458,8 +1456,9 @@ public class Service {
                         CID cid = ipfs.add(text, "", true);
                         checkNotNull(cid);
 
-                        // cleanup of entries with same CID
-                        List<Thread> sameEntries = threads.getThreadsByCID(cid);
+
+                        // cleanup of entries with same CID and hierarchy
+                        List<Thread> sameEntries = threads.getThreadsByCIDAndThread(cid, 0L);
                         for (Thread entry : sameEntries) {
                             threads.removeThread(entry);
                         }
@@ -1468,8 +1467,6 @@ public class Service {
                         threads.setThreadStatus(idx, ThreadStatus.ONLINE);
                     } catch (Throwable e) {
                         threads.setThreadStatus(idx, ThreadStatus.ERROR);
-                    } finally {
-                        Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
                     }
 
                 } catch (Throwable e) {
@@ -1524,7 +1521,6 @@ public class Service {
                     thread.setMimeType(fileDetails.getMimeType());
                     long idx = threads.storeThread(thread);
 
-                    Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
 
 
                     try {
@@ -1533,8 +1529,8 @@ public class Service {
                         CID cid = ipfs.add(inputStream, "", true);
                         checkNotNull(cid);
 
-                        // cleanup of entries with same CID
-                        List<Thread> sameEntries = threads.getThreadsByCID(cid);
+                        // cleanup of entries with same CID and hierarchy
+                        List<Thread> sameEntries = threads.getThreadsByCIDAndThread(cid, 0L);
                         for (Thread entry : sameEntries) {
                             threads.removeThread(entry);
                         }
@@ -1543,8 +1539,6 @@ public class Service {
                         threads.setThreadStatus(idx, ThreadStatus.ONLINE);
                     } catch (Throwable e) {
                         threads.setThreadStatus(idx, ThreadStatus.ERROR);
-                    } finally {
-                        Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
                     }
 
                 } catch (Throwable e) {
@@ -1676,6 +1670,8 @@ public class Service {
     private void sharePeer(@NonNull Context context, @NonNull User user, long[] idxs) {
         checkNotNull(user);
         checkNotNull(idxs);
+
+
         final THREADS threads = Singleton.getInstance(context).getThreads();
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         final ContentService contentService = ContentService.getInstance(context);
@@ -1713,19 +1709,6 @@ public class Service {
                 }
                 Service.notify(context, user.getPID().getPid(), cid.getCid(), hash, start);
 
-
-                if (ipfs.isConnected(user.getPID())) {
-
-                    if (Preferences.isPubsubEnabled(context)) {
-
-                        Singleton.getInstance(context).
-                                getConsoleListener().info(
-                                "Send Pubsub Notification to PID :" + user);
-
-
-                        ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
-                    }
-                }
 
 
             } catch (Throwable e) {

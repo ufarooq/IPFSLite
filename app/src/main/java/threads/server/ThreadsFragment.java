@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Base64;
 import android.util.Log;
@@ -42,7 +44,6 @@ import threads.core.THREADS;
 import threads.core.api.Content;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
-import threads.core.mdl.EventViewModel;
 import threads.core.mdl.ThreadViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
@@ -82,7 +83,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private long mLastClickTime = 0;
     private Context mContext;
     private ThreadsFragment.ActionListener mListener;
-
+    private Handler mHandler = new Handler(Looper.getMainLooper());
+    private RecyclerView mRecyclerView;
     private static String getCompactString(@NonNull String title) {
         checkNotNull(title);
         return title.replace("\n", " ");
@@ -244,12 +246,13 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
         threadViewModel = ViewModelProviders.of(this).get(ThreadViewModel.class);
 
-        RecyclerView mRecyclerView = view.findViewById(R.id.recycler_view_message_list);
+        mRecyclerView = view.findViewById(R.id.recycler_view_message_list);
         mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
 
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(mContext);
         mRecyclerView.setLayoutManager(linearLayoutManager);
+
         threadsViewAdapter = new ThreadsViewAdapter(mContext, this);
         mRecyclerView.setAdapter(threadsViewAdapter);
 
@@ -265,10 +268,10 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                if (getActivity() != null) {
+
                     ThreadsDialogFragment.newInstance(true, true, true)
                             .show(getChildFragmentManager(), ThreadsDialogFragment.TAG);
-                }
+
 
             } else {
 
@@ -284,25 +287,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
         });
 
-
-        EventViewModel eventViewModel =
-                ViewModelProviders.of(this).get(EventViewModel.class);
-
-
-        eventViewModel.getThreadSrollEvent().observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    try {
-                        linearLayoutManager.scrollToPosition(0);
-                    } catch (Throwable e) {
-                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    }
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-
-        });
 
     }
 
@@ -331,7 +315,27 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                         }
                     }
                     data.sort(Comparator.comparing(Thread::getDate).reversed());
+
+                    boolean scrollToTop = false;
+
+                    if (!data.isEmpty()) {
+                        int pos = threadsViewAdapter.getPositionOfItem(data.get(0).getIdx());
+                        scrollToTop = pos != 0;
+                    }
+
                     threadsViewAdapter.updateData(data);
+
+                    if (scrollToTop) {
+                        mRecyclerView.postDelayed(() -> {
+
+                            try {
+                                mRecyclerView.scrollToPosition(0);
+                            } catch (Throwable e) {
+                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                            }
+
+                        }, 10);
+                    }
                 }
             });
         } catch (Throwable e) {
@@ -398,15 +402,13 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                     threadsViewAdapter.setState(idx, ThreadsViewAdapter.State.MARKED);
                 }
 
-                if (getActivity() != null) {
-                    getActivity().runOnUiThread(() -> threadsViewAdapter.notifyDataSetChanged());
-                }
+                mHandler.post(() -> threadsViewAdapter.notifyDataSetChanged());
+
             } catch (Throwable e) {
                 Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
             } finally {
-                if (getActivity() != null) {
-                    getActivity().runOnUiThread(this::evaluateFabDeleteVisibility);
-                }
+                mHandler.post(this::evaluateFabDeleteVisibility);
+
             }
         });
     }
@@ -504,10 +506,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 Thread thread = threads.getThreadByIdx(idx);
                 if (thread != null) {
                     long parent = thread.getThread();
-
-                    if (getActivity() != null) {
-                        getActivity().runOnUiThread(() -> update(parent));
-                    }
+                    mHandler.post(() -> update(parent));
                 }
 
             } catch (Throwable e) {

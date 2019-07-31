@@ -174,8 +174,6 @@ class ContentsService {
                     Service.createThread(context, ipfs, user, cid,
                             ThreadStatus.ERROR, filename, filesize, mimeType, thumbnail);
 
-
-                    Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
                 }
 
             } catch (Throwable e) {

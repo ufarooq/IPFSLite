@@ -103,11 +103,10 @@ public class JobServiceMultihash extends JobService {
                 long idx = Service.createThread(context, ipfs, user, cid,
                         ThreadStatus.OFFLINE, null, null, null, null);
 
-                Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
+
                 Thread thread = threads.getThreadByIdx(idx);
                 checkNotNull(thread);
                 Service.downloadMultihash(context, threads, ipfs, thread, pid);
-                Preferences.event(threads, Preferences.THREAD_SCROLL_EVENT, "");
 
 
             } catch (Throwable e) {
