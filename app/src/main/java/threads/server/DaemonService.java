@@ -172,6 +172,7 @@ public class DaemonService extends Service {
                             getApplicationContext())) {
                         NotificationService.notifications(getApplicationContext());
                     }
+
                     Log.e(TAG, "Peers : " +
                             GatewayService.evaluatePeers(getApplicationContext()));
                 }

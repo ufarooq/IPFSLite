@@ -79,6 +79,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 public class Service {
 
     public static final int RELAYS = 5;
+    public static final String PROTOCOL = IPFS.Style.ipfs.name();
     public static final String PIN_SERVICE_KEY = "pinServiceKey";
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
@@ -344,7 +345,7 @@ public class Service {
                                     boolean success = false;
                                     if (peerInfo != null) {
                                         success = IdentityService.connectPeer(
-                                                context, peerInfo,
+                                                context, peerInfo, PROTOCOL,
                                                 timeout, true, true);
 
                                     }
@@ -523,24 +524,27 @@ public class Service {
             final int timeout = Preferences.getConnectionTimeout(context);
             final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
             boolean value = IdentityService.connectPeer(context, user,
-                    BuildConfig.ApiAesKey, peerDiscovery, true, true);
+                    BuildConfig.ApiAesKey, PROTOCOL, peerDiscovery, true, true);
             if (value) {
                 threads.setUserStatus(user, UserStatus.ONLINE);
-                PID host = Preferences.getPID(context);
-                checkNotNull(host);
-
-                Content map = new Content();
-                map.put(Content.EST, "CONNECT");
-                map.put(Content.ALIAS, threads.getUserAlias(host));
-                map.put(Content.PKEY, threads.getUserPublicKey(host));
-
-                Singleton.getInstance(context).
-                        getConsoleListener().info(
-                        "Send Notification to PID :" + user);
 
 
-                ipfs.pubsubPub(user.getPid(), gson.toJson(map), 50);
+                if (Preferences.isPubsubEnabled(context)) {
+                    PID host = Preferences.getPID(context);
+                    checkNotNull(host);
 
+                    Content map = new Content();
+                    map.put(Content.EST, "CONNECT");
+                    map.put(Content.ALIAS, threads.getUserAlias(host));
+                    map.put(Content.PKEY, threads.getUserPublicKey(host));
+
+                    Singleton.getInstance(context).
+                            getConsoleListener().info(
+                            "Send Pubsub Notification to PID :" + user);
+
+
+                    ipfs.pubsubPub(user.getPid(), gson.toJson(map), 50);
+                }
 
                 if (threads.getUserPublicKey(user).isEmpty()) {
 
@@ -604,7 +608,7 @@ public class Service {
                 Preferences.setGracePeriod(context, "10s");
 
 
-                Preferences.setConnectionTimeout(context, 45000);
+                Preferences.setConnectionTimeout(context, 45);
                 Preferences.setTangleTimeout(context, 30);
 
                 Preferences.setMdnsEnabled(context, true);
@@ -731,21 +735,23 @@ public class Service {
                     Preferences.error(threads, context.getString(R.string.user_connect_try, alias));
                 }
 
-                PID host = Preferences.getPID(context);
-                checkNotNull(host);
-                User hostUser = threads.getUserByPID(host);
-                checkNotNull(hostUser);
-                Content map = new Content();
-                map.put(Content.EST, "CONNECT_REPLY");
-                map.put(Content.ALIAS, hostUser.getAlias());
-                map.put(Content.PKEY, hostUser.getPublicKey());
+                if (Preferences.isPubsubEnabled(context)) {
+                    PID host = Preferences.getPID(context);
+                    checkNotNull(host);
+                    User hostUser = threads.getUserByPID(host);
+                    checkNotNull(hostUser);
+                    Content map = new Content();
+                    map.put(Content.EST, "CONNECT_REPLY");
+                    map.put(Content.ALIAS, hostUser.getAlias());
+                    map.put(Content.PKEY, hostUser.getPublicKey());
 
 
-                Singleton.getInstance(context).
-                        getConsoleListener().info(
-                        "Send Notification to PID :" + senderPid);
+                    Singleton.getInstance(context).
+                            getConsoleListener().info(
+                            "Send Pubsub Notification to PID :" + senderPid);
 
-                ipfs.pubsubPub(senderPid.getPid(), gson.toJson(map), 50);
+                    ipfs.pubsubPub(senderPid.getPid(), gson.toJson(map), 50);
+                }
 
 
             }
@@ -1653,7 +1659,8 @@ public class Service {
             if (!host.equals(sender)) {
 
                 IdentityService.connectPeer(context, sender,
-                        BuildConfig.ApiAesKey, peerDiscovery, true, true);
+                        BuildConfig.ApiAesKey, PROTOCOL,
+                        peerDiscovery, true, true);
 
             }
 
@@ -1708,8 +1715,14 @@ public class Service {
 
 
                 if (ipfs.isConnected(user.getPID())) {
-                    boolean enabled = Preferences.isPubsubEnabled(context);
-                    if (enabled) {
+
+                    if (Preferences.isPubsubEnabled(context)) {
+
+                        Singleton.getInstance(context).
+                                getConsoleListener().info(
+                                "Send Pubsub Notification to PID :" + user);
+
+
                         ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
                     }
                 }

@@ -19,6 +19,7 @@ import java.net.URLConnection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.api.Content;
 import threads.ipfs.IPFS;
@@ -92,11 +93,11 @@ public class JobServicePin extends JobService {
             long start = System.currentTimeMillis();
             try {
                 Service.getInstance(getApplicationContext());
-
+                final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
                 final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
 
                 checkNotNull(ipfs, "IPFS not valid");
-                ipfs.dhtPublish(CID.create(cid), true, TIMEOUT);
+                ipfs.dhtPublish(CID.create(cid), true, timeout * 5);
 
                 URL url = new URL(gateway + "/ipfs/" + cid);
                 boolean success = pinContent(url);

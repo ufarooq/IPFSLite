@@ -620,7 +620,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             boolean peerDiscovery = Service.isSupportPeerDiscovery(
                                     getApplicationContext());
                             boolean value = IdentityService.connectPeer(getApplicationContext(),
-                                    user, BuildConfig.ApiAesKey,
+                                    user, BuildConfig.ApiAesKey, Service.PROTOCOL,
                                     peerDiscovery, true, true);
 
                             if (value) {
@@ -1113,6 +1113,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
         final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+        final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
@@ -1127,7 +1128,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     File file = new File(ipfs.getCacheDir(), multihash + ".png");
 
                     if (!file.exists()) {
-                        ipfs.store(file, bitmap, "");
+                        ipfs.storeToFile(file, bitmap, "", timeout, true);
                     }
 
                     Uri uri = FileProvider.getUriForFile(getApplicationContext(),

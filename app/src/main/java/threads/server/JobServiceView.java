@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.api.Content;
 import threads.ipfs.IPFS;
@@ -23,7 +24,6 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class JobServiceView extends JobService {
 
-    private static final int TIMEOUT = 120000;
     private static final String TAG = JobServicePin.class.getSimpleName();
 
 
@@ -69,9 +69,9 @@ public class JobServiceView extends JobService {
                 Service.getInstance(getApplicationContext());
 
                 final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-
+                final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
                 checkNotNull(ipfs, "IPFS not valid");
-                ipfs.dhtPublish(CID.create(cid), true, TIMEOUT);
+                ipfs.dhtPublish(CID.create(cid), true, timeout * 5);
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

@@ -1,6 +1,6 @@
 package threads.server;
 
-import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
 import android.util.Pair;
@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.api.User;
 import threads.share.IPFSData;
@@ -29,12 +30,13 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
     private static final String TAG = ContactsViewAdapter.class.getSimpleName();
     private final ValidateListener listener;
     private final List<Pair<User, AtomicBoolean>> accounts = new ArrayList<>();
-    private final Activity activity;
+    private final Context context;
+    private final int timeout;
 
-
-    public ContactsViewAdapter(@NonNull Activity activity, @NonNull ValidateListener listener) {
-        this.activity = activity;
+    public ContactsViewAdapter(@NonNull Context context, @NonNull ValidateListener listener) {
+        this.context = context;
         this.listener = listener;
+        this.timeout = Preferences.getConnectionTimeout(context);
     }
 
 
@@ -96,10 +98,10 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
 
 
                     if (account.getImage() != null) {
-                        Singleton singleton = Singleton.getInstance(activity);
+                        Singleton singleton = Singleton.getInstance(context);
                         IPFSData data = IPFSData.create(singleton.getIpfs(),
-                                account.getImage(), account.getSesKey());
-                        Glide.with(activity).load(data).into(holder.account_icon);
+                                account.getImage(), account.getSesKey(), timeout);
+                        Glide.with(context).load(data).into(holder.account_icon);
                     } else {
                         holder.account_icon.setVisibility(View.GONE);
                     }
@@ -112,10 +114,10 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
                             v.setBackgroundColor(android.R.drawable.list_selector_background);
 
                             if (account.getImage() != null) {
-                                Singleton singleton = Singleton.getInstance(activity);
+                                Singleton singleton = Singleton.getInstance(context);
                                 IPFSData data = IPFSData.create(singleton.getIpfs(),
-                                        account.getImage(), account.getSesKey());
-                                Glide.with(activity).load(data).into(holder.account_icon);
+                                        account.getImage(), account.getSesKey(), timeout);
+                                Glide.with(context).load(data).into(holder.account_icon);
                             } else {
                                 holder.account_icon.setVisibility(View.GONE);
                             }

@@ -403,21 +403,17 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
 
 
         connection_timeout.setMax(180);
-        int timeout = 0;
+
         int connectionTimeout = Preferences.getConnectionTimeout(activity);
-        if (connectionTimeout > 0) {
-            timeout = (connectionTimeout / 1000);
-        }
+
         connection_timeout_text.setText(getString(R.string.connection_timeout,
-                String.valueOf(timeout)));
-        connection_timeout.setProgress(timeout);
+                String.valueOf(connectionTimeout)));
+        connection_timeout.setProgress(connectionTimeout);
         connection_timeout.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
-
-                int newValue = progress * 1000;
-                Preferences.setConnectionTimeout(activity, newValue);
+                Preferences.setConnectionTimeout(activity, progress);
                 connection_timeout_text.setText(
                         getString(R.string.connection_timeout,
                                 String.valueOf(progress)));

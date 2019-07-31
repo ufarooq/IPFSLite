@@ -80,7 +80,7 @@ class ContentsService {
                     if (!contents.isEmpty()) {
 
                         boolean success = IdentityService.connectPeer(
-                                context, user, BuildConfig.ApiAesKey,
+                                context, user, BuildConfig.ApiAesKey, Service.PROTOCOL,
                                 peerDiscovery, true, true);
 
                         if (success) {
@@ -118,8 +118,18 @@ class ContentsService {
                     CID.create(cidStr), file.getFilename(),
                     file.getSize(), file.getMimeType(), file.getImage());
 
-            if (Service.isAutoDownload(context)) {
-                JobServiceMultihash.download(context, pid, CID.create(cidStr));
+
+        }
+
+        if (Service.isAutoDownload(context)) {
+            if (files.size() < 50) {
+                for (ContentEntry file : files) {
+                    JobServiceMultihash.download(context, pid, CID.create(file.getCid()));
+                }
+            } else {
+                for (ContentEntry file : files) {
+                    JobServiceMultihash.downloadMultihash(context, pid, CID.create(file.getCid()));
+                }
             }
         }
 
@@ -195,7 +205,7 @@ class ContentsService {
                 byte[] content = ipfs.get(cid, "", timeout, false);
 
                 if (content.length > 0) {
-                    ipfs.pin_add(cid, true);
+                    ipfs.pin_add(cid, timeout, true);
                     return cid;
                 }
             } catch (Throwable e) {
@@ -213,6 +223,7 @@ class ContentsService {
 
         if (ipfs != null) {
             try {
+
                 byte[] content = ipfs.get(cid, "", timeout, false);
 
                 if (content.length > 0) {
@@ -221,6 +232,7 @@ class ContentsService {
 
                     return gson.fromJson(contentAsString, Contents.class);
                 }
+
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
@@ -257,7 +269,7 @@ class ContentsService {
                             boolean peerDiscovery = Service.isSupportPeerDiscovery(
                                     context);
                             success = IdentityService.connectPeer(
-                                    context, pid, BuildConfig.ApiAesKey,
+                                    context, pid, BuildConfig.ApiAesKey, Service.PROTOCOL,
                                     peerDiscovery, true, true);
 
                             if (!success) {
@@ -274,15 +286,15 @@ class ContentsService {
                     }
 
 
-                    // TODO maybe just downloading when connection success
+                    if (success) {
+                        Contents contents = downloadContents(context, cid);
 
-                    Contents contents = downloadContents(context, cid);
+                        if (contents != null) {
 
-                    if (contents != null) {
+                            contentService.finishContent(cid);
 
-                        contentService.finishContent(cid);
-
-                        downloadContents(context, pid, contents);
+                            downloadContents(context, pid, contents);
+                        }
                     }
 
                 }
