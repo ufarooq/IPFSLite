@@ -1626,12 +1626,9 @@ public class Service {
         checkNotNull(pid);
 
         for (User user : threads.getUsers()) {
-
             if (!user.getPID().equals(pid)) {
                 if (!threads.isUserBlocked(user.getPID())) {
-                    //if(threads.getPeerByPID(user.getPID()) != null) {
                     users.add(user.getPID().getPid());
-                    //}
                 }
             }
         }
@@ -1650,17 +1647,20 @@ public class Service {
             PID host = Preferences.getPID(context);
             checkNotNull(host);
             PID sender = thread.getSenderPid();
+
+
             if (!host.equals(sender)) {
 
                 IdentityService.connectPeer(context, sender,
                         BuildConfig.ApiAesKey, PROTOCOL,
                         peerDiscovery, true, true);
 
+                Service.downloadMultihash(context, threads, ipfs, thread, sender);
+
+            } else {
+
+                Service.downloadMultihash(context, threads, ipfs, thread, null);
             }
-
-            // TODO maybe also just download when connection established
-
-            Service.downloadMultihash(context, threads, ipfs, thread, null);
 
         }
 
