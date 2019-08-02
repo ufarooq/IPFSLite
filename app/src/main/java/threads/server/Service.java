@@ -213,7 +213,7 @@ public class Service {
     }
 
     @NonNull
-    static Service getInstance(@NonNull Context context) {
+    static synchronized Service getInstance(@NonNull Context context) {
         checkNotNull(context);
         if (SINGLETON == null) {
 
@@ -234,6 +234,7 @@ public class Service {
         }
         return SINGLETON;
     }
+
 
 
     private static void checkTangleServer(@NonNull Context context) {
@@ -614,6 +615,7 @@ public class Service {
 
                 Preferences.setReportMode(context, true);
                 Preferences.setDebugMode(context, false);
+                Preferences.setRandomSwarmPort(context, true);
 
 
                 setDontShowAgain(context, Service.PIN_SERVICE_KEY, false);

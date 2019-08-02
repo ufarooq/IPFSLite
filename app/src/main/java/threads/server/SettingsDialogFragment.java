@@ -379,6 +379,16 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
         });
 
 
+        Switch enable_random_swarm_port = view.findViewById(R.id.enable_random_swarm_port);
+        enable_random_swarm_port.setChecked(Preferences.isRandomSwarmPort(activity));
+        enable_random_swarm_port.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            Preferences.setRandomSwarmPort(activity, isChecked);
+
+            Toast.makeText(getContext(),
+                    R.string.daemon_restart_config_changed,
+                    Toast.LENGTH_LONG).show();
+        });
+
         Switch support_peer_discovery = view.findViewById(R.id.support_peer_discovery);
         support_peer_discovery.setChecked(Service.isSupportPeerDiscovery(activity));
         support_peer_discovery.setOnCheckedChangeListener((buttonView, isChecked) -> {
