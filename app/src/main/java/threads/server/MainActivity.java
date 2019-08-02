@@ -620,7 +620,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             boolean peerDiscovery = Service.isSupportPeerDiscovery(
                                     getApplicationContext());
                             boolean value = IdentityService.connectPeer(getApplicationContext(),
-                                    user, BuildConfig.ApiAesKey, Service.PROTOCOL,
+                                    user, BuildConfig.ApiAesKey,
                                     peerDiscovery, true, true);
 
                             if (value) {

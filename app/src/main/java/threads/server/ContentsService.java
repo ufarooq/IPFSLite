@@ -80,7 +80,7 @@ class ContentsService {
                     if (!contents.isEmpty()) {
 
                         boolean success = IdentityService.connectPeer(
-                                context, user, BuildConfig.ApiAesKey, Service.PROTOCOL,
+                                context, user, BuildConfig.ApiAesKey,
                                 peerDiscovery, true, true);
 
                         if (success) {
@@ -266,8 +266,8 @@ class ContentsService {
 
                             boolean peerDiscovery = Service.isSupportPeerDiscovery(
                                     context);
-                            success = IdentityService.connectPeer(
-                                    context, pid, BuildConfig.ApiAesKey, Service.PROTOCOL,
+                            success = IdentityService.connectPeer(context, pid,
+                                    BuildConfig.ApiAesKey,
                                     peerDiscovery, true, true);
 
                             if (!success) {

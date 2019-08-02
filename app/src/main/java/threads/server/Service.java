@@ -79,7 +79,6 @@ import static androidx.core.util.Preconditions.checkNotNull;
 public class Service {
 
     public static final int RELAYS = 5;
-    public static final String PROTOCOL = IPFS.Style.ipfs.name();
     public static final String PIN_SERVICE_KEY = "pinServiceKey";
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
@@ -345,7 +344,7 @@ public class Service {
                                     boolean success = false;
                                     if (peerInfo != null) {
                                         success = IdentityService.connectPeer(
-                                                context, peerInfo, PROTOCOL,
+                                                context, peerInfo,
                                                 timeout, true, true);
 
                                     }
@@ -524,7 +523,7 @@ public class Service {
             final int timeout = Preferences.getConnectionTimeout(context);
             final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
             boolean value = IdentityService.connectPeer(context, user,
-                    BuildConfig.ApiAesKey, PROTOCOL, peerDiscovery, true, true);
+                    BuildConfig.ApiAesKey, peerDiscovery, true, true);
             if (value) {
                 threads.setUserStatus(user, UserStatus.ONLINE);
 
@@ -594,7 +593,7 @@ public class Service {
                 Preferences.setRoutingType(context, RoutingConfig.TypeEnum.dhtclient);
 
 
-                Preferences.setAutoNATServiceEnabled(context, true);
+                Preferences.setAutoNATServiceEnabled(context, false);
                 Preferences.setRelayHopEnabled(context, false);
                 Preferences.setAutoRelayEnabled(context, true);
 
@@ -1651,8 +1650,7 @@ public class Service {
 
             if (!host.equals(sender)) {
 
-                IdentityService.connectPeer(context, sender,
-                        BuildConfig.ApiAesKey, PROTOCOL,
+                IdentityService.connectPeer(context, sender, BuildConfig.ApiAesKey,
                         peerDiscovery, true, true);
 
                 Service.downloadMultihash(context, threads, ipfs, thread, sender);
