@@ -230,7 +230,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         checkNotNull(user);
         try {
 
-            boolean callActive = Preferences.isPubsubEnabled(mContext);
+            boolean callActive = false;
             FragmentManager fm = getChildFragmentManager();
 
             UserActionDialogFragment.newInstance(

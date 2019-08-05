@@ -69,7 +69,6 @@ import threads.ipfs.api.PubsubInfo;
 import threads.ipfs.api.PubsubReader;
 import threads.ipfs.api.RoutingConfig;
 import threads.share.MimeTypeService;
-import threads.share.RTCSession;
 import threads.share.ThumbnailService;
 
 import static androidx.core.util.Preconditions.checkArgument;
@@ -220,7 +219,6 @@ public class Service {
             runUpdatesIfNecessary(context);
 
             ProgressChannel.createProgressChannel(context);
-            RTCSession.createRTCChannel(context);
 
             long time = System.currentTimeMillis();
             Singleton.getInstance(context);
@@ -234,7 +232,6 @@ public class Service {
         }
         return SINGLETON;
     }
-
 
 
     private static void checkTangleServer(@NonNull Context context) {
@@ -1523,7 +1520,6 @@ public class Service {
                     long idx = threads.storeThread(thread);
 
 
-
                     try {
                         threads.setThreadStatus(idx, ThreadStatus.LEACHING);
 
@@ -1712,7 +1708,6 @@ public class Service {
                 Service.notify(context, user.getPID().getPid(), cid.getCid(), hash, start);
 
 
-
             } catch (Throwable e) {
                 Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
             }
@@ -1851,10 +1846,6 @@ public class Service {
                                                     checkNotNull(cid);
                                                     Service.receiveReply(context, senderPid, cid);
                                                 }
-                                            } else {
-
-                                                RTCSession.handleContent(context,
-                                                        BuildConfig.ApiAesKey, senderPid, content);
                                             }
                                         } else {
                                             Preferences.error(threads, context.getString(

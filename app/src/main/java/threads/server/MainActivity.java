@@ -64,7 +64,6 @@ import threads.share.DontShowAgainDialog;
 import threads.share.InfoDialogFragment;
 import threads.share.NameDialogFragment;
 import threads.share.PermissionAction;
-import threads.share.RTCCallActivity;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThumbnailService;
 import threads.share.UserActionDialogFragment;
@@ -822,6 +821,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         checkNotNull(pid);
 
+        // Deactivated
+        /*
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
@@ -851,6 +852,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             storedUser.set(pid);
             return;
         }
+
         try {
             final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
             final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
@@ -872,6 +874,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                             intent.setAction(RTCCallActivity.ACTION_OUTGOING_CALL);
                             MainActivity.this.startActivity(intent);
+
                         }
                     } catch (Throwable e) {
                         Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
@@ -881,7 +884,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-
+        */
     }
 
 

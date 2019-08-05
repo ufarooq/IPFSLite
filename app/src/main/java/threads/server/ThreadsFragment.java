@@ -85,6 +85,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private ThreadsFragment.ActionListener mListener;
     private Handler mHandler = new Handler(Looper.getMainLooper());
     private RecyclerView mRecyclerView;
+
     private static String getCompactString(@NonNull String title) {
         checkNotNull(title);
         return title.replace("\n", " ");
@@ -269,8 +270,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 mLastClickTime = SystemClock.elapsedRealtime();
 
 
-                    ThreadsDialogFragment.newInstance(true, true, true)
-                            .show(getChildFragmentManager(), ThreadsDialogFragment.TAG);
+                ThreadsDialogFragment.newInstance(true, true, true)
+                        .show(getChildFragmentManager(), ThreadsDialogFragment.TAG);
 
 
             } else {
