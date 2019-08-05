@@ -16,7 +16,6 @@ import java.util.concurrent.Executors;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.api.Content;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 
@@ -24,7 +23,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class JobServiceView extends JobService {
 
-    private static final String TAG = JobServicePin.class.getSimpleName();
+    private static final String TAG = JobServiceView.class.getSimpleName();
 
 
     public static void view(@NonNull Context context, @NonNull String cid) {
@@ -71,7 +70,7 @@ public class JobServiceView extends JobService {
                 final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
                 final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
                 checkNotNull(ipfs, "IPFS not valid");
-                ipfs.dhtPublish(CID.create(cid), true, timeout * 5);
+                ipfs.dhtPublish(CID.create(cid), true, timeout);
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -85,13 +84,6 @@ public class JobServiceView extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters jobParameters) {
-
-        PersistableBundle bundle = jobParameters.getExtras();
-
-        final String cid = bundle.getString(Content.CID);
-        checkNotNull(cid);
-
-        Log.e(TAG, "onStopJob " + cid);
         return false;
     }
 }

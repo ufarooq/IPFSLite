@@ -16,7 +16,7 @@ ext {
     siteUrl = 'https://gitlab.com/remmer.wilts/threads-server'
     gitUrl = 'git@gitlab.com:remmer.wilts/threads-server.git'
 
-    libraryVersion = '0.9.7'
+    libraryVersion = '0.9.8'
 
     developerId = 'remmerw'
     developerName = 'Remmer Wilts'
@@ -34,8 +34,8 @@ android {
         applicationId "threads.server"
         minSdkVersion 24
         targetSdkVersion 29
-        versionCode 97
-        versionName "0.9.7"
+        versionCode 98
+        versionName "0.9.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
     }
@@ -69,7 +69,7 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
     // Android (LICENSE done)
-    implementation 'com.google.android.material:material:1.1.0-alpha08'
+    implementation 'com.google.android.material:material:1.1.0-alpha09'
 
     // API (LICENSE done)
     implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
@@ -99,7 +99,7 @@ dependencies {
     implementation 'threads.core:share:0.5.9'
 
     // API (LICENSE done)
-    implementation 'threads.core:api:0.4.8'
+    implementation 'threads.core:api:0.5.0'
 
     // API (LICENSE done)
     implementation 'threads.core:iota:0.0.4'
