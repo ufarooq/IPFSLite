@@ -232,15 +232,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 checkNotNull(host);
                 String multihash = codecDecider.getMultihash();
 
-                // check if multihash is valid
-                try {
-                    Multihash.fromBase58(codec);
-                } catch (Throwable e) {
-                    Preferences.error(singleton.getThreads(),
-                            this.getString(R.string.multihash_not_valid));
-                    return;
-                }
-
                 JobServiceMultihash.download(getApplicationContext(),
                         host, CID.create(multihash));
             } else {

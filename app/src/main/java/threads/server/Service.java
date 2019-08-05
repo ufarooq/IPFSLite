@@ -604,7 +604,7 @@ public class Service {
 
                 Preferences.setConnMgrConfigType(context, ConnMgrConfig.TypeEnum.basic);
                 Preferences.setLowWater(context, 50);
-                Preferences.setHighWater(context, 200);
+                Preferences.setHighWater(context, 250);
                 Preferences.setGracePeriod(context, "10s");
 
 
@@ -1687,7 +1687,9 @@ public class Service {
                 List<Thread> threadList = threads.getThreadByIdxs(idxs);
                 contents.add(threadList);
 
-                CID cid = ipfs.add(gson.toJson(contents), "", true);
+                String data = gson.toJson(contents);
+
+                CID cid = ipfs.add(data, "", true);
                 checkNotNull(cid);
 
                 checkNotNull(host);

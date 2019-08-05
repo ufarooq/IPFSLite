@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.GatewayService;
+import threads.core.Network;
 import threads.core.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -49,6 +50,7 @@ public class JobServicePeers extends JobService {
     public boolean onStartJob(JobParameters jobParameters) {
 
         final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
+        final boolean cleanPeers = Network.isConnectedFast(getApplicationContext());
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
 
@@ -56,10 +58,10 @@ public class JobServicePeers extends JobService {
                 Service.getInstance(getApplicationContext());
 
                 GatewayService.connectStoredAutonat(getApplicationContext(),
-                        3, timeout, true);
+                        3, timeout, cleanPeers);
 
                 GatewayService.connectStoredRelays(getApplicationContext(),
-                        Service.RELAYS, timeout, true);
+                        Service.RELAYS, timeout, cleanPeers);
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
