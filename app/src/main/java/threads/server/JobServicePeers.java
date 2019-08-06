@@ -15,7 +15,6 @@ import java.util.concurrent.Executors;
 
 import threads.core.GatewayService;
 import threads.core.Network;
-import threads.core.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -49,7 +48,7 @@ public class JobServicePeers extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
-        final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
+        final int timeout = 3;
         final boolean cleanPeers = Network.isConnectedFast(getApplicationContext());
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
