@@ -23,19 +23,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 import threads.core.GatewayService;
-import threads.core.IdentityService;
 import threads.core.Network;
-import threads.core.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
 
 public class DaemonService extends Service {
     public static final AtomicBoolean DAEMON_RUNNING = new AtomicBoolean(false);
-    public static final AtomicLong RUNNING = new AtomicLong(0L);
 
     private static final String HIGH_CHANNEL_ID = "HIGH_CHANNEL_ID";
     private static final int NOTIFICATION_ID = 998;
@@ -45,35 +41,21 @@ public class DaemonService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
-                if (Network.isNetworkAvailable(context)) {
-                    RUNNING.set(System.currentTimeMillis());
-                    final boolean peerDiscovery =
-                            threads.server.Service.isSupportPeerDiscovery(context);
-                    if (peerDiscovery) {
-                        int timeout = Preferences.getConnectionTimeout(context);
-                        IdentityService.identity(getApplicationContext(), BuildConfig.ApiAesKey,
-                                false, timeout, threads.server.Service.RELAYS,
-                                true);
-                        JobServicePeers.peers(getApplicationContext());
-                    }
+                if (Network.isConnected(context)) {
+                    JobServicePeers.peers(getApplicationContext());
                 }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
         }
     };
+
+
     private Future workService;
     private Future slowService;
     private Future fastService;
     private Future pinService;
 
-    public static long running() {
-        long started = DaemonService.RUNNING.get();
-        if (started == 0L) {
-            return 0L;
-        }
-        return System.currentTimeMillis() - started;
-    }
 
     public static void invoke(@NonNull Context context) {
         checkNotNull(context);
@@ -118,7 +100,7 @@ public class DaemonService extends Service {
 
         checkNotNull(intent);
         if (DAEMON_RUNNING.get()) {
-            RUNNING.set(System.currentTimeMillis());
+
             startForeground(NOTIFICATION_ID, buildNotification());
             IntentFilter intentFilter = new IntentFilter();
             intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
@@ -128,7 +110,7 @@ public class DaemonService extends Service {
             try {
                 stopForeground(true);
                 unregisterReceiver(broadcastReceiver);
-                RUNNING.set(0L);
+
                 if (workService != null) {
                     workService.cancel(true);
                 }
@@ -174,7 +156,7 @@ public class DaemonService extends Service {
                     }
 
                     Log.e(TAG, "Peers : " +
-                            GatewayService.evaluatePeers(getApplicationContext()));
+                            GatewayService.evaluatePeers(getApplicationContext(), false));
                 }
 
             } catch (InterruptedException e) {

@@ -372,15 +372,17 @@ public class Service {
 
     }
 
-    public static void notify(@NonNull Context context,
-                              @NonNull String pid,
-                              @NonNull String cid,
-                              @Nullable String hash,
-                              long startTime) {
+    public static boolean notify(@NonNull Context context,
+                                 @NonNull String pid,
+                                 @NonNull String cid,
+                                 @Nullable String hash,
+                                 long startTime) {
 
         checkNotNull(context);
         checkNotNull(pid);
         checkNotNull(cid);
+
+        boolean success = true;
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
         final PID host = Preferences.getPID(context);
@@ -433,6 +435,7 @@ public class Service {
                                     + pid + " Time : " + time + "[s]");
 
                 } catch (Throwable e) {
+                    success = false;
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                     long time = (System.currentTimeMillis() - startTime) / 1000;
 
@@ -447,8 +450,10 @@ public class Service {
 
             }
         } catch (Throwable e) {
+            success = false;
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
+        return success;
     }
 
     static void cleanup(@NonNull Context context) {
@@ -595,7 +600,7 @@ public class Service {
                 Preferences.setRelayHopEnabled(context, false);
                 Preferences.setAutoRelayEnabled(context, true);
 
-                Preferences.setPubsubEnabled(context, true);
+                Preferences.setPubsubEnabled(context, false);
                 Preferences.setPubsubRouter(context, PubsubConfig.RouterEnum.gossipsub);
                 Preferences.setReproviderInterval(context, "0");
 
@@ -1692,21 +1697,32 @@ public class Service {
                 contentService.insertContent(host, cid, true);
 
 
-                long start = System.currentTimeMillis();
-
                 boolean success = false;
-                if (peerDiscovery) {
-                    success = IdentityService.publishIdentity(
-                            context, BuildConfig.ApiAesKey, false,
-                            timeout, Service.RELAYS, true);
+                if (Service.isSendNotificationsEnabled(context)) {
+                    long start = System.currentTimeMillis();
+
+                    if (peerDiscovery) {
+                        success = IdentityService.publishIdentity(
+                                context, BuildConfig.ApiAesKey, false,
+                                timeout, Service.RELAYS, true);
+                    }
+
+                    String hash = null;
+                    if (success) {
+                        hash = threads.getPeerInfoHash(host);
+                    }
+                    success = Service.notify(
+                            context, user.getPID().getPid(), cid.getCid(), hash, start);
+
                 }
 
-                String hash = null;
-                if (success) {
-                    hash = threads.getPeerInfoHash(host);
-                }
-                Service.notify(context, user.getPID().getPid(), cid.getCid(), hash, start);
+                // just backup
+                if (!success && Preferences.isPubsubEnabled(context)) {
 
+                    if (ipfs.isConnected(user.getPID())) {
+                        ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
+                    }
+                }
 
             } catch (Throwable e) {
                 Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
