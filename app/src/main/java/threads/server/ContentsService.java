@@ -13,8 +13,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import threads.core.ConnectService;
 import threads.core.GatewayService;
-import threads.core.IdentityService;
 import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
@@ -79,7 +79,7 @@ class ContentsService {
 
                     if (!contents.isEmpty()) {
 
-                        boolean success = IdentityService.connectPeer(
+                        boolean success = ConnectService.connectPeer(
                                 context, user, BuildConfig.ApiAesKey,
                                 peerDiscovery, true, true, true);
 
@@ -266,7 +266,7 @@ class ContentsService {
 
                             boolean peerDiscovery = Service.isSupportPeerDiscovery(
                                     context);
-                            success = IdentityService.connectPeer(context, pid,
+                            success = ConnectService.connectPeer(context, pid,
                                     BuildConfig.ApiAesKey,
                                     peerDiscovery, true, true, true);
 

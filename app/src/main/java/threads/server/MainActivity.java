@@ -45,7 +45,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.psdev.licensesdialog.LicensesDialogFragment;
-import threads.core.IdentityService;
+import threads.core.ConnectService;
 import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
@@ -609,7 +609,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             boolean peerDiscovery = Service.isSupportPeerDiscovery(
                                     getApplicationContext());
-                            boolean value = IdentityService.connectPeer(getApplicationContext(),
+
+                            boolean value = ConnectService.connectPeer(getApplicationContext(),
                                     user, BuildConfig.ApiAesKey,
                                     peerDiscovery, true, true, true);
 

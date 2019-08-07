@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import threads.core.ConnectService;
 import threads.core.IdentityService;
 import threads.core.MimeType;
 import threads.core.Network;
@@ -345,7 +346,7 @@ public class Service {
                                                     iota, pid, hash, BuildConfig.ApiAesKey);
                                     boolean success = false;
                                     if (peerInfo != null) {
-                                        success = IdentityService.connectPeer(
+                                        success = ConnectService.connectPeer(
                                                 context, peerInfo,
                                                 timeout, true, true);
 
@@ -524,7 +525,7 @@ public class Service {
 
             final int timeout = Preferences.getConnectionTimeout(context);
             final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
-            boolean value = IdentityService.connectPeer(context, user,
+            boolean value = ConnectService.connectPeer(context, user,
                     BuildConfig.ApiAesKey, peerDiscovery, true, true, true);
             if (value) {
                 threads.setUserStatus(user, UserStatus.ONLINE);
@@ -1652,7 +1653,7 @@ public class Service {
 
             if (!host.equals(sender)) {
 
-                IdentityService.connectPeer(context, sender, BuildConfig.ApiAesKey,
+                ConnectService.connectPeer(context, sender, BuildConfig.ApiAesKey,
                         peerDiscovery, true, true, true);
 
                 Service.downloadMultihash(context, threads, ipfs, thread, sender);
