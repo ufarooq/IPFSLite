@@ -81,7 +81,7 @@ class ContentsService {
 
                         boolean success = IdentityService.connectPeer(
                                 context, user, BuildConfig.ApiAesKey,
-                                peerDiscovery, true, true);
+                                peerDiscovery, true, true, true);
 
                         if (success) {
                             for (threads.server.Content entry : contents) {
@@ -268,7 +268,7 @@ class ContentsService {
                                     context);
                             success = IdentityService.connectPeer(context, pid,
                                     BuildConfig.ApiAesKey,
-                                    peerDiscovery, true, true);
+                                    peerDiscovery, true, true, true);
 
                             if (!success) {
                                 Singleton.getInstance(context).getConsoleListener().info(

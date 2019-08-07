@@ -612,7 +612,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     getApplicationContext());
                             boolean value = IdentityService.connectPeer(getApplicationContext(),
                                     user, BuildConfig.ApiAesKey,
-                                    peerDiscovery, true, true);
+                                    peerDiscovery, true, true, true);
 
                             if (value) {
                                 threads.setUserStatus(user, UserStatus.ONLINE);

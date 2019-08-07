@@ -528,7 +528,7 @@ public class Service {
             final int timeout = Preferences.getConnectionTimeout(context);
             final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
             boolean value = IdentityService.connectPeer(context, user,
-                    BuildConfig.ApiAesKey, peerDiscovery, true, true);
+                    BuildConfig.ApiAesKey, peerDiscovery, true, true, true);
             if (value) {
                 threads.setUserStatus(user, UserStatus.ONLINE);
 
@@ -565,8 +565,8 @@ public class Service {
                 threads.setUserStatus(user, UserStatus.OFFLINE);
             }
 
-            threads.core.api.PeerInfo peerInfo = IdentityService.getPeerInfo(context, user,
-                    BuildConfig.ApiAesKey);
+            threads.core.api.PeerInfo peerInfo = IdentityService.getPeerInfo(
+                    context, user, BuildConfig.ApiAesKey, true);
             if (peerInfo != null) {
                 String name = peerInfo.getAdditional(Content.ALIAS);
                 if (!name.isEmpty()) {
@@ -1656,7 +1656,7 @@ public class Service {
             if (!host.equals(sender)) {
 
                 IdentityService.connectPeer(context, sender, BuildConfig.ApiAesKey,
-                        peerDiscovery, true, true);
+                        peerDiscovery, true, true, true);
 
                 Service.downloadMultihash(context, threads, ipfs, thread, sender);
 
