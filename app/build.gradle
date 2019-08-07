@@ -96,19 +96,22 @@ dependencies {
     //implementation 'threads.pow:pow:1.0.9'
 
     // UI+API (LICENSE done)
-    implementation 'threads.core:share:0.6.0'
+    implementation 'threads.core:share:0.6.1'
+
+    // UI+API (LICENSE done)
+    implementation 'threads.core:webrtc:0.0.4'
 
     // API (LICENSE done)
-    implementation 'threads.core:api:0.5.2'
+    implementation 'threads.core:api:0.5.3'
 
     // API (LICENSE done)
     implementation 'threads.core:iota:0.0.4'
 
     // API (LICENSE done)
-    implementation 'threads.core:ipfs:0.1.8'
+    implementation 'threads.core:ipfs:0.1.9'
 
     // API (LICENSE done)
-    implementation 'threads.mobile:ipfs:0.2.3'
+    implementation 'threads.mobile:ipfs:0.2.4'
 
     // API (LICENSE done)
     implementation 'com.google.code.gson:gson:2.8.5'

@@ -70,6 +70,7 @@ import threads.ipfs.api.PubsubReader;
 import threads.ipfs.api.RoutingConfig;
 import threads.share.MimeTypeService;
 import threads.share.ThumbnailService;
+import threads.webrtc.RTCSession;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -218,6 +219,7 @@ public class Service {
 
             runUpdatesIfNecessary(context);
 
+            RTCSession.createRTCChannel(context);
             ProgressChannel.createProgressChannel(context);
 
             long time = System.currentTimeMillis();
@@ -600,7 +602,7 @@ public class Service {
                 Preferences.setRelayHopEnabled(context, false);
                 Preferences.setAutoRelayEnabled(context, true);
 
-                Preferences.setPubsubEnabled(context, false);
+                Preferences.setPubsubEnabled(context, true);
                 Preferences.setPubsubRouter(context, PubsubConfig.RouterEnum.gossipsub);
                 Preferences.setReproviderInterval(context, "0");
 
@@ -1668,66 +1670,36 @@ public class Service {
     }
 
 
-    private void sharePeer(@NonNull Context context, @NonNull User user, long[] idxs) {
+    private void sharePeer(@NonNull Context context,
+                           @NonNull User user,
+                           @NonNull CID cid,
+                           @Nullable String hash,
+                           long start) {
+        checkNotNull(context);
         checkNotNull(user);
-        checkNotNull(idxs);
-
+        checkNotNull(cid);
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        final ContentService contentService = ContentService.getInstance(context);
-        final PID host = Preferences.getPID(context);
-        final int timeout = Preferences.getConnectionTimeout(context);
-        final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
 
 
-        if (ipfs != null) {
-            try {
-                Contents contents = new Contents();
+        try {
 
-                List<Thread> threadList = threads.getThreadByIdxs(idxs);
-                contents.add(threadList);
+            boolean success = Service.notify(
+                    context, user.getPID().getPid(), cid.getCid(), hash, start);
 
-                String data = gson.toJson(contents);
-
-                CID cid = ipfs.add(data, "", true);
-                checkNotNull(cid);
-
-                checkNotNull(host);
-                contentService.insertContent(host, cid, true);
-
-
-                boolean success = false;
-                if (Service.isSendNotificationsEnabled(context)) {
-                    long start = System.currentTimeMillis();
-
-                    if (peerDiscovery) {
-                        success = IdentityService.publishIdentity(
-                                context, BuildConfig.ApiAesKey, false,
-                                timeout, Service.RELAYS, true);
-                    }
-
-                    String hash = null;
-                    if (success) {
-                        hash = threads.getPeerInfoHash(host);
-                    }
-                    success = Service.notify(
-                            context, user.getPID().getPid(), cid.getCid(), hash, start);
-
+            // just backup
+            if (!success && Preferences.isPubsubEnabled(context)) {
+                final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                checkNotNull(ipfs, "IPFS not valid");
+                if (ipfs.isConnected(user.getPID())) {
+                    ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
                 }
-
-                // just backup
-                if (!success && Preferences.isPubsubEnabled(context)) {
-
-                    if (ipfs.isConnected(user.getPID())) {
-                        ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
-                    }
-                }
-
-            } catch (Throwable e) {
-                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
             }
+
+        } catch (Throwable e) {
+            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
         }
+
 
     }
 
@@ -1737,10 +1709,13 @@ public class Service {
         checkNotNull(users);
         checkNotNull(idxs);
 
-        final PID host = Preferences.getPID(context.getApplicationContext());
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final ContentService contentService = ContentService.getInstance(context);
+        final PID host = Preferences.getPID(context);
+        final int timeout = Preferences.getConnectionTimeout(context);
+        final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
 
         if (ipfs != null) {
 
@@ -1758,13 +1733,43 @@ public class Service {
                         threads.setThreadsStatus(ThreadStatus.PUBLISHING, idxs);
 
 
-                        // TODO maybe in the future it might sense to make it parallel
-                        ExecutorService executorService = Executors.newFixedThreadPool(1);
+                        long start = System.currentTimeMillis();
+
+                        Contents contents = new Contents();
+
+                        List<Thread> threadList = threads.getThreadByIdxs(idxs);
+                        contents.add(threadList);
+
+                        String data = gson.toJson(contents);
+
+                        CID cid = ipfs.add(data, "", true);
+                        checkNotNull(cid);
+
+                        checkNotNull(host);
+                        contentService.insertContent(host, cid, true);
+
+                        boolean success = false;
+                        if (peerDiscovery) {
+                            success = IdentityService.publishIdentity(
+                                    context, BuildConfig.ApiAesKey, false,
+                                    timeout, Service.RELAYS, true);
+                        }
+
+                        String peerInfoHash = null;
+                        if (success) {
+                            peerInfoHash = threads.getPeerInfoHash(host);
+                        }
+
+                        final String hash = peerInfoHash;
+
+
+                        ExecutorService executorService = Executors.newFixedThreadPool(
+                                users.size());
                         List<Future> futures = new ArrayList<>();
 
                         for (User user : users) {
                             futures.add(executorService.submit(() ->
-                                    sharePeer(context, user, idxs)));
+                                    sharePeer(context, user, cid, hash, start)));
                         }
 
 
@@ -1862,6 +1867,10 @@ public class Service {
                                                     checkNotNull(cid);
                                                     Service.receiveReply(context, senderPid, cid);
                                                 }
+                                            } else {
+
+                                                RTCSession.handleContent(context,
+                                                        BuildConfig.ApiAesKey, senderPid, content);
                                             }
                                         } else {
                                             Preferences.error(threads, context.getString(

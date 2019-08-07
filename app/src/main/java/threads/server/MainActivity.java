@@ -68,6 +68,7 @@ import threads.share.ThreadActionDialogFragment;
 import threads.share.ThumbnailService;
 import threads.share.UserActionDialogFragment;
 import threads.share.WebViewDialogFragment;
+import threads.webrtc.RTCCallActivity;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -821,8 +822,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         checkNotNull(pid);
 
-        // Deactivated
-        /*
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
@@ -884,7 +883,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-        */
+
     }
 
 

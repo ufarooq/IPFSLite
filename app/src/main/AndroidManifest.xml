@@ -68,6 +68,16 @@
                 android:value=".MainActivity" />
         </activity>
 
+        <activity
+            android:name="threads.webrtc.RTCCallActivity"
+            android:configChanges="orientation|smallestScreenSize|screenSize|screenLayout"
+            android:launchMode="singleTop"
+            android:parentActivityName=".MainActivity"
+            android:screenOrientation="fullUser">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
 
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
