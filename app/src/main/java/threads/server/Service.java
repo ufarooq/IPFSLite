@@ -348,8 +348,6 @@ public class Service {
                                                 timeout, true, true);
 
                                     }
-                                    Singleton.getInstance(context).getConsoleListener().info(
-                                            "Success Connect Hash : " + success);
                                 }
 
 
@@ -1184,7 +1182,7 @@ public class Service {
         try {
             threads.setStatus(thread, ThreadStatus.LEACHING);
             int timeout = Preferences.getConnectionTimeout(context);
-            File file = threads.receive(ipfs, cid, "",
+            File file = ipfs.get(cid, "",
                     new IPFS.Progress() {
                         @Override
                         public void setProgress(int percent) {
@@ -1198,7 +1196,7 @@ public class Service {
                         public boolean isStopped() {
                             return !Network.isConnected(context);
                         }
-                    }, timeout, size);
+                    }, false, timeout, size, true);
 
             if (file != null) {
                 success = true;
