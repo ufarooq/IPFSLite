@@ -28,7 +28,9 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -1748,8 +1750,14 @@ public class Service {
 
                         boolean success = false;
                         if (peerDiscovery) {
+
+                            Map<String, String> params = new HashMap<>();
+
+                            String alias = threads.getUserAlias(host);
+                            params.put(Content.ALIAS, alias);
+
                             success = IdentityService.publishIdentity(
-                                    context, BuildConfig.ApiAesKey, false,
+                                    context, BuildConfig.ApiAesKey, params, false,
                                     timeout, Service.RELAYS, true);
                         }
 

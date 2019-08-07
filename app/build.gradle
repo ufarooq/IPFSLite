@@ -102,7 +102,7 @@ dependencies {
     implementation 'threads.core:webrtc:0.0.5'
 
     // API (LICENSE done)
-    implementation 'threads.core:api:0.5.4'
+    implementation 'threads.core:api:0.5.5'
 
     // API (LICENSE done)
     implementation 'threads.core:iota:0.0.4'

@@ -10,11 +10,17 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.IdentityService;
 import threads.core.Preferences;
+import threads.core.Singleton;
+import threads.core.THREADS;
+import threads.core.api.Content;
+import threads.ipfs.api.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -51,11 +57,18 @@ public class JobServiceIdentity extends JobService {
                 final boolean peerDiscovery =
                         threads.server.Service.isSupportPeerDiscovery(getApplicationContext());
                 if (peerDiscovery) {
-
+                    THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
                     int timeout = Preferences.getConnectionTimeout(getApplicationContext());
 
+                    PID host = Preferences.getPID(getApplicationContext());
+
+                    Map<String, String> params = new HashMap<>();
+                    if (host != null) {
+                        String alias = threads.getUserAlias(host);
+                        params.put(Content.ALIAS, alias);
+                    }
                     IdentityService.publishIdentity(getApplicationContext(), BuildConfig.ApiAesKey,
-                            false, timeout, threads.server.Service.RELAYS,
+                            params, false, timeout, Service.RELAYS,
                             true);
                 }
 

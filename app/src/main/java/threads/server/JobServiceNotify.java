@@ -11,6 +11,8 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -84,8 +86,14 @@ public class JobServiceNotify extends JobService {
 
                 boolean success = false;
                 if (peerDiscovery) {
+
+                    Map<String, String> params = new HashMap<>();
+                    if (host != null) {
+                        String alias = threads.getUserAlias(host);
+                        params.put(Content.ALIAS, alias);
+                    }
                     success = IdentityService.publishIdentity(
-                            getApplicationContext(), BuildConfig.ApiAesKey, false,
+                            getApplicationContext(), BuildConfig.ApiAesKey, params, false,
                             timeout, Service.RELAYS, true);
                 }
 
