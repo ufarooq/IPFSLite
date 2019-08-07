@@ -124,6 +124,7 @@
     <string name="support_automatic_download">Automatic Download</string>
     <string name="pubsub_support">Pubsub Support</string>
     <string name="success_notification">Sending notification to Peer \"%1$s\" took \"%2$s\"[s]</string>
-    <string name="failed_notification">Sending notification to Peer \"%1$s\" failed in \"%2$s\"[s]</string>
+    <string name="failed_notification">Failed sending notification to Peer \"%1$s\"</string>
     <string name="enable_random_swarm_port">Random Swarm Port</string>
+    <string name="slow_connection">Internet connection is to slow</string>
 </resources>

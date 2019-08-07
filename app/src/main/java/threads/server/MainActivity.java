@@ -215,15 +215,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(codec);
 
         // CHECKED
+        Singleton singleton = Singleton.getInstance(getApplicationContext());
         if (!Network.isConnected(getApplicationContext())) {
-            Singleton singleton = Singleton.getInstance(getApplicationContext());
             Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
+            return;
+        }
+
+        if (!Network.isConnectedFast(getApplicationContext())) {
+            Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
             return;
         }
 
 
         try {
-            final Singleton singleton = Singleton.getInstance(this);
             CodecDecider codecDecider = CodecDecider.evaluate(codec);
             if (codecDecider.getCodex() == CodecDecider.Codec.MULTIHASH ||
                     codecDecider.getCodex() == CodecDecider.Codec.URI) {
@@ -584,12 +588,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(pid);
 
         // CHECKED
+        Singleton singleton = Singleton.getInstance(getApplicationContext());
+
         if (!Network.isConnected(getApplicationContext())) {
-            Singleton singleton = Singleton.getInstance(getApplicationContext());
             Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
             return;
         }
 
+        if (!Network.isConnectedFast(getApplicationContext())) {
+            Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
+            return;
+        }
 
         try {
 
@@ -822,14 +831,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         checkNotNull(pid);
 
-
+        Singleton singleton = Singleton.getInstance(getApplicationContext());
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-            Singleton singleton = Singleton.getInstance(getApplicationContext());
             Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
             return;
         }
 
+        if (!Network.isConnectedFast(getApplicationContext())) {
+            Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
+            return;
+        }
 
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.RECORD_AUDIO)
@@ -911,11 +923,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-
             Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
             return;
         }
 
+        if (!Network.isConnectedFast(getApplicationContext())) {
+            Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
+            return;
+        }
 
         try {
 
@@ -937,9 +952,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickThreadPublish(long idx) {
 
         // CHECKED
+        Singleton singleton = Singleton.getInstance(getApplicationContext());
+
         if (!Network.isConnected(getApplicationContext())) {
-            Singleton singleton = Singleton.getInstance(getApplicationContext());
             Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
+            return;
+        }
+
+        if (!Network.isConnectedFast(getApplicationContext())) {
+            Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
             return;
         }
 
@@ -1011,49 +1032,53 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickThreadsSend(final long[] idxs) {
-        try {
-            // CHECKED
-            if (!Network.isConnected(getApplicationContext())) {
-                Singleton singleton = Singleton.getInstance(getApplicationContext());
-                Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
-                return;
-            }
-
-            final THREADS threads = Singleton.getInstance(this).getThreads();
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    ArrayList<String> pids = Service.getInstance(getApplicationContext()).
-                            getEnhancedUserPIDs(getApplicationContext());
-
-                    if (pids.isEmpty()) {
-                        Preferences.error(threads,
-                                getApplicationContext().getString(R.string.no_sharing_peers));
-                    } else if (pids.size() == 1) {
-                        List<User> users = new ArrayList<>();
-                        users.add(threads.getUserByPID(PID.create(pids.get(0))));
-                        Service.getInstance(getApplicationContext()).sendThreads(
-                                getApplicationContext(), users, idxs);
-                    } else {
-                        FragmentManager fm = getSupportFragmentManager();
-                        SendDialogFragment dialogFragment = new SendDialogFragment();
-                        Bundle bundle = new Bundle();
-                        bundle.putLongArray(SendDialogFragment.IDXS, idxs);
-                        bundle.putStringArrayList(SendDialogFragment.PIDS, pids);
-                        dialogFragment.setArguments(bundle);
-                        dialogFragment.show(fm, SendDialogFragment.TAG);
-                    }
-
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-            });
 
 
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        Singleton singleton = Singleton.getInstance(getApplicationContext());
+
+        // CHECKED
+        if (!Network.isConnected(getApplicationContext())) {
+            Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
+            return;
         }
+
+        if (!Network.isConnectedFast(getApplicationContext())) {
+            Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
+            return;
+        }
+
+        final THREADS threads = Singleton.getInstance(this).getThreads();
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                ArrayList<String> pids = Service.getInstance(getApplicationContext()).
+                        getEnhancedUserPIDs(getApplicationContext());
+
+                if (pids.isEmpty()) {
+                    Preferences.error(threads,
+                            getApplicationContext().getString(R.string.no_sharing_peers));
+                } else if (pids.size() == 1) {
+                    List<User> users = new ArrayList<>();
+                    users.add(threads.getUserByPID(PID.create(pids.get(0))));
+                    Service.getInstance(getApplicationContext()).sendThreads(
+                            getApplicationContext(), users, idxs);
+                } else {
+                    FragmentManager fm = getSupportFragmentManager();
+                    SendDialogFragment dialogFragment = new SendDialogFragment();
+                    Bundle bundle = new Bundle();
+                    bundle.putLongArray(SendDialogFragment.IDXS, idxs);
+                    bundle.putStringArrayList(SendDialogFragment.PIDS, pids);
+                    dialogFragment.setArguments(bundle);
+                    dialogFragment.show(fm, SendDialogFragment.TAG);
+                }
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        });
+
+
     }
 
     @Override

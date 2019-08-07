@@ -439,15 +439,12 @@ public class Service {
                 } catch (Throwable e) {
                     success = false;
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    long time = (System.currentTimeMillis() - startTime) / 1000;
 
-                    threads.invokeEvent(Preferences.INFO,
-                            context.getString(R.string.failed_notification,
-                                    alias, String.valueOf(time)));
+                    threads.invokeEvent(Preferences.EXCEPTION,
+                            context.getString(R.string.failed_notification, alias));
 
                     Singleton.getInstance(context).getConsoleListener().error(
-                            "Failed sending notification to PID Inbox :"
-                                    + pid + " Time : " + time + "[s]");
+                            "Failed sending notification to PID Inbox :" + pid);
                 }
 
             }

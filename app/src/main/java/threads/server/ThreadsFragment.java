@@ -713,12 +713,15 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         checkNotNull(thread);
         try {
             // CHECKED
+            Singleton singleton = Singleton.getInstance(mContext);
             if (!Network.isConnected(mContext)) {
-                Singleton singleton = Singleton.getInstance(mContext);
                 Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
                 return;
             }
-
+            if (!Network.isConnectedFast(mContext)) {
+                Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
+                return;
+            }
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
