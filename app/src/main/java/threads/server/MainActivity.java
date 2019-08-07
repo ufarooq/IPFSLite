@@ -546,20 +546,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickUserInfo(@NonNull String pid) {
         checkNotNull(pid);
         try {
-            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-            /*
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    PeerService.publishPeer(getApplicationContext(), BuildConfig.ApiAesKey);
-                } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-                }
-            });*/
-
             InfoDialogFragment.show(this, pid,
                     getString(R.string.peer_id),
                     getString(R.string.peer_access, pid));
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -1270,6 +1260,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickInfoPeer() {
 
         try {
+            JobServiceIdentity.identity(getApplicationContext());
             PID pid = Preferences.getPID(getApplicationContext());
             checkNotNull(pid);
             clickUserInfo(pid.getPid());

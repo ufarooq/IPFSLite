@@ -33,6 +33,7 @@ public class JobServicePeers extends JobService {
 
             JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                    .setMinimumLatency(5000)
                     .build();
             int resultCode = jobScheduler.schedule(jobInfo);
             if (resultCode == JobScheduler.RESULT_SUCCESS) {

@@ -1766,8 +1766,7 @@ public class Service {
                         final String hash = peerInfoHash;
 
 
-                        ExecutorService executorService = Executors.newFixedThreadPool(
-                                users.size());
+                        ExecutorService executorService = Executors.newSingleThreadExecutor();
                         List<Future> futures = new ArrayList<>();
 
                         for (User user : users) {

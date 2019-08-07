@@ -38,7 +38,6 @@ public class JobServiceIdentity extends JobService {
 
             JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                    .setMinimumLatency(3000)
                     .build();
             int resultCode = jobScheduler.schedule(jobInfo);
             if (resultCode == JobScheduler.RESULT_SUCCESS) {

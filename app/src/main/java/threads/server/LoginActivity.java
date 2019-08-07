@@ -103,7 +103,6 @@ public class LoginActivity extends AppCompatActivity {
 
                 // jobs
                 JobServicePeers.peers(getApplicationContext());
-                JobServiceIdentity.identity(getApplicationContext());
 
 
                 CleanupService.cleanup(getApplicationContext());
