@@ -1139,7 +1139,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     File file = new File(ipfs.getCacheDir(), multihash + ".png");
 
                     if (!file.exists()) {
-                        ipfs.storeToFile(file, bitmap, "", timeout, true);
+                        ipfs.store(file, bitmap, "", timeout, true, false);
                     }
 
                     Uri uri = FileProvider.getUriForFile(getApplicationContext(),

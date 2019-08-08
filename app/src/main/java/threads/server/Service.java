@@ -40,6 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import threads.core.ConnectService;
+import threads.core.GatewayService;
 import threads.core.IdentityService;
 import threads.core.MimeType;
 import threads.core.Network;
@@ -344,9 +345,8 @@ public class Service {
                                     threads.core.api.PeerInfo peerInfo =
                                             threads.loadPeerInfoByHash(
                                                     iota, pid, hash, BuildConfig.ApiAesKey);
-                                    boolean success = false;
                                     if (peerInfo != null) {
-                                        success = ConnectService.connectPeer(
+                                        ConnectService.swarmConnect(
                                                 context, peerInfo,
                                                 timeout, true, true);
 
@@ -1086,7 +1086,7 @@ public class Service {
                         }
 
                         try {
-                            boolean finished = threadsAPI.download(ipfs, file, cid, "",
+                            boolean finished = ipfs.store(file, cid, "",
                                     new IPFS.Progress() {
                                         @Override
                                         public void setProgress(int percent) {
@@ -1100,7 +1100,7 @@ public class Service {
                                         public boolean isStopped() {
                                             return !Network.isConnected(context);
                                         }
-                                    }, false, true, timeout, size);
+                                    }, false, timeout, size, true);
 
                             if (finished) {
                                 String mimeType = threadObject.getMimeType();
@@ -1748,6 +1748,9 @@ public class Service {
 
                         boolean success = false;
                         if (peerDiscovery) {
+
+                            // first load stored relays
+                            GatewayService.connectStoredRelays(context, Service.RELAYS, 3);
 
                             Map<String, String> params = new HashMap<>();
 

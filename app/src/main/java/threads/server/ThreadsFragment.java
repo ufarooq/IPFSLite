@@ -627,7 +627,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                         } else if (mimeType.startsWith("audio")) {
                             File file = new File(ipfs.getCacheDir(), cid.getCid());
                             if (!file.exists()) {
-                                ipfs.storeToFile(file, cid, "", timeout, true);
+                                ipfs.store(file, cid, "", timeout, true, false);
                             }
 
                             Uri uri = Uri.fromFile(file);
@@ -640,7 +640,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
                             File file = new File(ipfs.getCacheDir(), cid.getCid());
                             if (!file.exists()) {
-                                ipfs.storeToFile(file, cid, "", timeout, true);
+                                ipfs.store(file, cid, "", timeout, true, false);
                             }
                             PDFView.with(getActivity())
                                     .fromfilepath(file.getAbsolutePath())

@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import threads.core.GatewayService;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.ipfs.IPFS;
@@ -70,6 +71,10 @@ public class JobServiceView extends JobService {
                 final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
                 final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
                 checkNotNull(ipfs, "IPFS not valid");
+
+                // first load stored relays
+                GatewayService.connectStoredRelays(
+                        getApplicationContext(), Service.RELAYS, 3);
                 ipfs.dhtPublish(CID.create(cid), true, timeout);
 
             } catch (Throwable e) {

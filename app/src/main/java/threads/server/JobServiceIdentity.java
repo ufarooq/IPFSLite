@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import threads.core.GatewayService;
 import threads.core.IdentityService;
 import threads.core.Preferences;
 import threads.core.Singleton;
@@ -60,6 +61,9 @@ public class JobServiceIdentity extends JobService {
                     int timeout = Preferences.getConnectionTimeout(getApplicationContext());
 
                     PID host = Preferences.getPID(getApplicationContext());
+
+                    GatewayService.connectStoredRelays(
+                            getApplicationContext(), Service.RELAYS, 3);
 
                     Map<String, String> params = new HashMap<>();
                     if (host != null) {
