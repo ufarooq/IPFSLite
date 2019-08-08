@@ -546,9 +546,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickUserInfo(@NonNull String pid) {
         checkNotNull(pid);
         try {
-            InfoDialogFragment.show(this, pid,
+            InfoDialogFragment.newInstance(pid,
                     getString(R.string.peer_id),
-                    getString(R.string.peer_access, pid));
+                    getString(R.string.peer_access, pid))
+                    .show(getSupportFragmentManager(), InfoDialogFragment.TAG);
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -1004,9 +1005,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         checkNotNull(cid);
                         String multihash = cid.getCid();
 
-                        InfoDialogFragment.show(this, multihash,
+                        InfoDialogFragment.newInstance(multihash,
                                 getString(R.string.content_id),
-                                getString(R.string.multihash_access, multihash));
+                                getString(R.string.multihash_access, multihash))
+                                .show(getSupportFragmentManager(), InfoDialogFragment.TAG);
 
 
                     } catch (Throwable e) {
