@@ -612,8 +612,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     getApplicationContext());
 
                             boolean value = ConnectService.connectPeer(getApplicationContext(),
-                                    user, BuildConfig.ApiAesKey,
-                                    peerDiscovery, true, true, true);
+                                    user, BuildConfig.ApiAesKey, "",
+                                    peerDiscovery, true);
 
                             if (value) {
                                 threads.setUserStatus(user, UserStatus.ONLINE);

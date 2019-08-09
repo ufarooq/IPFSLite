@@ -339,21 +339,6 @@ public class Service {
                                 }
 
 
-                                if (data.containsKey(Content.HASH)) {
-                                    final String hash = data.get(Content.HASH);
-
-                                    threads.core.api.PeerInfo peerInfo =
-                                            threads.loadPeerInfoByHash(
-                                                    iota, pid, hash, BuildConfig.ApiAesKey);
-                                    if (peerInfo != null) {
-                                        ConnectService.swarmConnect(
-                                                context, peerInfo,
-                                                timeout, true, true);
-
-                                    }
-                                }
-
-
                                 Singleton.getInstance(context).getConsoleListener().info(
                                         "Receive Inbox Notification from PID :" + pid);
 
@@ -378,7 +363,6 @@ public class Service {
     public static boolean notify(@NonNull Context context,
                                  @NonNull String pid,
                                  @NonNull String cid,
-                                 @Nullable String hash,
                                  long startTime) {
 
         checkNotNull(context);
@@ -418,9 +402,7 @@ public class Service {
 
                 content.put(Content.PID, Encryption.encryptRSA(host.getPid(), publicKey));
                 content.put(Content.CID, Encryption.encryptRSA(cid, publicKey));
-                if (hash != null) {
-                    content.put(Content.HASH, hash);
-                }
+
 
                 String alias = threads.getUserAlias(pid);
                 String json = gson.toJson(content);
@@ -526,7 +508,7 @@ public class Service {
             final int timeout = Preferences.getConnectionTimeout(context);
             final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
             boolean value = ConnectService.connectPeer(context, user,
-                    BuildConfig.ApiAesKey, peerDiscovery, true, true, true);
+                    BuildConfig.ApiAesKey, "", peerDiscovery, true);
             if (value) {
                 threads.setUserStatus(user, UserStatus.ONLINE);
 
@@ -566,7 +548,7 @@ public class Service {
             threads.core.api.PeerInfo peerInfo = IdentityService.getPeerInfo(
                     context, user, BuildConfig.ApiAesKey, true);
             if (peerInfo != null) {
-                String name = peerInfo.getAdditional(Content.ALIAS);
+                String name = peerInfo.getAdditionalValue(Content.ALIAS);
                 if (!name.isEmpty()) {
                     threads.setUserAlias(user, name);
                 }
@@ -1060,10 +1042,10 @@ public class Service {
 
                         int timeout = Preferences.getConnectionTimeout(context);
 
-                        String name = threadObject.getAdditional(Content.FILENAME);
+                        String name = threadObject.getAdditionalValue(Content.FILENAME);
                         long size = -1;
                         try {
-                            size = Long.valueOf(threadObject.getAdditional(Content.FILESIZE));
+                            size = Long.valueOf(threadObject.getAdditionalValue(Content.FILESIZE));
                         } catch (Throwable e) {
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
                         }
@@ -1144,8 +1126,8 @@ public class Service {
         CID cid = thread.getCid();
         checkNotNull(cid);
 
-        String filename = thread.getAdditional(Content.FILENAME);
-        String filesize = thread.getAdditional(Content.FILESIZE);
+        String filename = thread.getAdditionalValue(Content.FILENAME);
+        String filesize = thread.getAdditionalValue(Content.FILESIZE);
 
         return download(context, threads, ipfs, thread, cid, filename, Long.valueOf(filesize));
     }
@@ -1215,7 +1197,7 @@ public class Service {
 
                 // check if image was imported
                 try {
-                    String img = thread.getAdditional(Content.IMG);
+                    String img = thread.getAdditionalValue(Content.IMG);
                     if (img.isEmpty() || !Boolean.valueOf(img)) {
                         ThumbnailService.Result res = ThumbnailService.getThumbnail(
                                 context, file, filename, "");
@@ -1653,8 +1635,8 @@ public class Service {
 
             if (!host.equals(sender)) {
 
-                ConnectService.connectPeer(context, sender, BuildConfig.ApiAesKey,
-                        peerDiscovery, true, true, true);
+                ConnectService.connectPeer(context, sender, BuildConfig.ApiAesKey, "",
+                        peerDiscovery, true);
 
                 Service.downloadMultihash(context, threads, ipfs, thread, sender);
 
@@ -1671,7 +1653,6 @@ public class Service {
     private void sharePeer(@NonNull Context context,
                            @NonNull User user,
                            @NonNull CID cid,
-                           @Nullable String hash,
                            long start) {
         checkNotNull(context);
         checkNotNull(user);
@@ -1683,7 +1664,7 @@ public class Service {
         try {
 
             boolean success = Service.notify(
-                    context, user.getPID().getPid(), cid.getCid(), hash, start);
+                    context, user.getPID().getPid(), cid.getCid(), start);
 
             // just backup
             if (!success && Preferences.isPubsubEnabled(context)) {
@@ -1762,12 +1743,7 @@ public class Service {
                                     timeout, Service.RELAYS, true);
                         }
 
-                        String peerInfoHash = null;
-                        if (success) {
-                            peerInfoHash = threads.getPeerInfoHash(host);
-                        }
 
-                        final String hash = peerInfoHash;
 
 
                         ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -1775,7 +1751,7 @@ public class Service {
 
                         for (User user : users) {
                             futures.add(executorService.submit(() ->
-                                    sharePeer(context, user, cid, hash, start)));
+                                    sharePeer(context, user, cid, start)));
                         }
 
 

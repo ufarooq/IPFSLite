@@ -85,7 +85,6 @@ public class JobServiceNotify extends JobService {
                 Service.getInstance(getApplicationContext());
                 final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
 
-                boolean success = false;
                 if (peerDiscovery) {
 
                     GatewayService.connectStoredRelays(getApplicationContext(), Service.RELAYS, 3);
@@ -95,19 +94,13 @@ public class JobServiceNotify extends JobService {
                         String alias = threads.getUserAlias(host);
                         params.put(Content.ALIAS, alias);
                     }
-                    success = IdentityService.publishIdentity(
+                    IdentityService.publishIdentity(
                             getApplicationContext(), BuildConfig.ApiAesKey, params, false,
                             timeout, Service.RELAYS, true);
                 }
 
-                String hash = null;
-                if (success) {
-                    if (host != null) {
-                        hash = threads.getPeerInfoHash(host);
-                    }
-                }
 
-                Service.notify(getApplicationContext(), pid, cid, hash, startTime);
+                Service.notify(getApplicationContext(), pid, cid, startTime);
 
 
             } catch (Throwable e) {

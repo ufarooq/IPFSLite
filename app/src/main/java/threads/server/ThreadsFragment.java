@@ -572,7 +572,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             if (threads.isEmpty()) {
                 threadIdx = thread.getIdx();
 
-                String threadKind = thread.getAdditional(Preferences.THREAD_KIND);
+                String threadKind = thread.getAdditionalValue(Preferences.THREAD_KIND);
                 checkNotNull(threadKind);
                 Service.ThreadKind kind = Service.ThreadKind.valueOf(threadKind);
                 if (kind == Service.ThreadKind.NODE) {
@@ -606,8 +606,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                         CID cid = thread.getCid();
                         checkNotNull(cid);
 
-                        String filename = thread.getAdditional(Content.FILENAME);
-                        String filesize = thread.getAdditional(Content.FILESIZE);
+                        String filename = thread.getAdditionalValue(Content.FILENAME);
+                        String filesize = thread.getAdditionalValue(Content.FILESIZE);
                         String mimeType = thread.getMimeType();
 
 
@@ -648,7 +648,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                                     .start();
 
                         } else if (mimeType.equals(MimeType.LINK_MIME_TYPE)) {
-                            byte[] data = ipfs.get(cid, "", timeout, true);
+                            byte[] data = ipfs.get(cid, "", timeout, true, false);
+                            checkNotNull(data);
                             Uri uri = Uri.parse(new String(data));
 
                             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
@@ -658,15 +659,17 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
                         } else if (mimeType.startsWith("text")) {
 
-                            byte[] data = ipfs.get(cid, "", timeout, true);
-                            if (data.length > 0) {
-                                String content = Base64.encodeToString(data, Base64.NO_PADDING);
-                                WebViewDialogFragment.newInstance(mimeType, content, "base64").
-                                        show(getChildFragmentManager(), WebViewDialogFragment.TAG);
-                            }
+                            byte[] data = ipfs.get(cid, "", timeout, true, false);
+                            checkNotNull(data);
+
+                            String content = Base64.encodeToString(data, Base64.NO_PADDING);
+                            WebViewDialogFragment.newInstance(mimeType, content, "base64").
+                                    show(getChildFragmentManager(), WebViewDialogFragment.TAG);
+
                         } else if (mimeType.equals(MimeType.OCTET_MIME_TYPE)) {
                             // TODO improve this (should show text)
-                            byte[] data = ipfs.get(cid, "", timeout, true);
+                            byte[] data = ipfs.get(cid, "", timeout, true, false);
+                            checkNotNull(data);
                             int length = data.length;
                             if (length > 0 && length < 64000) { // TODO 64kb (better check if content is text)
                                 String content = new String(data);
@@ -754,7 +757,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @NonNull
     @Override
     public String getTitle(@NonNull Thread thread) {
-        return getCompactString(thread.getAdditional(Content.FILENAME));
+        return getCompactString(thread.getAdditionalValue(Content.FILENAME));
     }
 
     @Override

@@ -16,12 +16,12 @@ public class Contents extends ArrayList<ContentEntry> {
     public void add(@NonNull Thread thread) {
         CID cid = thread.getCid();
         checkNotNull(cid);
-        String filename = thread.getAdditional(Content.FILENAME);
-        String filesize = thread.getAdditional(Content.FILESIZE);
+        String filename = thread.getAdditionalValue(Content.FILENAME);
+        String filesize = thread.getAdditionalValue(Content.FILESIZE);
         String mimeType = thread.getMimeType();
 
         String image = null;
-        String img = thread.getAdditional(Content.IMG);
+        String img = thread.getAdditionalValue(Content.IMG);
 
         if (Boolean.valueOf(img)) { // This means a real thumbnail image is created
             CID imageCID = thread.getImage();

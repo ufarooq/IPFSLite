@@ -8,13 +8,14 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import threads.core.ConnectService;
-import threads.core.GatewayService;
 import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
@@ -78,10 +79,10 @@ class ContentsService {
                             contentDao().getContents(user, timestamp, false);
 
                     if (!contents.isEmpty()) {
-
+                        String swarmProtect = RandomStringUtils.randomAlphabetic(10);
                         boolean success = ConnectService.connectPeer(
-                                context, user, BuildConfig.ApiAesKey,
-                                peerDiscovery, true, true, true);
+                                context, user, BuildConfig.ApiAesKey, swarmProtect,
+                                peerDiscovery, true);
 
                         if (success) {
                             for (threads.server.Content entry : contents) {
@@ -200,12 +201,8 @@ class ContentsService {
                 }
 
                 CID cid = CID.create(image);
-                byte[] content = ipfs.get(cid, "", timeout, false);
+                ipfs.get(cid, "", timeout, false, true);
 
-                if (content.length > 0) {
-                    ipfs.pin_add(cid, timeout, true);
-                    return cid;
-                }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
@@ -222,9 +219,9 @@ class ContentsService {
         if (ipfs != null) {
             try {
 
-                byte[] content = ipfs.get(cid, "", timeout, false);
+                byte[] content = ipfs.get(cid, "", timeout, false, true);
 
-                if (content.length > 0) {
+                if (content != null) {
 
                     String contentAsString = new String(content);
 
@@ -258,29 +255,21 @@ class ContentsService {
 
                     final IPFS ipfs = Singleton.getInstance(context).getIpfs();
                     checkNotNull(ipfs, "IPFS not valid");
+                    String swarmProtect = RandomStringUtils.randomAlphabetic(10);
+                    success = ipfs.isConnected(pid);
+                    if (!success) {
 
-                    if (!ipfs.isConnected(pid)) {
-                        success = ipfs.swarmConnect(pid, timeout);
+                        boolean peerDiscovery = Service.isSupportPeerDiscovery(
+                                context);
+                        success = ConnectService.connectPeer(context, pid,
+                                BuildConfig.ApiAesKey, swarmProtect, timeout,
+                                peerDiscovery, true);
 
                         if (!success) {
-
-                            boolean peerDiscovery = Service.isSupportPeerDiscovery(
-                                    context);
-                            success = ConnectService.connectPeer(context, pid,
-                                    BuildConfig.ApiAesKey,
-                                    peerDiscovery, true, true, true);
-
-                            if (!success) {
-                                Singleton.getInstance(context).getConsoleListener().info(
-                                        "Can't connect to PID :" + pid);
-                            }
-
-                        } else {
-                            ipfs.protectPeer(pid, GatewayService.TAG);
+                            Singleton.getInstance(context).getConsoleListener().info(
+                                    "Can't connect to PID :" + pid);
                         }
-                    } else {
-                        success = true;
-                        ipfs.protectPeer(pid, GatewayService.TAG);
+
                     }
 
 
