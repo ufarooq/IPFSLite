@@ -60,7 +60,7 @@ class ContentsService {
         final THREADS threads = Singleton.getInstance(context).getThreads();
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         final PID host = Preferences.getPID(context);
-        final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
+
         try {
             checkNotNull(ipfs, "IPFS not valid");
             for (PID user : threads.getUsersPIDs()) {
@@ -89,7 +89,6 @@ class ContentsService {
                         SwarmService.disconnect(context, info);
                     }
                 }
-
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -129,52 +128,68 @@ class ContentsService {
 
     }
 
-    private static void createSkeleton(@NonNull Context context,
-                                       @NonNull PID sender,
-                                       @NonNull CID cid,
-                                       @Nullable String filename,
-                                       @Nullable String filesize,
-                                       @Nullable String mimeType,
-                                       @Nullable String image) {
+    private static void createSkeleton(
+            @NonNull Context context,
+            @NonNull PID sender,
+            @NonNull CID cid,
+            @Nullable String filename,
+            @Nullable String filesize,
+            @Nullable String mimeType,
+            @Nullable String image) {
 
         checkNotNull(context);
         checkNotNull(sender);
         checkNotNull(cid);
 
+
         final THREADS threads = Singleton.getInstance(context).getThreads();
+        try {
 
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        if (ipfs != null) {
-
-            try {
-
-                User user = threads.getUserByPID(sender);
-                if (user == null) {
-                    Preferences.error(threads, context.getString(R.string.unknown_peer_sends_data));
-                    return;
-                }
-
-
-                List<Thread> entries = threads.getThreadsByCIDAndThread(cid, 0L);
-
-                if (entries.isEmpty()) {
-
-                    CID thumbnail = null;
-
-                    if (image != null) {
-                        thumbnail = downloadImage(context, image);
-                    }
-
-                    Service.createThread(context, ipfs, user, cid,
-                            ThreadStatus.ERROR, filename, filesize, mimeType, thumbnail);
-
-                }
-
-            } catch (Throwable e) {
-                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+            User user = threads.getUserByPID(sender);
+            if (user == null) {
+                Preferences.error(threads, context.getString(R.string.unknown_peer_sends_data));
+                return;
             }
 
+            CID thumbnail = null;
+
+            if (image != null) {
+                thumbnail = downloadImage(context, image);
+            }
+
+            createThread(context, threads, user, cid, filename, filesize, mimeType, thumbnail);
+
+
+        } catch (Throwable e) {
+            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
         }
+
+
+    }
+
+    private static synchronized void createThread(
+            @NonNull Context context,
+            @NonNull THREADS threads,
+            @NonNull User user,
+            @NonNull CID cid,
+            @Nullable String filename,
+            @Nullable String filesize,
+            @Nullable String mimeType,
+            @Nullable CID thumbnail) {
+
+
+        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        checkNotNull(ipfs, "IPFS not valid");
+        List<Thread> entries = threads.getThreadsByCIDAndThread(cid, 0L);
+
+        if (entries.isEmpty()) {
+
+
+            Service.createThread(context, ipfs, user, cid,
+                    ThreadStatus.ERROR, filename, filesize, mimeType, thumbnail);
+
+        }
+
     }
 
     @Nullable

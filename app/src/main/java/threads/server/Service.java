@@ -810,6 +810,7 @@ public class Service {
         final THREADS threads = Singleton.getInstance(context).getThreads();
 
         try {
+            threads.resetThreadsPublish();
             threads.setUserStatus(UserStatus.DIALING, UserStatus.OFFLINE);
             threads.setThreadStatus(ThreadStatus.PUBLISHING, ThreadStatus.ONLINE); // TODO remove in the next future
             threads.setThreadStatus(ThreadStatus.LEACHING, ThreadStatus.ERROR);

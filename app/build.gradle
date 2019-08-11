@@ -102,16 +102,16 @@ dependencies {
     implementation 'threads.core:webrtc:0.1.2'
 
     // API (LICENSE done)
-    implementation 'threads.core:api:0.6.3'
+    implementation 'threads.core:api:0.6.4'
 
     // API (LICENSE done)
     implementation 'threads.core:iota:0.0.6'
 
     // API (LICENSE done)
-    implementation 'threads.core:ipfs:0.2.2'
+    implementation 'threads.core:ipfs:0.2.3'
 
     // API (LICENSE done)
-    implementation 'threads.mobile:ipfs:0.2.5'
+    implementation 'threads.mobile:ipfs:0.2.6'
 
     // API (LICENSE done)
     implementation 'com.google.code.gson:gson:2.8.5'
