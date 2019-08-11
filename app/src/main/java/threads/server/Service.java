@@ -508,7 +508,7 @@ public class Service {
             final int timeout = Preferences.getConnectionTimeout(context);
             final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
             boolean value = ConnectService.connectPeer(context, user,
-                    BuildConfig.ApiAesKey, "", peerDiscovery, true);
+                    BuildConfig.ApiAesKey, timeout, peerDiscovery, true);
             if (value) {
                 threads.setUserStatus(user, UserStatus.ONLINE);
 
@@ -588,7 +588,7 @@ public class Service {
 
                 Preferences.setConnMgrConfigType(context, ConnMgrConfig.TypeEnum.basic);
                 Preferences.setLowWater(context, 50);
-                Preferences.setHighWater(context, 250);
+                Preferences.setHighWater(context, 200);
                 Preferences.setGracePeriod(context, "10s");
 
 
@@ -811,7 +811,7 @@ public class Service {
 
         try {
             threads.setUserStatus(UserStatus.DIALING, UserStatus.OFFLINE);
-            threads.setThreadStatus(ThreadStatus.PUBLISHING, ThreadStatus.ONLINE);
+            threads.setThreadStatus(ThreadStatus.PUBLISHING, ThreadStatus.ONLINE); // TODO remove in the next future
             threads.setThreadStatus(ThreadStatus.LEACHING, ThreadStatus.ERROR);
             threads.setThreadStatus(ThreadStatus.OFFLINE, ThreadStatus.ERROR);
         } catch (Throwable e) {
@@ -1623,8 +1623,9 @@ public class Service {
 
         checkNotNull(context);
         checkNotNull(thread);
-        final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
+
         final THREADS threads = Singleton.getInstance(context).getThreads();
+
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         if (ipfs != null) {
             threads.setStatus(thread, ThreadStatus.LEACHING);
@@ -1635,10 +1636,11 @@ public class Service {
 
             if (!host.equals(sender)) {
 
-                ConnectService.connectPeer(context, sender, BuildConfig.ApiAesKey, "",
-                        peerDiscovery, true);
+                SwarmService.ConnectInfo info = SwarmService.connect(context, sender);
 
                 Service.downloadMultihash(context, threads, ipfs, thread, sender);
+
+                SwarmService.disconnect(context, info);
 
             } else {
 
@@ -1709,7 +1711,7 @@ public class Service {
                     } else {
                         checkNotNull(host);
 
-                        threads.setThreadsStatus(ThreadStatus.PUBLISHING, idxs);
+                        threads.setThreadsPublish(true, idxs);
 
 
                         long start = System.currentTimeMillis();
@@ -1744,8 +1746,6 @@ public class Service {
                         }
 
 
-
-
                         ExecutorService executorService = Executors.newSingleThreadExecutor();
                         List<Future> futures = new ArrayList<>();
 
@@ -1759,7 +1759,7 @@ public class Service {
                             future.get();
                         }
 
-                        threads.setThreadsStatus(ThreadStatus.ONLINE, idxs);
+                        threads.setThreadsPublish(false, idxs);
                     }
 
                 } catch (Throwable e) {

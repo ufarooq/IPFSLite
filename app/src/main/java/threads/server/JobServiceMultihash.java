@@ -89,8 +89,7 @@ public class JobServiceMultihash extends JobService {
                     Thread entry = entries.get(0);
 
                     if (entry.getStatus() == ThreadStatus.DELETING ||
-                            entry.getStatus() == ThreadStatus.ONLINE ||
-                            entry.getStatus() == ThreadStatus.PUBLISHING) {
+                            entry.getStatus() == ThreadStatus.ONLINE) {
                         Service.replySender(context, ipfs, pid, entry);
                         return;
                     } else {

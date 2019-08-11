@@ -51,7 +51,6 @@ import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.AddressType;
-import threads.core.api.ThreadStatus;
 import threads.core.api.User;
 import threads.core.api.UserStatus;
 import threads.core.mdl.EventViewModel;
@@ -610,9 +609,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             boolean peerDiscovery = Service.isSupportPeerDiscovery(
                                     getApplicationContext());
-
+                            int timeout = Preferences.getConnectionTimeout(getApplicationContext());
                             boolean value = ConnectService.connectPeer(getApplicationContext(),
-                                    user, BuildConfig.ApiAesKey, "",
+                                    user, BuildConfig.ApiAesKey, timeout,
                                     peerDiscovery, true);
 
                             if (value) {
@@ -963,7 +962,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() -> {
 
-                    threads.setThreadStatus(idx, ThreadStatus.PUBLISHING);
+                    threads.setThreadPublish(idx, true);
 
                     try {
                         CID cid = threads.getThreadCID(idx);
@@ -983,7 +982,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     } catch (Throwable e) {
                         Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                     } finally {
-                        threads.setThreadStatus(idx, ThreadStatus.ONLINE);
+                        threads.setThreadPublish(idx, false);
                     }
                 });
             }

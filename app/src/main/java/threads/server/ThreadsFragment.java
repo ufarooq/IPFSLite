@@ -519,6 +519,9 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public boolean generalActionSupport(@NonNull Thread thread) {
         checkNotNull(thread);
+        if (thread.isPublish()) {
+            return false;
+        }
         return thread.getStatus() == ThreadStatus.ONLINE;
     }
 
@@ -601,7 +604,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                     Thread thread = threads.getThreadByIdx(idx);
                     checkNotNull(thread);
                     ThreadStatus status = thread.getStatus();
-                    if (status == ThreadStatus.ONLINE || status == ThreadStatus.PUBLISHING) {
+                    if (status == ThreadStatus.ONLINE) {
 
                         CID cid = thread.getCid();
                         checkNotNull(cid);

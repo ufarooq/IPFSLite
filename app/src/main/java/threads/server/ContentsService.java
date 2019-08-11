@@ -8,14 +8,12 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 
-import org.apache.commons.lang3.RandomStringUtils;
-
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import threads.core.ConnectService;
 import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
@@ -79,16 +77,16 @@ class ContentsService {
                             contentDao().getContents(user, timestamp, false);
 
                     if (!contents.isEmpty()) {
-                        String swarmProtect = RandomStringUtils.randomAlphabetic(10);
-                        boolean success = ConnectService.connectPeer(
-                                context, user, BuildConfig.ApiAesKey, swarmProtect,
-                                peerDiscovery, true);
 
-                        if (success) {
+                        SwarmService.ConnectInfo info = SwarmService.connect(context, user);
+
+                        if (info.isConnected()) {
                             for (threads.server.Content entry : contents) {
                                 ContentsService.download(context, entry.getPid(), entry.getCID());
                             }
                         }
+
+                        SwarmService.disconnect(context, info);
                     }
                 }
 
@@ -123,14 +121,9 @@ class ContentsService {
         }
 
         if (Service.isAutoDownload(context)) {
-            if (files.size() < 50) {
-                for (ContentEntry file : files) {
-                    JobServiceMultihash.download(context, pid, CID.create(file.getCid()));
-                }
-            } else {
-                for (ContentEntry file : files) {
-                    JobServiceMultihash.downloadMultihash(context, pid, CID.create(file.getCid()));
-                }
+            Collections.reverse(files);
+            for (ContentEntry file : files) {
+                JobServiceMultihash.downloadMultihash(context, pid, CID.create(file.getCid()));
             }
         }
 
@@ -201,7 +194,10 @@ class ContentsService {
                 }
 
                 CID cid = CID.create(image);
-                ipfs.get(cid, "", timeout, false, true);
+                byte[] data = ipfs.get(cid, "", timeout, false, true);
+                if (data != null) {
+                    return cid;
+                }
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -251,26 +247,12 @@ class ContentsService {
             if (threads.existsUser(pid)) {
 
                 if (!threads.isUserBlocked(pid)) {
-                    final int timeout = Preferences.getConnectionTimeout(context);
 
                     final IPFS ipfs = Singleton.getInstance(context).getIpfs();
                     checkNotNull(ipfs, "IPFS not valid");
-                    String swarmProtect = RandomStringUtils.randomAlphabetic(10);
-                    success = ipfs.isConnected(pid);
-                    if (!success) {
 
-                        boolean peerDiscovery = Service.isSupportPeerDiscovery(
-                                context);
-                        success = ConnectService.connectPeer(context, pid,
-                                BuildConfig.ApiAesKey, swarmProtect, timeout,
-                                peerDiscovery, true);
-
-                        if (!success) {
-                            Singleton.getInstance(context).getConsoleListener().info(
-                                    "Can't connect to PID :" + pid);
-                        }
-
-                    }
+                    SwarmService.ConnectInfo info = SwarmService.connect(context, pid);
+                    success = info.isConnected();
 
 
                     if (success) {
@@ -283,6 +265,8 @@ class ContentsService {
                             downloadContents(context, pid, contents);
                         }
                     }
+
+                    SwarmService.disconnect(context, info);
 
                 }
             }
