@@ -611,8 +611,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     getApplicationContext());
                             int timeout = Preferences.getConnectionTimeout(getApplicationContext());
                             boolean value = ConnectService.connectPeer(getApplicationContext(),
-                                    user, BuildConfig.ApiAesKey, timeout,
-                                    peerDiscovery, true);
+                                    user, BuildConfig.ApiAesKey,
+                                    peerDiscovery, true, timeout);
 
                             if (value) {
                                 threads.setUserStatus(user, UserStatus.ONLINE);

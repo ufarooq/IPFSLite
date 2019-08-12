@@ -507,7 +507,7 @@ public class Service {
             final int timeout = Preferences.getConnectionTimeout(context);
             final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
             boolean value = ConnectService.connectPeer(context, user,
-                    BuildConfig.ApiAesKey, timeout, peerDiscovery, true);
+                    BuildConfig.ApiAesKey, peerDiscovery, true, timeout);
             if (value) {
                 threads.setUserStatus(user, UserStatus.ONLINE);
 
