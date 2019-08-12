@@ -71,7 +71,6 @@ public class JobServiceNotify extends JobService {
             return false;
         }
 
-        final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
         final PID host = Preferences.getPID(getApplication());
         final boolean peerDiscovery = Service.isSupportPeerDiscovery(getApplicationContext());
         final long startTime = System.currentTimeMillis();
@@ -93,9 +92,8 @@ public class JobServiceNotify extends JobService {
                         params.put(Content.ALIAS, alias);
                     }
 
-                    IdentityService.publishIdentity(
-                            getApplicationContext(), BuildConfig.ApiAesKey, params, false,
-                            timeout, Service.RELAYS);
+                    IdentityService.publishIdentity(getApplicationContext(), BuildConfig.ApiAesKey,
+                            params, false, Service.RELAYS);
                 }
 
 

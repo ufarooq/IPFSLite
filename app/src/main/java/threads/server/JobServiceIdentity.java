@@ -57,7 +57,6 @@ public class JobServiceIdentity extends JobService {
                         threads.server.Service.isSupportPeerDiscovery(getApplicationContext());
                 if (peerDiscovery) {
                     THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-                    int timeout = Preferences.getConnectionTimeout(getApplicationContext());
 
                     PID host = Preferences.getPID(getApplicationContext());
 
@@ -69,7 +68,7 @@ public class JobServiceIdentity extends JobService {
                     }
 
                     IdentityService.publishIdentity(getApplicationContext(), BuildConfig.ApiAesKey,
-                            params, false, timeout, Service.RELAYS);
+                            params, false, Service.RELAYS);
                 }
 
             } catch (Throwable e) {

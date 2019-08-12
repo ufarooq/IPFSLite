@@ -1695,7 +1695,6 @@ public class Service {
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         final ContentService contentService = ContentService.getInstance(context);
         final PID host = Preferences.getPID(context);
-        final int timeout = Preferences.getConnectionTimeout(context);
         final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
 
         if (ipfs != null) {
@@ -1739,7 +1738,7 @@ public class Service {
 
                             IdentityService.publishIdentity(
                                     context, BuildConfig.ApiAesKey, params, false,
-                                    timeout, Service.RELAYS);
+                                    Service.RELAYS);
                         }
 
 
