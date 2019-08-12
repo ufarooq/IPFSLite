@@ -40,7 +40,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import threads.core.ConnectService;
-import threads.core.GatewayService;
 import threads.core.IdentityService;
 import threads.core.MimeType;
 import threads.core.Network;
@@ -1730,20 +1729,17 @@ public class Service {
                         checkNotNull(host);
                         contentService.insertContent(host, cid, true);
 
-                        boolean success = false;
-                        if (peerDiscovery) {
 
-                            // first load stored relays
-                            GatewayService.connectStoredRelays(context, Service.RELAYS, 3);
+                        if (peerDiscovery) {
 
                             Map<String, String> params = new HashMap<>();
 
                             String alias = threads.getUserAlias(host);
                             params.put(Content.ALIAS, alias);
 
-                            success = IdentityService.publishIdentity(
+                            IdentityService.publishIdentity(
                                     context, BuildConfig.ApiAesKey, params, false,
-                                    timeout, Service.RELAYS, true);
+                                    timeout, Service.RELAYS);
                         }
 
 

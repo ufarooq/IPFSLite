@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.GatewayService;
 import threads.core.IdentityService;
 import threads.core.Preferences;
 import threads.core.Singleton;
@@ -62,17 +61,15 @@ public class JobServiceIdentity extends JobService {
 
                     PID host = Preferences.getPID(getApplicationContext());
 
-                    GatewayService.connectStoredRelays(
-                            getApplicationContext(), Service.RELAYS, 3);
 
                     Map<String, String> params = new HashMap<>();
                     if (host != null) {
                         String alias = threads.getUserAlias(host);
                         params.put(Content.ALIAS, alias);
                     }
+
                     IdentityService.publishIdentity(getApplicationContext(), BuildConfig.ApiAesKey,
-                            params, false, timeout, Service.RELAYS,
-                            true);
+                            params, false, timeout, Service.RELAYS);
                 }
 
             } catch (Throwable e) {
