@@ -41,7 +41,7 @@ public class SwarmService {
 
                     if (peerInfo != null) {
                         info.setPeerInfo(peerInfo);
-                        if (ConnectService.swarmConnect(context, peerInfo, tag, timeout)) {
+                        if (ConnectService.swarmConnect(context, peerInfo, tag)) {
                             info.setConnected(true);
 
                             ipfs.protectPeer(pid, tag);
