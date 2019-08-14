@@ -21,7 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -245,7 +245,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         super.onViewCreated(view, savedInstanceState);
 
 
-        threadViewModel = ViewModelProviders.of(this).get(ThreadViewModel.class);
+        threadViewModel = new ViewModelProvider(this).get(ThreadViewModel.class);
 
         mRecyclerView = view.findViewById(R.id.recycler_view_message_list);
         mRecyclerView.setItemAnimator(null); // no animation of the item when something changed

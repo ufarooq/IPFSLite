@@ -16,7 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -193,7 +193,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         mRecyclerView.setAdapter(usersViewAdapter);
 
         final PID host = Preferences.getPID(mContext);
-        UsersViewModel messagesViewModel = ViewModelProviders.of(this).get(UsersViewModel.class);
+        UsersViewModel messagesViewModel = new ViewModelProvider(this).get(UsersViewModel.class);
         messagesViewModel.getUsers().observe(this, (users) -> {
 
             try {

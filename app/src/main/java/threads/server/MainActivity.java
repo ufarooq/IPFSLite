@@ -25,7 +25,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -714,7 +714,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         daemonStatus();
 
 
-        EventViewModel eventViewModel = ViewModelProviders.of(this).get(EventViewModel.class);
+        EventViewModel eventViewModel = new ViewModelProvider(this).get(EventViewModel.class);
 
 
         eventViewModel.getIPFSInstallFailure().observe(this, (event) -> {

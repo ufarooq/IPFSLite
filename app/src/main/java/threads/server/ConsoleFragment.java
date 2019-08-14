@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -68,7 +68,7 @@ public class ConsoleFragment extends Fragment {
         mRecyclerView.setAdapter(messageViewAdapter);
 
 
-        MessagesViewModel messagesViewModel = ViewModelProviders.of(this).get(MessagesViewModel.class);
+        MessagesViewModel messagesViewModel = new ViewModelProvider(this).get(MessagesViewModel.class);
         messagesViewModel.getMessages().observe(this, (messages) -> {
 
             if (messages != null) {
