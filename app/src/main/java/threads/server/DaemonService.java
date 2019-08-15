@@ -174,8 +174,9 @@ public class DaemonService extends Service {
                 threads.server.Service.getInstance(getApplicationContext());
 
                 while (DAEMON_RUNNING.get()) {
-                    java.lang.Thread.sleep(TimeUnit.MINUTES.toMillis(5));
                     JobServiceFindPeers.findPeers(getApplicationContext());
+                    java.lang.Thread.sleep(TimeUnit.MINUTES.toMillis(5));
+
                 }
 
             } catch (InterruptedException e) {
