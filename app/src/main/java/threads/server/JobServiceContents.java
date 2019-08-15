@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import threads.core.Network;
 import threads.core.api.Content;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
@@ -67,8 +68,15 @@ public class JobServiceContents extends JobService {
         checkNotNull(pid);
         final String cid = bundle.getString(Content.CID);
         checkNotNull(cid);
+
+        if (!Network.isConnectedFast(getApplicationContext())) {
+            return false;
+        }
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
+            long start = System.currentTimeMillis();
+
             try {
                 Service.getInstance(getApplicationContext());
 
@@ -94,6 +102,7 @@ public class JobServiceContents extends JobService {
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {
+                Log.e(TAG, " finish onStart [" + (System.currentTimeMillis() - start) + "]...");
                 jobFinished(jobParameters, false);
             }
 

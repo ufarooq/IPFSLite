@@ -292,11 +292,7 @@ public class Service {
                     if (data != null) {
 
 
-                        Service.getInstance(context); // now time to load instance
-
                         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-                        final THREADS threads = Singleton.getInstance(context).getThreads();
-                        final IOTA iota = Singleton.getInstance(context).getIota();
                         checkNotNull(ipfs, "IPFS not valid");
                         if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
                             try {
@@ -471,6 +467,43 @@ public class Service {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
+    }
+
+    public static void createUnknownUser(@NonNull Context context, @NonNull PID pid) throws Exception {
+        checkNotNull(context);
+        checkNotNull(pid);
+
+        IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        THREADS threads = Singleton.getInstance(context).getThreads();
+        checkNotNull(ipfs, "IPFS not defined");
+
+
+        if (threads.getUserByPID(pid) == null) {
+            threads.ipfs.api.PeerInfo info = ipfs.id(pid, 3);
+            if (info != null) {
+                String pubKey = info.getPublicKey();
+                if (pubKey != null && !pubKey.isEmpty()) {
+
+                    threads.core.api.PeerInfo peerInfo = IdentityService.getPeerInfo(
+                            context, pid,
+                            BuildConfig.ApiAesKey, false);
+                    if (peerInfo != null) {
+                        String alias = peerInfo.getAdditionalValue(Content.ALIAS);
+                        if (!alias.isEmpty()) {
+                            CID image = ThumbnailService.getImage(
+                                    context,
+                                    alias, "",
+                                    R.drawable.server_network);
+
+                            User user = threads.createUser(pid, pubKey, alias,
+                                    UserType.UNKNOWN, image);
+                            user.setBlocked(true);
+                            threads.storeUser(user);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public static void connectPeer(@NonNull Context context, @NonNull PID user) throws Exception {

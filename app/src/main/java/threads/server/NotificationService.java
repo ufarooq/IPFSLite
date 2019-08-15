@@ -21,9 +21,9 @@ class NotificationService {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
+                if (Network.isConnectedFast(context)) {
+                    Service.getInstance(context);
 
-                Service.getInstance(context);
-                if (Network.isConnected(context)) {
                     Log.e(TAG, "Run notifications service");
                     Service.notifications(context);
                 }

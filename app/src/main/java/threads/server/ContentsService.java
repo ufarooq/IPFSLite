@@ -246,9 +246,7 @@ class ContentsService {
         return null;
     }
 
-    public static boolean download(@NonNull Context context,
-                                   @NonNull PID pid,
-                                   @NonNull CID cid) {
+    public static boolean download(@NonNull Context context, @NonNull PID pid, @NonNull CID cid) {
         checkNotNull(context);
         checkNotNull(pid);
         checkNotNull(cid);
@@ -284,6 +282,10 @@ class ContentsService {
                     SwarmService.disconnect(context, info);
 
                 }
+            } else {
+                // create a new unknown user
+                Service.createUnknownUser(context, pid);
+
             }
 
         } catch (Throwable e) {

@@ -16,6 +16,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.IdentityService;
+import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -50,30 +51,41 @@ public class JobServiceIdentity extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
+        boolean peerDiscovery =
+                Service.isSupportPeerDiscovery(getApplicationContext());
+        if (!peerDiscovery) {
+            return false;
+        }
+        if (!Network.isConnectedFast(getApplicationContext())) {
+            return false;
+        }
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
+            long start = System.currentTimeMillis();
+
             try {
-                final boolean peerDiscovery =
-                        threads.server.Service.isSupportPeerDiscovery(getApplicationContext());
-                if (peerDiscovery) {
-                    THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
 
-                    PID host = Preferences.getPID(getApplicationContext());
+                Singleton.getInstance(getApplicationContext());
+
+                THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+
+                PID host = Preferences.getPID(getApplicationContext());
 
 
-                    Map<String, String> params = new HashMap<>();
-                    if (host != null) {
-                        String alias = threads.getUserAlias(host);
-                        params.put(Content.ALIAS, alias);
-                    }
-
-                    IdentityService.publishIdentity(getApplicationContext(), BuildConfig.ApiAesKey,
-                            params, false, Service.RELAYS);
+                Map<String, String> params = new HashMap<>();
+                if (host != null) {
+                    String alias = threads.getUserAlias(host);
+                    params.put(Content.ALIAS, alias);
                 }
+
+                IdentityService.publishIdentity(getApplicationContext(), BuildConfig.ApiAesKey,
+                        params, false, Service.RELAYS);
+
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {
+                Log.e(TAG, " finish onStart [" + (System.currentTimeMillis() - start) + "]...");
                 jobFinished(jobParameters, false);
             }
 

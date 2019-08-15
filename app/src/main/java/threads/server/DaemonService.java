@@ -167,7 +167,7 @@ public class DaemonService extends Service {
 
         });
 
-
+        /*
         ExecutorService work = Executors.newSingleThreadExecutor();
         workService = work.submit(() -> {
             try {
@@ -177,9 +177,11 @@ public class DaemonService extends Service {
                     final boolean peerDiscovery =
                             threads.server.Service.isSupportPeerDiscovery(getApplicationContext());
                     if (peerDiscovery) {
+                        GatewayService.evaluateAllPeers(getApplicationContext());
+                        GatewayService.connectStoredPeers(getApplicationContext(), 3);
                         JobServiceFindPeers.findPeers(getApplicationContext());
                     }
-                    java.lang.Thread.sleep(TimeUnit.MINUTES.toMillis(5));
+                    java.lang.Thread.sleep(TimeUnit.MINUTES.toMillis(1));
 
                 }
 
@@ -189,7 +191,7 @@ public class DaemonService extends Service {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
 
-        });
+        });*/
 
         ExecutorService clean = Executors.newSingleThreadExecutor();
         slowService = clean.submit(() -> {

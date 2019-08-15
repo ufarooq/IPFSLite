@@ -618,6 +618,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         } catch (Throwable e) {
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
                             threads.setUserConnected(user, false);
+                        } finally {
                             threads.setUserDialing(user, false);
                         }
                     }

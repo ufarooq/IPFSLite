@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.IdentityService;
+import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -70,15 +71,17 @@ public class JobServiceNotify extends JobService {
         if (!Service.isSendNotificationsEnabled(getApplicationContext())) {
             return false;
         }
-
-        final PID host = Preferences.getPID(getApplication());
-        final boolean peerDiscovery = Service.isSupportPeerDiscovery(getApplicationContext());
-        final long startTime = System.currentTimeMillis();
+        if (!Network.isConnectedFast(getApplicationContext())) {
+            return false;
+        }
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
+            long start = System.currentTimeMillis();
 
             try {
+                final PID host = Preferences.getPID(getApplication());
+                final boolean peerDiscovery = Service.isSupportPeerDiscovery(getApplicationContext());
 
                 Service.getInstance(getApplicationContext());
                 final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
@@ -97,12 +100,13 @@ public class JobServiceNotify extends JobService {
                 }
 
 
-                Service.notify(getApplicationContext(), pid, cid, startTime);
+                Service.notify(getApplicationContext(), pid, cid, start);
 
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {
+                Log.e(TAG, " finish onStart [" + (System.currentTimeMillis() - start) + "]...");
                 jobFinished(jobParameters, false);
             }
 

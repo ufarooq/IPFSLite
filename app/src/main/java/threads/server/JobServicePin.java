@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.GatewayService;
+import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.api.Content;
@@ -81,19 +82,23 @@ public class JobServicePin extends JobService {
     public boolean onStartJob(JobParameters jobParameters) {
 
         PersistableBundle bundle = jobParameters.getExtras();
-
         final String cid = bundle.getString(Content.CID);
         checkNotNull(cid);
 
-        String gateway = Service.getGateway(getApplicationContext());
+        if (!Network.isConnectedFast(getApplicationContext())) {
+            return false;
+        }
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
-
-
             long start = System.currentTimeMillis();
             try {
+
                 Service.getInstance(getApplicationContext());
+
+                String gateway = Service.getGateway(getApplicationContext());
+
+
                 final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
                 final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
 
@@ -117,6 +122,7 @@ public class JobServicePin extends JobService {
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {
+                Log.e(TAG, " finish onStart [" + (System.currentTimeMillis() - start) + "]...");
                 jobFinished(jobParameters, false);
             }
 

@@ -14,19 +14,11 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.IdentityService;
 import threads.core.Network;
 import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.Content;
-import threads.core.api.PeerInfo;
-import threads.core.api.User;
-import threads.core.api.UserType;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.Peer;
-import threads.share.ThumbnailService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -46,6 +38,7 @@ public class JobServiceFindPeers extends JobService {
 
             JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                    .setMinimumLatency(15000)
                     .build();
             int resultCode = jobScheduler.schedule(jobInfo);
             if (resultCode == JobScheduler.RESULT_SUCCESS) {
@@ -60,18 +53,25 @@ public class JobServiceFindPeers extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
-        final int timeout = 3;
+        boolean peerDiscovery =
+                Service.isSupportPeerDiscovery(getApplicationContext());
+        if (!peerDiscovery) {
+            return false;
+        }
+
+        if (!Network.isConnectedFast(getApplicationContext())) {
+            return false;
+        }
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
+            long start = System.currentTimeMillis();
 
             try {
 
-                if (Network.isConnectedFast(getApplicationContext())) {
+
                     Service.getInstance(getApplicationContext());
 
-
                     IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-                    THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
                     checkNotNull(ipfs, "IPFS not defined");
 
 
@@ -79,38 +79,13 @@ public class JobServiceFindPeers extends JobService {
 
                     for (Peer peer : peers) {
                         PID pid = peer.getPid();
-
-                        if (threads.getUserByPID(pid) == null) {
-                            threads.ipfs.api.PeerInfo info = ipfs.id(pid, timeout);
-                            if (info != null) {
-                                String pubKey = info.getPublicKey();
-                                if (pubKey != null && !pubKey.isEmpty()) {
-
-                                    PeerInfo peerInfo = IdentityService.getPeerInfo(
-                                            getApplicationContext(), pid,
-                                            BuildConfig.ApiAesKey, false);
-                                    if (peerInfo != null) {
-                                        String alias = peerInfo.getAdditionalValue(Content.ALIAS);
-                                        if (!alias.isEmpty()) {
-                                            CID image = ThumbnailService.getImage(
-                                                    getApplicationContext(),
-                                                    alias, "",
-                                                    R.drawable.server_network);
-
-                                            User user = threads.createUser(pid, pubKey, alias,
-                                                    UserType.UNKNOWN, image);
-                                            user.setBlocked(true);
-                                            threads.storeUser(user);
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        Service.createUnknownUser(getApplicationContext(), pid);
                     }
-                }
+
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {
+                Log.e(TAG, " finish onStart [" + (System.currentTimeMillis() - start) + "]...");
                 jobFinished(jobParameters, false);
             }
 

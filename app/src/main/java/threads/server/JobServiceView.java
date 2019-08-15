@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.GatewayService;
+import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.ipfs.IPFS;
@@ -60,11 +61,13 @@ public class JobServiceView extends JobService {
         final String cid = bundle.getString(threads.core.api.Content.CID);
         checkNotNull(cid);
 
+        if (!Network.isConnectedFast(getApplicationContext())) {
+            return false;
+        }
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
-
-
+            long start = System.currentTimeMillis();
             try {
                 Service.getInstance(getApplicationContext());
 
@@ -80,6 +83,7 @@ public class JobServiceView extends JobService {
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {
+                Log.e(TAG, " finish onStart [" + (System.currentTimeMillis() - start) + "]...");
                 jobFinished(jobParameters, false);
             }
 
