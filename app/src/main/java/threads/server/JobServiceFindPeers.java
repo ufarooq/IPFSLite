@@ -81,18 +81,21 @@ public class JobServiceFindPeers extends JobService {
                         PID pid = peer.getPid();
 
                         if (threads.getUserByPID(pid) == null) {
+                            threads.ipfs.api.PeerInfo info = ipfs.id(pid, timeout);
+                            if (info != null) {
+                                String pubKey = info.getPublicKey();
+                                if (pubKey != null && !pubKey.isEmpty()) {
 
-                            PeerInfo peerInfo = IdentityService.getPeerInfo(
-                                    getApplicationContext(), pid, "", false);
-                            if (peerInfo != null) {
-                                String alias = peerInfo.getAdditionalValue(Content.ALIAS);
-                                if (!alias.isEmpty()) {
-                                    threads.ipfs.api.PeerInfo info = ipfs.id(pid, timeout);
-                                    if (info != null) {
-                                        String pubKey = info.getPublicKey();
-                                        if (pubKey != null && !pubKey.isEmpty()) {
-                                            CID image = ThumbnailService.getImage(getApplicationContext(),
-                                                    alias, BuildConfig.ApiAesKey, R.drawable.server_network);
+                                    PeerInfo peerInfo = IdentityService.getPeerInfo(
+                                            getApplicationContext(), pid,
+                                            BuildConfig.ApiAesKey, false);
+                                    if (peerInfo != null) {
+                                        String alias = peerInfo.getAdditionalValue(Content.ALIAS);
+                                        if (!alias.isEmpty()) {
+                                            CID image = ThumbnailService.getImage(
+                                                    getApplicationContext(),
+                                                    alias, "",
+                                                    R.drawable.server_network);
 
                                             User user = threads.createUser(pid, pubKey, alias,
                                                     UserType.UNKNOWN, image);
@@ -101,7 +104,6 @@ public class JobServiceFindPeers extends JobService {
                                         }
                                     }
                                 }
-
                             }
                         }
                     }
