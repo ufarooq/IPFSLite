@@ -174,7 +174,11 @@ public class DaemonService extends Service {
                 threads.server.Service.getInstance(getApplicationContext());
 
                 while (DAEMON_RUNNING.get()) {
-                    JobServiceFindPeers.findPeers(getApplicationContext());
+                    final boolean peerDiscovery =
+                            threads.server.Service.isSupportPeerDiscovery(getApplicationContext());
+                    if (peerDiscovery) {
+                        JobServiceFindPeers.findPeers(getApplicationContext());
+                    }
                     java.lang.Thread.sleep(TimeUnit.MINUTES.toMillis(5));
 
                 }

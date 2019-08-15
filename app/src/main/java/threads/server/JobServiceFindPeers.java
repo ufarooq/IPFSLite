@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.IdentityService;
+import threads.core.Network;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.Content;
@@ -45,7 +46,6 @@ public class JobServiceFindPeers extends JobService {
 
             JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                    .setMinimumLatency(5000)
                     .build();
             int resultCode = jobScheduler.schedule(jobInfo);
             if (resultCode == JobScheduler.RESULT_SUCCESS) {
@@ -65,45 +65,47 @@ public class JobServiceFindPeers extends JobService {
         executor.submit(() -> {
 
             try {
-                Service.getInstance(getApplicationContext());
+
+                if (Network.isConnectedFast(getApplicationContext())) {
+                    Service.getInstance(getApplicationContext());
 
 
-                IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-                THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-                checkNotNull(ipfs, "IPFS not defined");
+                    IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+                    THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+                    checkNotNull(ipfs, "IPFS not defined");
 
 
-                List<Peer> peers = ipfs.swarmPeers();
+                    List<Peer> peers = ipfs.swarmPeers();
 
-                for (Peer peer : peers) {
-                    PID pid = peer.getPid();
+                    for (Peer peer : peers) {
+                        PID pid = peer.getPid();
 
-                    if (threads.getUserByPID(pid) == null) {
+                        if (threads.getUserByPID(pid) == null) {
 
-                        PeerInfo peerInfo = IdentityService.getPeerInfo(
-                                getApplicationContext(), pid, "", false);
-                        if (peerInfo != null) {
-                            String alias = peerInfo.getAdditionalValue(Content.ALIAS);
-                            if (!alias.isEmpty()) {
-                                threads.ipfs.api.PeerInfo info = ipfs.id(pid, timeout);
-                                if (info != null) {
-                                    String pubKey = info.getPublicKey();
-                                    if (pubKey != null && !pubKey.isEmpty()) {
-                                        CID image = ThumbnailService.getImage(getApplicationContext(),
-                                                alias, BuildConfig.ApiAesKey, R.drawable.server_network);
+                            PeerInfo peerInfo = IdentityService.getPeerInfo(
+                                    getApplicationContext(), pid, "", false);
+                            if (peerInfo != null) {
+                                String alias = peerInfo.getAdditionalValue(Content.ALIAS);
+                                if (!alias.isEmpty()) {
+                                    threads.ipfs.api.PeerInfo info = ipfs.id(pid, timeout);
+                                    if (info != null) {
+                                        String pubKey = info.getPublicKey();
+                                        if (pubKey != null && !pubKey.isEmpty()) {
+                                            CID image = ThumbnailService.getImage(getApplicationContext(),
+                                                    alias, BuildConfig.ApiAesKey, R.drawable.server_network);
 
-                                        User user = threads.createUser(pid, pubKey, alias,
-                                                UserType.UNKNOWN, image);
-                                        user.setBlocked(true);
-                                        threads.storeUser(user);
+                                            User user = threads.createUser(pid, pubKey, alias,
+                                                    UserType.UNKNOWN, image);
+                                            user.setBlocked(true);
+                                            threads.storeUser(user);
+                                        }
                                     }
                                 }
-                            }
 
+                            }
                         }
                     }
                 }
-
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {
