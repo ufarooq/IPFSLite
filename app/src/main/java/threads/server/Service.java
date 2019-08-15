@@ -547,9 +547,9 @@ public class Service {
             threads.core.api.PeerInfo peerInfo = IdentityService.getPeerInfo(
                     context, user, BuildConfig.ApiAesKey, true);
             if (peerInfo != null) {
-                String name = peerInfo.getAdditionalValue(Content.ALIAS);
-                if (!name.isEmpty()) {
-                    threads.setUserAlias(user, name);
+                String alias = peerInfo.getAdditionalValue(Content.ALIAS);
+                if (!alias.isEmpty()) {
+                    threads.setUserAlias(user, alias);
                 }
             }
 

@@ -167,7 +167,7 @@ public class DaemonService extends Service {
 
         });
 
-        /*
+
         ExecutorService work = Executors.newSingleThreadExecutor();
         workService = work.submit(() -> {
             try {
@@ -175,8 +175,7 @@ public class DaemonService extends Service {
 
                 while (DAEMON_RUNNING.get()) {
                     java.lang.Thread.sleep(TimeUnit.MINUTES.toMillis(5));
-                    PeerService.publishPeer(getApplicationContext(), BuildConfig.ApiAesKey);
-
+                    JobServiceFindPeers.findPeers(getApplicationContext());
                 }
 
             } catch (InterruptedException e) {
@@ -185,7 +184,7 @@ public class DaemonService extends Service {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
 
-        });*/
+        });
 
         ExecutorService clean = Executors.newSingleThreadExecutor();
         slowService = clean.submit(() -> {
