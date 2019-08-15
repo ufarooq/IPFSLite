@@ -52,7 +52,6 @@ import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.AddressType;
 import threads.core.api.User;
-import threads.core.api.UserStatus;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
@@ -614,13 +613,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     user, BuildConfig.ApiAesKey,
                                     peerDiscovery, true, timeout);
 
-                            if (value) {
-                                threads.setUserStatus(user, UserStatus.ONLINE);
-                            } else {
-                                threads.setUserStatus(user, UserStatus.OFFLINE);
-                            }
+                            threads.setUserConnected(user, value);
+
                         } catch (Throwable e) {
-                            threads.setUserStatus(user, UserStatus.OFFLINE);
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                            threads.setUserConnected(user, false);
                             threads.setUserDialing(user, false);
                         }
                     }

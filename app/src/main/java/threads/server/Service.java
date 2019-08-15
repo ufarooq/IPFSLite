@@ -53,7 +53,6 @@ import threads.core.api.Server;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.api.User;
-import threads.core.api.UserStatus;
 import threads.core.api.UserType;
 import threads.iota.Entity;
 import threads.iota.EntityService;
@@ -492,7 +491,6 @@ public class Service {
 
             User newUser = threads.createUser(user, "",
                     alias, UserType.VERIFIED, image);
-            newUser.setStatus(UserStatus.OFFLINE);
             threads.storeUser(newUser);
 
         } else {
@@ -508,8 +506,9 @@ public class Service {
             final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
             boolean value = ConnectService.connectPeer(context, user,
                     BuildConfig.ApiAesKey, peerDiscovery, true, timeout);
+            threads.setUserConnected(user, value);
+
             if (value) {
-                threads.setUserStatus(user, UserStatus.ONLINE);
 
 
                 if (Preferences.isPubsubEnabled(context)) {
@@ -540,8 +539,6 @@ public class Service {
                     }
                 }
 
-            } else {
-                threads.setUserStatus(user, UserStatus.OFFLINE);
             }
 
             threads.core.api.PeerInfo peerInfo = IdentityService.getPeerInfo(
@@ -555,7 +552,8 @@ public class Service {
 
 
         } catch (Throwable e) {
-            threads.setUserStatus(user, UserStatus.OFFLINE);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            threads.setUserConnected(user, false);
         } finally {
             threads.setUserDialing(user, false);
         }
@@ -813,7 +811,8 @@ public class Service {
         try {
             threads.resetThreadsPublish();
             threads.resetUsersDialing();
-            threads.setUserStatus(UserStatus.DIALING, UserStatus.OFFLINE); // TODO remove in the next release
+            threads.resetPeersConnected();
+            threads.resetUsersConnected();
             threads.setThreadStatus(ThreadStatus.PUBLISHING, ThreadStatus.ONLINE); // TODO remove in the next release
             threads.setThreadStatus(ThreadStatus.LEACHING, ThreadStatus.ERROR);
             threads.setThreadStatus(ThreadStatus.OFFLINE, ThreadStatus.ERROR);
@@ -844,14 +843,12 @@ public class Service {
                     user = threads.createUser(pid, publicKey, getDeviceName(),
                             UserType.VERIFIED, image);
                     user.setBlocked(true);
-                    user.setStatus(UserStatus.ONLINE);
                     threads.storeUser(user);
 
 
                     JobServiceIdentity.identity(context);
 
                 } else {
-                    threads.setUserStatus(pid, UserStatus.ONLINE);
                     threads.blockUser(pid);
                 }
             } catch (Throwable e) {
@@ -1578,20 +1575,12 @@ public class Service {
 
                         try {
                             boolean value = ipfs.isConnected(user);
-
-                            if (value) {
-                                threads.setUserStatus(user, UserStatus.ONLINE);
-
-                            } else {
-                                threads.setUserStatus(user, UserStatus.OFFLINE);
-
-                            }
+                            threads.setUserConnected(user, value);
 
                         } catch (Throwable e) {
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                            threads.setUserStatus(user, UserStatus.OFFLINE);
+                            threads.setUserConnected(user, false);
                         }
-
                     }
                 }
             }
