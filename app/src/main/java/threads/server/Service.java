@@ -502,7 +502,7 @@ public class Service {
 
 
         try {
-            threads.setUserStatus(user, UserStatus.DIALING);
+            threads.setUserDialing(user, true);
 
             final int timeout = Preferences.getConnectionTimeout(context);
             final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
@@ -556,6 +556,8 @@ public class Service {
 
         } catch (Throwable e) {
             threads.setUserStatus(user, UserStatus.OFFLINE);
+        } finally {
+            threads.setUserDialing(user, false);
         }
     }
 
@@ -810,8 +812,9 @@ public class Service {
 
         try {
             threads.resetThreadsPublish();
-            threads.setUserStatus(UserStatus.DIALING, UserStatus.OFFLINE);
-            threads.setThreadStatus(ThreadStatus.PUBLISHING, ThreadStatus.ONLINE); // TODO remove in the next future
+            threads.resetUsersDialing();
+            threads.setUserStatus(UserStatus.DIALING, UserStatus.OFFLINE); // TODO remove in the next release
+            threads.setThreadStatus(ThreadStatus.PUBLISHING, ThreadStatus.ONLINE); // TODO remove in the next release
             threads.setThreadStatus(ThreadStatus.LEACHING, ThreadStatus.ERROR);
             threads.setThreadStatus(ThreadStatus.OFFLINE, ThreadStatus.ERROR);
         } catch (Throwable e) {
@@ -1566,32 +1569,25 @@ public class Service {
 
                 users.remove(host);
 
-
                 for (PID user : users) {
-                    if (!threads.isUserBlocked(user)) {
-                        UserStatus currentStatus = threads.getUserStatus(user);
-                        if (currentStatus != UserStatus.DIALING) {
-                            try {
-                                boolean value = ipfs.isConnected(user);
+                    if (!threads.isUserBlocked(user) && !threads.getUserDialing(user)) {
 
-                                currentStatus = threads.getUserStatus(user);
-                                if (currentStatus != UserStatus.DIALING) {
-                                    if (value) {
-                                        if (currentStatus != UserStatus.ONLINE) {
-                                            threads.setUserStatus(user, UserStatus.ONLINE);
-                                        }
-                                    } else {
-                                        if (currentStatus != UserStatus.OFFLINE) {
-                                            threads.setUserStatus(user, UserStatus.OFFLINE);
-                                        }
-                                    }
-                                }
-                            } catch (Throwable e) {
-                                if (threads.getUserStatus(user) != UserStatus.DIALING) {
-                                    threads.setUserStatus(user, UserStatus.OFFLINE);
-                                }
+                        try {
+                            boolean value = ipfs.isConnected(user);
+
+                            if (value) {
+                                threads.setUserStatus(user, UserStatus.ONLINE);
+
+                            } else {
+                                threads.setUserStatus(user, UserStatus.OFFLINE);
+
                             }
+
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                            threads.setUserStatus(user, UserStatus.OFFLINE);
                         }
+
                     }
                 }
             }

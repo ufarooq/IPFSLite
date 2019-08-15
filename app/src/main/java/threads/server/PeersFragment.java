@@ -32,7 +32,6 @@ import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.User;
-import threads.core.api.UserStatus;
 import threads.core.mdl.UsersViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
@@ -246,7 +245,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
     @Override
     public boolean generalActionSupport(@NonNull User user) {
-        return user.getStatus() != UserStatus.DIALING;
+        return !user.isDialing();
     }
 
     public interface ActionListener {

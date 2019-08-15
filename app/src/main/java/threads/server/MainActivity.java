@@ -605,7 +605,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     } else {
 
                         try {
-                            threads.setUserStatus(user, UserStatus.DIALING);
+                            threads.setUserDialing(user, true);
 
                             boolean peerDiscovery = Service.isSupportPeerDiscovery(
                                     getApplicationContext());
@@ -621,6 +621,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             }
                         } catch (Throwable e) {
                             threads.setUserStatus(user, UserStatus.OFFLINE);
+                            threads.setUserDialing(user, false);
                         }
                     }
                 } catch (Throwable e) {
