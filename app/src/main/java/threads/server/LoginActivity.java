@@ -16,8 +16,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.Preferences;
-
 public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = LoginActivity.class.getSimpleName();
@@ -110,10 +108,6 @@ public class LoginActivity extends AppCompatActivity {
                 CleanupService.cleanup(getApplicationContext());
                 ContentsService.contents(getApplicationContext());
 
-                if (!Preferences.getLoginFlag(getApplicationContext())) {
-                    JobServiceIdentity.identity(getApplicationContext());
-                    Preferences.setLoginFlag(getApplicationContext(), true);
-                }
 
                 if (threads.server.Service.isReceiveNotificationsEnabled(
                         getApplicationContext())) {

@@ -846,6 +846,10 @@ public class Service {
                     user.setBlocked(true);
                     user.setStatus(UserStatus.ONLINE);
                     threads.storeUser(user);
+
+
+                    JobServiceIdentity.identity(context);
+
                 } else {
                     threads.setUserStatus(pid, UserStatus.ONLINE);
                     threads.blockUser(pid);
