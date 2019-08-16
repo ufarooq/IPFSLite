@@ -11,6 +11,10 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -22,22 +26,21 @@ import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.Thread;
-import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class JobServicePin extends JobService {
+public class JobServicePinLoader extends JobService {
 
-    private static final String TAG = JobServicePin.class.getSimpleName();
+    private static final String TAG = JobServicePinLoader.class.getSimpleName();
     private static final String IDX = "IDX";
 
-    public static void pin(@NonNull Context context, long idx) {
+    public static void pinLoader(@NonNull Context context, long idx) {
         checkNotNull(context);
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
-            ComponentName componentName = new ComponentName(context, JobServicePin.class);
+            ComponentName componentName = new ComponentName(context, JobServicePinLoader.class);
 
             PersistableBundle bundle = new PersistableBundle();
             bundle.putLong(IDX, idx);
@@ -55,7 +58,24 @@ public class JobServicePin extends JobService {
         }
     }
 
-
+    private static boolean pinContent(@NonNull URL url, int timeout) throws IOException {
+        checkNotNull(url);
+        try {
+            URLConnection con = url.openConnection();
+            con.setConnectTimeout(15000);
+            con.setReadTimeout(timeout * 1000);
+            try (InputStream stream = con.getInputStream()) {
+                while (stream.read() != -1) {
+                }
+                return true;
+            } catch (Exception e) {
+                Log.e(TAG, "" + e.getLocalizedMessage());
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage());
+        }
+        return false;
+    }
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
@@ -75,13 +95,8 @@ public class JobServicePin extends JobService {
 
                 Service.getInstance(getApplicationContext());
 
+                String gateway = Service.getGateway(getApplicationContext());
 
-                final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-
-                checkNotNull(ipfs, "IPFS not valid");
-
-                // first load stored relays
-                GatewayService.connectStoredRelays(getApplicationContext(), 20, 3);
 
                 THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
 
@@ -89,17 +104,28 @@ public class JobServicePin extends JobService {
                 Thread thread = threads.getThreadByIdx(idx);
                 checkNotNull(thread);
 
-
                 CID cid = thread.getCid();
                 if (cid != null) {
                     contents.add(cid);
                 }
 
+
                 for (CID content : contents) {
-                    Executors.newSingleThreadExecutor().submit(
-                            () -> ipfs.dhtPublish(content, true, timeout));
+                    long pageTime = System.currentTimeMillis();
+                    URL url = new URL(gateway + "/ipfs/" + content);
+
+
+                    boolean success = pinContent(url, timeout);
+                    long time = (System.currentTimeMillis() - pageTime) / 1000;
+
+                    if (success) {
+                        Log.e(TAG, "Success pin : " + url.toString() + " " + time + " [s]");
+                    } else {
+                        Log.e(TAG, "Failed pin : " + url.toString() + " " + time + " [s]");
+                    }
                 }
 
+                GatewayService.evaluatePeers(getApplicationContext(), false);
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

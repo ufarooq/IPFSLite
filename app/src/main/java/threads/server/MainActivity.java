@@ -1100,7 +1100,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     checkNotNull(cid);
                     String multihash = cid.getCid();
 
-                    JobServiceView.view(getApplicationContext(), multihash);
+                    JobServicePin.pin(getApplicationContext(), idx);
 
                     String gateway = Service.getGateway(getApplicationContext());
                     Uri uri = Uri.parse(gateway + "/ipfs/" + multihash);

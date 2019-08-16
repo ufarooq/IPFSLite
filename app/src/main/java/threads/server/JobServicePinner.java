@@ -6,11 +6,12 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
-import android.os.PersistableBundle;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -18,30 +19,29 @@ import threads.core.GatewayService;
 import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
+import threads.core.THREADS;
+import threads.core.api.Thread;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class JobServiceView extends JobService {
+public class JobServicePinner extends JobService {
 
-    private static final String TAG = JobServiceView.class.getSimpleName();
+    private static final String TAG = JobServicePinner.class.getSimpleName();
 
-
-    public static void view(@NonNull Context context, @NonNull String cid) {
+    public static void pinning(@NonNull Context context) {
         checkNotNull(context);
-        checkNotNull(cid);
+
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
-            ComponentName componentName = new ComponentName(context, JobServiceView.class);
+            ComponentName componentName = new ComponentName(context, JobServicePinner.class);
 
-            PersistableBundle bundle = new PersistableBundle();
-            bundle.putString(threads.core.api.Content.CID, cid);
 
-            JobInfo jobInfo = new JobInfo.Builder(cid.hashCode(), componentName)
+            JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                    .setExtras(bundle)
+                    //.setPeriodic(TimeUnit.HOURS.toMillis(6))
                     .build();
             int resultCode = jobScheduler.schedule(jobInfo);
             if (resultCode == JobScheduler.RESULT_SUCCESS) {
@@ -52,33 +52,63 @@ public class JobServiceView extends JobService {
         }
     }
 
-
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
-        PersistableBundle bundle = jobParameters.getExtras();
-
-        final String cid = bundle.getString(threads.core.api.Content.CID);
-        checkNotNull(cid);
 
         if (!Network.isConnectedFast(getApplicationContext())) {
             return false;
         }
 
+        if (!DaemonService.DAEMON_RUNNING.get()) {
+            return false;
+        }
+        int timeout = Preferences.getConnectionTimeout(getApplicationContext());
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             long start = System.currentTimeMillis();
             try {
+
                 Service.getInstance(getApplicationContext());
 
-                final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-                final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
+
+                IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+
                 checkNotNull(ipfs, "IPFS not valid");
 
                 // first load stored relays
-                GatewayService.connectStoredRelays(
-                        getApplicationContext(), Service.RELAYS, 3);
-                ipfs.dhtPublish(CID.create(cid), true, timeout);
+                GatewayService.connectStoredRelays(getApplicationContext(), 20, 3);
+
+
+                if (!DaemonService.DAEMON_RUNNING.get()) {
+                    return;
+                }
+
+                THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+
+                List<CID> contents = new ArrayList<>();
+                List<Thread> list = threads.getPinnedThreads();
+
+                for (Thread thread : list) {
+                    CID cid = thread.getCid();
+                    if (cid != null) {
+                        contents.add(cid);
+                    }
+                }
+
+                if (!DaemonService.DAEMON_RUNNING.get()) {
+                    return;
+                }
+
+                for (CID content : contents) {
+                    Executors.newSingleThreadExecutor().submit(
+                            () -> ipfs.dhtPublish(content, true, timeout));
+                }
+
+
+                for (Thread thread : list) {
+                    JobServicePinLoader.pinLoader(getApplicationContext(), thread.getIdx());
+                }
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

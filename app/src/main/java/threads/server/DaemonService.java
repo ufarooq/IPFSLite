@@ -221,7 +221,7 @@ public class DaemonService extends Service {
 
                 while (DAEMON_RUNNING.get() && time > 0) {
                     java.lang.Thread.sleep(TimeUnit.HOURS.toMillis(time));
-                    PinService.pin(getApplicationContext());
+                    JobServicePinner.pinning(getApplicationContext());
                 }
 
             } catch (InterruptedException e) {
