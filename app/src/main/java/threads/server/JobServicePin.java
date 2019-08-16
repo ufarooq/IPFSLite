@@ -132,13 +132,6 @@ public class JobServicePin extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters jobParameters) {
-
-        PersistableBundle bundle = jobParameters.getExtras();
-
-        final String cid = bundle.getString(Content.CID);
-        checkNotNull(cid);
-
-        Log.e(TAG, "onStopJob " + cid);
         return false;
     }
 }
