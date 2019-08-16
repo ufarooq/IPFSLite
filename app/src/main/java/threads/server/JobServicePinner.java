@@ -60,9 +60,7 @@ public class JobServicePinner extends JobService {
             return false;
         }
 
-        if (!DaemonService.DAEMON_RUNNING.get()) {
-            return false;
-        }
+
         int timeout = Preferences.getConnectionTimeout(getApplicationContext());
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -80,10 +78,6 @@ public class JobServicePinner extends JobService {
                 GatewayService.connectStoredRelays(getApplicationContext(), 20, 3);
 
 
-                if (!DaemonService.DAEMON_RUNNING.get()) {
-                    return;
-                }
-
                 THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
 
                 List<CID> contents = new ArrayList<>();
@@ -96,9 +90,6 @@ public class JobServicePinner extends JobService {
                     }
                 }
 
-                if (!DaemonService.DAEMON_RUNNING.get()) {
-                    return;
-                }
 
                 for (CID content : contents) {
                     Executors.newSingleThreadExecutor().submit(
