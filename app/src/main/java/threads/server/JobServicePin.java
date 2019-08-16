@@ -11,8 +11,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
@@ -61,19 +59,21 @@ public class JobServicePin extends JobService {
         }
     }
 
-    private static boolean pinContent(@NonNull URL url) throws IOException {
+    private static boolean pinContent(@NonNull URL url) {
         checkNotNull(url);
-        URLConnection con = url.openConnection();
-        con.setConnectTimeout(15000);
-        con.setReadTimeout(TIMEOUT);
-        try (InputStream stream = con.getInputStream()) {
-            while (stream.read() != -1) {
+        try {
+            URLConnection con = url.openConnection();
+            con.setConnectTimeout(15000);
+            con.setReadTimeout(TIMEOUT);
+            try (InputStream stream = con.getInputStream()) {
+                while (stream.read() != -1) {
+                }
+                return true;
+            } catch (Exception e) {
+                Log.e(TAG, "" + e.getLocalizedMessage());
             }
-            return true;
-        } catch (FileNotFoundException e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        } catch (IOException e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage());
         }
         return false;
     }
