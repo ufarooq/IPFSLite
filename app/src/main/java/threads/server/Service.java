@@ -49,7 +49,6 @@ import threads.core.THREADS;
 import threads.core.api.AddressType;
 import threads.core.api.Content;
 import threads.core.api.Kind;
-import threads.core.api.Server;
 import threads.core.api.Thread;
 import threads.core.api.ThreadStatus;
 import threads.core.api.User;
@@ -268,15 +267,12 @@ public class Service {
 
         final PID host = Preferences.getPID(context);
         if (host != null) {
-            final int timeout = Preferences.getTangleTimeout(context);
-            final Server server = Preferences.getTangleServer(context);
 
             final EntityService entityService = EntityService.getInstance(context);
             final ContentService contentService = ContentService.getInstance(context);
             try {
                 String address = AddressType.getAddress(host, AddressType.NOTIFICATION);
-                List<Entity> entities = entityService.loadEntities(address,
-                        server.getProtocol(), server.getHost(), server.getPort(), timeout);
+                List<Entity> entities = entityService.loadEntities(context, address);
 
                 Log.e(TAG, "Received " + entities.size() + " incoming messages");
 
