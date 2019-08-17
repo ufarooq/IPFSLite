@@ -598,7 +598,7 @@ public class Service {
 
 
                 Preferences.setConnectionTimeout(context, 45);
-                Preferences.setTangleTimeout(context, 30);
+                EntityService.setTangleTimeout(context, 30);
 
                 Preferences.setMdnsEnabled(context, true);
 
