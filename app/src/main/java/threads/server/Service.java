@@ -21,7 +21,6 @@ import com.google.gson.Gson;
 import com.j256.simplemagic.ContentInfo;
 
 import org.apache.commons.lang3.StringUtils;
-import org.iota.jota.pow.pearldiver.PearlDiverLocalPoW;
 
 import java.io.File;
 import java.io.InputStream;
@@ -56,7 +55,6 @@ import threads.core.api.UserType;
 import threads.iota.Entity;
 import threads.iota.EntityService;
 import threads.iota.HashDatabase;
-import threads.iota.IOTA;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.ConnMgrConfig;
@@ -237,27 +235,6 @@ public class Service {
     }
 
 
-    private static void checkTangleServer(@NonNull Context context) {
-        checkNotNull(context);
-        try {
-            if (Network.isConnected(context)) {
-                IOTA iota = Singleton.getInstance(context).getIota();
-                checkNotNull(iota);
-
-                try {
-                    if (!IOTA.remotePoW(iota.getNodeInfo())) {
-                        iota.setLocalPoW(new PearlDiverLocalPoW());
-                    }
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
-
 
     private static long getDaysAgo(int days) {
         return System.currentTimeMillis() - TimeUnit.DAYS.toMillis(days);
@@ -364,7 +341,7 @@ public class Service {
         final THREADS threads = Singleton.getInstance(context).getThreads();
         final PID host = Preferences.getPID(context);
         checkNotNull(host);
-        final IOTA iota = Singleton.getInstance(context).getIota();
+        final EntityService entityService = Singleton.getInstance(context).getEntityService();
         try {
             String address = AddressType.getAddress(
                     PID.create(pid), AddressType.NOTIFICATION);
@@ -398,7 +375,7 @@ public class Service {
                 String json = gson.toJson(content);
 
                 try {
-                    iota.insertTransaction(address, json);
+                    entityService.insertData(context, address, json);
                     long time = (System.currentTimeMillis() - startTime) / 1000;
 
                     threads.invokeEvent(Preferences.INFO,
@@ -1899,8 +1876,6 @@ public class Service {
                     Preferences.evaluateException(threads, Preferences.IPFS_START_FAILURE, e);
                 }
 
-
-                new java.lang.Thread(() -> checkTangleServer(context)).start();
 
                 if (Preferences.isDebugMode(context)) {
                     ExecutorService executor = Executors.newSingleThreadExecutor();
