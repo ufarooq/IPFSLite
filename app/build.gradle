@@ -16,7 +16,7 @@ ext {
     siteUrl = 'https://gitlab.com/remmer.wilts/threads-server'
     gitUrl = 'git@gitlab.com:remmer.wilts/threads-server.git'
 
-    libraryVersion = '1.0.1'
+    libraryVersion = '1.0.2'
 
     developerId = 'remmerw'
     developerName = 'Remmer Wilts'
@@ -34,8 +34,8 @@ android {
         applicationId "threads.server"
         minSdkVersion 24
         targetSdkVersion 29
-        versionCode 101
-        versionName "1.0.1"
+        versionCode 102
+        versionName "1.0.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
     }
@@ -96,22 +96,22 @@ dependencies {
     //implementation 'threads.pow:pow:1.0.9'
 
     // UI+API (LICENSE done)
-    implementation 'threads.core:share:0.9.1'
+    implementation 'threads.core:share:0.9.2'
 
     // UI+API (LICENSE done)
     implementation 'threads.core:webrtc:0.1.5'
 
     // API (LICENSE done)
-    implementation 'threads.core:api:0.9.4'
+    implementation 'threads.core:api:0.9.5'
 
     // API (LICENSE done)
     implementation 'threads.core:iota:0.0.9'
 
     // API (LICENSE done)
-    implementation 'threads.core:ipfs:0.2.7'
+    implementation 'threads.core:ipfs:0.2.8'
 
     // API (LICENSE done)
-    implementation 'threads.mobile:ipfs:0.3.0'
+    implementation 'threads.mobile:ipfs:0.3.2'
 
     // API (LICENSE done)
     implementation 'com.google.code.gson:gson:2.8.5'

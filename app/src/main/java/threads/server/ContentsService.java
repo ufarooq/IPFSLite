@@ -18,8 +18,8 @@ import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
+import threads.core.api.Status;
 import threads.core.api.Thread;
-import threads.core.api.ThreadStatus;
 import threads.core.api.User;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
@@ -184,9 +184,8 @@ class ContentsService {
 
         if (entries.isEmpty()) {
 
-
             Service.createThread(context, ipfs, user, cid,
-                    ThreadStatus.ERROR, filename, filesize, mimeType, thumbnail);
+                    Status.ERROR, filename, filesize, mimeType, thumbnail);
 
         }
 

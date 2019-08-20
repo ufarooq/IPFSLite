@@ -48,8 +48,8 @@ import threads.core.THREADS;
 import threads.core.api.AddressType;
 import threads.core.api.Content;
 import threads.core.api.Kind;
+import threads.core.api.Status;
 import threads.core.api.Thread;
-import threads.core.api.ThreadStatus;
 import threads.core.api.User;
 import threads.core.api.UserType;
 import threads.iota.Entity;
@@ -575,7 +575,6 @@ public class Service {
 
                 // Experimental Features
                 Preferences.setQUICEnabled(context, true);
-                Preferences.setFilestoreEnabled(context, false);
                 Preferences.setPreferTLS(context, false);
 
 
@@ -819,9 +818,8 @@ public class Service {
             threads.resetUsersDialing();
             threads.resetPeersConnected();
             threads.resetUsersConnected();
-            threads.setThreadStatus(ThreadStatus.PUBLISHING, ThreadStatus.ONLINE); // TODO remove in the next release
-            threads.setThreadStatus(ThreadStatus.LEACHING, ThreadStatus.ERROR);
-            threads.setThreadStatus(ThreadStatus.OFFLINE, ThreadStatus.ERROR);
+            threads.setThreadStatus(Status.LEACHING, Status.ERROR);
+            threads.setThreadStatus(Status.OFFLINE, Status.ERROR);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -871,7 +869,7 @@ public class Service {
 
         try {
             checkNotNull(ipfs, "IPFS is not valid");
-            threads.setThreadsStatus(ThreadStatus.DELETING, idxs);
+            threads.setThreadsStatus(Status.DELETING, idxs);
 
             threads.removeThreads(ipfs, idxs);
 
@@ -918,7 +916,7 @@ public class Service {
         User user = threads.getUserByPID(creator);
         checkNotNull(user);
 
-        Thread thread = threads.createThread(user, ThreadStatus.OFFLINE, Kind.OUT,
+        Thread thread = threads.createThread(user, Status.OFFLINE, Kind.OUT,
                 "", cid, parent);
 
         if (link.isDirectory()) {
@@ -968,7 +966,7 @@ public class Service {
                                     @NonNull IPFS ipfs,
                                     @NonNull User creator,
                                     @NonNull CID cid,
-                                    @NonNull ThreadStatus threadStatus,
+                                    @NonNull Status threadStatus,
                                     @Nullable String filename,
                                     @Nullable String filesize,
                                     @Nullable String mimeType,
@@ -1172,7 +1170,7 @@ public class Service {
 
         boolean success;
         try {
-            threads.setStatus(thread, ThreadStatus.LEACHING);
+            threads.setStatus(thread, Status.LEACHING);
             int timeout = Preferences.getConnectionTimeout(context);
             File file = ipfs.get(cid, "",
                     new IPFS.Progress() {
@@ -1276,7 +1274,7 @@ public class Service {
             CID cid = link.getCid();
             Thread entry = getDirectoryThread(threads, thread, cid);
             if (entry != null) {
-                if (entry.getStatus() != ThreadStatus.ONLINE) {
+                if (entry.getStatus() != Status.ONLINE) {
 
                     boolean success = downloadLink(context, threads, ipfs, entry, link);
                     if (success) {
@@ -1296,9 +1294,9 @@ public class Service {
 
                 if (success) {
                     successCounter.incrementAndGet();
-                    threads.setStatus(entry, ThreadStatus.ONLINE);
+                    threads.setStatus(entry, Status.ONLINE);
                 } else {
-                    threads.setStatus(entry, ThreadStatus.ERROR);
+                    threads.setStatus(entry, Status.ERROR);
                 }
             }
 
@@ -1338,7 +1336,7 @@ public class Service {
         checkNotNull(thread);
 
 
-        threads.setStatus(thread, ThreadStatus.LEACHING);
+        threads.setStatus(thread, Status.LEACHING);
 
         CID cid = thread.getCid();
         checkNotNull(cid);
@@ -1350,12 +1348,12 @@ public class Service {
 
                 boolean result = downloadThread(context, threads, ipfs, thread);
                 if (result) {
-                    threads.setStatus(thread, ThreadStatus.ONLINE);
+                    threads.setStatus(thread, Status.ONLINE);
                     if (sender != null) {
                         replySender(context, ipfs, sender, thread);
                     }
                 } else {
-                    threads.setStatus(thread, ThreadStatus.ERROR);
+                    threads.setStatus(thread, Status.ERROR);
                 }
 
             } else {
@@ -1380,16 +1378,16 @@ public class Service {
 
                 boolean result = downloadLinks(context, threads, ipfs, thread, links);
                 if (result) {
-                    threads.setStatus(thread, ThreadStatus.ONLINE);
+                    threads.setStatus(thread, Status.ONLINE);
                     if (sender != null) {
                         replySender(context, ipfs, sender, thread);
                     }
                 } else {
-                    threads.setStatus(thread, ThreadStatus.ERROR);
+                    threads.setStatus(thread, Status.ERROR);
                 }
             }
         } else {
-            threads.setStatus(thread, ThreadStatus.ERROR);
+            threads.setStatus(thread, Status.ERROR);
         }
 
     }
@@ -1427,7 +1425,7 @@ public class Service {
 
                     long size = text.length();
 
-                    Thread thread = threads.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
+                    Thread thread = threads.createThread(host, Status.OFFLINE, Kind.IN,
                             "", null, 0L);
                     thread.addAdditional(Content.IMG, String.valueOf(false), true);
                     thread.addAdditional(Content.FILENAME, content, false);
@@ -1446,7 +1444,7 @@ public class Service {
 
 
                     try {
-                        threads.setThreadStatus(idx, ThreadStatus.LEACHING);
+                        threads.setThreadStatus(idx, Status.LEACHING);
 
                         CID cid = ipfs.add(text, "", true);
                         checkNotNull(cid);
@@ -1459,9 +1457,9 @@ public class Service {
                         }
 
                         threads.setThreadCID(idx, cid);
-                        threads.setThreadStatus(idx, ThreadStatus.ONLINE);
+                        threads.setThreadStatus(idx, Status.ONLINE);
                     } catch (Throwable e) {
-                        threads.setThreadStatus(idx, ThreadStatus.ERROR);
+                        threads.setThreadStatus(idx, Status.ERROR);
                     }
 
                 } catch (Throwable e) {
@@ -1501,7 +1499,7 @@ public class Service {
                     String name = fileDetails.getFileName();
                     long size = fileDetails.getFileSize();
 
-                    Thread thread = threads.createThread(host, ThreadStatus.OFFLINE, Kind.IN,
+                    Thread thread = threads.createThread(host, Status.OFFLINE, Kind.IN,
                             "", null, 0L);
 
                     ThumbnailService.Result res =
@@ -1518,7 +1516,7 @@ public class Service {
 
 
                     try {
-                        threads.setThreadStatus(idx, ThreadStatus.LEACHING);
+                        threads.setThreadStatus(idx, Status.LEACHING);
 
                         CID cid = ipfs.add(inputStream, "", true);
                         checkNotNull(cid);
@@ -1530,9 +1528,9 @@ public class Service {
                         }
 
                         threads.setThreadCID(idx, cid);
-                        threads.setThreadStatus(idx, ThreadStatus.ONLINE);
+                        threads.setThreadStatus(idx, Status.ONLINE);
                     } catch (Throwable e) {
-                        threads.setThreadStatus(idx, ThreadStatus.ERROR);
+                        threads.setThreadStatus(idx, Status.ERROR);
                     }
 
                 } catch (Throwable e) {
@@ -1623,7 +1621,7 @@ public class Service {
 
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         if (ipfs != null) {
-            threads.setStatus(thread, ThreadStatus.LEACHING);
+            threads.setStatus(thread, Status.LEACHING);
             PID host = Preferences.getPID(context);
             checkNotNull(host);
             PID sender = thread.getSenderPid();

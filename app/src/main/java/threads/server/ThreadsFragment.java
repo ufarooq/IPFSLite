@@ -42,8 +42,8 @@ import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.Content;
+import threads.core.api.Status;
 import threads.core.api.Thread;
-import threads.core.api.ThreadStatus;
 import threads.core.mdl.ThreadViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
@@ -311,7 +311,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
                     List<Thread> data = new ArrayList<>();
                     for (Thread threadObject : threads) {
-                        if (threadObject.getStatus() != ThreadStatus.DELETING) {
+                        if (threadObject.getStatus() != Status.DELETING) {
                             data.add(threadObject);
                         }
                     }
@@ -522,14 +522,14 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         if (thread.isPublish()) {
             return false;
         }
-        return thread.getStatus() == ThreadStatus.ONLINE;
+        return thread.getStatus() == Status.ONLINE;
     }
 
     @Override
     public void invokeGeneralAction(@NonNull Thread thread) {
         try {
 
-            boolean online = thread.getStatus() == ThreadStatus.ONLINE;
+            boolean online = thread.getStatus() == Status.ONLINE;
             boolean pinned = thread.isPinned();
             boolean sendActive = Service.isSendNotificationsEnabled(mContext);
 
@@ -603,8 +603,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 try {
                     Thread thread = threads.getThreadByIdx(idx);
                     checkNotNull(thread);
-                    ThreadStatus status = thread.getStatus();
-                    if (status == ThreadStatus.ONLINE) {
+                    Status status = thread.getStatus();
+                    if (status == Status.ONLINE) {
 
                         CID cid = thread.getCid();
                         checkNotNull(cid);

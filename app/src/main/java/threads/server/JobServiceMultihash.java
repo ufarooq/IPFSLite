@@ -20,8 +20,8 @@ import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.Content;
+import threads.core.api.Status;
 import threads.core.api.Thread;
-import threads.core.api.ThreadStatus;
 import threads.core.api.User;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
@@ -89,8 +89,8 @@ public class JobServiceMultihash extends JobService {
                 if (!entries.isEmpty()) {
                     Thread entry = entries.get(0);
 
-                    if (entry.getStatus() == ThreadStatus.DELETING ||
-                            entry.getStatus() == ThreadStatus.ONLINE) {
+                    if (entry.getStatus() == Status.DELETING ||
+                            entry.getStatus() == Status.ONLINE) {
                         Service.replySender(context, ipfs, pid, entry);
                         return;
                     } else {
@@ -101,7 +101,7 @@ public class JobServiceMultihash extends JobService {
 
                 }
                 long idx = Service.createThread(context, ipfs, user, cid,
-                        ThreadStatus.OFFLINE, null, null, null, null);
+                        Status.OFFLINE, null, null, null, null);
 
 
                 Thread thread = threads.getThreadByIdx(idx);
