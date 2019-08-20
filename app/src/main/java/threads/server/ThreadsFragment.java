@@ -592,7 +592,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     }
 
 
-    public void clickThreadPlay(long idx) {
+    private void clickThreadPlay(long idx) {
 
         final THREADS threads = Singleton.getInstance(mContext).getThreads();
         final IPFS ipfs = Singleton.getInstance(mContext).getIpfs();
@@ -610,7 +610,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                         checkNotNull(cid);
 
                         String filename = thread.getAdditionalValue(Content.FILENAME);
-                        String filesize = thread.getAdditionalValue(Content.FILESIZE);
                         String mimeType = thread.getMimeType();
 
 
@@ -621,7 +620,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                         } else if (mimeType.startsWith("video")) {
 
                             VideoDialogFragment dialogFragment = VideoDialogFragment.newInstance(
-                                    cid.getCid(), thread.getSesKey(), Long.valueOf(filesize));
+                                    cid.getCid());
 
                             getChildFragmentManager().beginTransaction().
                                     add(dialogFragment, VideoDialogFragment.TAG).
