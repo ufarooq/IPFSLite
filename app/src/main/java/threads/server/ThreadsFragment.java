@@ -27,7 +27,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -635,12 +634,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
                         } else if (mimeType.startsWith(MimeType.PDF_MIME_TYPE)) {
 
-                            File file = new File(ipfs.getCacheDir(), cid.getCid());
-                            if (!file.exists()) {
-                                ipfs.storeToFile(file, cid, true, timeout, -1, false);
-                            }
                             PDFView.with(getActivity())
-                                    .fromfilepath(file.getAbsolutePath())
+                                    .cid(cid.getCid())
                                     .swipeHorizontal(true)
                                     .start();
 

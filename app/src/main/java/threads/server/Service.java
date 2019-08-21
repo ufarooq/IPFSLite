@@ -436,6 +436,7 @@ public class Service {
             }
 
             ipfs.repo_gc();
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -1188,10 +1189,10 @@ public class Service {
                             return !Network.isConnected(context);
                         }
                     }, false, timeout, size, true);
-
+            if (file.exists()) {
+                checkArgument(file.delete());
+            }
             if (success) {
-                file.deleteOnExit();
-
                 // Now check if MIME TYPE of thread can be re-evaluated
                 if (threads.getMimeType(thread).equals(MimeType.OCTET_MIME_TYPE)) {
                     ContentInfo contentInfo = ipfs.getContentInfo(file);
@@ -1868,7 +1869,7 @@ public class Service {
                         public String getTopic() {
                             return ipfs.getPid().getPid();
                         }
-                    }, Preferences.isPubsubEnabled(context), false);
+                    }, Preferences.isPubsubEnabled(context));
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(threads, Preferences.IPFS_START_FAILURE, e);
