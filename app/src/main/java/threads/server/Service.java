@@ -874,6 +874,8 @@ public class Service {
 
             threads.removeThreads(ipfs, idxs);
 
+            ipfs.repo_gc();
+
         } catch (Throwable e) {
             Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
         }
