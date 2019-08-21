@@ -100,7 +100,7 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
                     if (account.getImage() != null) {
                         Singleton singleton = Singleton.getInstance(context);
                         IPFSData data = IPFSData.create(singleton.getIpfs(),
-                                account.getImage(), account.getSesKey(), timeout);
+                                account.getImage(), timeout);
                         Glide.with(context).load(data).into(holder.account_icon);
                     } else {
                         holder.account_icon.setVisibility(View.GONE);
@@ -116,7 +116,7 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
                             if (account.getImage() != null) {
                                 Singleton singleton = Singleton.getInstance(context);
                                 IPFSData data = IPFSData.create(singleton.getIpfs(),
-                                        account.getImage(), account.getSesKey(), timeout);
+                                        account.getImage(), timeout);
                                 Glide.with(context).load(data).into(holder.account_icon);
                             } else {
                                 holder.account_icon.setVisibility(View.GONE);

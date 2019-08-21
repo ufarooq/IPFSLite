@@ -1137,7 +1137,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     File file = new File(ipfs.getCacheDir(), multihash + ".png");
 
                     if (!file.exists()) {
-                        ipfs.store(file, bitmap, "", timeout, true, false);
+                        ipfs.storeToFile(file, bitmap, true, timeout, -1, false);
                     }
 
                     Uri uri = FileProvider.getUriForFile(getApplicationContext(),
@@ -1240,7 +1240,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     PID user = PID.create(pid);
 
                     CID image = ThumbnailService.getImage(getApplicationContext(),
-                            name, "", R.drawable.server_network);
+                            name, R.drawable.server_network);
                     threads.setUserImage(user, image);
 
                     threads.setUserAlias(user, name);

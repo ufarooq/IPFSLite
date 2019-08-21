@@ -614,7 +614,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
 
                         if (mimeType.startsWith("image")) {
-                            ImageDialogFragment.newInstance(cid.getCid(), thread.getSesKey()).show(
+                            ImageDialogFragment.newInstance(cid.getCid()).show(
                                     getChildFragmentManager(), ImageDialogFragment.TAG);
 
                         } else if (mimeType.startsWith("video")) {
@@ -627,14 +627,9 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                                     commitAllowingStateLoss();
 
                         } else if (mimeType.startsWith("audio")) {
-                            File file = new File(ipfs.getCacheDir(), cid.getCid());
-                            if (!file.exists()) {
-                                ipfs.store(file, cid, "", timeout, true, false);
-                            }
 
-                            Uri uri = Uri.fromFile(file);
-                            AudioDialogFragment.newInstance(uri, filename,
-                                    thread.getSenderAlias(), thread.getSesKey())
+                            AudioDialogFragment.newInstance(cid.getCid(), filename,
+                                    thread.getSenderAlias())
                                     .show(getChildFragmentManager(), AudioDialogFragment.TAG);
 
 
@@ -642,7 +637,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
                             File file = new File(ipfs.getCacheDir(), cid.getCid());
                             if (!file.exists()) {
-                                ipfs.store(file, cid, "", timeout, true, false);
+                                ipfs.storeToFile(file, cid, true, timeout, -1, false);
                             }
                             PDFView.with(getActivity())
                                     .fromfilepath(file.getAbsolutePath())
@@ -650,7 +645,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                                     .start();
 
                         } else if (mimeType.equals(MimeType.LINK_MIME_TYPE)) {
-                            byte[] data = ipfs.get(cid, "", timeout, true, false);
+                            byte[] data = ipfs.getData(cid, timeout, true, false);
                             checkNotNull(data);
                             Uri uri = Uri.parse(new String(data));
 
@@ -661,7 +656,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
                         } else if (mimeType.startsWith("text")) {
 
-                            byte[] data = ipfs.get(cid, "", timeout, true, false);
+                            byte[] data = ipfs.getData(cid, timeout, true, false);
                             checkNotNull(data);
 
                             String content = Base64.encodeToString(data, Base64.NO_PADDING);
@@ -670,7 +665,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
                         } else if (mimeType.equals(MimeType.OCTET_MIME_TYPE)) {
                             // TODO improve this (should show text)
-                            byte[] data = ipfs.get(cid, "", timeout, true, false);
+                            byte[] data = ipfs.getData(cid, timeout, true, false);
                             checkNotNull(data);
                             int length = data.length;
                             if (length > 0 && length < 64000) { // TODO 64kb (better check if content is text)

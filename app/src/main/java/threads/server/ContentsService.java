@@ -208,7 +208,7 @@ class ContentsService {
                 }
 
                 CID cid = CID.create(image);
-                byte[] data = ipfs.get(cid, "", timeout, false, true);
+                byte[] data = ipfs.getData(cid, timeout, false, true);
                 if (data != null) {
                     return cid;
                 }
@@ -229,13 +229,11 @@ class ContentsService {
         if (ipfs != null) {
             try {
 
-                byte[] content = ipfs.get(cid, "", timeout, false, true);
+                String content = ipfs.getText(cid, "", timeout, false, true);
 
                 if (content != null) {
 
-                    String contentAsString = new String(content);
-
-                    return gson.fromJson(contentAsString, Contents.class);
+                    return gson.fromJson(content, Contents.class);
                 }
 
             } catch (Throwable e) {

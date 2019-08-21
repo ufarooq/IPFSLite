@@ -465,7 +465,7 @@ public class Service {
                         if (!alias.isEmpty()) {
                             CID image = ThumbnailService.getImage(
                                     context,
-                                    alias, "",
+                                    alias,
                                     R.drawable.server_network);
 
                             User user = threads.createUser(pid, pubKey, alias,
@@ -493,7 +493,7 @@ public class Service {
 
             checkNotNull(ipfs, "IPFS is not valid");
             CID image = ThumbnailService.getImage(
-                    context, alias, "", R.drawable.server_network);
+                    context, alias, R.drawable.server_network);
 
             User newUser = threads.createUser(user, "",
                     alias, UserType.VERIFIED, image);
@@ -649,7 +649,7 @@ public class Service {
 
 
             CID image = ThumbnailService.getImage(
-                    context, alias, "", R.drawable.server_network);
+                    context, alias, R.drawable.server_network);
 
             sender.setPublicKey(pubKey);
             sender.setAlias(alias);
@@ -715,7 +715,7 @@ public class Service {
 
                     // create a new user which is blocked (User has to unblock and verified the user)
                     CID image = ThumbnailService.getImage(
-                            context, alias, "", R.drawable.server_network);
+                            context, alias, R.drawable.server_network);
 
                     sender = threads.createUser(senderPid, pubKey, alias, userType, image);
                     sender.setBlocked(true);
@@ -841,7 +841,7 @@ public class Service {
                     String publicKey = ipfs.getPublicKey();
 
                     CID image = ThumbnailService.getImage(
-                            context, pid.getPid(), "", R.drawable.server_network);
+                            context, pid.getPid(), R.drawable.server_network);
 
 
                     user = threads.createUser(pid, publicKey, getDeviceName(),
@@ -940,8 +940,8 @@ public class Service {
 
         if (link.isDirectory()) {
             try {
-                CID image = ThumbnailService.createResourceImage(context, threads, ipfs,
-                        R.drawable.folder_outline, "");
+                CID image = ThumbnailService.createResourceImage(context, ipfs,
+                        R.drawable.folder_outline);
                 if (image != null) {
                     thread.addAdditional(Content.IMG, String.valueOf(false), true);
                     thread.setImage(image);
@@ -952,7 +952,7 @@ public class Service {
         } else {
             try {
                 CID image = ThumbnailService.getImage(context.getApplicationContext(),
-                        user.getAlias(), "", R.drawable.file);
+                        user.getAlias(), R.drawable.file);
                 thread.addAdditional(Content.IMG, String.valueOf(false), true);
                 thread.setImage(image);
             } catch (Throwable e) {
@@ -1016,7 +1016,7 @@ public class Service {
                 }
                 thread.addAdditional(Content.IMG, String.valueOf(false), true);
                 thread.setImage(ThumbnailService.getImage(context.getApplicationContext(),
-                        creator.getAlias(), "", resource));
+                        creator.getAlias(), resource));
             } else {
                 thread.addAdditional(Content.IMG, String.valueOf(true), true);
                 thread.setImage(image);
@@ -1076,7 +1076,7 @@ public class Service {
                         }
 
                         try {
-                            boolean finished = ipfs.store(file, cid, "",
+                            boolean finished = ipfs.storeToFile(file, cid,
                                     new IPFS.Progress() {
                                         @Override
                                         public void setProgress(int percent) {
@@ -1172,7 +1172,8 @@ public class Service {
         try {
             threads.setStatus(thread, Status.LEACHING);
             int timeout = Preferences.getConnectionTimeout(context);
-            File file = ipfs.get(cid, "",
+            File file = ipfs.getTempCacheFile();
+            success = ipfs.storeToFile(file, cid,
                     new IPFS.Progress() {
                         @Override
                         public void setProgress(int percent) {
@@ -1188,9 +1189,8 @@ public class Service {
                         }
                     }, false, timeout, size, true);
 
-            if (file != null) {
-                success = true;
-
+            if (success) {
+                file.deleteOnExit();
 
                 // Now check if MIME TYPE of thread can be re-evaluated
                 if (threads.getMimeType(thread).equals(MimeType.OCTET_MIME_TYPE)) {
@@ -1208,7 +1208,7 @@ public class Service {
                     String img = thread.getAdditionalValue(Content.IMG);
                     if (img.isEmpty() || !Boolean.valueOf(img)) {
                         ThumbnailService.Result res = ThumbnailService.getThumbnail(
-                                context, file, filename, "");
+                                context, file, filename);
                         threads.setAdditional(thread,
                                 Content.IMG, String.valueOf(res.isThumbnail()), true);
                         CID image = res.getCid();
@@ -1366,8 +1366,8 @@ public class Service {
                             ThreadKind.NODE.name(), true);
 
                     try {
-                        CID image = ThumbnailService.createResourceImage(context, threads, ipfs,
-                                R.drawable.folder_outline, "");
+                        CID image = ThumbnailService.createResourceImage(context, ipfs,
+                                R.drawable.folder_outline);
                         checkNotNull(image);
                         threads.setImage(thread, image);
                     } catch (Throwable e) {
@@ -1436,7 +1436,7 @@ public class Service {
                             mimeType, false);
 
                     CID image = ThumbnailService.getImage(
-                            context, host.getAlias(), "", resource);
+                            context, host.getAlias(), resource);
                     thread.setImage(image);
                     thread.setMimeType(mimeType);
 
@@ -1446,7 +1446,7 @@ public class Service {
                     try {
                         threads.setThreadStatus(idx, Status.LEACHING);
 
-                        CID cid = ipfs.add(text, "", true);
+                        CID cid = ipfs.storeText(text, "", true);
                         checkNotNull(cid);
 
 
@@ -1503,7 +1503,7 @@ public class Service {
                             "", null, 0L);
 
                     ThumbnailService.Result res =
-                            ThumbnailService.getThumbnail(context, uri, host.getAlias(), "");
+                            ThumbnailService.getThumbnail(context, uri, host.getAlias());
 
                     thread.addAdditional(Content.IMG, String.valueOf(res.isThumbnail()), true);
                     thread.addAdditional(Content.FILENAME, name, false);
@@ -1518,7 +1518,7 @@ public class Service {
                     try {
                         threads.setThreadStatus(idx, Status.LEACHING);
 
-                        CID cid = ipfs.add(inputStream, "", true);
+                        CID cid = ipfs.storeStream(inputStream, true);
                         checkNotNull(cid);
 
                         // cleanup of entries with same CID and hierarchy
@@ -1715,7 +1715,7 @@ public class Service {
 
                         String data = gson.toJson(contents);
 
-                        CID cid = ipfs.add(data, "", true);
+                        CID cid = ipfs.storeText(data, "", true);
                         checkNotNull(cid);
 
                         checkNotNull(host);
