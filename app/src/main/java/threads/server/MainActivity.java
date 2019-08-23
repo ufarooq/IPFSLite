@@ -55,7 +55,6 @@ import threads.core.api.User;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
-import threads.ipfs.api.IpnsInfo;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.share.DontShowAgainDialog;
@@ -559,10 +558,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(pid);
         try {
             final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+            final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    threads.removeUserByPID(PID.create(pid));
+                    checkNotNull(ipfs, "IPFS is not valid");
+                    User user = threads.getUserByPID(PID.create(pid));
+                    if (user != null) {
+                        threads.removeUser(ipfs, user);
+                    }
+
                 } catch (Throwable e) {
                     Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                 }
@@ -941,53 +946,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadPublish(long idx) {
 
-        // CHECKED
-        Singleton singleton = Singleton.getInstance(getApplicationContext());
-
-        if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
-            return;
-        }
-
-        if (!Network.isConnectedFast(getApplicationContext())) {
-            Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
-            return;
-        }
-
-        try {
-            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-            final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-            if (ipfs != null) {
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.submit(() -> {
-
-                    threads.setThreadPublish(idx, true);
-
-                    try {
-                        CID cid = threads.getThreadCID(idx);
-                        checkNotNull(cid);
-
-                        String gateway = Service.getGateway(getApplicationContext());
-                        IpnsInfo info = ipfs.name_publish(cid);
-
-                        if (info != null) {
-                            Uri uri = Uri.parse(gateway + "/ipns/" + info.getName());
-
-                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
-                        }
-                    } catch (Throwable e) {
-                        Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-                    } finally {
-                        threads.setThreadPublish(idx, false);
-                    }
-                });
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
+        // TODO not supported anymore
     }
 
     @Override

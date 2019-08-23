@@ -432,7 +432,7 @@ public class Service {
                 contentDatabase.contentDao().removeContent(content);
 
                 CID cid = content.getCID();
-                ipfs.rm(cid);
+                ipfs.pinRm(cid);
             }
 
             ipfs.repo_gc();
@@ -1455,9 +1455,9 @@ public class Service {
 
                         // cleanup of entries with same CID and hierarchy
                         List<Thread> sameEntries = threads.getThreadsByCIDAndThread(cid, 0L);
-                        for (Thread entry : sameEntries) {
-                            threads.removeThread(entry);
-                        }
+                        threads.removeThreads(ipfs, sameEntries);
+
+
 
                         threads.setThreadCID(idx, cid);
                         threads.setThreadStatus(idx, Status.ONLINE);
@@ -1526,9 +1526,8 @@ public class Service {
 
                         // cleanup of entries with same CID and hierarchy
                         List<Thread> sameEntries = threads.getThreadsByCIDAndThread(cid, 0L);
-                        for (Thread entry : sameEntries) {
-                            threads.removeThread(entry);
-                        }
+                        threads.removeThreads(ipfs, sameEntries);
+
 
                         threads.setThreadCID(idx, cid);
                         threads.setThreadStatus(idx, Status.ONLINE);

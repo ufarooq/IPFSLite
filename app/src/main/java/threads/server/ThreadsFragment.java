@@ -528,7 +528,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void invokeGeneralAction(@NonNull Thread thread) {
         try {
 
-            boolean online = thread.getStatus() == Status.ONLINE;
             boolean pinned = thread.isPinned();
             boolean sendActive = Service.isSendNotificationsEnabled(mContext);
 
@@ -536,7 +535,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
             ThreadActionDialogFragment.newInstance(
                     thread.getIdx(), true, true,
-                    topLevel.get(), online, true, sendActive,
+                    topLevel.get(), false, true, sendActive,
                     true, !pinned, pinned)
                     .show(fm, ThreadActionDialogFragment.TAG);
 
