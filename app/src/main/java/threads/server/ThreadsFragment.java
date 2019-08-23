@@ -535,7 +535,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
             ThreadActionDialogFragment.newInstance(
                     thread.getIdx(), true, true,
-                    topLevel.get(), false, true, sendActive,
+                    topLevel.get(), true, sendActive,
                     true, !pinned, pinned)
                     .show(fm, ThreadActionDialogFragment.TAG);
 

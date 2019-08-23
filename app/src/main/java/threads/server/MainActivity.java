@@ -943,11 +943,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-    @Override
-    public void clickThreadPublish(long idx) {
-
-        // TODO not supported anymore
-    }
 
     @Override
     public void clickThreadInfo(long idx) {
