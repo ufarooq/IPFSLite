@@ -427,15 +427,17 @@ public class Service {
 
             checkNotNull(ipfs, "IPFS not valid");
 
-            for (threads.server.Content content : entries) {
+            try {
+                for (threads.server.Content content : entries) {
 
-                contentDatabase.contentDao().removeContent(content);
+                    contentDatabase.contentDao().removeContent(content);
 
-                CID cid = content.getCID();
-                ipfs.pinRm(cid);
+                    CID cid = content.getCID();
+                    ipfs.rm(cid);
+                }
+            } finally {
+                ipfs.gc();
             }
-
-            ipfs.repo_gc();
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -874,8 +876,6 @@ public class Service {
 
             threads.removeThreads(ipfs, idxs);
 
-            ipfs.repo_gc();
-
         } catch (Throwable e) {
             Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
         }
@@ -1093,7 +1093,7 @@ public class Service {
                                         public boolean isStopped() {
                                             return !Network.isConnected(context);
                                         }
-                                    }, false, timeout, size, true);
+                                    }, false, timeout, size);
 
                             if (finished) {
                                 String mimeType = threadObject.getMimeType();
@@ -1190,7 +1190,7 @@ public class Service {
                         public boolean isStopped() {
                             return !Network.isConnected(context);
                         }
-                    }, false, timeout, size, true);
+                    }, false, timeout, size);
             if (file.exists()) {
                 checkArgument(file.delete());
             }

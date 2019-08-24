@@ -208,7 +208,7 @@ class ContentsService {
                 }
 
                 CID cid = CID.create(image);
-                byte[] data = ipfs.getData(cid, timeout, false, true);
+                byte[] data = ipfs.getData(cid, timeout, false);
                 if (data != null) {
                     return cid;
                 }
@@ -229,7 +229,7 @@ class ContentsService {
         if (ipfs != null) {
             try {
 
-                String content = ipfs.getText(cid, "", timeout, false, true);
+                String content = ipfs.getText(cid, "", timeout, false);
 
                 if (content != null) {
 
