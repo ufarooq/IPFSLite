@@ -47,6 +47,7 @@ import threads.core.mdl.ThreadViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.share.AudioDialogFragment;
+import threads.share.IPFSVideoActivity;
 import threads.share.ImageDialogFragment;
 import threads.share.PDFView;
 import threads.share.ThreadActionDialogFragment;
@@ -609,7 +610,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
                         String filename = thread.getAdditionalValue(Content.FILENAME);
                         String mimeType = thread.getMimeType();
-
+                        String fileSize = thread.getAdditionalValue(Content.FILESIZE);
+                        long size = Long.valueOf(fileSize);
 
                         if (mimeType.startsWith("image")) {
                             ImageDialogFragment.newInstance(cid.getCid()).show(
@@ -617,12 +619,20 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
                         } else if (mimeType.startsWith("video")) {
 
-                            VideoDialogFragment dialogFragment = VideoDialogFragment.newInstance(
-                                    cid.getCid());
+                            if (size >= 1e+8) { // 100 MB
+                                Intent intent = new Intent(mContext, IPFSVideoActivity.class);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                                intent.putExtra(IPFSVideoActivity.CID_ID, cid.getCid());
+                                startActivity(intent);
 
-                            getChildFragmentManager().beginTransaction().
-                                    add(dialogFragment, VideoDialogFragment.TAG).
-                                    commitAllowingStateLoss();
+                            } else {
+                                VideoDialogFragment dialogFragment = VideoDialogFragment.newInstance(
+                                        cid.getCid());
+
+                                getChildFragmentManager().beginTransaction().
+                                        add(dialogFragment, VideoDialogFragment.TAG).
+                                        commitAllowingStateLoss();
+                            }
 
                         } else if (mimeType.startsWith("audio")) {
 
