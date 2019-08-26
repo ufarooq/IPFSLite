@@ -470,14 +470,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
         long[] entries = convert(threads);
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                Service.removeThreads(mContext, entries);
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        });
+        JobServiceDeleteThreads.removeThreads(mContext, entries);
 
         try {
             if (threads.contains(threadIdx)) {

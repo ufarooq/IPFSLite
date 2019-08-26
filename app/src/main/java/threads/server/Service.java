@@ -864,24 +864,7 @@ public class Service {
         }
     }
 
-    static void removeThreads(@NonNull Context context, long... idxs) {
-        checkNotNull(context);
-        checkNotNull(idxs);
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
 
-        try {
-            checkNotNull(ipfs, "IPFS is not valid");
-            threads.setThreadsStatus(Status.DELETING, idxs);
-
-            threads.removeThreads(ipfs, idxs);
-
-        } catch (Throwable e) {
-            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-        }
-
-
-    }
 
     @NonNull
     private static String evaluateMimeType(@NonNull Context context, @NonNull String filename) {

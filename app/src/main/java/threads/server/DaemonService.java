@@ -200,7 +200,6 @@ public class DaemonService extends Service {
 
                 while (DAEMON_RUNNING.get()) {
                     java.lang.Thread.sleep(TimeUnit.HOURS.toMillis(12));
-                    CleanupService.cleanup(getApplicationContext());
                     ContentsService.contents(getApplicationContext());
                 }
 

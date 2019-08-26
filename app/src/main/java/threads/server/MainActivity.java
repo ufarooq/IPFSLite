@@ -1028,16 +1028,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickThreadDelete(long idx) {
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                Service.removeThreads(getApplicationContext(), idx);
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        });
-
+        JobServiceDeleteThreads.removeThreads(getApplicationContext(), idx);
     }
 
     @Override

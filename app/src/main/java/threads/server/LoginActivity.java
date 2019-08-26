@@ -105,7 +105,7 @@ public class LoginActivity extends AppCompatActivity {
                 JobServicePeers.peers(getApplicationContext());
                 JobServiceFindPeers.findPeers(getApplicationContext());
 
-                CleanupService.cleanup(getApplicationContext());
+                JobServiceCleanup.cleanup(getApplicationContext());
                 ContentsService.contents(getApplicationContext());
 
 
