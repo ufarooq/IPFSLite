@@ -41,9 +41,9 @@ import threads.share.WebViewDialogFragment;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class SchwarmFragment extends Fragment implements PeersViewAdapter.PeersViewAdapterListener {
+public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersViewAdapterListener {
 
-    private static final String TAG = SchwarmFragment.class.getSimpleName();
+    private static final String TAG = SwarmFragment.class.getSimpleName();
     private long mLastClickTime = 0;
 
 
@@ -64,7 +64,7 @@ public class SchwarmFragment extends Fragment implements PeersViewAdapter.PeersV
         super.onAttach(context);
         mContext = context;
         try {
-            actionListener = (SchwarmFragment.ActionListener) getActivity();
+            actionListener = (SwarmFragment.ActionListener) getActivity();
             Service.getInstance(context).peersCheckEnable(true);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);

@@ -77,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         EditMultihashDialogFragment.ActionListener,
         EditPeerDialogFragment.ActionListener,
         PeersFragment.ActionListener,
-        SchwarmFragment.ActionListener,
+        SwarmFragment.ActionListener,
         ThreadsFragment.ActionListener,
         NameDialogFragment.ActionListener,
         DontShowAgainDialog.ActionListener {
@@ -1236,7 +1236,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 case 1:
                     return new PeersFragment();
                 case 2:
-                    return new SchwarmFragment();
+                    return new SwarmFragment();
                 default:
                     throw new RuntimeException("Not Supported position");
             }
