@@ -133,7 +133,6 @@ public class EditPeerDialogFragment extends DialogFragment {
 
 
         builder.setView(view)
-                // Add action buttons
                 .setPositiveButton(android.R.string.ok, (dialog, id) -> {
 
                     if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
@@ -152,19 +151,7 @@ public class EditPeerDialogFragment extends DialogFragment {
                     mListener.clickConnectPeer(hash);
 
 
-                })/*
-                .setNegativeButton(android.R.string.cancel, (dialog, id) -> {
-
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                        return;
-                    }
-
-                    mLastClickTime = SystemClock.elapsedRealtime();
-
-                    removeKeyboards();
-                    dismiss();
-
-                })*/
+                })
                 .setTitle(getString(R.string.peer_id));
 
 
@@ -187,7 +174,6 @@ public class EditPeerDialogFragment extends DialogFragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        Service.getInstance(mContext).peersCheckEnable(false);
         mContext = null;
     }
 

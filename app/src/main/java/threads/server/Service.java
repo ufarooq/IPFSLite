@@ -39,6 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import threads.core.ConnectService;
+import threads.core.GatewayService;
 import threads.core.IdentityService;
 import threads.core.MimeType;
 import threads.core.Network;
@@ -92,6 +93,7 @@ public class Service {
     private static final String SUPPORT_PEER_DISCOVERY_KEY = "supportPeerDiscoveryKey";
     private static Service SINGLETON = null;
     private final AtomicBoolean peerCheckFlag = new AtomicBoolean(false);
+    private final AtomicBoolean swarmCheckFlag = new AtomicBoolean(false);
 
     private Service() {
     }
@@ -1529,6 +1531,10 @@ public class Service {
         peerCheckFlag.set(value);
     }
 
+    void swarmCheckEnable(boolean value) {
+        swarmCheckFlag.set(value);
+    }
+
     void checkPeersOnlineStatus(@NonNull Context context) {
         checkNotNull(context);
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
@@ -1537,6 +1543,21 @@ public class Service {
                 while (peerCheckFlag.get() && ipfs.isDaemonRunning()) {
                     checkPeers(context);
                     java.lang.Thread.sleep(1000);
+                }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        }
+    }
+
+    void checkSwarmOnlineStatus(@NonNull Context context) {
+        checkNotNull(context);
+        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        if (ipfs != null) {
+            try {
+                while (swarmCheckFlag.get() && ipfs.isDaemonRunning()) {
+                    GatewayService.evaluateAllPeers(context);
+                    java.lang.Thread.sleep(30000);
                 }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

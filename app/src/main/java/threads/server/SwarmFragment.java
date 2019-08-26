@@ -55,7 +55,7 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
     @Override
     public void onDetach() {
         super.onDetach();
-        Service.getInstance(mContext).peersCheckEnable(false);
+        Service.getInstance(mContext).swarmCheckEnable(false);
         mContext = null;
     }
 
@@ -65,17 +65,17 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
         mContext = context;
         try {
             actionListener = (SwarmFragment.ActionListener) getActivity();
-            Service.getInstance(context).peersCheckEnable(true);
+            Service.getInstance(context).swarmCheckEnable(true);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
-    private void peersOnlineStatus() {
+    private void swarmOnlineStatus() {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                Service.getInstance(mContext).checkPeersOnlineStatus(mContext);
+                Service.getInstance(mContext).checkSwarmOnlineStatus(mContext);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
@@ -214,7 +214,7 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
             }
 
         });
-        peersOnlineStatus();
+        swarmOnlineStatus();
 
         return view;
     }

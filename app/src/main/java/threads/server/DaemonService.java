@@ -24,7 +24,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import threads.core.GatewayService;
 import threads.core.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -154,10 +153,6 @@ public class DaemonService extends Service {
                             getApplicationContext())) {
                         NotificationService.notifications(getApplicationContext());
                     }
-
-                    Log.e(TAG, "Peers : " +
-                            GatewayService.evaluateAllPeers(
-                                    getApplicationContext(), true));
                 }
 
             } catch (InterruptedException e) {
