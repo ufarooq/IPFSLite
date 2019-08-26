@@ -1557,7 +1557,7 @@ public class Service {
             try {
                 while (swarmCheckFlag.get() && ipfs.isDaemonRunning()) {
                     GatewayService.evaluateAllPeers(context);
-                    java.lang.Thread.sleep(30000);
+                    java.lang.Thread.sleep(15000);
                 }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

@@ -50,7 +50,6 @@ public class DaemonService extends Service {
     };
 
 
-    private Future workService;
     private Future slowService;
     private Future fastService;
     private Future pinService;
@@ -110,9 +109,6 @@ public class DaemonService extends Service {
                 stopForeground(true);
                 unregisterReceiver(broadcastReceiver);
 
-                if (workService != null) {
-                    workService.cancel(true);
-                }
                 if (slowService != null) {
                     slowService.cancel(true);
                 }
@@ -163,31 +159,6 @@ public class DaemonService extends Service {
 
         });
 
-        /*
-        ExecutorService work = Executors.newSingleThreadExecutor();
-        workService = work.submit(() -> {
-            try {
-                threads.server.Service.getInstance(getApplicationContext());
-
-                while (DAEMON_RUNNING.get()) {
-                    final boolean peerDiscovery =
-                            threads.server.Service.isSupportPeerDiscovery(getApplicationContext());
-                    if (peerDiscovery) {
-                        GatewayService.evaluateAllPeers(getApplicationContext());
-                        GatewayService.connectStoredPeers(getApplicationContext(), 3);
-                        JobServiceFindPeers.findPeers(getApplicationContext());
-                    }
-                    java.lang.Thread.sleep(TimeUnit.MINUTES.toMillis(1));
-
-                }
-
-            } catch (InterruptedException e) {
-                Log.e(TAG, "Daemon Work Service has been successfully stopped");
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-
-        });*/
 
         ExecutorService clean = Executors.newSingleThreadExecutor();
         slowService = clean.submit(() -> {
