@@ -604,7 +604,7 @@ public class Service {
 
                 Preferences.setMdnsEnabled(context, true);
 
-                Preferences.setReportMode(context, true);
+                Preferences.setReportMode(context, false);
                 Preferences.setDebugMode(context, false);
                 Preferences.setRandomSwarmPort(context, true);
 

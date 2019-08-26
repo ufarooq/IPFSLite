@@ -127,4 +127,5 @@
     <string name="failed_notification">Failed sending notification to Peer \"%1$s\"</string>
     <string name="enable_random_swarm_port">Random Swarm Port</string>
     <string name="slow_connection">Internet connection is to slow</string>
+    <string name="schwarm">Schwarm</string>
 </resources>

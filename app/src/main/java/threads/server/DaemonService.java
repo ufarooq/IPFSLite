@@ -156,7 +156,8 @@ public class DaemonService extends Service {
                     }
 
                     Log.e(TAG, "Peers : " +
-                            GatewayService.evaluatePeers(getApplicationContext(), false));
+                            GatewayService.evaluateAllPeers(
+                                    getApplicationContext(), true));
                 }
 
             } catch (InterruptedException e) {
