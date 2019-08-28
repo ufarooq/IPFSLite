@@ -24,8 +24,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import threads.core.Network;
-
 import static androidx.core.util.Preconditions.checkNotNull;
 
 
@@ -40,9 +38,7 @@ public class DaemonService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
-                if (Network.isConnected(context)) {
-                    JobServicePeers.peers(getApplicationContext());
-                }
+                JobServicePeers.peers(getApplicationContext());
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
