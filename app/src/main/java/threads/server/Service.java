@@ -1171,9 +1171,7 @@ public class Service {
                             return !Network.isConnected(context);
                         }
                     }, false, timeout, size);
-            if (file.exists()) {
-                checkArgument(file.delete());
-            }
+
             if (success) {
                 // Now check if MIME TYPE of thread can be re-evaluated
                 if (threads.getMimeType(thread).equals(MimeType.OCTET_MIME_TYPE)) {
@@ -1205,12 +1203,16 @@ public class Service {
             } else {
                 success = false;
             }
+            if (file.exists()) {
+                checkArgument(file.delete());
+            }
         } catch (Throwable e) {
             success = false;
         } finally {
             if (notificationManager != null) {
                 notificationManager.cancel(notifyID);
             }
+
         }
 
         return success;
