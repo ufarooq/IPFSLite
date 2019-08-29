@@ -63,7 +63,7 @@ public class JobServicePin extends JobService {
         PersistableBundle bundle = jobParameters.getExtras();
         final long idx = bundle.getLong(IDX);
 
-        if (!Network.isConnectedFast(getApplicationContext())) {
+        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
             return false;
         }
         int timeout = Preferences.getConnectionTimeout(getApplicationContext());

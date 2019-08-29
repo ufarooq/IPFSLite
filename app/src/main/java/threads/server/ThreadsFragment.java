@@ -722,7 +722,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
                 return;
             }
-            if (!Network.isConnectedFast(mContext)) {
+            if (!Network.isConnectedMinHighBandwidth(mContext)) {
                 Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
                 return;
             }

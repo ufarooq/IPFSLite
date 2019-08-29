@@ -71,7 +71,7 @@ public class JobServiceNotify extends JobService {
         if (!Service.isSendNotificationsEnabled(getApplicationContext())) {
             return false;
         }
-        if (!Network.isConnectedFast(getApplicationContext())) {
+        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
             return false;
         }
 

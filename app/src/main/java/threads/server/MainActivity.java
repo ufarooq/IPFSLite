@@ -219,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        if (!Network.isConnectedFast(getApplicationContext())) {
+        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
             Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
             return;
         }
@@ -590,7 +590,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        if (!Network.isConnectedFast(getApplicationContext())) {
+        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
             Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
             return;
         }
@@ -834,7 +834,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        if (!Network.isConnectedFast(getApplicationContext())) {
+        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
             Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
             return;
         }
@@ -923,7 +923,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        if (!Network.isConnectedFast(getApplicationContext())) {
+        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
             Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
             return;
         }
@@ -988,7 +988,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        if (!Network.isConnectedFast(getApplicationContext())) {
+        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
             Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
             return;
         }

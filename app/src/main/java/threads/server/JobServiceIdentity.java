@@ -56,7 +56,7 @@ public class JobServiceIdentity extends JobService {
         if (!peerDiscovery) {
             return false;
         }
-        if (!Network.isConnectedFast(getApplicationContext())) {
+        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
             return false;
         }
         ExecutorService executor = Executors.newSingleThreadExecutor();

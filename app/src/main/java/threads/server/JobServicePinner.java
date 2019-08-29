@@ -56,7 +56,7 @@ public class JobServicePinner extends JobService {
     public boolean onStartJob(JobParameters jobParameters) {
 
 
-        if (!Network.isConnectedFast(getApplicationContext())) {
+        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
             return false;
         }
 

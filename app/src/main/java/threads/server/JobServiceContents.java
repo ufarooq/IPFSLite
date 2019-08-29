@@ -69,7 +69,7 @@ public class JobServiceContents extends JobService {
         final String cid = bundle.getString(Content.CID);
         checkNotNull(cid);
 
-        if (!Network.isConnectedFast(getApplicationContext())) {
+        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
             return false;
         }
 
