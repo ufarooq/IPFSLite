@@ -907,12 +907,6 @@ public class Service {
         Thread thread = threads.createThread(user, Status.OFFLINE, Kind.OUT,
                 "", cid, parent);
 
-        if (link.isDirectory()) {
-            thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.NODE.name(), false);
-        } else {
-            thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
-        }
-
         String filename = link.getName();
         thread.addAdditional(Content.FILENAME, filename, false);
 
@@ -972,7 +966,8 @@ public class Service {
 
         Thread thread = threads.createThread(creator, threadStatus, Kind.OUT,
                 "", cid, 0L);
-        thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false); // not known yet
+
+
         if (filename != null) {
             thread.addAdditional(Content.FILENAME, filename, false);
             if (mimeType != null) {
@@ -1350,8 +1345,6 @@ public class Service {
 
                 if (!thread.getMimeType().equals(DocumentsContract.Document.MIME_TYPE_DIR)) {
                     threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
-                    threads.setAdditional(thread, Preferences.THREAD_KIND,
-                            ThreadKind.NODE.name(), true);
 
                     try {
                         CID image = ThumbnailService.createResourceImage(context, ipfs,
@@ -1417,7 +1410,6 @@ public class Service {
                             "", null, 0L);
                     thread.addAdditional(Content.IMG, String.valueOf(false), true);
                     thread.addAdditional(Content.FILENAME, content, false);
-                    thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
                     thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
 
                     int resource = MimeTypeService.getMediaResource(
@@ -1495,7 +1487,6 @@ public class Service {
 
                     thread.addAdditional(Content.IMG, String.valueOf(res.isThumbnail()), true);
                     thread.addAdditional(Content.FILENAME, name, false);
-                    thread.addAdditional(Preferences.THREAD_KIND, ThreadKind.LEAF.name(), false);
                     thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
 
                     thread.setImage(res.getCid());

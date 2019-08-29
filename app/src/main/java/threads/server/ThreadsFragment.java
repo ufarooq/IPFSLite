@@ -233,7 +233,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             if (current == null) {
                 directory.set(0L);
             }
-            update(directory.get());
+            updateDirectory(directory.get());
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -291,7 +291,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
 
     }
 
-    private void update(long thread) {
+    private void updateDirectory(long thread) {
         try {
             topLevel.set(thread == 0L);
 
@@ -500,7 +500,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 Thread thread = threads.getThreadByIdx(idx);
                 if (thread != null) {
                     long parent = thread.getThread();
-                    mHandler.post(() -> update(parent));
+                    mHandler.post(() -> updateDirectory(parent));
                 }
 
             } catch (Throwable e) {
@@ -567,15 +567,22 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
             if (threads.isEmpty()) {
                 threadIdx = thread.getIdx();
 
-                String threadKind = thread.getAdditionalValue(Preferences.THREAD_KIND);
-                checkNotNull(threadKind);
-                Service.ThreadKind kind = Service.ThreadKind.valueOf(threadKind);
-                if (kind == Service.ThreadKind.NODE) {
-                    long idx = thread.getIdx();
-                    update(idx);
-                } else {
-                    clickThreadPlay(threadIdx);
-                }
+
+                final THREADS threads = Singleton.getInstance(mContext).getThreads();
+
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(() -> {
+                    try {
+                        int children = threads.getThreadReferences(threadIdx);
+                        if (children > 0) {
+                            mHandler.post(() -> updateDirectory(threadIdx));
+                        } else {
+                            mHandler.post(() -> clickThreadPlay(threadIdx));
+                        }
+                    } catch (Throwable e) {
+                        Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                    }
+                });
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
