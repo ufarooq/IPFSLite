@@ -21,7 +21,6 @@ import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
-import threads.core.api.Thread;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 
@@ -86,11 +85,8 @@ public class JobServicePin extends JobService {
                 THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
 
                 List<CID> contents = new ArrayList<>();
-                Thread thread = threads.getThreadByIdx(idx);
-                checkNotNull(thread);
 
-
-                CID cid = thread.getCid();
+                CID cid = threads.getThreadCID(idx);
                 if (cid != null) {
                     contents.add(cid);
                 }

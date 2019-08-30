@@ -1036,20 +1036,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickThreadView(long idx) {
 
         final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-        final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-        if (ipfs != null) {
+
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
 
                     CID cid = threads.getThreadCID(idx);
                     checkNotNull(cid);
-                    String multihash = cid.getCid();
 
                     JobServicePin.pin(getApplicationContext(), idx);
 
                     String gateway = Service.getGateway(getApplicationContext());
-                    Uri uri = Uri.parse(gateway + "/ipfs/" + multihash);
+                    Uri uri = Uri.parse(gateway + "/ipfs/" + cid.getCid());
 
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -1060,7 +1058,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                 }
             });
-        }
+
     }
 
     @Override
