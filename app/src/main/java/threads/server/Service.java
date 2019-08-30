@@ -593,7 +593,6 @@ public class Service {
 
                 Preferences.setPubsubEnabled(context, true);
                 Preferences.setPubsubRouter(context, PubsubConfig.RouterEnum.gossipsub);
-                Preferences.setReproviderInterval(context, "0");
 
                 Preferences.setConnMgrConfigType(context, ConnMgrConfig.TypeEnum.basic);
                 Preferences.setLowWater(context, 50);
