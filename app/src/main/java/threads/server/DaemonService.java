@@ -48,7 +48,6 @@ public class DaemonService extends Service {
 
     private Future slowService;
     private Future fastService;
-    private Future pinService;
 
 
     public static void invoke(@NonNull Context context) {
@@ -111,9 +110,7 @@ public class DaemonService extends Service {
                 if (fastService != null) {
                     fastService.cancel(true);
                 }
-                if (pinService != null) {
-                    pinService.cancel(true);
-                }
+
             } finally {
                 stopSelf();
             }
@@ -174,25 +171,6 @@ public class DaemonService extends Service {
 
         });
 
-
-        ExecutorService pin = Executors.newSingleThreadExecutor();
-        pinService = pin.submit(() -> {
-            try {
-                threads.server.Service.getInstance(getApplicationContext());
-                int time = threads.server.Service.getPinServiceTime(getApplicationContext());
-
-                while (DAEMON_RUNNING.get() && time > 0) {
-                    java.lang.Thread.sleep(TimeUnit.HOURS.toMillis(time));
-                    JobServicePinner.pinning(getApplicationContext());
-                }
-
-            } catch (InterruptedException e) {
-                Log.e(TAG, "Daemon Slow Service has been successfully stopped");
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-
-        });
 
     }
 

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import threads.core.GatewayService;
 import threads.core.Network;
@@ -26,23 +27,30 @@ import threads.ipfs.api.CID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class JobServicePinner extends JobService {
+public class JobServicePublisher extends JobService {
 
-    private static final String TAG = JobServicePinner.class.getSimpleName();
+    private static final String TAG = JobServicePublisher.class.getSimpleName();
 
-    public static void pinning(@NonNull Context context) {
+    public static void publish(@NonNull Context context) {
         checkNotNull(context);
+
+        int time = Service.getPublishServiceTime(context);
 
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
-            ComponentName componentName = new ComponentName(context, JobServicePinner.class);
+            ComponentName componentName = new ComponentName(context, JobServicePublisher.class);
 
 
             JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                    //.setPeriodic(TimeUnit.HOURS.toMillis(6))
+                    .setRequiresCharging(true)
+                    .setPeriodic(TimeUnit.HOURS.toMillis(time))
                     .build();
+
+            // cancel a running job with same tag
+            jobScheduler.cancel(TAG.hashCode());
+
             int resultCode = jobScheduler.schedule(jobInfo);
             if (resultCode == JobScheduler.RESULT_SUCCESS) {
                 Log.e(TAG, "Job scheduled!");
@@ -98,7 +106,7 @@ public class JobServicePinner extends JobService {
 
 
                 for (Thread thread : list) {
-                    JobServicePinLoader.pinLoader(getApplicationContext(), thread.getIdx());
+                    JobServiceGatewayLoader.loader(getApplicationContext(), thread.getIdx());
                 }
 
             } catch (Throwable e) {

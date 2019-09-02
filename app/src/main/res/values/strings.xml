@@ -63,7 +63,7 @@
     <string name="action_edit_cid">Edit CID</string>
     <string name="action_file_cid">Upload</string>
     <string name="connection_timeout">Connection Timeout %1$s[s]</string>
-    <string name="pin_service_time">Pin Service Interval %1$s[h]</string>
+    <string name="publisher_service_time">Publisher Service Interval %1$s[h]</string>
     <string name="unknown_peer_sends_data">An unknown peerInfo sends data.</string>
     <string name="peer_info">Peer Info</string>
     <string name="info">Info</string>
@@ -110,15 +110,14 @@
     <string name="no_marked_file_send">No marked files for sending</string>
     <string name="general">General</string>
     <string name="pin_service_notice"><![CDATA[
-    <h2>Pin Service</h2>
-    The pin service pins your content via a gateway. In order to successfully pin your data, some requirements have to be fulfilled.<br>
+    <h2>Publisher Service</h2>
+    The publisher service publish your content via a gateway. In order to successfully publish your data, some requirements have to be fulfilled.<br>
     <br><strong>1. Network</strong> must be available
-    <br><strong>2. IPFS Lite</strong> daemon must run [Limitation]
-    <br><strong>3. Charging</strong> Android device must currently be charged [Limitation]
-    <br><strong>4. Public IP Address</strong>
-    <br><br>In <strong>Pin Service</strong> Settings additional behavioral adoptions can be made
+    <br><strong>2. Charging</strong> Android device must currently be charged [Limitation]
+    <br><strong>3. Public IP Address</strong>
+    <br><br>In <strong>Publisher Service</strong> Settings additional behavioral adoptions can be made
     ]]></string>
-    <string name="pin_service_settings">Pin Service</string>
+    <string name="publisher_service_settings">Publisher Service</string>
     <string name="gateway">Gateway</string>
     <string name="support_automatic_download">Automatic Download</string>
     <string name="pubsub_support">Pubsub Support</string>

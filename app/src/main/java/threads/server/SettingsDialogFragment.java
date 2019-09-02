@@ -304,7 +304,7 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
         });
 
 
-        Spinner pin_gateways = view.findViewById(R.id.pin_gateways);
+        Spinner pin_gateways = view.findViewById(R.id.publisher_gateways);
         List<String> list = new ArrayList<>();
         list.add("https://ipfs.io");
         list.add("https://cloudflare-ipfs.com");
@@ -328,28 +328,30 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
         });
 
 
-        TextView pin_service_time_text = view.findViewById(R.id.pin_service_time_text);
-        SeekBar pin_service_time = view.findViewById(R.id.pin_service_time);
+        TextView publisher_service_time_text = view.findViewById(R.id.publisher_service_time_text);
+        SeekBar publisher_service_time = view.findViewById(R.id.publisher_service_time);
 
 
-        pin_service_time.setMax(12);
+        publisher_service_time.setMax(12);
         int time = 0;
-        int pinServiceTime = Service.getPinServiceTime(activity);
+        int pinServiceTime = Service.getPublishServiceTime(activity);
         if (pinServiceTime > 0) {
             time = (pinServiceTime);
         }
-        pin_service_time_text.setText(getString(R.string.pin_service_time,
+        publisher_service_time_text.setText(getString(R.string.publisher_service_time,
                 String.valueOf(time)));
-        pin_service_time.setProgress(time);
-        pin_service_time.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        publisher_service_time.setProgress(time);
+        publisher_service_time.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
 
-                Service.setPinServiceTime(activity, progress);
-                pin_service_time_text.setText(
-                        getString(R.string.pin_service_time,
+                Service.setPublisherServiceTime(mContext, progress);
+                publisher_service_time_text.setText(
+                        getString(R.string.publisher_service_time,
                                 String.valueOf(progress)));
+
+                JobServicePublisher.publish(mContext);
 
             }
 
