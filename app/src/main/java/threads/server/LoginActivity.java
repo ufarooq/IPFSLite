@@ -102,6 +102,8 @@ public class LoginActivity extends AppCompatActivity {
                 Service.getInstance(getApplicationContext());
 
                 // jobs
+                JobServiceLoadNotifications.notifications(getApplicationContext());
+                JobServiceDownloader.downloader(getApplicationContext());
                 JobServicePublisher.publish(getApplicationContext());
                 JobServicePeers.peers(getApplicationContext());
                 JobServiceFindPeers.findPeers(getApplicationContext());
@@ -110,10 +112,6 @@ public class LoginActivity extends AppCompatActivity {
                 ContentsService.contents(getApplicationContext());
 
 
-                if (threads.server.Service.isReceiveNotificationsEnabled(
-                        getApplicationContext())) {
-                    NotificationService.notifications(getApplicationContext());
-                }
                 if (Intent.ACTION_SEND.equals(action)) {
                     String type = intent.getType();
                     if ("text/plain".equals(type)) {

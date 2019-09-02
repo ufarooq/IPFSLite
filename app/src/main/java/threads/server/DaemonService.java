@@ -18,10 +18,6 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -44,11 +40,6 @@ public class DaemonService extends Service {
             }
         }
     };
-
-
-    private Future slowService;
-    private Future fastService;
-
 
     public static void invoke(@NonNull Context context) {
         checkNotNull(context);
@@ -98,18 +89,10 @@ public class DaemonService extends Service {
             IntentFilter intentFilter = new IntentFilter();
             intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
             registerReceiver(broadcastReceiver, intentFilter);
-            run();
         } else {
             try {
                 stopForeground(true);
                 unregisterReceiver(broadcastReceiver);
-
-                if (slowService != null) {
-                    slowService.cancel(true);
-                }
-                if (fastService != null) {
-                    fastService.cancel(true);
-                }
 
             } finally {
                 stopSelf();
@@ -129,50 +112,6 @@ public class DaemonService extends Service {
         super.onCreate();
     }
 
-    private void run() {
-
-        ExecutorService fast = Executors.newSingleThreadExecutor();
-        fastService = fast.submit(() -> {
-            try {
-                threads.server.Service.getInstance(getApplicationContext());
-
-                while (DAEMON_RUNNING.get()) {
-                    java.lang.Thread.sleep(TimeUnit.SECONDS.toMillis(30));
-                    if (threads.server.Service.isReceiveNotificationsEnabled(
-                            getApplicationContext())) {
-                        NotificationService.notifications(getApplicationContext());
-                    }
-                }
-
-            } catch (InterruptedException e) {
-                Log.e(TAG, "Daemon Fast Service has been successfully stopped");
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-
-        });
-
-
-        ExecutorService clean = Executors.newSingleThreadExecutor();
-        slowService = clean.submit(() -> {
-            try {
-                threads.server.Service.getInstance(getApplicationContext());
-
-                while (DAEMON_RUNNING.get()) {
-                    java.lang.Thread.sleep(TimeUnit.HOURS.toMillis(12));
-                    ContentsService.contents(getApplicationContext());
-                }
-
-            } catch (InterruptedException e) {
-                Log.e(TAG, "Daemon Slow Service has been successfully stopped");
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-
-        });
-
-
-    }
 
     private Notification buildNotification() {
 

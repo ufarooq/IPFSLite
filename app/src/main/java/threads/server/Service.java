@@ -232,10 +232,10 @@ public class Service {
             Log.e(TAG, "Time Daemon : " + (System.currentTimeMillis() - time));
             SINGLETON.init(context);
 
+
         }
         return SINGLETON;
     }
-
 
 
     private static long getDaysAgo(int days) {
@@ -866,7 +866,6 @@ public class Service {
     }
 
 
-
     @NonNull
     private static String evaluateMimeType(@NonNull Context context, @NonNull String filename) {
         final THREADS threads = Singleton.getInstance(context).getThreads();
@@ -1374,6 +1373,25 @@ public class Service {
 
     }
 
+    public static void checkNotifications(@NonNull Context context) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                if (ipfs != null) {
+
+                    while (ipfs.isDaemonRunning()) {
+                        java.lang.Thread.sleep(TimeUnit.SECONDS.toMillis(30));
+                        JobServiceLoadNotifications.notifications(context);
+                    }
+                }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        });
+
+
+    }
 
     void storeData(@NonNull Context context, @NonNull String text) {
         checkNotNull(context);
@@ -1434,7 +1452,6 @@ public class Service {
                         // cleanup of entries with same CID and hierarchy
                         List<Thread> sameEntries = threads.getThreadsByCIDAndThread(cid, 0L);
                         threads.removeThreads(ipfs, sameEntries);
-
 
 
                         threads.setThreadCID(idx, cid);
@@ -1764,6 +1781,7 @@ public class Service {
             try {
                 Service.cleanStates(context);
                 Service.createHost(context);
+                Service.checkNotifications(context);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
@@ -1872,26 +1890,9 @@ public class Service {
                     Preferences.evaluateException(threads, Preferences.IPFS_START_FAILURE, e);
                 }
 
-
-                if (Preferences.isDebugMode(context)) {
-                    ExecutorService executor = Executors.newSingleThreadExecutor();
-                    executor.submit(() -> {
-                        try {
-                            ipfs.logs();
-                        } catch (Throwable e) {
-                            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-                        }
-                    });
-                }
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
-
-
-    public enum ThreadKind {
-        LEAF, NODE
-    }
-
 }

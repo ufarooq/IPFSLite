@@ -86,7 +86,7 @@ public class JobServiceContents extends JobService {
                         PID.create(pid), CID.create(cid));
 
                 if (connected) {
-                    // load old entries when connected
+                    // notifications old entries when connected
                     long timestamp = getMinutesAgo(30);
 
                     List<threads.server.Content> contents =

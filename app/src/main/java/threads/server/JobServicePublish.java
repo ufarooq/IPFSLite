@@ -55,7 +55,6 @@ public class JobServicePublish extends JobService {
     }
 
 
-
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
@@ -79,7 +78,7 @@ public class JobServicePublish extends JobService {
 
                 checkNotNull(ipfs, "IPFS not valid");
 
-                // first load stored relays
+                // first notifications stored relays
                 GatewayService.connectStoredRelays(getApplicationContext(), 20, 3);
 
                 THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();

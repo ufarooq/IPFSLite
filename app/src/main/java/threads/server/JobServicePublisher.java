@@ -82,7 +82,7 @@ public class JobServicePublisher extends JobService {
 
                 checkNotNull(ipfs, "IPFS not valid");
 
-                // first load stored relays
+                // first notifications stored relays
                 GatewayService.connectStoredRelays(getApplicationContext(), 20, 3);
 
 

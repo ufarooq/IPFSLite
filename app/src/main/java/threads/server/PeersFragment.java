@@ -72,6 +72,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         }
     }
 
+
     private void peersOnlineStatus() {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -218,6 +219,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
             }
 
         });
+
         peersOnlineStatus();
 
         return view;

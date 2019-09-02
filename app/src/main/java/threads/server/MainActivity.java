@@ -1037,27 +1037,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
 
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
 
-                    CID cid = threads.getThreadCID(idx);
-                    checkNotNull(cid);
+                CID cid = threads.getThreadCID(idx);
+                checkNotNull(cid);
 
-                    JobServicePublish.pin(getApplicationContext(), idx);
+                JobServicePublish.pin(getApplicationContext(), idx);
 
-                    String gateway = Service.getGateway(getApplicationContext());
-                    Uri uri = Uri.parse(gateway + "/ipfs/" + cid.getCid());
+                String gateway = Service.getGateway(getApplicationContext());
+                Uri uri = Uri.parse(gateway + "/ipfs/" + cid.getCid());
 
-                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
+                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
 
-                } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-                }
-            });
+            } catch (Throwable e) {
+                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+            }
+        });
 
     }
 

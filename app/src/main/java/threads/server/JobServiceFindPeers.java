@@ -69,18 +69,18 @@ public class JobServiceFindPeers extends JobService {
             try {
 
 
-                    Service.getInstance(getApplicationContext());
+                Service.getInstance(getApplicationContext());
 
-                    IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-                    checkNotNull(ipfs, "IPFS not defined");
+                IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+                checkNotNull(ipfs, "IPFS not defined");
 
 
-                    List<Peer> peers = ipfs.swarmPeers();
+                List<Peer> peers = ipfs.swarmPeers();
 
-                    for (Peer peer : peers) {
-                        PID pid = peer.getPid();
-                        Service.createUnknownUser(getApplicationContext(), pid);
-                    }
+                for (Peer peer : peers) {
+                    PID pid = peer.getPid();
+                    Service.createUnknownUser(getApplicationContext(), pid);
+                }
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
