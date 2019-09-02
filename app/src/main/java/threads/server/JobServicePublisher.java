@@ -26,17 +26,17 @@ import threads.ipfs.api.CID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class JobServicePinner extends JobService {
+public class JobServicePublisher extends JobService {
 
-    private static final String TAG = JobServicePinner.class.getSimpleName();
+    private static final String TAG = JobServicePublisher.class.getSimpleName();
 
-    public static void pinning(@NonNull Context context) {
+    public static void publish(@NonNull Context context) {
         checkNotNull(context);
 
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
-            ComponentName componentName = new ComponentName(context, JobServicePinner.class);
+            ComponentName componentName = new ComponentName(context, JobServicePublisher.class);
 
 
             JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
@@ -98,7 +98,7 @@ public class JobServicePinner extends JobService {
 
 
                 for (Thread thread : list) {
-                    JobServicePinLoader.pinLoader(getApplicationContext(), thread.getIdx());
+                    JobServiceGatewayLoader.loader(getApplicationContext(), thread.getIdx());
                 }
 
             } catch (Throwable e) {

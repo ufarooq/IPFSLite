@@ -155,7 +155,7 @@ public class Service {
         return sharedPref.getInt(PIN_SERICE_TIME_KEY, 6);
     }
 
-    public static void setPinServiceTime(@NonNull Context context, int timeout) {
+    public static void setPublisherServiceTime(@NonNull Context context, int timeout) {
         checkNotNull(context);
         checkArgument(timeout >= 0);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);

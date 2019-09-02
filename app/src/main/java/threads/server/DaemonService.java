@@ -183,7 +183,7 @@ public class DaemonService extends Service {
 
                 while (DAEMON_RUNNING.get() && time > 0) {
                     java.lang.Thread.sleep(TimeUnit.HOURS.toMillis(time));
-                    JobServicePinner.pinning(getApplicationContext());
+                    JobServicePublisher.publish(getApplicationContext());
                 }
 
             } catch (InterruptedException e) {

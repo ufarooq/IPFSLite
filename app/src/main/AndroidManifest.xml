@@ -123,19 +123,19 @@
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServicePin"
+            android:name=".JobServicePublish"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServicePinner"
+            android:name=".JobServicePublisher"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServicePinLoader"
+            android:name=".JobServiceGatewayLoader"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
