@@ -29,9 +29,9 @@ import threads.ipfs.api.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class JobServiceMultihash extends JobService {
+public class JobServiceDownload extends JobService {
 
-    private static final String TAG = JobServiceMultihash.class.getSimpleName();
+    private static final String TAG = JobServiceDownload.class.getSimpleName();
 
 
     public static void download(@NonNull Context context,
@@ -43,7 +43,7 @@ public class JobServiceMultihash extends JobService {
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
-            ComponentName componentName = new ComponentName(context, JobServiceMultihash.class);
+            ComponentName componentName = new ComponentName(context, JobServiceDownload.class);
 
             PersistableBundle bundle = new PersistableBundle();
             bundle.putString(threads.core.api.Content.PID, pid.getPid());

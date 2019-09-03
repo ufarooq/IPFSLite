@@ -1820,7 +1820,7 @@ public class Service {
                                         JobServiceContents.contents(context,
                                                 senderPid, CID.create(result.getMultihash()));
                                     } else if (result.getCodex() == CodecDecider.Codec.URI) {
-                                        JobServiceMultihash.download(context,
+                                        JobServiceDownload.download(context,
                                                 senderPid, CID.create(result.getMultihash()));
 
                                     } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {

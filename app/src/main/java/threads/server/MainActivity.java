@@ -234,7 +234,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 checkNotNull(host);
                 String multihash = codecDecider.getMultihash();
 
-                JobServiceMultihash.download(getApplicationContext(),
+                JobServiceDownload.download(getApplicationContext(),
                         host, CID.create(multihash));
             } else {
 

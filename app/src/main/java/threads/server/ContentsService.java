@@ -122,7 +122,7 @@ class ContentsService {
         if (Service.isAutoDownload(context)) {
             Collections.reverse(files);
             for (ContentEntry file : files) {
-                JobServiceMultihash.downloadContentID(context, pid, CID.create(file.getCid()));
+                JobServiceDownload.downloadContentID(context, pid, CID.create(file.getCid()));
             }
         }
 
