@@ -119,9 +119,9 @@ public class JobServiceGatewayLoader extends JobService {
                     long time = (System.currentTimeMillis() - pageTime) / 1000;
 
                     if (success) {
-                        Log.e(TAG, "Success pin : " + url.toString() + " " + time + " [s]");
+                        Log.e(TAG, "Success publish : " + url.toString() + " " + time + " [s]");
                     } else {
-                        Log.e(TAG, "Failed pin : " + url.toString() + " " + time + " [s]");
+                        Log.e(TAG, "Failed publish : " + url.toString() + " " + time + " [s]");
                     }
                 }
 

@@ -62,7 +62,7 @@ public class JobServiceMultihash extends JobService {
         }
     }
 
-    public static void downloadMultihash(@NonNull Context context,
+    public static void downloadContentID(@NonNull Context context,
                                          @NonNull PID pid,
                                          @NonNull CID cid) {
 
@@ -136,7 +136,7 @@ public class JobServiceMultihash extends JobService {
             try {
                 Service.getInstance(getApplicationContext());
 
-                downloadMultihash(getApplicationContext(), PID.create(pid), CID.create(cid));
+                downloadContentID(getApplicationContext(), PID.create(pid), CID.create(cid));
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {

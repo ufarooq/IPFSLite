@@ -1044,7 +1044,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 CID cid = threads.getThreadCID(idx);
                 checkNotNull(cid);
 
-                JobServicePublish.pin(getApplicationContext(), idx);
+                JobServicePublish.publish(getApplicationContext(), cid);
 
                 String gateway = Service.getGateway(getApplicationContext());
                 Uri uri = Uri.parse(gateway + "/ipfs/" + cid.getCid());
