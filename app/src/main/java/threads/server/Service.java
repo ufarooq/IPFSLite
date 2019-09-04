@@ -459,24 +459,26 @@ public class Service {
         if (threads.getUserByPID(pid) == null) {
             threads.ipfs.api.PeerInfo info = ipfs.id(pid, 3);
             if (info != null) {
-                String pubKey = info.getPublicKey();
-                if (pubKey != null && !pubKey.isEmpty()) {
+                if (info.isLiteAgent()) {
+                    String pubKey = info.getPublicKey();
+                    if (pubKey != null && !pubKey.isEmpty()) {
 
-                    threads.core.api.PeerInfo peerInfo = IdentityService.getPeerInfo(
-                            context, pid,
-                            BuildConfig.ApiAesKey, false);
-                    if (peerInfo != null) {
-                        String alias = peerInfo.getAdditionalValue(Content.ALIAS);
-                        if (!alias.isEmpty()) {
-                            CID image = ThumbnailService.getImage(
-                                    context,
-                                    alias,
-                                    R.drawable.server_network);
+                        threads.core.api.PeerInfo peerInfo = IdentityService.getPeerInfo(
+                                context, pid,
+                                BuildConfig.ApiAesKey, false);
+                        if (peerInfo != null) {
+                            String alias = peerInfo.getAdditionalValue(Content.ALIAS);
+                            if (!alias.isEmpty()) {
+                                CID image = ThumbnailService.getImage(
+                                        context,
+                                        alias,
+                                        R.drawable.server_network);
 
-                            User user = threads.createUser(pid, pubKey, alias,
-                                    UserType.UNKNOWN, image);
-                            user.setBlocked(true);
-                            threads.storeUser(user);
+                                User user = threads.createUser(pid, pubKey, alias,
+                                        UserType.UNKNOWN, image);
+                                user.setBlocked(true);
+                                threads.storeUser(user);
+                            }
                         }
                     }
                 }
@@ -601,7 +603,7 @@ public class Service {
 
 
                 Preferences.setConnectionTimeout(context, 45);
-                EntityService.setTangleTimeout(context, 30);
+                EntityService.setTangleTimeout(context, 45);
 
                 Preferences.setMdnsEnabled(context, true);
 
@@ -1747,8 +1749,7 @@ public class Service {
                             params.put(Content.ALIAS, alias);
 
                             IdentityService.publishIdentity(
-                                    context, BuildConfig.ApiAesKey, params, false,
-                                    Service.RELAYS);
+                                    context, BuildConfig.ApiAesKey, params, Service.RELAYS);
                         }
 
 

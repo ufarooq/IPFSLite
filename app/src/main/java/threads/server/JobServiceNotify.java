@@ -96,7 +96,7 @@ public class JobServiceNotify extends JobService {
                     }
 
                     IdentityService.publishIdentity(getApplicationContext(), BuildConfig.ApiAesKey,
-                            params, false, Service.RELAYS);
+                            params, Service.RELAYS);
                 }
 
 

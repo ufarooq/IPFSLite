@@ -46,8 +46,7 @@ public class JobServiceLoadNotifications extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
-        if (!Service.isReceiveNotificationsEnabled(
-                getApplicationContext())) {
+        if (!Service.isReceiveNotificationsEnabled(getApplicationContext())) {
             return false;
         }
 

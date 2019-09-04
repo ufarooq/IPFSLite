@@ -11,8 +11,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -82,14 +80,8 @@ public class JobServicePublish extends JobService {
                 GatewayService.connectStoredRelays(getApplicationContext(),
                         20, 3);
 
-                List<CID> contents = new ArrayList<>();
 
-                contents.add(CID.create(cid));
-
-                for (CID content : contents) {
-                    Executors.newSingleThreadExecutor().submit(
-                            () -> ipfs.dhtPublish(content, true, timeout));
-                }
+                ipfs.dhtPublish(CID.create(cid), true, timeout);
 
 
             } catch (Throwable e) {

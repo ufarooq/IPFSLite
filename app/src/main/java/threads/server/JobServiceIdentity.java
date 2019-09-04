@@ -79,7 +79,7 @@ public class JobServiceIdentity extends JobService {
                 }
 
                 IdentityService.publishIdentity(getApplicationContext(), BuildConfig.ApiAesKey,
-                        params, false, Service.RELAYS);
+                        params, Service.RELAYS);
 
 
             } catch (Throwable e) {
