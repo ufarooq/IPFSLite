@@ -515,31 +515,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickUserBlock(@NonNull String pid) {
+    public void clickUserBlock(@NonNull String pid, boolean value) {
         checkNotNull(pid);
-        try {
-            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
 
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
 
-                    User user = threads.getUserByPID(PID.create(pid));
-                    checkNotNull(user);
-
-                    if (user.isBlocked()) {
-                        threads.unblockUser(user);
-                    } else {
-                        threads.blockUser(user);
-                    }
-
-                } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                if (!value) {
+                    threads.unblockUser(PID.create(pid));
+                } else {
+                    threads.blockUser(PID.create(pid));
                 }
-            });
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        });
+
     }
 
     @Override
@@ -975,38 +969,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickUserAutoConnect(@NonNull String pid) {
+    public void clickUserAutoConnect(@NonNull String pid, boolean autoConnect) {
 
 
-        try {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
 
-            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+                threads.setUserAutoConnect(PID.create(pid), autoConnect);
 
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        });
 
-
-                    User user = threads.getUserByPID(PID.create(pid));
-                    checkNotNull(user);
-
-                    boolean autoConnect = user.isAutoConnect();
-
-                    // TOGGLE auto connect
-                    threads.setUserAutoConnect(user.getPID(), !autoConnect);
-
-                    if (!autoConnect) {
-                        clickUserConnect(pid);
-                    }
-
-                } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-                }
-            });
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
     }
 
 

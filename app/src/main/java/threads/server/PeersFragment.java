@@ -14,7 +14,6 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -229,12 +228,11 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         try {
 
             boolean callActive = Preferences.isPubsubEnabled(mContext);
-            FragmentManager fm = getChildFragmentManager();
 
             UserActionDialogFragment.newInstance(
                     user.getPID().getPid(), true, true, true,
-                    true, true, true, true, callActive)
-                    .show(fm, UserActionDialogFragment.TAG);
+                    user.isAutoConnect(), true, user.isBlocked(), true, callActive)
+                    .show(getChildFragmentManager(), UserActionDialogFragment.TAG);
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
