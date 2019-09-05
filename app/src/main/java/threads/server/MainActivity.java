@@ -57,9 +57,11 @@ import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
+import threads.ipfs.api.PeerInfo;
 import threads.share.DontShowAgainDialog;
 import threads.share.InfoDialogFragment;
 import threads.share.NameDialogFragment;
+import threads.share.PeerActionDialogFragment;
 import threads.share.PermissionAction;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.ThumbnailService;
@@ -77,9 +79,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         EditMultihashDialogFragment.ActionListener,
         EditPeerDialogFragment.ActionListener,
         PeersFragment.ActionListener,
-        SwarmFragment.ActionListener,
         ThreadsFragment.ActionListener,
         NameDialogFragment.ActionListener,
+        PeerActionDialogFragment.ActionListener,
         DontShowAgainDialog.ActionListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -894,6 +896,119 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    @Override
+    public void clickUserDetails(@NonNull String pid) {
+
+        Singleton singleton = Singleton.getInstance(getApplicationContext());
+        // CHECKED
+        if (!Network.isConnected(getApplicationContext())) {
+            Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
+            return;
+        }
+
+        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
+            Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
+            return;
+        }
+
+        try {
+            final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
+            final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+            final PID host = Preferences.getPID(getApplicationContext());
+            checkNotNull(host);
+            if (ipfs != null) {
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(() -> {
+                    PID peer = PID.create(pid);
+                    try {
+
+                        threads.setUserDialing(peer, true);
+                        PeerInfo info = ipfs.id(peer, timeout);
+
+
+                        String html = "<html><h4 align=\"center\">Peer Details</h4><ul>";
+
+                        if (info != null) {
+
+                            String spid = "PID : " + info.getPID().getPid();
+                            html = html.concat("<li><div style=\"width: 80%;" +
+                                    "  word-wrap:break-word;\">").concat(spid).concat("</div></li>");
+
+
+                            String agent = "Agent Version : " + info.getAgentVersion();
+                            html = html.concat("<li><div style=\"width: 80%;" +
+                                    "  word-wrap:break-word;\">").concat(agent).concat("</div></li>");
+
+
+                            String protocol = "Protocol Version : " + info.getProtocolVersion();
+                            html = html.concat("<li><div style=\"width: 80%;" +
+                                    "  word-wrap:break-word;\">").concat(protocol).concat("</div></li>");
+
+
+                            List<String> addresses = info.getMultiAddresses();
+                            for (String address : addresses) {
+                                html = html.concat("<li><div style=\"width: 80%;" +
+                                        "  word-wrap:break-word;\">").concat(address).concat("</div></li>");
+                            }
+
+                        }
+
+                        html = html.concat("</ul></html>");
+
+
+                        WebViewDialogFragment.newInstance(
+                                WebViewDialogFragment.Type.HTML, html).show(
+                                getSupportFragmentManager(),
+                                WebViewDialogFragment.TAG);
+                    } catch (Throwable e) {
+                        Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                    } finally {
+                        threads.setUserDialing(peer, false);
+                    }
+                });
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+
+    }
+
+    @Override
+    public void clickUserAutoConnect(@NonNull String pid) {
+
+
+        try {
+
+            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+
+
+                    User user = threads.getUserByPID(PID.create(pid));
+                    checkNotNull(user);
+
+                    boolean autoConnect = user.isAutoConnect();
+
+                    // TOGGLE auto connect
+                    threads.setUserAutoConnect(user.getPID(), !autoConnect);
+
+                    if (!autoConnect) {
+                        clickUserConnect(pid);
+                    }
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                }
+            });
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
 
     @Override
     public void clickConnectPeer(@NonNull String pid) {
@@ -1213,6 +1328,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
+    }
+
+    @Override
+    public void clickPeerInfo(@NonNull String pid) {
+        clickUserInfo(pid);
+    }
+
+    @Override
+    public void clickPeerDetails(@NonNull String pid) {
+        clickUserDetails(pid);
+    }
+
+    @Override
+    public void clickPeerAdd(@NonNull String pid) {
+        clickConnectPeer(pid);
     }
 
     private class PagerAdapter extends FragmentStatePagerAdapter {

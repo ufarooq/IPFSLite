@@ -32,8 +32,8 @@ import threads.core.GatewayService;
 import threads.core.api.IPeer;
 import threads.core.mdl.EventViewModel;
 import threads.core.mdl.PeersViewModel;
+import threads.share.PeerActionDialogFragment;
 import threads.share.PeersViewAdapter;
-import threads.share.UserActionDialogFragment;
 import threads.share.WebViewDialogFragment;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -50,7 +50,6 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
 
 
     private PeersViewAdapter peersViewAdapter;
-    private ActionListener actionListener;
     private Context mContext;
     private FloatingActionButton fab_traffic;
 
@@ -66,7 +65,6 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
         super.onAttach(context);
         mContext = context;
         try {
-            actionListener = (SwarmFragment.ActionListener) getActivity();
             Service.getInstance(context).swarmCheckEnable(true);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -121,7 +119,7 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
                     GatewayService.PeerSummary info = GatewayService.evaluateAllPeers(mContext);
 
 
-                    String html = "<html><h2 align=\"center\">Quality</h2><ul>";
+                    String html = "<html><h4 align=\"center\">Quality</h4><ul>";
 
 
                     String numPeers = "Number Peers : " + info.getNumPeers();
@@ -223,10 +221,9 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
 
             FragmentManager fm = getChildFragmentManager();
 
-            UserActionDialogFragment.newInstance(
-                    peer.getPID().getPid(), true, false,
-                    false, false, false, false)
-                    .show(fm, UserActionDialogFragment.TAG);
+            PeerActionDialogFragment.newInstance(
+                    peer.getPID().getPid(), true, true, true)
+                    .show(fm, PeerActionDialogFragment.TAG);
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -239,8 +236,4 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
         return !peer.isDialing();
     }
 
-    public interface ActionListener {
-
-        void clickInfoPeer();
-    }
 }

@@ -130,7 +130,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                         try {
                             PeerInfo info = ipfs.id();
                             checkNotNull(info);
-                            String html = "<html><h2>Addresses</h2><ul>";
+                            String html = "<html><h4 align=\"center\">Addresses</h4><ul>";
                             List<String> addresses = info.getMultiAddresses();
                             for (String address : addresses) {
                                 html = html.concat("<li><div style=\"width: 80%;" +
@@ -232,8 +232,8 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
             FragmentManager fm = getChildFragmentManager();
 
             UserActionDialogFragment.newInstance(
-                    user.getPID().getPid(), true, true,
-                    true, true, true, callActive)
+                    user.getPID().getPid(), true, true, true,
+                    true, true, true, true, callActive)
                     .show(fm, UserActionDialogFragment.TAG);
 
         } catch (Throwable e) {
