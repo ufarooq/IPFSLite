@@ -35,6 +35,7 @@ public class DaemonService extends Service {
         public void onReceive(Context context, Intent intent) {
             try {
                 JobServicePeers.peers(getApplicationContext());
+                JobServiceAutoConnect.autoConnect(getApplicationContext());
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
