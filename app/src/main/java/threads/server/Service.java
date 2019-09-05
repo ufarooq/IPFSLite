@@ -1560,9 +1560,9 @@ public class Service {
                     GatewayService.PeerSummary info = GatewayService.evaluateAllPeers(context);
 
                     String content = SwarmFragment.NONE;
-                    if (info.getLatency() < 100) {
+                    if (info.getLatency() < 150) {
                         content = SwarmFragment.HIGH;
-                    } else if (info.getLatency() < 300) {
+                    } else if (info.getLatency() < 500) {
                         content = SwarmFragment.MEDIUM;
                     } else if (info.getNumPeers() > 0) {
                         content = SwarmFragment.LOW;
