@@ -82,8 +82,10 @@ public class JobServicePublisher extends JobService {
 
                 checkNotNull(ipfs, "IPFS not valid");
 
+
                 // first notifications stored relays
-                GatewayService.connectStoredRelays(getApplicationContext(), 20, 3);
+                GatewayService.connectStoredRelays(
+                        getApplicationContext(), "", 20, 3);
 
 
                 THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();

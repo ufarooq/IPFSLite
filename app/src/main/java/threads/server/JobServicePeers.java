@@ -63,7 +63,7 @@ public class JobServicePeers extends JobService {
                 GatewayService.connectStoredAutonat(getApplicationContext(),
                         3, 3);
 
-                GatewayService.connectStoredRelays(getApplicationContext(),
+                GatewayService.connectStoredRelays(getApplicationContext(), "",
                         Service.RELAYS, 3);
 
             } catch (Throwable e) {

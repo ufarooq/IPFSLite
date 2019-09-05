@@ -258,23 +258,18 @@ class ContentsService {
 
                 if (!threads.isUserBlocked(pid)) {
 
-                    final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-                    checkNotNull(ipfs, "IPFS not valid");
-
                     SwarmService.ConnectInfo info = SwarmService.connect(context, pid);
                     success = info.isConnected();
 
+                    Contents contents = downloadContents(context, cid);
 
-                    if (success) {
-                        Contents contents = downloadContents(context, cid);
+                    if (contents != null) {
 
-                        if (contents != null) {
+                        contentService.finishContent(cid);
 
-                            contentService.finishContent(cid);
-
-                            downloadContents(context, pid, contents);
-                        }
+                        downloadContents(context, pid, contents);
                     }
+
 
                     SwarmService.disconnect(context, info);
 

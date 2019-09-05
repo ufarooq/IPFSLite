@@ -1738,7 +1738,7 @@ public class Service {
                         checkNotNull(host);
                         contentService.insertContent(host, cid, true);
 
-                        JobServicePublish.publish(context, cid);
+                        JobServicePublish.publish(context, cid, false);
 
 
                         if (peerDiscovery) {

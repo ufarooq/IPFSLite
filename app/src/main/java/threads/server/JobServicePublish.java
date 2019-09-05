@@ -28,7 +28,7 @@ public class JobServicePublish extends JobService {
 
     private static final String TAG = JobServicePublish.class.getSimpleName();
 
-    public static void publish(@NonNull Context context, @NonNull CID cid) {
+    public static void publish(@NonNull Context context, @NonNull CID cid, boolean connectStoredRelays) {
         checkNotNull(context);
         checkNotNull(cid);
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
@@ -38,6 +38,7 @@ public class JobServicePublish extends JobService {
 
             PersistableBundle bundle = new PersistableBundle();
             bundle.putString(Content.CID, cid.getCid());
+            bundle.putBoolean(Content.PEERS, connectStoredRelays);
 
             JobInfo jobInfo = new JobInfo.Builder(cid.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
@@ -59,6 +60,7 @@ public class JobServicePublish extends JobService {
         PersistableBundle bundle = jobParameters.getExtras();
         final String cid = bundle.getString(Content.CID);
         checkNotNull(cid);
+        final boolean connectPeers = bundle.getBoolean(Content.PEERS);
         if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
             return false;
         }
@@ -77,9 +79,11 @@ public class JobServicePublish extends JobService {
                 checkNotNull(ipfs, "IPFS not valid");
 
                 // first notifications stored relays
-                GatewayService.connectStoredRelays(getApplicationContext(),
-                        20, 3);
 
+                if (connectPeers) {
+                    GatewayService.connectStoredRelays(getApplicationContext(), "",
+                            20, 3);
+                }
 
                 ipfs.dhtPublish(CID.create(cid), true, timeout);
 
