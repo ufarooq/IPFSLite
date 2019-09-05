@@ -130,7 +130,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                         try {
                             PeerInfo info = ipfs.id();
                             checkNotNull(info);
-                            String html = "<html><h4 align=\"center\">Addresses</h4><ul>";
+                            String html = "<html><h3 align=\"center\">Addresses</h3><ul>";
                             List<String> addresses = info.getMultiAddresses();
                             for (String address : addresses) {
                                 html = html.concat("<li><div style=\"width: 80%;" +

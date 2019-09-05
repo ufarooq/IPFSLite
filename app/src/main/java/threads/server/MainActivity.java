@@ -927,7 +927,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         PeerInfo info = ipfs.id(peer, timeout);
 
 
-                        String html = "<html><h4 align=\"center\">Peer Details</h4><ul>";
+                        String html = "<html><h3 align=\"center\">Peer Details</h3><ul>";
 
                         if (info != null) {
 

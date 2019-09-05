@@ -119,7 +119,7 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
                     GatewayService.PeerSummary info = GatewayService.evaluateAllPeers(mContext);
 
 
-                    String html = "<html><h4 align=\"center\">Quality</h4><ul>";
+                    String html = "<html><h3 align=\"center\">Quality</h3><ul>";
 
 
                     String numPeers = "Number Peers : " + info.getNumPeers();
