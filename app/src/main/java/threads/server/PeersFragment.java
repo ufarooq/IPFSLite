@@ -1,6 +1,5 @@
 package threads.server;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -140,13 +139,11 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                             String agent = info.getAgentVersion();
                             html = html.concat("</ul><br/><footer>Version : " + agent + "</footer></html>");
 
-                            Activity activity = getActivity();
-                            if (activity != null) {
-                                WebViewDialogFragment.newInstance(
-                                        WebViewDialogFragment.Type.HTML, html).show(
-                                        getActivity().getSupportFragmentManager(),
-                                        WebViewDialogFragment.TAG);
-                            }
+
+                            WebViewDialogFragment.newInstance(
+                                    WebViewDialogFragment.Type.HTML, html).show(
+                                    getChildFragmentManager(), WebViewDialogFragment.TAG);
+
 
                         } catch (Throwable e) {
                             // ignore exception for now
@@ -176,10 +173,10 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
             }
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            if (getActivity() != null) {
-                PeersDialogFragment.newInstance(true, true, true)
-                        .show(getActivity().getSupportFragmentManager(), PeersDialogFragment.TAG);
-            }
+
+            PeersDialogFragment.newInstance(true, true, true)
+                    .show(getChildFragmentManager(), PeersDialogFragment.TAG);
+
 
         });
 

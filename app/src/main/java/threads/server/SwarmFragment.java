@@ -2,6 +2,7 @@ package threads.server;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -27,11 +28,13 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import threads.core.GatewayService;
 import threads.core.api.IPeer;
 import threads.core.mdl.EventViewModel;
 import threads.core.mdl.PeersViewModel;
 import threads.share.PeersViewAdapter;
 import threads.share.UserActionDialogFragment;
+import threads.share.WebViewDialogFragment;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -104,6 +107,52 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
         View view = inflater.inflate(R.layout.swarm_view, container, false);
 
         fab_traffic = view.findViewById(R.id.fab_traffic);
+        fab_traffic.setOnClickListener((v) -> {
+
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    GatewayService.PeerSummary info = GatewayService.evaluateAllPeers(mContext);
+
+
+                    String html = "<html><h2 align=\"center\">Quality</h2><ul>";
+
+
+                    String numPeers = "Number Peers : " + info.getNumPeers();
+                    html = html.concat("<li><div style=\"width: 80%;" +
+                            "  word-wrap:break-word;\">").concat(numPeers).concat("</div></li>");
+
+
+                    String latency = "Average Latency : n.a.";
+                    if (info.getLatency() < Long.MAX_VALUE) {
+                        latency = "Average Latency : " + info.getLatency();
+                    }
+
+
+                    html = html.concat("<li><div style=\"width: 80%;" +
+                            "  word-wrap:break-word;\">").concat(latency).concat("</div></li>");
+                    html = html.concat("</ul></html>");
+
+
+                    WebViewDialogFragment.newInstance(
+                            WebViewDialogFragment.Type.HTML, html).show(
+                            getChildFragmentManager(),
+                            WebViewDialogFragment.TAG);
+
+
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            });
+
+
+        });
         RecyclerView mRecyclerView = view.findViewById(R.id.recycler_users);
         mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
