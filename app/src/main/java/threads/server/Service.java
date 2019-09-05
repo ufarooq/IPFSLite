@@ -1674,6 +1674,8 @@ public class Service {
         final THREADS threads = Singleton.getInstance(context).getThreads();
 
 
+        JobServiceConnect.connect(context, user.getPID());
+
         try {
 
             boolean success = Service.notify(
@@ -1758,6 +1760,7 @@ public class Service {
                         List<Future> futures = new ArrayList<>();
 
                         for (User user : users) {
+
                             futures.add(executorService.submit(() ->
                                     sharePeer(context, user, cid, start)));
                         }

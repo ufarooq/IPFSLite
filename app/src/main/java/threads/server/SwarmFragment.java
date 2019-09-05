@@ -131,7 +131,7 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
 
                     String latency = "Average Latency : n.a.";
                     if (info.getLatency() < Long.MAX_VALUE) {
-                        latency = "Average Latency : " + info.getLatency();
+                        latency = "Average Latency : " + info.getLatency() + " [ms]";
                     }
 
 
