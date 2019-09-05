@@ -1,9 +1,7 @@
 package threads.server;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -14,6 +12,7 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
@@ -28,29 +27,29 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.Preferences;
-import threads.core.Singleton;
-import threads.core.THREADS;
 import threads.core.api.IPeer;
+import threads.core.mdl.EventViewModel;
 import threads.core.mdl.PeersViewModel;
-import threads.ipfs.IPFS;
-import threads.ipfs.api.PeerInfo;
 import threads.share.PeersViewAdapter;
 import threads.share.UserActionDialogFragment;
-import threads.share.WebViewDialogFragment;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersViewAdapterListener {
 
-    private static final String TAG = SwarmFragment.class.getSimpleName();
+    public static final String TAG = SwarmFragment.class.getSimpleName();
+    public static final String LOW = "LOW";
+    public static final String HIGH = "HIGH";
+    public static final String MEDIUM = "MEDIUM";
+    public static final String NONE = "NONE";
+
     private long mLastClickTime = 0;
 
 
     private PeersViewAdapter peersViewAdapter;
     private ActionListener actionListener;
     private Context mContext;
-
+    private FloatingActionButton fab_traffic;
 
     @Override
     public void onDetach() {
@@ -91,97 +90,20 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_peers, menu);
+        inflater.inflate(R.menu.menu_swarm, menu);
         super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-
-        switch (item.getItemId()) {
-            case R.id.action_info: {
-
-                // mis-clicking prevention, using threshold of 1000 ms
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                actionListener.clickInfoPeer();
-
-                return true;
-            }
-
-            case R.id.action_id: {
-
-                // mis-clicking prevention, using threshold of 1000 ms
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-
-                final THREADS threads = Singleton.getInstance(mContext).getThreads();
-                final IPFS ipfs = Singleton.getInstance(mContext).getIpfs();
-                if (ipfs != null) {
-                    ExecutorService executor = Executors.newSingleThreadExecutor();
-                    executor.submit(() -> {
-                        try {
-                            PeerInfo info = ipfs.id();
-                            checkNotNull(info);
-                            String html = "<html><h2>Addresses</h2><ul>";
-                            List<String> addresses = info.getMultiAddresses();
-                            for (String address : addresses) {
-                                html = html.concat("<li><div style=\"width: 80%;" +
-                                        "  word-wrap:break-word;\">").concat(address).concat("</div></li>");
-                            }
-                            String agent = info.getAgentVersion();
-                            html = html.concat("</ul><br/><footer>Version : " + agent + "</footer></html>");
-
-                            Activity activity = getActivity();
-                            if (activity != null) {
-                                WebViewDialogFragment.newInstance(
-                                        WebViewDialogFragment.Type.HTML, html).show(
-                                        getActivity().getSupportFragmentManager(),
-                                        WebViewDialogFragment.TAG);
-                            }
-
-                        } catch (Throwable e) {
-                            // ignore exception for now
-                            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-                        }
-                    });
-
-                }
-
-
-                return true;
-            }
-        }
         return super.onOptionsItemSelected(item);
     }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.peers_view, container, false);
+        View view = inflater.inflate(R.layout.swarm_view, container, false);
 
-
-        FloatingActionButton fab_action = view.findViewById(R.id.fab_action);
-        fab_action.setOnClickListener((v) -> {
-
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                return;
-            }
-            mLastClickTime = SystemClock.elapsedRealtime();
-
-            if (getActivity() != null) {
-                PeersDialogFragment.newInstance(true, true, true)
-                        .show(getActivity().getSupportFragmentManager(), PeersDialogFragment.TAG);
-            }
-
-        });
-
-
+        fab_traffic = view.findViewById(R.id.fab_traffic);
         RecyclerView mRecyclerView = view.findViewById(R.id.recycler_users);
         mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
@@ -207,6 +129,31 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
                         peersViewAdapter.updateData(connected);
                     } catch (Throwable e) {
                         Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    }
+                }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+
+        });
+
+        EventViewModel eventViewModel = new ViewModelProvider(this).get(EventViewModel.class);
+        eventViewModel.getEvent(TAG).observe(this, (event) -> {
+            try {
+                if (event != null) {
+                    String content = event.getContent();
+                    if (content.equals(HIGH)) {
+                        fab_traffic.setBackgroundTintList(
+                                ContextCompat.getColorStateList(mContext, android.R.color.holo_green_light));
+                    } else if (content.equals(MEDIUM)) {
+                        fab_traffic.setBackgroundTintList(
+                                ContextCompat.getColorStateList(mContext, android.R.color.holo_orange_light));
+                    } else if (content.equals(LOW)) {
+                        fab_traffic.setBackgroundTintList(
+                                ContextCompat.getColorStateList(mContext, android.R.color.holo_red_light));
+                    } else {
+                        fab_traffic.setBackgroundTintList(
+                                ContextCompat.getColorStateList(mContext, android.R.color.holo_red_dark));
                     }
                 }
             } catch (Throwable e) {

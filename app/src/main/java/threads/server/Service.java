@@ -1552,13 +1552,25 @@ public class Service {
 
     void checkSwarmOnlineStatus(@NonNull Context context) {
         checkNotNull(context);
+        final THREADS threads = Singleton.getInstance(context).getThreads();
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         if (ipfs != null) {
             try {
                 while (swarmCheckFlag.get() && ipfs.isDaemonRunning()) {
-                    GatewayService.evaluateAllPeers(context);
+                    GatewayService.PeerSummary info = GatewayService.evaluateAllPeers(context);
+
+                    String content = SwarmFragment.NONE;
+                    if (info.getLatency() < 100) {
+                        content = SwarmFragment.HIGH;
+                    } else if (info.getLatency() < 300) {
+                        content = SwarmFragment.MEDIUM;
+                    } else if (info.getNumPeers() > 0) {
+                        content = SwarmFragment.LOW;
+                    }
+                    threads.invokeEvent(SwarmFragment.TAG, content);
                     java.lang.Thread.sleep(15000);
                 }
+                threads.invokeEvent(SwarmFragment.TAG, SwarmFragment.NONE);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
