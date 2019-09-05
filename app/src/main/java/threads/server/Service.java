@@ -42,7 +42,6 @@ import threads.core.ConnectService;
 import threads.core.GatewayService;
 import threads.core.IdentityService;
 import threads.core.MimeType;
-import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
@@ -607,8 +606,6 @@ public class Service {
 
                 Preferences.setMdnsEnabled(context, true);
 
-                Preferences.setReportMode(context, false);
-                Preferences.setDebugMode(context, false);
                 Preferences.setRandomSwarmPort(context, true);
 
 
@@ -1069,10 +1066,6 @@ public class Service {
                                             }
                                         }
 
-                                        @Override
-                                        public boolean isStopped() {
-                                            return !Network.isConnected(context);
-                                        }
                                     }, false, timeout, size);
 
                             if (finished) {
@@ -1166,10 +1159,6 @@ public class Service {
                             }
                         }
 
-                        @Override
-                        public boolean isStopped() {
-                            return !Network.isConnected(context);
-                        }
                     }, false, timeout, size);
 
             if (success) {
