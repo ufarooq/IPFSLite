@@ -920,16 +920,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         threads.setUserDialing(peer, true);
 
-                        String protocol = "n.a.";
-                        String version = "n.a.";
+                        String protocolVersion = "n.a.";
+                        String agentVersion = "n.a.";
                         List<String> addresses = new ArrayList<>();
 
 
                         PeerInfo info = ipfs.id(peer, timeout);
 
                         if (info != null) {
-                            version = info.getAgentVersion();
-                            protocol = info.getProtocolVersion();
+                            agentVersion = info.getAgentVersion();
+                            protocolVersion = info.getProtocolVersion();
                             addresses = info.getMultiAddresses();
                         }
 
@@ -940,7 +940,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 "  word-wrap:break-word;\">").concat(pid).concat("</div><br/>");
 
                         html = html.concat("<div style=\"width: 80%;" +
-                                "  word-wrap:break-word;\">").concat("Protocol Version : ").concat(protocol).concat("</div><br/>");
+                                "  word-wrap:break-word;\">").concat("Protocol Version : ").concat(protocolVersion).concat("</div><br/>");
 
                         html = html.concat("<ul>");
 
@@ -950,7 +950,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         }
 
 
-                        html = html.concat("</ul><br/></body><footer>Version : <strong style=\"color:teal;\">" + version + "</strong></footer></html>");
+                        html = html.concat("</ul><br/></body><footer>Agent : <strong style=\"color:teal;\">" + agentVersion + "</strong></footer></html>");
 
 
                         DetailsDialogFragment.newInstance(

@@ -135,8 +135,8 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                                 html = html.concat("<li><div style=\"width: 80%;" +
                                         "  word-wrap:break-word;\">").concat(address).concat("</div></li>");
                             }
-                            String agent = info.getAgentVersion();
-                            html = html.concat("</ul><br/></body><footer>Version : <strong style=\"color:teal;\">" + agent + "</strong></footer></html>");
+                            String agentVersion = info.getAgentVersion();
+                            html = html.concat("</ul><br/></body><footer>Agent : <strong style=\"color:teal;\">" + agentVersion + "</strong></footer></html>");
 
 
                             DetailsDialogFragment.newInstance(
