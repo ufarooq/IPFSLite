@@ -58,6 +58,7 @@ import threads.ipfs.api.CID;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.PeerInfo;
+import threads.share.DetailsDialogFragment;
 import threads.share.DontShowAgainDialog;
 import threads.share.InfoDialogFragment;
 import threads.share.NameDialogFragment;
@@ -918,43 +919,44 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     try {
 
                         threads.setUserDialing(peer, true);
+
+                        String protocol = "n.a.";
+                        String version = "n.a.";
+                        List<String> addresses = new ArrayList<>();
+
+
                         PeerInfo info = ipfs.id(peer, timeout);
 
-
-                        String html = "<html><h3 align=\"center\">Peer Details</h3><ul>";
-
                         if (info != null) {
-
-                            String spid = "PID : " + info.getPID().getPid();
-                            html = html.concat("<li><div style=\"width: 80%;" +
-                                    "  word-wrap:break-word;\">").concat(spid).concat("</div></li>");
-
-
-                            String agent = "Agent Version : " + info.getAgentVersion();
-                            html = html.concat("<li><div style=\"width: 80%;" +
-                                    "  word-wrap:break-word;\">").concat(agent).concat("</div></li>");
-
-
-                            String protocol = "Protocol Version : " + info.getProtocolVersion();
-                            html = html.concat("<li><div style=\"width: 80%;" +
-                                    "  word-wrap:break-word;\">").concat(protocol).concat("</div></li>");
-
-
-                            List<String> addresses = info.getMultiAddresses();
-                            for (String address : addresses) {
-                                html = html.concat("<li><div style=\"width: 80%;" +
-                                        "  word-wrap:break-word;\">").concat(address).concat("</div></li>");
-                            }
-
+                            version = info.getAgentVersion();
+                            protocol = info.getProtocolVersion();
+                            addresses = info.getMultiAddresses();
                         }
 
-                        html = html.concat("</ul></html>");
+                        String html = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
 
 
-                        WebViewDialogFragment.newInstance(
-                                WebViewDialogFragment.Type.HTML, html).show(
+                        html = html.concat("<div style=\"width: 80%;" +
+                                "  word-wrap:break-word;\">").concat(pid).concat("</div><br/>");
+
+                        html = html.concat("<div style=\"width: 80%;" +
+                                "  word-wrap:break-word;\">").concat("Protocol Version : ").concat(protocol).concat("</div><br/>");
+
+                        html = html.concat("<ul>");
+
+                        for (String address : addresses) {
+                            html = html.concat("<li><div style=\"width: 80%;" +
+                                    "  word-wrap:break-word;\">").concat(address).concat("</div></li>");
+                        }
+
+
+                        html = html.concat("</ul><br/></body><footer>Version : <strong style=\"color:teal;\">" + version + "</strong></footer></html>");
+
+
+                        DetailsDialogFragment.newInstance(
+                                DetailsDialogFragment.Type.HTML, html).show(
                                 getSupportFragmentManager(),
-                                WebViewDialogFragment.TAG);
+                                DetailsDialogFragment.TAG);
                     } catch (Throwable e) {
                         Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                     } finally {
@@ -1234,7 +1236,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickThreadPin(long idx, boolean pinned) {
+    public void clickThreadPublish(long idx, boolean pinned) {
 
         if (pinned) {
             if (!Service.getDontShowAgain(this, Service.PIN_SERVICE_KEY)) {

@@ -19,7 +19,6 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -522,16 +521,13 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public void invokeGeneralAction(@NonNull Thread thread) {
         try {
 
-            boolean pinned = thread.isPinned();
             boolean sendActive = Service.isSendNotificationsEnabled(mContext);
-
-            FragmentManager fm = getChildFragmentManager();
 
             ThreadActionDialogFragment.newInstance(
                     thread.getIdx(), true, true,
                     topLevel.get(), true, sendActive,
-                    true, !pinned, pinned)
-                    .show(fm, ThreadActionDialogFragment.TAG);
+                    true, true, thread.isPinned())
+                    .show(getChildFragmentManager(), ThreadActionDialogFragment.TAG);
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);

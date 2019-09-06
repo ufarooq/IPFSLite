@@ -34,9 +34,9 @@ import threads.core.mdl.UsersViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.PeerInfo;
+import threads.share.DetailsDialogFragment;
 import threads.share.UserActionDialogFragment;
 import threads.share.UsersViewAdapter;
-import threads.share.WebViewDialogFragment;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -129,20 +129,20 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                         try {
                             PeerInfo info = ipfs.id();
                             checkNotNull(info);
-                            String html = "<html><h3 align=\"center\">Addresses</h3><ul>";
+                            String html = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Addresses</h3><ul>";
                             List<String> addresses = info.getMultiAddresses();
                             for (String address : addresses) {
                                 html = html.concat("<li><div style=\"width: 80%;" +
                                         "  word-wrap:break-word;\">").concat(address).concat("</div></li>");
                             }
                             String agent = info.getAgentVersion();
-                            html = html.concat("</ul><br/><footer>Version : " + agent + "</footer></html>");
+                            html = html.concat("</ul><br/></body><footer>Version : <strong style=\"color:teal;\">" + agent + "</strong></footer></html>");
 
 
-                            WebViewDialogFragment.newInstance(
-                                    WebViewDialogFragment.Type.HTML, html).show(
-                                    getChildFragmentManager(), WebViewDialogFragment.TAG);
-
+                            DetailsDialogFragment.newInstance(
+                                    DetailsDialogFragment.Type.HTML, html).show(
+                                    getChildFragmentManager(),
+                                    DetailsDialogFragment.TAG);
 
                         } catch (Throwable e) {
                             // ignore exception for now
