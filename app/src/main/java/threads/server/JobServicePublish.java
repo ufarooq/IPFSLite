@@ -88,6 +88,9 @@ public class JobServicePublish extends JobService {
                 ipfs.dhtPublish(CID.create(cid), true, timeout);
 
 
+                GatewayService.evaluatePeers(getApplicationContext(), false);
+
+
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {
