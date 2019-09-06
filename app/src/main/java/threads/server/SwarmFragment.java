@@ -32,9 +32,9 @@ import threads.core.GatewayService;
 import threads.core.api.IPeer;
 import threads.core.mdl.EventViewModel;
 import threads.core.mdl.PeersViewModel;
+import threads.share.DetailsDialogFragment;
 import threads.share.PeerActionDialogFragment;
 import threads.share.PeersViewAdapter;
-import threads.share.WebViewDialogFragment;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -119,7 +119,7 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
                     GatewayService.PeerSummary info = GatewayService.evaluateAllPeers(mContext);
 
 
-                    String html = "<html><h3 align=\"center\">Quality</h3><ul>";
+                    String html = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Quality</h3><ul>";
 
 
                     String numPeers = "Number Peers : " + info.getNumPeers();
@@ -135,14 +135,14 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
 
                     html = html.concat("<li><div style=\"width: 80%;" +
                             "  word-wrap:break-word;\">").concat(latency).concat("</div></li>");
-                    html = html.concat("</ul></html>");
+                    html = html.concat("</ul></body><footer style=\"color:tomato;\">"
+                            + getString(R.string.quality_measurement) + "</footer></html>");
 
 
-                    WebViewDialogFragment.newInstance(
-                            WebViewDialogFragment.Type.HTML, html).show(
+                    DetailsDialogFragment.newInstance(
+                            DetailsDialogFragment.Type.HTML, html).show(
                             getChildFragmentManager(),
-                            WebViewDialogFragment.TAG);
-
+                            DetailsDialogFragment.TAG);
 
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);

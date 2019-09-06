@@ -126,4 +126,5 @@
     <string name="enable_random_swarm_port">Random Swarm Port</string>
     <string name="slow_connection">Internet connection is to slow</string>
     <string name="swarm">Swarm</string>
+    <string name="quality_measurement">Note: Quality measurement based on a simple algorithm.</string>
 </resources>
