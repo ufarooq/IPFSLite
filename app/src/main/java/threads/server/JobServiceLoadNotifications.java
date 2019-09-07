@@ -12,11 +12,8 @@ import androidx.annotation.NonNull;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import threads.core.Network;
-import threads.core.Singleton;
-import threads.ipfs.IPFS;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -35,7 +32,6 @@ public class JobServiceLoadNotifications extends JobService {
 
             JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                    .setMinimumLatency(TimeUnit.SECONDS.toMillis(30))
                     .build();
 
             int resultCode = jobScheduler.schedule(jobInfo);
@@ -62,23 +58,17 @@ public class JobServiceLoadNotifications extends JobService {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             long start = System.currentTimeMillis();
-            boolean wantReschedule = false;
             try {
 
                 Service.getInstance(getApplicationContext());
 
                 Service.notifications(getApplicationContext());
 
-                IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-                if (ipfs != null) {
-                    wantReschedule = ipfs.isDaemonRunning();
-                }
-
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {
                 Log.e(TAG, " finish onStart [" + (System.currentTimeMillis() - start) + "]...");
-                jobFinished(jobParameters, wantReschedule);
+                jobFinished(jobParameters, false);
             }
 
         });
