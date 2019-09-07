@@ -96,7 +96,7 @@ dependencies {
     //implementation 'threads.pow:pow:1.0.9'
 
     // UI+API (LICENSE done)
-    implementation 'threads.core:share:1.2.3'
+    implementation 'threads.core:share:1.2.7'
 
     // UI+API (LICENSE done)
     implementation 'threads.core:webrtc:0.1.6'
@@ -108,7 +108,7 @@ dependencies {
     implementation 'threads.core:iota:0.0.9'
 
     // API (LICENSE done)
-    implementation 'threads.core:ipfs:0.4.1'
+    implementation 'threads.core:ipfs:0.4.2'
 
     // API (LICENSE done)
     implementation 'threads.mobile:ipfs:0.4.0'
