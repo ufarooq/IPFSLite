@@ -42,6 +42,7 @@ public class ContentEntry {
     }
 
     @Override
+    @NonNull
     public String toString() {
         return "ContentEntry{" +
                 "filename='" + filename + '\'' +

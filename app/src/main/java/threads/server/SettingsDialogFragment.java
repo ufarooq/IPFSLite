@@ -1,14 +1,10 @@
 package threads.server;
 
-import android.animation.Animator;
-import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -30,11 +26,11 @@ import threads.ipfs.api.RoutingConfig;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class SettingsDialogFragment extends DialogFragment implements View.OnTouchListener {
+public class SettingsDialogFragment extends DialogFragment {
 
     static final String TAG = SettingsDialogFragment.class.getSimpleName();
 
-    private float downX, downY, upX, upY;
+
     private Context mContext;
 
     @Override
@@ -47,111 +43,6 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
-    }
-
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-
-        int min_distance = 200;
-        if (event.getOrientation() == 0) {
-            switch (event.getAction()) { // Check vertical and horizontal touches
-                case MotionEvent.ACTION_DOWN: {
-                    downX = event.getX();
-                    downY = event.getY();
-                    return true;
-                }
-                case MotionEvent.ACTION_UP: {
-                    upX = event.getX();
-                    upY = event.getY();
-
-                    float deltaX = downX - upX;
-                    float deltaY = downY - upY;
-
-                    //HORIZONTAL SCROLL
-                    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                        if (Math.abs(deltaX) > min_distance) {
-                            // left or right
-                            if (deltaX < 0) {
-                                this.onLeftToRightSwipe();
-                                return true;
-                            }
-                            if (deltaX > 0) {
-                                this.onRightToLeftSwipe();
-                                return true;
-                            }
-                        } else {
-                            //not long enough swipe...
-                            return false;
-                        }
-                    }
-                    return false;
-                }
-            }
-        }
-        return false;
-    }
-
-    public void onLeftToRightSwipe() {
-        try {
-            final View decorView = getDialog().getWindow().getDecorView();
-
-            ObjectAnimator scaleDown = ObjectAnimator.ofFloat(decorView,
-                    View.TRANSLATION_X, decorView.getWidth());
-            scaleDown.addListener(new Animator.AnimatorListener() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    dismiss();
-                }
-
-                @Override
-                public void onAnimationStart(Animator animation) {
-                }
-
-                @Override
-                public void onAnimationCancel(Animator animation) {
-                }
-
-                @Override
-                public void onAnimationRepeat(Animator animation) {
-                }
-            });
-            scaleDown.setDuration(500);
-            scaleDown.start();
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
-
-    public void onRightToLeftSwipe() {
-        try {
-            final View decorView = getDialog().getWindow().getDecorView();
-
-            ObjectAnimator scaleDown = ObjectAnimator.ofFloat(decorView,
-                    View.TRANSLATION_X, -decorView.getWidth());
-
-            scaleDown.addListener(new Animator.AnimatorListener() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    dismiss();
-                }
-
-                @Override
-                public void onAnimationStart(Animator animation) {
-                }
-
-                @Override
-                public void onAnimationCancel(Animator animation) {
-                }
-
-                @Override
-                public void onAnimationRepeat(Animator animation) {
-                }
-            });
-            scaleDown.setDuration(500);
-            scaleDown.start();
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
     }
 
 
@@ -167,9 +58,7 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
         LayoutInflater inflater = activity.getLayoutInflater();
 
 
-        @SuppressWarnings("all")
         View view = inflater.inflate(R.layout.settings_view, null);
-        //view.setOnTouchListener(this); // TODO not yet activated
 
         Switch dht_support = view.findViewById(R.id.dht_support);
         dht_support.setChecked(Preferences.getRoutingType(activity) == RoutingConfig.TypeEnum.dht);
@@ -365,22 +254,22 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
 
         Switch support_peer_discovery = view.findViewById(R.id.support_peer_discovery);
         support_peer_discovery.setChecked(Service.isSupportPeerDiscovery(activity));
-        support_peer_discovery.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Service.setSupportPeerDiscovery(activity, isChecked);
-        });
+        support_peer_discovery.setOnCheckedChangeListener((buttonView, isChecked) ->
+                Service.setSupportPeerDiscovery(activity, isChecked)
+        );
 
 
         Switch send_notifications_enabled = view.findViewById(R.id.send_notifications_enabled);
         send_notifications_enabled.setChecked(Service.isSendNotificationsEnabled(activity));
-        send_notifications_enabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Service.setSendNotificationsEnabled(activity, isChecked);
-        });
+        send_notifications_enabled.setOnCheckedChangeListener((buttonView, isChecked) ->
+                Service.setSendNotificationsEnabled(activity, isChecked)
+        );
 
         Switch receive_notifications_enabled = view.findViewById(R.id.receive_notifications_enabled);
         receive_notifications_enabled.setChecked(Service.isReceiveNotificationsEnabled(activity));
-        receive_notifications_enabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Service.setReceiveNotificationsEnabled(activity, isChecked);
-        });
+        receive_notifications_enabled.setOnCheckedChangeListener((buttonView, isChecked) ->
+                Service.setReceiveNotificationsEnabled(activity, isChecked)
+        );
 
         TextView connection_timeout_text = view.findViewById(R.id.connection_timeout_text);
         SeekBar connection_timeout = view.findViewById(R.id.connection_timeout);
@@ -415,9 +304,9 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
 
         Switch support_automatic_download = view.findViewById(R.id.support_automatic_download);
         support_automatic_download.setChecked(Service.isAutoDownload(activity));
-        support_automatic_download.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Service.setAutoDownload(activity, isChecked);
-        });
+        support_automatic_download.setOnCheckedChangeListener((buttonView, isChecked) ->
+                Service.setAutoDownload(activity, isChecked)
+        );
 
 
         return new androidx.appcompat.app.AlertDialog.Builder(activity)

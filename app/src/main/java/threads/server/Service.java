@@ -241,8 +241,8 @@ public class Service {
         return System.currentTimeMillis() - TimeUnit.DAYS.toMillis(days);
     }
 
-    public static void notifications(@NonNull Context context) {
-
+    static void notifications(@NonNull Context context) {
+        checkNotNull(context);
         final PID host = Preferences.getPID(context);
         if (host != null) {
 
@@ -251,8 +251,6 @@ public class Service {
             try {
                 String address = AddressType.getAddress(host, AddressType.NOTIFICATION);
                 List<Entity> entities = entityService.loadEntities(context, address);
-
-                Log.e(TAG, "Received " + entities.size() + " incoming messages");
 
                 for (Entity entity : entities) {
                     String notification = entity.getContent();
@@ -265,19 +263,20 @@ public class Service {
                     }
                     if (data != null) {
 
-
                         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
                         checkNotNull(ipfs, "IPFS not valid");
                         if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
                             try {
                                 String privateKey = ipfs.getPrivateKey();
                                 checkNotNull(privateKey, "Private Key not valid");
-                                final String pidStr = Encryption.decryptRSA(
-                                        data.get(Content.PID), privateKey);
+                                String encPid = data.get(Content.PID);
+                                checkNotNull(encPid);
+                                final String pidStr = Encryption.decryptRSA(encPid, privateKey);
                                 checkNotNull(pidStr);
 
-                                final String cidStr = Encryption.decryptRSA(
-                                        data.get(Content.CID), privateKey);
+                                String encCid = data.get(Content.CID);
+                                checkNotNull(encCid);
+                                final String cidStr = Encryption.decryptRSA(encCid, privateKey);
                                 checkNotNull(cidStr);
 
                                 // check if cid is valid
@@ -305,11 +304,6 @@ public class Service {
                                 if (content == null) {
                                     contentService.insertContent(pid, cid, false);
                                 }
-
-
-                                Singleton.getInstance(context).getConsoleListener().info(
-                                        "Receive Inbox Notification from PID :" + pid);
-
 
                                 JobServiceContents.contents(context, pid, cid);
 
@@ -1183,8 +1177,6 @@ public class Service {
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
-            } else {
-                success = false;
             }
             if (file.exists()) {
                 checkArgument(file.delete());
