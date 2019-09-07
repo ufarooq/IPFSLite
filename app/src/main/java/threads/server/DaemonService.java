@@ -36,6 +36,7 @@ public class DaemonService extends Service {
             try {
                 JobServicePeers.peers(getApplicationContext());
                 JobServiceAutoConnect.autoConnect(getApplicationContext());
+                JobServiceLoadNotifications.notifications(getApplicationContext());
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }

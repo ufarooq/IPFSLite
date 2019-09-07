@@ -39,7 +39,6 @@ public class JobServiceAutoConnect extends JobService {
         if (jobScheduler != null) {
             ComponentName componentName = new ComponentName(context, JobServiceAutoConnect.class);
 
-
             JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                     .build();

@@ -1348,25 +1348,6 @@ class Service {
 
     }
 
-    private static void checkNotifications(@NonNull Context context) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-                if (ipfs != null) {
-
-                    while (ipfs.isDaemonRunning()) {
-                        java.lang.Thread.sleep(TimeUnit.SECONDS.toMillis(30));
-                        JobServiceLoadNotifications.notifications(context);
-                    }
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        });
-
-
-    }
 
     void storeData(@NonNull Context context, @NonNull String text) {
         checkNotNull(context);
@@ -1772,7 +1753,6 @@ class Service {
             try {
                 Service.cleanStates(context);
                 Service.createHost(context);
-                Service.checkNotifications(context);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
