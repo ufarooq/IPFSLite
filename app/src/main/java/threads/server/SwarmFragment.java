@@ -41,10 +41,10 @@ import static androidx.core.util.Preconditions.checkNotNull;
 public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersViewAdapterListener {
 
     public static final String TAG = SwarmFragment.class.getSimpleName();
-    public static final String LOW = "LOW";
-    public static final String HIGH = "HIGH";
-    public static final String MEDIUM = "MEDIUM";
-    public static final String NONE = "NONE";
+    static final String LOW = "LOW";
+    static final String HIGH = "HIGH";
+    static final String MEDIUM = "MEDIUM";
+    static final String NONE = "NONE";
 
     private long mLastClickTime = 0;
 
@@ -189,18 +189,23 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
             try {
                 if (event != null) {
                     String content = event.getContent();
-                    if (content.equals(HIGH)) {
-                        fab_traffic.setBackgroundTintList(
-                                ContextCompat.getColorStateList(mContext, android.R.color.holo_green_light));
-                    } else if (content.equals(MEDIUM)) {
-                        fab_traffic.setBackgroundTintList(
-                                ContextCompat.getColorStateList(mContext, android.R.color.holo_orange_light));
-                    } else if (content.equals(LOW)) {
-                        fab_traffic.setBackgroundTintList(
-                                ContextCompat.getColorStateList(mContext, android.R.color.holo_red_light));
-                    } else {
-                        fab_traffic.setBackgroundTintList(
-                                ContextCompat.getColorStateList(mContext, android.R.color.holo_red_dark));
+                    switch (content) {
+                        case HIGH:
+                            fab_traffic.setBackgroundTintList(
+                                    ContextCompat.getColorStateList(mContext, android.R.color.holo_green_light));
+                            break;
+                        case MEDIUM:
+                            fab_traffic.setBackgroundTintList(
+                                    ContextCompat.getColorStateList(mContext, android.R.color.holo_orange_light));
+                            break;
+                        case LOW:
+                            fab_traffic.setBackgroundTintList(
+                                    ContextCompat.getColorStateList(mContext, android.R.color.holo_red_light));
+                            break;
+                        default:
+                            fab_traffic.setBackgroundTintList(
+                                    ContextCompat.getColorStateList(mContext, android.R.color.holo_red_dark));
+
                     }
                 }
             } catch (Throwable e) {

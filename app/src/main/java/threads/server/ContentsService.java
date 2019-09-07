@@ -243,7 +243,7 @@ class ContentsService {
         return null;
     }
 
-    public static boolean download(@NonNull Context context, @NonNull PID pid, @NonNull CID cid) {
+    static boolean download(@NonNull Context context, @NonNull PID pid, @NonNull CID cid) {
         checkNotNull(context);
         checkNotNull(pid);
         checkNotNull(cid);

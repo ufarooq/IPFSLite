@@ -1,5 +1,6 @@
 package threads.server;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
@@ -23,25 +24,15 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class PeersDialogFragment extends DialogFragment {
     static final String TAG = PeersDialogFragment.class.getSimpleName();
-    private static final String EDIT_PEER_ACTIVE = "EDIT_PEER_ACTIVE";
-    private static final String SCAN_PEER_ACTIVE = "SCAN_PEER_ACTIVE";
-    private static final String YOUR_PEER_ACTIVE = "YOUR_PEER_ACTIVE";
+
     private int backgroundColor;
     private ActionListener actionListener;
     private long mLastClickTime = 0;
 
-    static PeersDialogFragment newInstance(boolean editPeerActive,
-                                           boolean scanPeerActive,
-                                           boolean yourPeerActive) {
+    static PeersDialogFragment newInstance() {
 
-        Bundle bundle = new Bundle();
+        return new PeersDialogFragment();
 
-        bundle.putBoolean(EDIT_PEER_ACTIVE, editPeerActive);
-        bundle.putBoolean(SCAN_PEER_ACTIVE, scanPeerActive);
-        bundle.putBoolean(YOUR_PEER_ACTIVE, yourPeerActive);
-        PeersDialogFragment fragment = new PeersDialogFragment();
-        fragment.setArguments(bundle);
-        return fragment;
     }
 
     private static int getThemeBackgroundColor(final Context context) {
@@ -75,86 +66,67 @@ public class PeersDialogFragment extends DialogFragment {
 
         LayoutInflater inflater = activity.getLayoutInflater();
 
-        Bundle args = getArguments();
-        checkNotNull(args);
-        boolean editPeerActive = args.getBoolean(EDIT_PEER_ACTIVE);
-        boolean scanPeerActive = args.getBoolean(SCAN_PEER_ACTIVE);
-        boolean yourPeerActive = args.getBoolean(YOUR_PEER_ACTIVE);
-
-
-        @SuppressWarnings("all")
-        View view = inflater.inflate(R.layout.peers_action_view, null);
+        @SuppressLint("InflateParams") View view = inflater.inflate(R.layout.peers_action_view, null);
 
         view.setBackgroundColor(backgroundColor);
 
         TextView menu_scan_peer = view.findViewById(R.id.menu_scan_pid);
-        if (!scanPeerActive) {
-            menu_scan_peer.setVisibility(View.GONE);
-        } else {
-            menu_scan_peer.setOnClickListener((v) -> {
 
-                try {
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                        return;
-                    }
+        menu_scan_peer.setOnClickListener((v) -> {
 
-                    mLastClickTime = SystemClock.elapsedRealtime();
-                    actionListener.clickConnectPeer();
-                } finally {
-                    dismiss();
+            try {
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    return;
                 }
 
+                mLastClickTime = SystemClock.elapsedRealtime();
+                actionListener.clickConnectPeer();
+            } finally {
+                dismiss();
+            }
 
-            });
-        }
+
+        });
 
 
         TextView menu_edit_peer = view.findViewById(R.id.menu_edit_pid);
-        if (!editPeerActive) {
-            menu_edit_peer.setVisibility(View.GONE);
-        } else {
-            menu_edit_peer.setOnClickListener((v) -> {
 
-                try {
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                        return;
-                    }
+        menu_edit_peer.setOnClickListener((v) -> {
 
-                    mLastClickTime = SystemClock.elapsedRealtime();
-
-                    actionListener.clickEditPeer();
-
-                } finally {
-                    dismiss();
+            try {
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    return;
                 }
 
-            });
-        }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+                actionListener.clickEditPeer();
+
+            } finally {
+                dismiss();
+            }
+
+        });
+
 
         TextView menu_your_peer = view.findViewById(R.id.menu_your_pid);
-        if (!yourPeerActive) {
-            menu_your_peer.setVisibility(View.GONE);
-        } else {
-            menu_your_peer.setOnClickListener((v) -> {
 
-                try {
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                        return;
-                    }
+        menu_your_peer.setOnClickListener((v) -> {
 
-                    mLastClickTime = SystemClock.elapsedRealtime();
-
-                    actionListener.clickInfoPeer();
-
-                } finally {
-                    dismiss();
+            try {
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    return;
                 }
 
-            });
-        }
-        if (!editPeerActive && !scanPeerActive && !yourPeerActive) {
-            view.findViewById(R.id.row_first).setVisibility(View.GONE);
-        }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+                actionListener.clickInfoPeer();
+
+            } finally {
+                dismiss();
+            }
+
+        });
 
 
         builder.setView(view);

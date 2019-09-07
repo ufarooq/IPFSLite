@@ -18,9 +18,6 @@ public interface ContentDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertContent(Content... contents);
 
-    @Query("DELETE FROM Content")
-    void clear();
-
     @Delete
     void removeContent(Content content);
 

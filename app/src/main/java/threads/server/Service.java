@@ -75,10 +75,10 @@ import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 
-public class Service {
+class Service {
 
-    public static final int RELAYS = 5;
-    public static final String PIN_SERVICE_KEY = "pinServiceKey";
+    static final int RELAYS = 5;
+    static final String PIN_SERVICE_KEY = "pinServiceKey";
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(10);
@@ -97,13 +97,13 @@ public class Service {
     private Service() {
     }
 
-    public static boolean isSupportPeerDiscovery(@NonNull Context context) {
+    static boolean isSupportPeerDiscovery(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         return sharedPref.getBoolean(SUPPORT_PEER_DISCOVERY_KEY, true);
     }
 
-    public static void setSupportPeerDiscovery(@NonNull Context context, boolean enable) {
+    static void setSupportPeerDiscovery(@NonNull Context context, boolean enable) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
@@ -111,14 +111,14 @@ public class Service {
         editor.apply();
     }
 
-    public static boolean isAutoDownload(@NonNull Context context) {
+    static boolean isAutoDownload(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(
                 APP_KEY, Context.MODE_PRIVATE);
         return sharedPref.getBoolean(AUTO_DOWNLOAD_KEY, true);
     }
 
-    public static void setAutoDownload(@NonNull Context context, boolean automaticDownload) {
+    static void setAutoDownload(@NonNull Context context, boolean automaticDownload) {
         checkNotNull(context);
 
         SharedPreferences sharedPref = context.getSharedPreferences(
@@ -130,14 +130,14 @@ public class Service {
     }
 
     @NonNull
-    public static String getGateway(@NonNull Context context) {
+    static String getGateway(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(
                 APP_KEY, Context.MODE_PRIVATE);
         return sharedPref.getString(GATEWAY_KEY, "https://ipfs.io");
     }
 
-    public static void setGateway(@NonNull Context context, @NonNull String gateway) {
+    static void setGateway(@NonNull Context context, @NonNull String gateway) {
         checkNotNull(context);
         checkNotNull(gateway);
         SharedPreferences sharedPref = context.getSharedPreferences(
@@ -148,13 +148,13 @@ public class Service {
 
     }
 
-    public static int getPublishServiceTime(@NonNull Context context) {
+    static int getPublishServiceTime(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         return sharedPref.getInt(PIN_SERVICE_TIME_KEY, 6);
     }
 
-    public static void setPublisherServiceTime(@NonNull Context context, int timeout) {
+    static void setPublisherServiceTime(@NonNull Context context, int timeout) {
         checkNotNull(context);
         checkArgument(timeout >= 0);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
@@ -163,7 +163,7 @@ public class Service {
         editor.apply();
     }
 
-    public static boolean getDontShowAgain(@NonNull Context context, @NonNull String key) {
+    static boolean getDontShowAgain(@NonNull Context context, @NonNull String key) {
         checkNotNull(context);
         checkNotNull(key);
         SharedPreferences sharedPref = context.getSharedPreferences(
@@ -171,7 +171,7 @@ public class Service {
         return sharedPref.getBoolean(key, false);
     }
 
-    public static void setDontShowAgain(@NonNull Context context, @NonNull String key, boolean value) {
+    static void setDontShowAgain(@NonNull Context context, @NonNull String key, boolean value) {
         checkNotNull(context);
         checkNotNull(key);
         SharedPreferences sharedPref = context.getSharedPreferences(
@@ -183,13 +183,13 @@ public class Service {
     }
 
 
-    public static boolean isSendNotificationsEnabled(@NonNull Context context) {
+    static boolean isSendNotificationsEnabled(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         return sharedPref.getBoolean(SEND_NOTIFICATIONS_ENABLED_KEY, true);
     }
 
-    public static void setSendNotificationsEnabled(@NonNull Context context, boolean enable) {
+    static void setSendNotificationsEnabled(@NonNull Context context, boolean enable) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
@@ -198,13 +198,13 @@ public class Service {
     }
 
 
-    public static boolean isReceiveNotificationsEnabled(@NonNull Context context) {
+    static boolean isReceiveNotificationsEnabled(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         return sharedPref.getBoolean(RECEIVE_NOTIFICATIONS_ENABLED_KEY, true);
     }
 
-    public static void setReceiveNotificationsEnabled(@NonNull Context context, boolean enable) {
+    static void setReceiveNotificationsEnabled(@NonNull Context context, boolean enable) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
@@ -322,10 +322,10 @@ public class Service {
 
     }
 
-    public static boolean notify(@NonNull Context context,
-                                 @NonNull String pid,
-                                 @NonNull String cid,
-                                 long startTime) {
+    static boolean notify(@NonNull Context context,
+                          @NonNull String pid,
+                          @NonNull String cid,
+                          long startTime) {
 
         checkNotNull(context);
         checkNotNull(pid);
@@ -434,7 +434,7 @@ public class Service {
 
     }
 
-    public static void createUnknownUser(@NonNull Context context, @NonNull PID pid) throws Exception {
+    static void createUnknownUser(@NonNull Context context, @NonNull PID pid) throws Exception {
         checkNotNull(context);
         checkNotNull(pid);
 
@@ -473,7 +473,7 @@ public class Service {
         }
     }
 
-    public static void connectPeer(@NonNull Context context, @NonNull PID user) throws Exception {
+    static void connectPeer(@NonNull Context context, @NonNull PID user) throws Exception {
         checkNotNull(context);
         checkNotNull(user);
 
@@ -929,15 +929,15 @@ public class Service {
         return threads.storeThread(thread);
     }
 
-    public static long createThread(@NonNull Context context,
-                                    @NonNull IPFS ipfs,
-                                    @NonNull User creator,
-                                    @NonNull CID cid,
-                                    @NonNull Status threadStatus,
-                                    @Nullable String filename,
-                                    @Nullable String filesize,
-                                    @Nullable String mimeType,
-                                    @Nullable CID image) {
+    static long createThread(@NonNull Context context,
+                             @NonNull IPFS ipfs,
+                             @NonNull User creator,
+                             @NonNull CID cid,
+                             @NonNull Status threadStatus,
+                             @Nullable String filename,
+                             @Nullable String filesize,
+                             @Nullable String mimeType,
+                             @Nullable CID image) {
 
         checkNotNull(context);
         checkNotNull(ipfs);
@@ -1045,14 +1045,13 @@ public class Service {
 
                         try {
                             boolean finished = ipfs.storeToFile(file, cid,
-                                    new IPFS.Progress() {
-                                        @Override
-                                        public void setProgress(int percent) {
-                                            builder.setProgress(100, percent, false);
-                                            if (notificationManager != null) {
-                                                notificationManager.notify(notifyID, builder.build());
-                                            }
+                                    (percent) -> {
+
+                                        builder.setProgress(100, percent, false);
+                                        if (notificationManager != null) {
+                                            notificationManager.notify(notifyID, builder.build());
                                         }
+
 
                                     }, false, timeout, size);
 
@@ -1138,14 +1137,13 @@ public class Service {
             int timeout = Preferences.getConnectionTimeout(context);
             File file = ipfs.getTempCacheFile();
             success = ipfs.storeToFile(file, cid,
-                    new IPFS.Progress() {
-                        @Override
-                        public void setProgress(int percent) {
-                            builder.setProgress(100, percent, false);
-                            if (notificationManager != null) {
-                                notificationManager.notify(notifyID, builder.build());
-                            }
+                    (percent) -> {
+
+                        builder.setProgress(100, percent, false);
+                        if (notificationManager != null) {
+                            notificationManager.notify(notifyID, builder.build());
                         }
+
 
                     }, false, timeout, size);
 
@@ -1350,7 +1348,7 @@ public class Service {
 
     }
 
-    public static void checkNotifications(@NonNull Context context) {
+    private static void checkNotifications(@NonNull Context context) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {

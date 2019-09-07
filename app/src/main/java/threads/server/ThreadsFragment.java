@@ -73,16 +73,14 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private final AtomicReference<Long> directory = new AtomicReference<>();
     @NonNull
     private final AtomicBoolean topLevel = new AtomicBoolean(true);
-
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
     private long threadIdx;
-
     private View view;
     private ThreadsViewAdapter threadsViewAdapter;
     private ThreadViewModel threadViewModel;
     private long mLastClickTime = 0;
     private Context mContext;
     private ThreadsFragment.ActionListener mListener;
-    private Handler mHandler = new Handler(Looper.getMainLooper());
     private RecyclerView mRecyclerView;
 
     private static String getCompactString(@NonNull String title) {
@@ -269,7 +267,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                 mLastClickTime = SystemClock.elapsedRealtime();
 
 
-                ThreadsDialogFragment.newInstance(true, true, true)
+                ThreadsDialogFragment.newInstance()
                         .show(getChildFragmentManager(), ThreadsDialogFragment.TAG);
 
 

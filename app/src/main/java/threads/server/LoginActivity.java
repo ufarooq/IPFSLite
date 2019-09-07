@@ -48,7 +48,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
 
-    void handleSendText(Intent intent) {
+    private void handleSendText(Intent intent) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
 
@@ -63,7 +63,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    void handleSend(Intent intent, boolean multi) {
+    private void handleSend(Intent intent, boolean multi) {
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -91,7 +91,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    public void onLoad() {
+    private void onLoad() {
 
         Intent intent = getIntent();
         final String action = intent.getAction();

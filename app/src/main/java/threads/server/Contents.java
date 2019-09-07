@@ -11,9 +11,9 @@ import threads.ipfs.api.CID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class Contents extends ArrayList<ContentEntry> {
+class Contents extends ArrayList<ContentEntry> {
 
-    public void add(@NonNull Thread thread) {
+    private void add(@NonNull Thread thread) {
         CID cid = thread.getCid();
         checkNotNull(cid);
         String filename = thread.getAdditionalValue(Content.FILENAME);

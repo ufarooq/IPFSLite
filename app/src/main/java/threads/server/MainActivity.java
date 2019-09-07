@@ -32,7 +32,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
-import com.google.gson.Gson;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -86,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         DontShowAgainDialog.ActionListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final Gson gson = new Gson();
+
     private static final int REQUEST_VIDEO_CAPTURE = 1;
     private static final int REQUEST_AUDIO_CAPTURE = 2;
     private static final int REQUEST_MODIFY_AUDIO_SETTINGS = 3;
@@ -273,21 +272,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int id = item.getItemId();
-        switch (id) {
-            case R.id.action_info: {
-                return false;
-            }
-            case R.id.action_mark_all: {
-                return false;
-            }
-            case R.id.action_delete: {
-                return false;
-            }
-            case R.id.action_send: {
-                return false;
-            }
-        }
 
         return super.onOptionsItemSelected(item);
     }

@@ -7,18 +7,18 @@ import java.util.Objects;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class ContentEntry {
+class ContentEntry {
     private final String filename;
     private final String size;
     private final String cid;
     private final String image;
     private final String mimeType;
 
-    public ContentEntry(@NonNull String cid,
-                        @NonNull String filename,
-                        @NonNull String size,
-                        @NonNull String mimeType,
-                        @Nullable String image) {
+    ContentEntry(@NonNull String cid,
+                 @NonNull String filename,
+                 @NonNull String size,
+                 @NonNull String mimeType,
+                 @Nullable String image) {
         checkNotNull(cid);
         checkNotNull(filename);
         checkNotNull(size);
@@ -29,15 +29,15 @@ public class ContentEntry {
         this.image = image;
     }
 
-    public String getImage() {
+    String getImage() {
         return image;
     }
 
-    public String getMimeType() {
+    String getMimeType() {
         return mimeType;
     }
 
-    public String getFilename() {
+    String getFilename() {
         return filename;
     }
 
@@ -53,7 +53,7 @@ public class ContentEntry {
                 '}';
     }
 
-    public String getSize() {
+    String getSize() {
         return size;
     }
 

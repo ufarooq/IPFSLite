@@ -1,5 +1,6 @@
 package threads.server;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
@@ -24,26 +25,14 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class ThreadsDialogFragment extends DialogFragment {
     static final String TAG = ThreadsDialogFragment.class.getSimpleName();
-    private static final String EDIT_CID_ACTIVE = "EDIT_CID_ACTIVE";
-    private static final String SCAN_CID_ACTIVE = "SCAN_CID_ACTIVE";
-    private static final String FILE_CID_ACTIVE = "FILE_CID_ACTIVE";
 
     private ThreadsDialogFragment.ActionListener actionListener;
     private long mLastClickTime = 0;
     private int backgroundColor;
 
-    static ThreadsDialogFragment newInstance(boolean editActive,
-                                             boolean scanActive,
-                                             boolean fileActive) {
+    static ThreadsDialogFragment newInstance() {
 
-        Bundle bundle = new Bundle();
-
-        bundle.putBoolean(EDIT_CID_ACTIVE, editActive);
-        bundle.putBoolean(SCAN_CID_ACTIVE, scanActive);
-        bundle.putBoolean(FILE_CID_ACTIVE, fileActive);
-        ThreadsDialogFragment fragment = new ThreadsDialogFragment();
-        fragment.setArguments(bundle);
-        return fragment;
+        return new ThreadsDialogFragment();
     }
 
     private static int getThemeBackgroundColor(final Context context) {
@@ -77,87 +66,68 @@ public class ThreadsDialogFragment extends DialogFragment {
 
         LayoutInflater inflater = activity.getLayoutInflater();
 
-        Bundle args = getArguments();
-        checkNotNull(args);
-        boolean editActive = args.getBoolean(EDIT_CID_ACTIVE);
-        boolean scanActive = args.getBoolean(SCAN_CID_ACTIVE);
-        boolean fileActive = args.getBoolean(FILE_CID_ACTIVE);
 
-
-        @SuppressWarnings("all")
-        View view = inflater.inflate(R.layout.threads_action_view, null);
+        @SuppressLint("InflateParams") View view = inflater.inflate(R.layout.threads_action_view, null);
 
         view.setBackgroundColor(backgroundColor);
 
 
         TextView menu_file_cid = view.findViewById(R.id.menu_file_cid);
-        if (!fileActive) {
-            menu_file_cid.setVisibility(View.GONE);
-        } else {
-            menu_file_cid.setOnClickListener((v) -> {
 
-                try {
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                        return;
-                    }
+        menu_file_cid.setOnClickListener((v) -> {
 
-                    mLastClickTime = SystemClock.elapsedRealtime();
-                    actionListener.clickUpload();
-                } finally {
-                    dismiss();
+            try {
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    return;
                 }
 
+                mLastClickTime = SystemClock.elapsedRealtime();
+                actionListener.clickUpload();
+            } finally {
+                dismiss();
+            }
 
-            });
-        }
+
+        });
+
 
         TextView menu_scan_cid = view.findViewById(R.id.menu_scan_cid);
-        if (!scanActive) {
-            menu_scan_cid.setVisibility(View.GONE);
-        } else {
-            menu_scan_cid.setOnClickListener((v) -> {
 
-                try {
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                        return;
-                    }
+        menu_scan_cid.setOnClickListener((v) -> {
 
-                    mLastClickTime = SystemClock.elapsedRealtime();
-                    actionListener.clickMultihash();
-                } finally {
-                    dismiss();
+            try {
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    return;
                 }
 
+                mLastClickTime = SystemClock.elapsedRealtime();
+                actionListener.clickMultihash();
+            } finally {
+                dismiss();
+            }
 
-            });
-        }
+
+        });
 
 
         TextView menu_edit_cid = view.findViewById(R.id.menu_edit_cid);
-        if (!editActive) {
-            menu_edit_cid.setVisibility(View.GONE);
-        } else {
-            menu_edit_cid.setOnClickListener((v) -> {
 
-                try {
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                        return;
-                    }
+        menu_edit_cid.setOnClickListener((v) -> {
 
-                    mLastClickTime = SystemClock.elapsedRealtime();
-
-                    actionListener.clickEditMultihash();
-
-                } finally {
-                    dismiss();
+            try {
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    return;
                 }
 
-            });
-        }
+                mLastClickTime = SystemClock.elapsedRealtime();
 
-        if (!editActive && !scanActive) {
-            view.findViewById(R.id.row_first).setVisibility(View.GONE);
-        }
+                actionListener.clickEditMultihash();
+
+            } finally {
+                dismiss();
+            }
+
+        });
 
 
         builder.setView(view);

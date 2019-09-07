@@ -31,7 +31,7 @@ public class SwarmService {
         ConnectInfo info = new ConnectInfo(pid, tag);
         if (ipfs != null) {
             if (ipfs.isConnected(pid)) {
-                info.setConnected(true);
+                info.setConnected();
                 ipfs.protectPeer(pid, tag);
             } else {
 
@@ -42,7 +42,7 @@ public class SwarmService {
                     if (peerInfo != null) {
                         info.setPeerInfo(peerInfo);
                         if (ConnectService.swarmConnect(context, peerInfo, tag)) {
-                            info.setConnected(true);
+                            info.setConnected();
 
                             ipfs.protectPeer(pid, tag);
 
@@ -54,7 +54,7 @@ public class SwarmService {
                 }
 
                 if (ipfs.swarmConnect(pid, timeout)) {
-                    info.setConnected(true);
+                    info.setConnected();
                     ipfs.protectPeer(pid, tag);
                     return info;
                 }
@@ -80,7 +80,7 @@ public class SwarmService {
         }
     }
 
-    public static class ConnectInfo {
+    static class ConnectInfo {
 
         private final PID pid;
         private final String tag;
@@ -96,20 +96,20 @@ public class SwarmService {
         }
 
         @Nullable
-        public PeerInfo getPeerInfo() {
+        PeerInfo getPeerInfo() {
             return peerInfo;
         }
 
-        public void setPeerInfo(@Nullable PeerInfo peerInfo) {
+        void setPeerInfo(@Nullable PeerInfo peerInfo) {
             this.peerInfo = peerInfo;
         }
 
-        public boolean isConnected() {
+        boolean isConnected() {
             return connected;
         }
 
-        public void setConnected(boolean connected) {
-            this.connected = connected;
+        void setConnected() {
+            this.connected = true;
         }
     }
 }

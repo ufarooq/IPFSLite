@@ -11,7 +11,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
@@ -58,7 +57,7 @@ public class JobServiceGatewayLoader extends JobService {
         }
     }
 
-    private static boolean pinContent(@NonNull URL url, int timeout) throws IOException {
+    private static boolean pinContent(@NonNull URL url, int timeout) {
         checkNotNull(url);
         try {
             URLConnection con = url.openConnection();

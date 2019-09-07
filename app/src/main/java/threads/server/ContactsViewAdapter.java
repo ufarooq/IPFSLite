@@ -71,14 +71,10 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
     @NonNull
     public ContactsViewAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent,
                                                              int viewType) {
-        View v;
-        switch (viewType) {
-            case 0:
-                v = LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.send_entry, parent, false);
-                return new ViewHolder(v);
-        }
-        throw new RuntimeException("Not supported view type.");
+        View v = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.send_entry, parent, false);
+        return new ViewHolder(v);
+
     }
 
     @Override
@@ -89,13 +85,27 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
         final AtomicBoolean selected = pair.second;
         final User account = pair.first;
 
-        switch (holder.getItemViewType()) {
-            case 0:
 
-                try {
+        try {
 
-                    holder.account_name.setText(account.getAlias());
+            holder.account_name.setText(account.getAlias());
 
+
+            if (account.getImage() != null) {
+                Singleton singleton = Singleton.getInstance(context);
+                IPFSData data = IPFSData.create(singleton.getIpfs(),
+                        account.getImage(), timeout);
+                Glide.with(context).load(data).into(holder.account_icon);
+            } else {
+                holder.account_icon.setVisibility(View.GONE);
+            }
+
+            holder.view.setClickable(true);
+
+            holder.view.setOnClickListener((v) -> {
+
+                if (selected.get()) {
+                    v.setBackgroundColor(android.R.drawable.list_selector_background);
 
                     if (account.getImage() != null) {
                         Singleton singleton = Singleton.getInstance(context);
@@ -105,42 +115,23 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
                     } else {
                         holder.account_icon.setVisibility(View.GONE);
                     }
-
-                    holder.view.setClickable(true);
-
-                    holder.view.setOnClickListener((v) -> {
-
-                        if (selected.get()) {
-                            v.setBackgroundColor(android.R.drawable.list_selector_background);
-
-                            if (account.getImage() != null) {
-                                Singleton singleton = Singleton.getInstance(context);
-                                IPFSData data = IPFSData.create(singleton.getIpfs(),
-                                        account.getImage(), timeout);
-                                Glide.with(context).load(data).into(holder.account_icon);
-                            } else {
-                                holder.account_icon.setVisibility(View.GONE);
-                            }
-                        } else {
-                            v.setBackgroundColor(Color.GRAY);
-                            TextDrawable drawable = TextDrawable.builder()
-                                    .buildRound("\u2713", Color.DKGRAY);
-                            holder.account_icon.setImageDrawable(drawable);
-                        }
-                        selected.set(!selected.get());
-
-                        listener.validate();
-
-                    });
-
-
-                } catch (Throwable e) {
-                    Log.e(TAG, e.getLocalizedMessage(), e);
+                } else {
+                    v.setBackgroundColor(Color.GRAY);
+                    TextDrawable drawable = TextDrawable.builder()
+                            .buildRound("\u2713", Color.DKGRAY);
+                    holder.account_icon.setImageDrawable(drawable);
                 }
+                selected.set(!selected.get());
 
-                break;
+                listener.validate();
 
+            });
+
+
+        } catch (Throwable e) {
+            Log.e(TAG, e.getLocalizedMessage(), e);
         }
+
 
     }
 

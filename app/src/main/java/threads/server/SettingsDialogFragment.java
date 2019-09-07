@@ -1,5 +1,6 @@
 package threads.server;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
@@ -58,7 +59,7 @@ public class SettingsDialogFragment extends DialogFragment {
         LayoutInflater inflater = activity.getLayoutInflater();
 
 
-        View view = inflater.inflate(R.layout.settings_view, null);
+        @SuppressLint("InflateParams") View view = inflater.inflate(R.layout.settings_view, null);
 
         Switch dht_support = view.findViewById(R.id.dht_support);
         dht_support.setChecked(Preferences.getRoutingType(activity) == RoutingConfig.TypeEnum.dht);

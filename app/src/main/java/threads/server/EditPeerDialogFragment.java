@@ -1,5 +1,6 @@
 package threads.server;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
@@ -103,8 +104,7 @@ public class EditPeerDialogFragment extends DialogFragment {
         LayoutInflater inflater = activity.getLayoutInflater();
 
 
-        @SuppressWarnings("all")
-        View view = inflater.inflate(R.layout.edit_view, null);
+        @SuppressLint("InflateParams") View view = inflater.inflate(R.layout.edit_view, null);
         edit_multihash_layout = view.findViewById(R.id.edit_multihash_layout);
         edit_multihash_layout.setCounterEnabled(true);
         edit_multihash_layout.setCounterMaxLength(MULTIHASH_SIZE);

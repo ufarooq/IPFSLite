@@ -12,7 +12,6 @@ import threads.ipfs.api.PID;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class ContentService {
-    private static final String TAG = ContentService.class.getSimpleName();
     private static ContentService SINGLETON = null;
     @NonNull
     private final ContentDatabase contentDatabase;
@@ -35,27 +34,26 @@ public class ContentService {
     }
 
     @NonNull
-    public ContentDatabase getContentDatabase() {
+    ContentDatabase getContentDatabase() {
         return contentDatabase;
     }
 
 
     @Nullable
-    public Content getContent(@NonNull CID cid) {
+    Content getContent(@NonNull CID cid) {
         checkNotNull(cid);
         return getContentDatabase().contentDao().getContent(cid.getCid());
     }
 
-    @NonNull
-    public Content insertContent(@NonNull PID pid, @NonNull CID cid, boolean finished) {
+
+    void insertContent(@NonNull PID pid, @NonNull CID cid, boolean finished) {
         checkNotNull(pid);
         checkNotNull(cid);
         Content content = Content.create(pid, cid, finished);
         getContentDatabase().contentDao().insertContent(content);
-        return content;
     }
 
-    public void finishContent(CID cid) {
+    void finishContent(CID cid) {
         checkNotNull(cid);
         getContentDatabase().contentDao().setFinished(cid.getCid(), true);
     }

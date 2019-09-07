@@ -34,9 +34,7 @@ public class JobServiceDownload extends JobService {
     private static final String TAG = JobServiceDownload.class.getSimpleName();
 
 
-    public static void download(@NonNull Context context,
-                                @NonNull PID pid,
-                                @NonNull CID cid) {
+    public static void download(@NonNull Context context, @NonNull PID pid, @NonNull CID cid) {
         checkNotNull(context);
         checkNotNull(pid);
         checkNotNull(cid);
