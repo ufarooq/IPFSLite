@@ -28,7 +28,7 @@
     <string name="commands">Commands</string>
     <string name="share_app">Share</string>
     <string name="choose_one">Choose an application</string>
-    <string name="playstore_url">https://play.google.com/store/apps/details?id=threads.server</string>
+    <string name="play_store_url">https://play.google.com/store/apps/details?id=threads.server</string>
     <string name="fdroid_url">https://f-droid.org/packages/threads.server/</string>
     <string name="store_mail">Let me recommend you this application.</string>
     <string name="issues">Issue Report</string>
@@ -105,7 +105,7 @@
     <string name="receive_notifications_enabled">Support Receiving Notifications</string>
     <string name="documentation">Documentation</string>
     <string name="outbox">Outbox</string>
-    <string name="deleting_files_within_directory_not_supported">Delecting files within a directory is currently not supported</string>
+    <string name="deleting_files_within_directory_not_supported">Deleting files within a directory is currently not supported</string>
     <string name="no_marked_file_delete">No files marked for deleting</string>
     <string name="no_marked_file_send">No marked files for sending</string>
     <string name="general">General</string>

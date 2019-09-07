@@ -83,7 +83,7 @@ public class Service {
     private static final Gson gson = new Gson();
     private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(10);
     private static final String APP_KEY = "AppKey";
-    private static final String PIN_SERICE_TIME_KEY = "pinServiceTimeKey";
+    private static final String PIN_SERVICE_TIME_KEY = "pinServiceTimeKey";
     private static final String GATEWAY_KEY = "gatewayKey";
     private static final String AUTO_DOWNLOAD_KEY = "autoDownloadKey";
     private static final String UPDATE = "UPDATE";
@@ -151,7 +151,7 @@ public class Service {
     public static int getPublishServiceTime(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getInt(PIN_SERICE_TIME_KEY, 6);
+        return sharedPref.getInt(PIN_SERVICE_TIME_KEY, 6);
     }
 
     public static void setPublisherServiceTime(@NonNull Context context, int timeout) {
@@ -159,7 +159,7 @@ public class Service {
         checkArgument(timeout >= 0);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putInt(PIN_SERICE_TIME_KEY, timeout);
+        editor.putInt(PIN_SERVICE_TIME_KEY, timeout);
         editor.apply();
     }
 
@@ -383,9 +383,6 @@ public class Service {
                             context.getString(R.string.success_notification,
                                     alias, String.valueOf(time)));
 
-                    Singleton.getInstance(context).getConsoleListener().info(
-                            "Sucess sending notification to PID Inbox : "
-                                    + pid + " Time : " + time + "[s]");
 
                 } catch (Throwable e) {
                     success = false;
@@ -393,9 +390,6 @@ public class Service {
 
                     threads.invokeEvent(Preferences.EXCEPTION,
                             context.getString(R.string.failed_notification, alias));
-
-                    Singleton.getInstance(context).getConsoleListener().error(
-                            "Failed sending notification to PID Inbox :" + pid);
                 }
 
             }

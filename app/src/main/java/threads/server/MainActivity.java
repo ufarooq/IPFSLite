@@ -420,7 +420,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (BuildConfig.FDroid) {
                         sAux = sAux + getString(R.string.fdroid_url) + "\n\n";
                     } else {
-                        sAux = sAux + getString(R.string.playstore_url) + "\n\n";
+                        sAux = sAux + getString(R.string.play_store_url) + "\n\n";
                     }
                     i.putExtra(Intent.EXTRA_TEXT, sAux);
                     startActivity(Intent.createChooser(i, getString(R.string.choose_one)));
@@ -1231,8 +1231,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void dontShowAgain(@NonNull String key, boolean dontShowAgain) {
-        Service.setDontShowAgain(this, key, dontShowAgain);
+    public void dontShowAgain(@NonNull String key, boolean notShowAgain) {
+        Service.setDontShowAgain(this, key, notShowAgain);
     }
 
     @Override
