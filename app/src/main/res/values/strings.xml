@@ -25,7 +25,6 @@
     <string name="privacy_policy">Privacy Policy</string>
     <string name="quic_support">QUIC Support</string>
     <string name="pubsub_router">Enable Gossipsub</string>
-    <string name="commands">Commands</string>
     <string name="share_app">Share</string>
     <string name="choose_one">Choose an application</string>
     <string name="play_store_url">https://play.google.com/store/apps/details?id=threads.server</string>
@@ -39,7 +38,6 @@
     <string name="multihash_not_valid">Multihash is not valid</string>
     <string name="codec_not_supported">Codec is not supported</string>
     <string name="peers">Peers</string>
-    <string name="console">Console</string>
     <string name="files">Files</string>
     <string name="offline_mode">Offline Mode</string>
     <string name="peer_exists_with_pid">Peer with the PID exists already</string>
@@ -49,7 +47,6 @@
     <string name="user_connect_try">Peer \"%1$s\" connection request.</string>
     <string name="action_download">Download</string>
     <string name="no_sharing_peers">Currently no peers are available to share data with.</string>
-    <string name="data_shared_with_peers">\"%1$s\" peers were notify to download the data.</string>
     <string name="select_files">File Chooser</string>
     <string name="action_select_all">Select All</string>
     <string name="action_clear_selection">Clear Selection</string>
@@ -89,7 +86,6 @@
     <string name="cancel">Cancel</string>
     <string name="version_number">%1$s</string>
     <string name="mdns_support">MDNS Support</string>
-    <string name="logs_mode_enable">Debug Mode (logs)</string>
     <string name="dht_support">Enable DHT Routing</string>
     <string name="prefer_tls">Prefer TLS</string>
     <string name="experimental_settings">Experimental Settings</string>

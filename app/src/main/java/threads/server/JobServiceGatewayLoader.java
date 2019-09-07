@@ -65,6 +65,7 @@ public class JobServiceGatewayLoader extends JobService {
             con.setConnectTimeout(15000);
             con.setReadTimeout(timeout * 1000);
             try (InputStream stream = con.getInputStream()) {
+                //noinspection StatementWithEmptyBody
                 while (stream.read() != -1) {
                 }
                 return true;

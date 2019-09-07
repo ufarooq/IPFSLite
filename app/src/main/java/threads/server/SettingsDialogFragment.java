@@ -376,9 +376,9 @@ public class SettingsDialogFragment extends DialogFragment implements View.OnTou
             Service.setSendNotificationsEnabled(activity, isChecked);
         });
 
-        Switch receive_notifciations_enabled = view.findViewById(R.id.receive_notifications_enabled);
-        receive_notifciations_enabled.setChecked(Service.isReceiveNotificationsEnabled(activity));
-        receive_notifciations_enabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        Switch receive_notifications_enabled = view.findViewById(R.id.receive_notifications_enabled);
+        receive_notifications_enabled.setChecked(Service.isReceiveNotificationsEnabled(activity));
+        receive_notifications_enabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Service.setReceiveNotificationsEnabled(activity, isChecked);
         });
 
