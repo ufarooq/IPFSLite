@@ -798,7 +798,7 @@ class Service {
         final THREADS threads = Singleton.getInstance(context).getThreads();
 
         try {
-            // TODO threads.resetThreadsUnreadNotes();
+            threads.resetThreadsUnreadNotes();
             threads.resetThreadsPublish();
             threads.resetUsersDialing();
             threads.resetPeersConnected();
