@@ -27,9 +27,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -689,13 +687,11 @@ class Service {
     private static void createUser(@NonNull Context context,
                                    @NonNull PID senderPid,
                                    @NonNull String alias,
-                                   @NonNull String pubKey,
-                                   @NonNull UserType userType) {
+                                   @NonNull String pubKey) {
         checkNotNull(context);
         checkNotNull(senderPid);
         checkNotNull(alias);
         checkNotNull(pubKey);
-        checkNotNull(userType);
 
         try {
             final THREADS threads = Singleton.getInstance(context).getThreads();
@@ -708,7 +704,7 @@ class Service {
                     CID image = ThumbnailService.getImage(
                             context, alias, R.drawable.server_network);
 
-                    sender = threads.createUser(senderPid, pubKey, alias, userType, image);
+                    sender = threads.createUser(senderPid, pubKey, alias, UserType.VERIFIED, image);
                     sender.setBlocked(true);
                     threads.storeUser(sender);
 
@@ -1692,7 +1688,6 @@ class Service {
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         final ContentService contentService = ContentService.getInstance(context);
         final PID host = Preferences.getPID(context);
-        final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
 
         if (ipfs != null) {
 
@@ -1727,17 +1722,7 @@ class Service {
 
                         JobServicePublish.publish(context, cid, false);
 
-
-                        if (peerDiscovery) {
-
-                            Map<String, String> params = new HashMap<>();
-
-                            String alias = threads.getUserAlias(host);
-                            params.put(Content.ALIAS, alias);
-
-                            IdentityService.publishIdentity(
-                                    context, BuildConfig.ApiAesKey, params, Service.RELAYS);
-                        }
+                        JobServiceIdentity.identity(context);
 
 
                         ExecutorService executorService = Executors.newSingleThreadExecutor();
@@ -1825,8 +1810,7 @@ class Service {
                                                     if (pubKey == null) {
                                                         pubKey = "";
                                                     }
-                                                    createUser(context, senderPid,
-                                                            alias, pubKey, UserType.VERIFIED);
+                                                    createUser(context, senderPid, alias, pubKey);
                                                 }
                                             } else if ("CONNECT_REPLY".equals(est)) {
                                                 if (content.containsKey(Content.ALIAS)) {

@@ -71,7 +71,9 @@ class ContentsService {
 
                 if (!threads.isUserBlocked(user)) {
 
-                    long timestamp = getMinutesAgo(10);
+                    long timestamp = System.currentTimeMillis() -
+                            TimeUnit.MINUTES.toMillis(10);
+
 
                     List<Content> contents = contentService.getContentDatabase().
                             contentDao().getContents(user, timestamp, false);
@@ -93,10 +95,6 @@ class ContentsService {
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-    }
-
-    private static long getMinutesAgo(int minutes) {
-        return System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(minutes);
     }
 
     private static void downloadContents(@NonNull Context context,

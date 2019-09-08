@@ -55,10 +55,6 @@ public class JobServiceContents extends JobService {
         }
     }
 
-    private static long getMinutesAgo(int minutes) {
-        return System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(minutes);
-    }
-
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
@@ -87,7 +83,9 @@ public class JobServiceContents extends JobService {
 
                 if (connected) {
                     // notifications old entries when connected
-                    long timestamp = getMinutesAgo(30);
+                    long timestamp = System.currentTimeMillis() -
+                            TimeUnit.MINUTES.toMillis(30);
+
 
                     List<threads.server.Content> contents =
                             contentService.getContentDatabase().
