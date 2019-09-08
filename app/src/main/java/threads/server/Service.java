@@ -320,10 +320,8 @@ class Service {
 
     }
 
-    static boolean notify(@NonNull Context context,
-                          @NonNull String pid,
-                          @NonNull String cid,
-                          long startTime) {
+    private static boolean notify(@NonNull Context context, @NonNull String pid,
+                                  @NonNull String cid, long startTime) {
 
         checkNotNull(context);
         checkNotNull(pid);
@@ -1451,60 +1449,59 @@ class Service {
 
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
 
-        if (ipfs != null) {
 
-            UPLOAD_SERVICE.submit(() -> {
+        UPLOAD_SERVICE.submit(() -> {
+            try {
+                checkNotNull(ipfs, "IPFS is not valid");
+                InputStream inputStream =
+                        context.getContentResolver().openInputStream(uri);
+                checkNotNull(inputStream);
+
+                PID pid = Preferences.getPID(context);
+                checkNotNull(pid);
+                User host = threads.getUserByPID(pid);
+                checkNotNull(host);
+
+
+                String name = fileDetails.getFileName();
+                long size = fileDetails.getFileSize();
+
+                Thread thread = threads.createThread(host, Status.OFFLINE, Kind.IN,
+                        "", null, 0L);
+
+                ThumbnailService.Result res =
+                        ThumbnailService.getThumbnail(context, uri, host.getAlias());
+
+                thread.addAdditional(Content.IMG, String.valueOf(res.isThumbnail()), true);
+                thread.addAdditional(Content.FILENAME, name, false);
+                thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
+
+                thread.setImage(res.getCid());
+                thread.setMimeType(fileDetails.getMimeType());
+                long idx = threads.storeThread(thread);
+
+
                 try {
-                    InputStream inputStream =
-                            context.getContentResolver().openInputStream(uri);
-                    checkNotNull(inputStream);
+                    threads.setThreadStatus(idx, Status.LEACHING);
 
-                    PID pid = Preferences.getPID(context);
-                    checkNotNull(pid);
-                    User host = threads.getUserByPID(pid);
-                    checkNotNull(host);
+                    CID cid = ipfs.storeStream(inputStream, true);
+                    checkNotNull(cid);
 
-
-                    String name = fileDetails.getFileName();
-                    long size = fileDetails.getFileSize();
-
-                    Thread thread = threads.createThread(host, Status.OFFLINE, Kind.IN,
-                            "", null, 0L);
-
-                    ThumbnailService.Result res =
-                            ThumbnailService.getThumbnail(context, uri, host.getAlias());
-
-                    thread.addAdditional(Content.IMG, String.valueOf(res.isThumbnail()), true);
-                    thread.addAdditional(Content.FILENAME, name, false);
-                    thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
-
-                    thread.setImage(res.getCid());
-                    thread.setMimeType(fileDetails.getMimeType());
-                    long idx = threads.storeThread(thread);
+                    // cleanup of entries with same CID and hierarchy
+                    List<Thread> sameEntries = threads.getThreadsByCIDAndThread(cid, 0L);
+                    threads.removeThreads(ipfs, sameEntries);
 
 
-                    try {
-                        threads.setThreadStatus(idx, Status.LEACHING);
-
-                        CID cid = ipfs.storeStream(inputStream, true);
-                        checkNotNull(cid);
-
-                        // cleanup of entries with same CID and hierarchy
-                        List<Thread> sameEntries = threads.getThreadsByCIDAndThread(cid, 0L);
-                        threads.removeThreads(ipfs, sameEntries);
-
-
-                        threads.setThreadCID(idx, cid);
-                        threads.setThreadStatus(idx, Status.ONLINE);
-                    } catch (Throwable e) {
-                        threads.setThreadStatus(idx, Status.ERROR);
-                    }
-
+                    threads.setThreadCID(idx, cid);
+                    threads.setThreadStatus(idx, Status.ONLINE);
                 } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                    threads.setThreadStatus(idx, Status.ERROR);
                 }
-            });
-        }
+
+            } catch (Throwable e) {
+                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+            }
+        });
     }
 
     void peersCheckEnable(boolean value) {
