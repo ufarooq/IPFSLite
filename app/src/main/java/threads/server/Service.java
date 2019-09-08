@@ -447,8 +447,7 @@ class Service {
                     if (pubKey != null && !pubKey.isEmpty()) {
 
                         threads.core.api.PeerInfo peerInfo = IdentityService.getPeerInfo(
-                                context, pid,
-                                BuildConfig.ApiAesKey, false);
+                                context, pid, "", false);
                         if (peerInfo != null) {
                             String alias = peerInfo.getAdditionalValue(Content.ALIAS);
                             if (!alias.isEmpty()) {
@@ -501,7 +500,7 @@ class Service {
             final int timeout = Preferences.getConnectionTimeout(context);
             final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
             boolean value = ConnectService.connectPeer(context, user,
-                    BuildConfig.ApiAesKey, peerDiscovery, true, timeout);
+                    "", peerDiscovery, true, timeout);
             threads.setUserConnected(user, value);
 
             if (value) {
@@ -538,7 +537,7 @@ class Service {
             }
 
             threads.core.api.PeerInfo peerInfo = IdentityService.getPeerInfo(
-                    context, user, BuildConfig.ApiAesKey, true);
+                    context, user, "", true);
             if (peerInfo != null) {
                 String alias = peerInfo.getAdditionalValue(Content.ALIAS);
                 if (!alias.isEmpty()) {
@@ -1829,7 +1828,7 @@ class Service {
                                             } else {
 
                                                 RTCSession.handleContent(context,
-                                                        BuildConfig.ApiAesKey, senderPid, content);
+                                                        "", senderPid, content);
                                             }
                                         } else {
                                             Preferences.error(threads, context.getString(

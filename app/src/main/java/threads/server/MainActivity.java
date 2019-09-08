@@ -597,7 +597,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     getApplicationContext());
                             int timeout = Preferences.getConnectionTimeout(getApplicationContext());
                             boolean value = ConnectService.connectPeer(getApplicationContext(),
-                                    user, BuildConfig.ApiAesKey,
+                                    user, "",
                                     peerDiscovery, true, timeout);
 
                             threads.setUserConnected(user, value);
@@ -858,7 +858,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         } else {
 
                             Intent intent = RTCCallActivity.createIntent(MainActivity.this,
-                                    BuildConfig.ApiAesKey, pid, user.getAlias(), null, true);
+                                    "", pid, user.getAlias(), null, true);
                             intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                             intent.setAction(RTCCallActivity.ACTION_OUTGOING_CALL);
                             MainActivity.this.startActivity(intent);

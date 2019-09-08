@@ -78,7 +78,7 @@ public class JobServiceIdentity extends JobService {
                     params.put(Content.ALIAS, alias);
                 }
 
-                IdentityService.publishIdentity(getApplicationContext(), BuildConfig.ApiAesKey,
+                IdentityService.publishIdentity(getApplicationContext(), "",
                         params, Service.RELAYS);
 
 

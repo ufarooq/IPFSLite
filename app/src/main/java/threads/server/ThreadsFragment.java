@@ -28,6 +28,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -774,7 +775,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public String getDate(@NonNull Thread thread) {
         checkNotNull(thread);
-        return Preferences.getDate(thread.getDate());
+        return Preferences.getDate(new Date(thread.getDate()));
     }
 
     @Override

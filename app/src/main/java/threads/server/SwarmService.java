@@ -37,7 +37,7 @@ public class SwarmService {
 
                 if (peerDiscovery) {
                     threads.core.api.PeerInfo peerInfo = IdentityService.getPeerInfo(
-                            context, pid, BuildConfig.ApiAesKey, true);
+                            context, pid, "", true);
 
                     if (peerInfo != null) {
                         info.setPeerInfo(peerInfo);
