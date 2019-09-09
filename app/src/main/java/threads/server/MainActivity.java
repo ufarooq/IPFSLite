@@ -842,33 +842,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         try {
-            final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
             final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-            final PID host = Preferences.getPID(getApplicationContext());
-            checkNotNull(host);
-            if (ipfs != null) {
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.submit(() -> {
-                    try {
-                        User user = threads.getUserByPID(PID.create(pid));
-                        checkNotNull(user);
 
-                        if (threads.isUserBlocked(user.getPID())) {
-                            Preferences.warning(threads, getString(R.string.peer_is_blocked));
-                        } else {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    if (threads.isUserBlocked(pid)) {
+                        Preferences.warning(threads, getString(R.string.peer_is_blocked));
+                    } else {
 
-                            Intent intent = RTCCallActivity.createIntent(MainActivity.this,
-                                    "", pid, user.getAlias(), null, true);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                            intent.setAction(RTCCallActivity.ACTION_OUTGOING_CALL);
-                            MainActivity.this.startActivity(intent);
+                        Intent intent = RTCCallActivity.createIntent(getApplicationContext(),
+                                pid, null, true);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                        intent.setAction(RTCCallActivity.ACTION_OUTGOING_CALL);
+                        startActivity(intent);
 
-                        }
-                    } catch (Throwable e) {
-                        Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                     }
-                });
-            }
+                } catch (Throwable e) {
+                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                }
+            });
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }

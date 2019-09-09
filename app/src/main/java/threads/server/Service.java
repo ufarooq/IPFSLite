@@ -1777,6 +1777,7 @@ class Service {
                             try {
 
                                 String sender = message.getSenderPid();
+                                String topic = message.getTopic();
                                 PID senderPid = PID.create(sender);
 
 
@@ -1827,8 +1828,7 @@ class Service {
                                                 }
                                             } else {
 
-                                                RTCSession.handleContent(context,
-                                                        "", senderPid, content);
+                                                RTCSession.handleContent(context, topic, content);
                                             }
                                         } else {
                                             Preferences.error(threads, context.getString(
