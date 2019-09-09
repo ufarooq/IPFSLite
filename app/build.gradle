@@ -97,7 +97,7 @@ dependencies {
     implementation 'threads.core:share:1.3.2'
 
     // UI+API (LICENSE done)
-    implementation 'threads.core:webrtc:0.2.0'
+    implementation 'threads.core:webrtc:0.2.4'
 
     // API (LICENSE done)
     implementation 'threads.core:api:1.1.8'
