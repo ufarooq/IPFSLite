@@ -62,8 +62,6 @@ import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.PeerInfo;
 import threads.ipfs.api.PubsubConfig;
-import threads.ipfs.api.PubsubInfo;
-import threads.ipfs.api.PubsubReader;
 import threads.ipfs.api.RoutingConfig;
 import threads.share.MimeTypeService;
 import threads.share.ThumbnailService;
@@ -1742,8 +1740,6 @@ class Service {
                     Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
                 }
             });
-
-
         }
     }
 
@@ -1769,93 +1765,90 @@ class Service {
             if (ipfs != null) {
 
                 try {
-                    Singleton.getInstance(context).getConsoleListener().debug("Start Daemon");
+                    Singleton singleton = Singleton.getInstance(context);
+                    singleton.getConsoleListener().debug("Start Daemon");
 
-                    ipfs.daemon(new PubsubReader() {
-                        @Override
-                        public void receive(@NonNull PubsubInfo message) {
-                            try {
+                    boolean pubSubEnabled = Preferences.isPubsubEnabled(context);
+                    ipfs.daemon(pubSubEnabled);
 
-                                String sender = message.getSenderPid();
-                                String topic = message.getTopic();
-                                PID senderPid = PID.create(sender);
+                    singleton.setPubsubHandler((message) -> {
+                        try {
+
+                            String sender = message.getSenderPid();
+                            String topic = message.getTopic();
+                            PID senderPid = PID.create(sender);
 
 
-                                if (!threads.isUserBlocked(senderPid)) {
+                            if (!threads.isUserBlocked(senderPid)) {
 
-                                    String code = message.getMessage().trim();
+                                String code = message.getMessage().trim();
 
-                                    CodecDecider result = CodecDecider.evaluate(code);
+                                CodecDecider result = CodecDecider.evaluate(code);
 
-                                    if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
-                                        JobServiceContents.contents(context,
-                                                senderPid, CID.create(result.getMultihash()));
-                                    } else if (result.getCodex() == CodecDecider.Codec.URI) {
-                                        JobServiceDownload.download(context,
-                                                senderPid, CID.create(result.getMultihash()));
+                                if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
+                                    JobServiceContents.contents(context,
+                                            senderPid, CID.create(result.getMultihash()));
+                                } else if (result.getCodex() == CodecDecider.Codec.URI) {
+                                    JobServiceDownload.download(context,
+                                            senderPid, CID.create(result.getMultihash()));
 
-                                    } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {
-                                        Content content = result.getContent();
-                                        checkNotNull(content);
-                                        if (content.containsKey(Content.EST)) {
-                                            String est = content.get(Content.EST);
-                                            if ("CONNECT".equals(est)) {
-                                                if (content.containsKey(Content.ALIAS)) {
-                                                    String alias = content.get(Content.ALIAS);
-                                                    checkNotNull(alias);
-                                                    String pubKey = content.get(Content.PKEY);
-                                                    if (pubKey == null) {
-                                                        pubKey = "";
-                                                    }
-                                                    createUser(context, senderPid, alias, pubKey);
+                                } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {
+                                    Content content = result.getContent();
+                                    checkNotNull(content);
+                                    if (content.containsKey(Content.EST)) {
+                                        String est = content.get(Content.EST);
+                                        if ("CONNECT".equals(est)) {
+                                            if (content.containsKey(Content.ALIAS)) {
+                                                String alias = content.get(Content.ALIAS);
+                                                checkNotNull(alias);
+                                                String pubKey = content.get(Content.PKEY);
+                                                if (pubKey == null) {
+                                                    pubKey = "";
                                                 }
-                                            } else if ("CONNECT_REPLY".equals(est)) {
-                                                if (content.containsKey(Content.ALIAS)) {
-                                                    String alias = content.get(Content.ALIAS);
-                                                    checkNotNull(alias);
-                                                    String pubKey = content.get(Content.PKEY);
-                                                    if (pubKey == null) {
-                                                        pubKey = "";
-                                                    }
-                                                    adaptUser(context, senderPid, alias, pubKey);
+                                                createUser(context, senderPid, alias, pubKey);
+                                            }
+                                        } else if ("CONNECT_REPLY".equals(est)) {
+                                            if (content.containsKey(Content.ALIAS)) {
+                                                String alias = content.get(Content.ALIAS);
+                                                checkNotNull(alias);
+                                                String pubKey = content.get(Content.PKEY);
+                                                if (pubKey == null) {
+                                                    pubKey = "";
                                                 }
-                                            } else if ("REPLY".equals(est)) {
+                                                adaptUser(context, senderPid, alias, pubKey);
+                                            }
+                                        } else if ("REPLY".equals(est)) {
 
-                                                if (content.containsKey(Content.CID)) {
-                                                    String cid = content.get(Content.CID);
-                                                    checkNotNull(cid);
-                                                    Service.receiveReply(context, senderPid, cid);
-                                                }
-                                            } else {
-
-                                                RTCSession.handleContent(context, topic, content);
+                                            if (content.containsKey(Content.CID)) {
+                                                String cid = content.get(Content.CID);
+                                                checkNotNull(cid);
+                                                Service.receiveReply(context, senderPid, cid);
                                             }
                                         } else {
-                                            Preferences.error(threads, context.getString(
-                                                    R.string.unsupported_pubsub_message,
-                                                    senderPid.getPid()));
-                                        }
-                                    } else if (result.getCodex() == CodecDecider.Codec.UNKNOWN) {
 
+                                            RTCSession.handleContent(context, topic, content);
+                                        }
+                                    } else {
                                         Preferences.error(threads, context.getString(
                                                 R.string.unsupported_pubsub_message,
                                                 senderPid.getPid()));
                                     }
+                                } else if (result.getCodex() == CodecDecider.Codec.UNKNOWN) {
 
+                                    Preferences.error(threads, context.getString(
+                                            R.string.unsupported_pubsub_message,
+                                            senderPid.getPid()));
                                 }
-                            } catch (Throwable e) {
-                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                            } finally {
-                                Log.e(TAG, "Receive : " + message.getMessage());
+
                             }
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                        } finally {
+                            Log.e(TAG, "Receive : " + message.getMessage());
                         }
 
-                        @NonNull
-                        @Override
-                        public String getTopic() {
-                            return ipfs.getPid().getPid();
-                        }
-                    }, Preferences.isPubsubEnabled(context));
+
+                    });
 
                 } catch (Throwable e) {
                     Preferences.evaluateException(threads, Preferences.IPFS_START_FAILURE, e);
