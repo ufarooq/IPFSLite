@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -559,6 +560,8 @@ class Service {
     }
 
     public static void sendReceiveMessage(@NonNull Context context, @NonNull String topic) {
+        checkNotNull(context);
+        checkNotNull(topic);
         Gson gson = new Gson();
         IPFS ipfs = Singleton.getInstance(context).getIpfs();
         THREADS threads = Singleton.getInstance(context).getThreads();
@@ -574,6 +577,21 @@ class Service {
             ipfs.pubsubPub(topic, gson.toJson(map), 50);
         }
     }
+
+    public static void sendShareMessage(@NonNull Context context, @NonNull String topic) {
+        checkNotNull(context);
+        checkNotNull(topic);
+        Gson gson = new Gson();
+        IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        if (Preferences.isPubsubEnabled(context)) {
+            Content map = new Content();
+            map.put(Content.EST, "SHARE");
+
+            checkNotNull(ipfs, "IPFS not valid");
+            ipfs.pubsubPub(topic, gson.toJson(map), 50);
+        }
+    }
+
 
     private static void runUpdatesIfNecessary(@NonNull Context context) {
         try {
@@ -1668,7 +1686,8 @@ class Service {
         checkNotNull(user);
         checkNotNull(cid);
 
-        final THREADS threads = Singleton.getInstance(context).getThreads();
+        final Singleton singleton = Singleton.getInstance(context);
+        final THREADS threads = singleton.getThreads();
 
 
         JobServiceConnect.connect(context, user.getPID());
@@ -1679,14 +1698,16 @@ class Service {
                     context, user.getPID().getPid(), cid.getCid(), start);
 
             // just backup
-            if (!success && Preferences.isPubsubEnabled(context)) {
-                final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-                checkNotNull(ipfs, "IPFS not valid");
-                if (ipfs.isConnected(user.getPID())) {
+            if (Preferences.isPubsubEnabled(context)) {
+                singleton.connectPubsubTopic(context, user.getPID().getPid());
+                if (!success) {
+                    final IPFS ipfs = singleton.getIpfs();
+                    checkNotNull(ipfs, "IPFS not valid");
                     ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
+                } else {
+                    sendShareMessage(context, user.getPID().getPid());
                 }
             }
-
         } catch (Throwable e) {
             Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
         }
@@ -1856,6 +1877,12 @@ class Service {
                                                 Preferences.error(threads, context.getString(
                                                         R.string.notification_received, alias));
                                             }
+                                        } else if ("SHARE".equals(est)) {
+                                            ScheduledExecutorService executorService =
+                                                    Executors.newSingleThreadScheduledExecutor();
+                                            executorService.schedule(() ->
+                                                            Service.notifications(context),
+                                                    3, TimeUnit.SECONDS);
                                         } else {
                                             RTCSession.handleContent(context, topic, content);
                                         }
