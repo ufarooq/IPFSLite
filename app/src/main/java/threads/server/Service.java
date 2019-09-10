@@ -12,7 +12,6 @@ import android.provider.DocumentsContract;
 import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -1852,9 +1851,10 @@ class Service {
                                             if (content.containsKey(Content.ALIAS)) {
                                                 String alias = content.get(Content.ALIAS);
                                                 checkNotNull(alias);
-                                                Toast.makeText(context, context.getString(
-                                                        R.string.notification_received, alias),
-                                                        Toast.LENGTH_LONG).show();
+
+                                                // TODO make a info
+                                                Preferences.error(threads, context.getString(
+                                                        R.string.notification_received, alias));
                                             }
                                         } else {
                                             RTCSession.handleContent(context, topic, content);
