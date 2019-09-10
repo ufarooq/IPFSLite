@@ -12,6 +12,7 @@ import android.provider.DocumentsContract;
 import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -259,7 +260,8 @@ class Service {
                     }
                     if (data != null) {
 
-                        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                        final Singleton singleton = Singleton.getInstance(context);
+                        final IPFS ipfs = singleton.getIpfs();
                         checkNotNull(ipfs, "IPFS not valid");
                         if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
                             try {
@@ -294,6 +296,10 @@ class Service {
                                 PID pid = PID.create(pidStr);
                                 CID cid = CID.create(cidStr);
 
+                                // THIS is a try, it tries to find the pubsub of the PID
+                                // (for sending a message when done)
+                                singleton.connectPubsubTopic(context, pid.getPid());
+
 
                                 threads.server.Content content =
                                         contentService.getContent(cid);
@@ -302,6 +308,7 @@ class Service {
                                 }
 
                                 JobServiceContents.contents(context, pid, cid);
+
 
 
                             } catch (Throwable e) {
@@ -552,6 +559,23 @@ class Service {
         }
     }
 
+    public static void sendReceiveMessage(@NonNull Context context, @NonNull String topic) {
+        Gson gson = new Gson();
+        IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        THREADS threads = Singleton.getInstance(context).getThreads();
+        if (Preferences.isPubsubEnabled(context)) {
+            PID host = Preferences.getPID(context);
+            checkNotNull(host);
+
+            Content map = new Content();
+            map.put(Content.EST, "RECEIVED");
+            map.put(Content.ALIAS, threads.getUserAlias(host));
+
+            checkNotNull(ipfs, "IPFS not valid");
+            ipfs.pubsubPub(topic, gson.toJson(map), 50);
+        }
+    }
+
     private static void runUpdatesIfNecessary(@NonNull Context context) {
         try {
             int versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
@@ -562,7 +586,7 @@ class Service {
 
                 // Experimental Features
                 Preferences.setQUICEnabled(context, true);
-                Preferences.setPreferTLS(context, false);
+                Preferences.setPreferTLS(context, true);
 
 
                 Preferences.setSwarmPort(context, 4001);
@@ -1824,8 +1848,15 @@ class Service {
                                                 checkNotNull(cid);
                                                 Service.receiveReply(context, senderPid, cid);
                                             }
+                                        } else if ("RECEIVED".equals(est)) {
+                                            if (content.containsKey(Content.ALIAS)) {
+                                                String alias = content.get(Content.ALIAS);
+                                                checkNotNull(alias);
+                                                Toast.makeText(context, context.getString(
+                                                        R.string.notification_received, alias),
+                                                        Toast.LENGTH_LONG).show();
+                                            }
                                         } else {
-
                                             RTCSession.handleContent(context, topic, content);
                                         }
                                     } else {

@@ -263,12 +263,16 @@ class ContentsService {
 
                     if (contents != null) {
 
+                        // Send a message that the notification is downloaded
+                        Service.sendReceiveMessage(context, pid.getPid());
+
+
                         contentService.finishContent(cid);
 
                         downloadContents(context, pid, contents);
                     }
 
-
+                    // This has to be evaluated again if it really required
                     SwarmService.disconnect(context, info);
 
                 }
@@ -284,4 +288,5 @@ class ContentsService {
         return success;
 
     }
+
 }

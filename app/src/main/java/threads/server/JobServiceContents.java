@@ -78,6 +78,8 @@ public class JobServiceContents extends JobService {
 
                 final ContentService contentService =
                         ContentService.getInstance(getApplicationContext());
+
+                // work of download is done here
                 boolean connected = ContentsService.download(getApplicationContext(),
                         PID.create(pid), CID.create(cid));
 
