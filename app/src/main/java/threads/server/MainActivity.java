@@ -760,14 +760,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         eventViewModel.getException().observe(this, (event) -> {
             try {
                 if (event != null) {
-                    Snackbar snackbar = Snackbar.make(drawer_layout, event.getContent(),
-                            Snackbar.LENGTH_INDEFINITE);
-                    snackbar.setAction(android.R.string.ok, (view) -> {
-                        eventViewModel.removeEvent(event);
-                        snackbar.dismiss();
+                    String content = event.getContent();
+                    if (!content.isEmpty()) {
+                        Snackbar snackbar = Snackbar.make(drawer_layout, content,
+                                Snackbar.LENGTH_INDEFINITE);
+                        snackbar.setAction(android.R.string.ok, (view) -> {
+                            snackbar.dismiss();
+                        });
+                        snackbar.show();
+                    }
+                    eventViewModel.removeEvent(event);
 
-                    });
-                    snackbar.show();
                 }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -778,8 +781,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         eventViewModel.getWarning().observe(this, (event) -> {
             try {
                 if (event != null) {
-                    Toast.makeText(
-                            getApplicationContext(), event.getContent(), Toast.LENGTH_LONG).show();
+                    String content = event.getContent();
+                    if (!content.isEmpty()) {
+                        Toast.makeText(
+                                getApplicationContext(), content, Toast.LENGTH_LONG).show();
+                    }
                     eventViewModel.removeEvent(event);
                 }
             } catch (Throwable e) {
@@ -790,8 +796,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         eventViewModel.getInfo().observe(this, (event) -> {
             try {
                 if (event != null) {
-                    Toast.makeText(
-                            getApplicationContext(), event.getContent(), Toast.LENGTH_LONG).show();
+                    String content = event.getContent();
+                    if (!content.isEmpty()) {
+                        Toast.makeText(getApplicationContext(), content, Toast.LENGTH_LONG).show();
+                    }
                     eventViewModel.removeEvent(event);
                 }
             } catch (Throwable e) {
