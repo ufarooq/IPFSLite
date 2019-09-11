@@ -23,6 +23,7 @@ import com.j256.simplemagic.ContentInfo;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -1534,8 +1535,11 @@ class Service {
                     threads.setThreadStatus(idx, Status.ONLINE);
                 } catch (Throwable e) {
                     threads.setThreadStatus(idx, Status.ERROR);
+                    throw e;
                 }
 
+            } catch (FileNotFoundException e) {
+                Preferences.error(threads, context.getString(R.string.file_not_found));
             } catch (Throwable e) {
                 Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
             }
