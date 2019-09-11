@@ -70,10 +70,12 @@ public class JobServiceAutoConnect extends JobService {
 
                 Service.getInstance(getApplicationContext());
 
-                IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+                Singleton singleton = Singleton.getInstance(getApplicationContext());
+
+                IPFS ipfs = singleton.getIpfs();
                 checkNotNull(ipfs, "IPFS not defined");
 
-                THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+                THREADS threads = singleton.getThreads();
                 List<User> users = threads.getAutoConnectUsers();
 
                 ExecutorService executorService = Executors.newFixedThreadPool(5);
@@ -81,6 +83,11 @@ public class JobServiceAutoConnect extends JobService {
 
                 for (User user : users) {
                     if (!ipfs.isConnected(user.getPID())) {
+
+                        singleton.connectPubsubTopic(
+                                getApplicationContext(), user.getPID().getPid());
+
+
                         futures.add(executorService.submit(() ->
                                 ipfs.swarmConnect(user.getPID(), timeout)));
                     }

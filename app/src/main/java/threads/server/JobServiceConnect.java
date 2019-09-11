@@ -75,10 +75,15 @@ public class JobServiceConnect extends JobService {
 
                 Service.getInstance(getApplicationContext());
 
-                IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+                Singleton singleton = Singleton.getInstance(getApplicationContext());
+
+                IPFS ipfs = singleton.getIpfs();
                 checkNotNull(ipfs, "IPFS not defined");
 
                 if (!ipfs.isConnected(PID.create(pid))) {
+
+                    singleton.connectPubsubTopic(getApplicationContext(), pid);
+
                     ipfs.swarmConnect(PID.create(pid), timeout);
                 }
 
