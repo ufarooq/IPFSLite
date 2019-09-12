@@ -560,7 +560,7 @@ class Service {
         }
     }
 
-    public static void sendReceiveMessage(@NonNull Context context, @NonNull String topic) {
+    static void sendReceiveMessage(@NonNull Context context, @NonNull String topic) {
         checkNotNull(context);
         checkNotNull(topic);
         Gson gson = new Gson();
@@ -579,7 +579,7 @@ class Service {
         }
     }
 
-    public static void sendShareMessage(@NonNull Context context, @NonNull String topic) {
+    private static void sendShareMessage(@NonNull Context context, @NonNull String topic) {
         checkNotNull(context);
         checkNotNull(topic);
         Gson gson = new Gson();
@@ -1877,7 +1877,6 @@ class Service {
                                                 String alias = content.get(Content.ALIAS);
                                                 checkNotNull(alias);
 
-                                                // TODO make a info
                                                 Preferences.error(threads, context.getString(
                                                         R.string.notification_received, alias));
                                             }
