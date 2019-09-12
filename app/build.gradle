@@ -16,7 +16,7 @@ ext {
     siteUrl = 'https://gitlab.com/remmer.wilts/threads-server'
     gitUrl = 'git@gitlab.com:remmer.wilts/threads-server.git'
 
-    libraryVersion = '1.0.3'
+    libraryVersion = '1.0.4'
 
     developerId = 'remmerw'
     developerName = 'Remmer Wilts'
@@ -34,20 +34,20 @@ android {
         applicationId "threads.server"
         minSdkVersion 24
         targetSdkVersion 29
-        versionCode 103
-        versionName "1.0.3"
+        versionCode 104
+        versionName "1.0.4"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
     }
     buildTypes {
         debug {
-            buildConfigField "boolean", "FDroid", "false"
+            buildConfigField "boolean", "FDroid", "true"
         }
 
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            buildConfigField "boolean", "FDroid", "false"
+            buildConfigField "boolean", "FDroid", "true"
         }
     }
 
