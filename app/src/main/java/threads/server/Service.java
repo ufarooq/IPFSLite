@@ -601,6 +601,9 @@ class Service {
                     APP_KEY, Context.MODE_PRIVATE);
             if (prefs.getInt(UPDATE, 0) != versionCode) {
 
+                Preferences.setLoginFlag(context, false); // TODO remove later
+                IPFS.deleteConfigFile(context); // TODO remove later
+
 
                 // Experimental Features
                 Preferences.setQUICEnabled(context, true);
