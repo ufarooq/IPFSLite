@@ -47,15 +47,15 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
 
     private UsersViewAdapter usersViewAdapter;
-    private ActionListener actionListener;
+    private ActionListener mListener;
     private Context mContext;
 
 
     @Override
     public void onDetach() {
         super.onDetach();
-        Service.getInstance(mContext).peersCheckEnable(false);
         mContext = null;
+        mListener = null;
     }
 
     @Override
@@ -63,23 +63,10 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         super.onAttach(context);
         mContext = context;
         try {
-            actionListener = (PeersFragment.ActionListener) getActivity();
-            Service.getInstance(context).peersCheckEnable(true);
+            mListener = (PeersFragment.ActionListener) getActivity();
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-    }
-
-
-    private void peersOnlineStatus() {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                Service.getInstance(mContext).checkPeersOnlineStatus(mContext);
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        });
     }
 
 
@@ -107,7 +94,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                actionListener.clickInfoPeer();
+                mListener.clickInfoPeer();
 
                 return true;
             }
@@ -215,8 +202,6 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
             }
 
         });
-
-        peersOnlineStatus();
 
         return view;
     }

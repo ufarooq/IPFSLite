@@ -1335,7 +1335,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-
     @Override
     public void dontShowAgain(@NonNull String key, boolean notShowAgain) {
         Service.setDontShowAgain(this, key, notShowAgain);

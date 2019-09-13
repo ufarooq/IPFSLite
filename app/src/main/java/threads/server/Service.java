@@ -89,7 +89,6 @@ class Service {
     private static final String RECEIVE_NOTIFICATIONS_ENABLED_KEY = "receiveNotificationKey";
     private static final String SUPPORT_PEER_DISCOVERY_KEY = "supportPeerDiscoveryKey";
     private static Service SINGLETON = null;
-    private final AtomicBoolean peerCheckFlag = new AtomicBoolean(false);
     private final AtomicBoolean swarmCheckFlag = new AtomicBoolean(false);
 
     private Service() {
@@ -309,7 +308,6 @@ class Service {
                                 }
 
                                 JobServiceContents.contents(context, pid, cid);
-
 
 
                             } catch (Throwable e) {
@@ -1403,6 +1401,72 @@ class Service {
         });
     }
 
+    private static void peersOnlineStatus(@NonNull Context context) {
+        checkNotNull(context);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                checkPeersOnlineStatus(context);
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        });
+    }
+
+    private static void checkPeersOnlineStatus(@NonNull Context context) {
+        checkNotNull(context);
+        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        if (ipfs != null) {
+            try {
+                while (ipfs.isDaemonRunning()) {
+                    checkPeers(context);
+                    java.lang.Thread.sleep(1000);
+                }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        }
+    }
+
+    private static void checkPeers(@NonNull Context context) {
+        checkNotNull(context);
+
+        try {
+            final PID host = Preferences.getPID(context);
+            final THREADS threads = Singleton.getInstance(context).getThreads();
+
+
+            final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+            if (ipfs != null) {
+
+                List<PID> users = threads.getUsersPIDs();
+
+                users.remove(host);
+
+                for (PID user : users) {
+                    if (!threads.isUserBlocked(user) && !threads.getUserDialing(user)) {
+
+                        try {
+                            boolean value = ipfs.isConnected(user);
+
+                            boolean preValue = threads.isUserConnected(user);
+
+                            if (preValue != value) {
+                                threads.setUserConnected(user, value);
+                            }
+
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                            threads.setUserConnected(user, false);
+                        }
+                    }
+                }
+            }
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
 
     void storeData(@NonNull Context context, @NonNull String text) {
         checkNotNull(context);
@@ -1549,27 +1613,8 @@ class Service {
         });
     }
 
-    void peersCheckEnable(boolean value) {
-        peerCheckFlag.set(value);
-    }
-
     void swarmCheckEnable(boolean value) {
         swarmCheckFlag.set(value);
-    }
-
-    void checkPeersOnlineStatus(@NonNull Context context) {
-        checkNotNull(context);
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        if (ipfs != null) {
-            try {
-                while (peerCheckFlag.get() && ipfs.isDaemonRunning()) {
-                    checkPeers(context);
-                    java.lang.Thread.sleep(1000);
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        }
     }
 
     void checkSwarmOnlineStatus(@NonNull Context context) {
@@ -1596,46 +1641,6 @@ class Service {
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
-        }
-    }
-
-    private void checkPeers(@NonNull Context context) {
-        checkNotNull(context);
-
-        try {
-            final PID host = Preferences.getPID(context);
-            final THREADS threads = Singleton.getInstance(context).getThreads();
-
-
-            final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-            if (ipfs != null) {
-
-                List<PID> users = threads.getUsersPIDs();
-
-                users.remove(host);
-
-                for (PID user : users) {
-                    if (!threads.isUserBlocked(user) && !threads.getUserDialing(user)) {
-
-                        try {
-                            boolean value = ipfs.isConnected(user);
-
-                            boolean preValue = threads.isUserConnected(user);
-
-                            if (preValue != value) {
-                                threads.setUserConnected(user, value);
-                            }
-
-                        } catch (Throwable e) {
-                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                            threads.setUserConnected(user, false);
-                        }
-                    }
-                }
-            }
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
@@ -1806,6 +1811,7 @@ class Service {
                 Service.cleanStates(context);
                 Service.createHost(context);
                 Service.checkNotifications(context);
+                Service.peersOnlineStatus(context);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
