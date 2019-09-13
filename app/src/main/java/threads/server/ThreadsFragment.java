@@ -519,6 +519,11 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public void invokeGeneralAction(@NonNull Thread thread) {
         try {
+            // mis-clicking prevention, using threshold of 1000 ms
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
 
             boolean sendActive = Service.isSendNotificationsEnabled(mContext);
 

@@ -226,6 +226,11 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
     public void invokeGeneralAction(@NonNull User user) {
         checkNotNull(user);
         try {
+            // mis-clicking prevention, using threshold of 1000 ms
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
 
             boolean callActive = Preferences.isPubsubEnabled(mContext);
 

@@ -224,6 +224,12 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
         checkNotNull(peer);
         try {
 
+            // mis-clicking prevention, using threshold of 1000 ms
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
+
             FragmentManager fm = getChildFragmentManager();
 
             PeerActionDialogFragment.newInstance(
