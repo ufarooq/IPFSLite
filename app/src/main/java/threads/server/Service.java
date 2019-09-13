@@ -1619,7 +1619,12 @@ class Service {
 
                         try {
                             boolean value = ipfs.isConnected(user);
-                            threads.setUserConnected(user, value);
+
+                            boolean preValue = threads.isUserConnected(user);
+
+                            if (preValue != value) {
+                                threads.setUserConnected(user, value);
+                            }
 
                         } catch (Throwable e) {
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
