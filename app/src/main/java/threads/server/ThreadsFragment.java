@@ -513,7 +513,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         if (thread.isPublishing()) {
             return false;
         }
-        return thread.getStatus() == Status.ONLINE;
+        return thread.getStatus() == Status.DONE;
     }
 
     @Override
@@ -603,7 +603,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
                     Thread thread = threads.getThreadByIdx(idx);
                     checkNotNull(thread);
                     Status status = thread.getStatus();
-                    if (status == Status.ONLINE) {
+                    if (status == Status.DONE) {
 
                         CID cid = thread.getCid();
                         checkNotNull(cid);

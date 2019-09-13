@@ -845,8 +845,7 @@ class Service {
             threads.resetUsersDialing();
             threads.resetPeersConnected();
             threads.resetUsersConnected();
-            threads.setThreadStatus(Status.ONLINE, Status.ERROR);
-            threads.setThreadStatus(Status.OFFLINE, Status.ERROR);
+            threads.setThreadStatus(Status.INIT, Status.ERROR);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -925,7 +924,7 @@ class Service {
         User user = threads.getUserByPID(creator);
         checkNotNull(user);
 
-        Thread thread = threads.createThread(user, Status.OFFLINE, Kind.OUT,
+        Thread thread = threads.createThread(user, Status.INIT, Kind.OUT,
                 "", cid, parent);
 
         String filename = link.getName();
@@ -1269,7 +1268,7 @@ class Service {
             CID cid = link.getCid();
             Thread entry = getDirectoryThread(threads, thread, cid);
             if (entry != null) {
-                if (entry.getStatus() != Status.ONLINE) {
+                if (entry.getStatus() != Status.DONE) {
 
                     boolean success = downloadLink(context, threads, ipfs, entry, link);
                     if (success) {
@@ -1289,7 +1288,7 @@ class Service {
 
                 if (success) {
                     successCounter.incrementAndGet();
-                    threads.setStatus(entry, Status.ONLINE);
+                    threads.setStatus(entry, Status.DONE);
                 } else {
                     threads.setStatus(entry, Status.ERROR);
                 }
@@ -1344,7 +1343,7 @@ class Service {
 
                     boolean result = downloadThread(context, threads, ipfs, thread);
                     if (result) {
-                        threads.setStatus(thread, Status.ONLINE);
+                        threads.setStatus(thread, Status.DONE);
                         if (sender != null) {
                             replySender(context, ipfs, sender, thread);
                         }
@@ -1372,7 +1371,7 @@ class Service {
 
                     boolean result = downloadLinks(context, threads, ipfs, thread, links);
                     if (result) {
-                        threads.setStatus(thread, Status.ONLINE);
+                        threads.setStatus(thread, Status.DONE);
                         if (sender != null) {
                             replySender(context, ipfs, sender, thread);
                         }
@@ -1505,7 +1504,7 @@ class Service {
 
                     long size = text.length();
 
-                    Thread thread = threads.createThread(host, Status.OFFLINE, Kind.IN,
+                    Thread thread = threads.createThread(host, Status.INIT, Kind.IN,
                             "", null, 0L);
                     thread.addAdditional(Content.IMG, String.valueOf(false), true);
                     thread.addAdditional(Content.FILENAME, content, false);
@@ -1535,7 +1534,7 @@ class Service {
 
 
                         threads.setThreadCID(idx, cid);
-                        threads.setThreadStatus(idx, Status.ONLINE);
+                        threads.setThreadStatus(idx, Status.DONE);
                     } catch (Throwable e) {
                         threads.setThreadStatus(idx, Status.ERROR);
                     } finally {
@@ -1579,7 +1578,7 @@ class Service {
                 String name = fileDetails.getFileName();
                 long size = fileDetails.getFileSize();
 
-                Thread thread = threads.createThread(host, Status.OFFLINE, Kind.IN,
+                Thread thread = threads.createThread(host, Status.INIT, Kind.IN,
                         "", null, 0L);
 
                 ThumbnailService.Result res =
@@ -1606,7 +1605,7 @@ class Service {
 
 
                     threads.setThreadCID(idx, cid);
-                    threads.setThreadStatus(idx, Status.ONLINE);
+                    threads.setThreadStatus(idx, Status.DONE);
                 } catch (Throwable e) {
                     threads.setThreadStatus(idx, Status.ERROR);
                     throw e;

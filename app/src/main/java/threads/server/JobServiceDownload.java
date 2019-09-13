@@ -88,7 +88,7 @@ public class JobServiceDownload extends JobService {
                     Thread entry = entries.get(0);
 
                     if (entry.getStatus() == Status.DELETING ||
-                            entry.getStatus() == Status.ONLINE) {
+                            entry.getStatus() == Status.DONE) {
                         Service.replySender(context, ipfs, pid, entry);
                         return;
                     } else {
@@ -99,7 +99,7 @@ public class JobServiceDownload extends JobService {
 
                 }
                 long idx = Service.createThread(context, ipfs, user, cid,
-                        Status.OFFLINE, null, null, null, null);
+                        Status.INIT, null, null, null, null);
 
 
                 Thread thread = threads.getThreadByIdx(idx);
