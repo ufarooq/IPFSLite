@@ -840,11 +840,12 @@ class Service {
 
         try {
             threads.resetThreadsUnreadNotes();
-            threads.resetThreadsPublish();
+            threads.resetThreadsPublishing();
+            threads.resetThreadsLeaching();
             threads.resetUsersDialing();
             threads.resetPeersConnected();
             threads.resetUsersConnected();
-            threads.setThreadStatus(Status.LEACHING, Status.ERROR);
+            threads.setThreadStatus(Status.ONLINE, Status.ERROR);
             threads.setThreadStatus(Status.OFFLINE, Status.ERROR);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -1168,7 +1169,7 @@ class Service {
 
         boolean success;
         try {
-            threads.setStatus(thread, Status.LEACHING);
+            threads.setThreadLeaching(thread.getIdx(), true);
             int timeout = Preferences.getConnectionTimeout(context);
             File file = ipfs.getTempCacheFile();
             success = ipfs.storeToFile(file, cid,
@@ -1217,6 +1218,7 @@ class Service {
         } catch (Throwable e) {
             success = false;
         } finally {
+            threads.setThreadLeaching(thread.getIdx(), false);
             if (notificationManager != null) {
                 notificationManager.cancel(notifyID);
             }
@@ -1329,58 +1331,61 @@ class Service {
         checkNotNull(thread);
 
 
-        threads.setStatus(thread, Status.LEACHING);
+        try {
+            threads.setThreadLeaching(thread.getIdx(), true);
 
-        CID cid = thread.getCid();
-        checkNotNull(cid);
+            CID cid = thread.getCid();
+            checkNotNull(cid);
 
-        List<LinkInfo> links = getLinks(context, ipfs, cid);
+            List<LinkInfo> links = getLinks(context, ipfs, cid);
 
-        if (links != null) {
-            if (links.isEmpty()) {
+            if (links != null) {
+                if (links.isEmpty()) {
 
-                boolean result = downloadThread(context, threads, ipfs, thread);
-                if (result) {
-                    threads.setStatus(thread, Status.ONLINE);
-                    if (sender != null) {
-                        replySender(context, ipfs, sender, thread);
+                    boolean result = downloadThread(context, threads, ipfs, thread);
+                    if (result) {
+                        threads.setStatus(thread, Status.ONLINE);
+                        if (sender != null) {
+                            replySender(context, ipfs, sender, thread);
+                        }
+                    } else {
+                        threads.setStatus(thread, Status.ERROR);
                     }
-                } else {
-                    threads.setStatus(thread, Status.ERROR);
-                }
 
+                } else {
+
+                    // thread is directory
+
+                    if (!thread.getMimeType().equals(DocumentsContract.Document.MIME_TYPE_DIR)) {
+                        threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
+
+                        try {
+                            CID image = ThumbnailService.createResourceImage(context, ipfs,
+                                    R.drawable.folder_outline);
+                            checkNotNull(image);
+                            threads.setImage(thread, image);
+                        } catch (Throwable e) {
+                            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                        }
+                    }
+
+
+                    boolean result = downloadLinks(context, threads, ipfs, thread, links);
+                    if (result) {
+                        threads.setStatus(thread, Status.ONLINE);
+                        if (sender != null) {
+                            replySender(context, ipfs, sender, thread);
+                        }
+                    } else {
+                        threads.setStatus(thread, Status.ERROR);
+                    }
+                }
             } else {
-
-                // thread is directory
-
-                if (!thread.getMimeType().equals(DocumentsContract.Document.MIME_TYPE_DIR)) {
-                    threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
-
-                    try {
-                        CID image = ThumbnailService.createResourceImage(context, ipfs,
-                                R.drawable.folder_outline);
-                        checkNotNull(image);
-                        threads.setImage(thread, image);
-                    } catch (Throwable e) {
-                        Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-                    }
-                }
-
-
-                boolean result = downloadLinks(context, threads, ipfs, thread, links);
-                if (result) {
-                    threads.setStatus(thread, Status.ONLINE);
-                    if (sender != null) {
-                        replySender(context, ipfs, sender, thread);
-                    }
-                } else {
-                    threads.setStatus(thread, Status.ERROR);
-                }
+                threads.setStatus(thread, Status.ERROR);
             }
-        } else {
-            threads.setStatus(thread, Status.ERROR);
+        } finally {
+            threads.setThreadLeaching(thread.getIdx(), false);
         }
-
     }
 
     private static void checkNotifications(@NonNull Context context) {
@@ -1518,7 +1523,7 @@ class Service {
 
 
                     try {
-                        threads.setThreadStatus(idx, Status.LEACHING);
+                        threads.setThreadLeaching(idx, true);
 
                         CID cid = ipfs.storeText(text, "", true);
                         checkNotNull(cid);
@@ -1533,6 +1538,8 @@ class Service {
                         threads.setThreadStatus(idx, Status.ONLINE);
                     } catch (Throwable e) {
                         threads.setThreadStatus(idx, Status.ERROR);
+                    } finally {
+                        threads.setThreadLeaching(idx, false);
                     }
 
                 } catch (Throwable e) {
@@ -1588,7 +1595,7 @@ class Service {
 
 
                 try {
-                    threads.setThreadStatus(idx, Status.LEACHING);
+                    threads.setThreadLeaching(idx, true);
 
                     CID cid = ipfs.storeStream(inputStream, true);
                     checkNotNull(cid);
@@ -1603,6 +1610,8 @@ class Service {
                 } catch (Throwable e) {
                     threads.setThreadStatus(idx, Status.ERROR);
                     throw e;
+                } finally {
+                    threads.setThreadLeaching(idx, false);
                 }
 
             } catch (FileNotFoundException e) {
@@ -1671,25 +1680,28 @@ class Service {
 
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         if (ipfs != null) {
-            threads.setStatus(thread, Status.LEACHING);
-            PID host = Preferences.getPID(context);
-            checkNotNull(host);
-            PID sender = thread.getSenderPid();
+            try {
+                threads.setThreadLeaching(thread.getIdx(), false);
+                PID host = Preferences.getPID(context);
+                checkNotNull(host);
+                PID sender = thread.getSenderPid();
 
 
-            if (!host.equals(sender)) {
+                if (!host.equals(sender)) {
 
-                SwarmService.ConnectInfo info = SwarmService.connect(context, sender);
+                    SwarmService.ConnectInfo info = SwarmService.connect(context, sender);
 
-                Service.downloadMultihash(context, threads, ipfs, thread, sender);
+                    Service.downloadMultihash(context, threads, ipfs, thread, sender);
 
-                SwarmService.disconnect(context, info);
+                    SwarmService.disconnect(context, info);
 
-            } else {
+                } else {
 
-                Service.downloadMultihash(context, threads, ipfs, thread, null);
+                    Service.downloadMultihash(context, threads, ipfs, thread, null);
+                }
+            } finally {
+                threads.setThreadLeaching(thread.getIdx(), false);
             }
-
         }
 
     }
@@ -1757,7 +1769,7 @@ class Service {
                     } else {
                         checkNotNull(host);
 
-                        threads.setThreadsPublish(true, idxs);
+                        threads.setThreadsPublishing(true, idxs);
 
 
                         long start = System.currentTimeMillis();
@@ -1794,7 +1806,7 @@ class Service {
                             future.get();
                         }
 
-                        threads.setThreadsPublish(false, idxs);
+                        threads.setThreadsPublishing(false, idxs);
                     }
 
                 } catch (Throwable e) {

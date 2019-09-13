@@ -510,7 +510,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     @Override
     public boolean generalActionSupport(@NonNull Thread thread) {
         checkNotNull(thread);
-        if (thread.isPublish()) {
+        if (thread.isPublishing()) {
             return false;
         }
         return thread.getStatus() == Status.ONLINE;
