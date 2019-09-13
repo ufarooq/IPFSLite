@@ -68,6 +68,7 @@ import threads.share.ThumbnailService;
 import threads.share.UserActionDialogFragment;
 import threads.share.WebViewDialogFragment;
 import threads.webrtc.RTCCallActivity;
+import threads.webrtc.RTCVideoCallActivity;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -91,6 +92,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final int REQUEST_MODIFY_AUDIO_SETTINGS = 3;
     private static final int REQUEST_SELECT_FILES = 4;
     private static final int REQUEST_EXTERNAL_STORAGE = 5;
+
+    private static final int RTC_VIDEO_VIDEO_CAPTURE = 6;
+    private static final int RTC_VIDEO_AUDIO_CAPTURE = 7;
+    private static final int RTC_VIDEO_MODIFY_AUDIO_SETTINGS = 8;
 
     private final AtomicReference<Long> storedThread = new AtomicReference<>(null);
     private final AtomicReference<String> storedUser = new AtomicReference<>(null);
@@ -161,6 +166,52 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 break;
             }
+            case RTC_VIDEO_MODIFY_AUDIO_SETTINGS: {
+                for (int i = 0, len = permissions.length; i < len; i++) {
+                    if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                        Snackbar.make(drawer_layout,
+                                getString(R.string.permission_audio_settings_denied),
+                                Snackbar.LENGTH_LONG)
+                                .setAction(R.string.app_settings, new threads.share.PermissionAction()).show();
+                    }
+                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                        clickUserVideoCall(storedUser.get());
+                    }
+                }
+
+                break;
+            }
+            case RTC_VIDEO_AUDIO_CAPTURE: {
+                for (int i = 0, len = permissions.length; i < len; i++) {
+                    if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                        Snackbar.make(drawer_layout,
+                                getString(R.string.permission_audio_denied),
+                                Snackbar.LENGTH_LONG)
+                                .setAction(R.string.app_settings, new threads.share.PermissionAction()).show();
+                    }
+                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                        clickUserVideoCall(storedUser.get());
+                    }
+                }
+
+                break;
+            }
+            case RTC_VIDEO_VIDEO_CAPTURE: {
+                for (int i = 0, len = permissions.length; i < len; i++) {
+                    if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                        Snackbar.make(drawer_layout,
+                                getString(R.string.permission_camera_denied),
+                                Snackbar.LENGTH_LONG)
+                                .setAction(R.string.app_settings, new threads.share.PermissionAction()).show();
+                    }
+                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                        clickUserVideoCall(storedUser.get());
+                    }
+                }
+
+                break;
+            }
+
         }
     }
 
@@ -764,9 +815,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     if (!content.isEmpty()) {
                         Snackbar snackbar = Snackbar.make(drawer_layout, content,
                                 Snackbar.LENGTH_INDEFINITE);
-                        snackbar.setAction(android.R.string.ok, (view) -> {
-                            snackbar.dismiss();
-                        });
+                        snackbar.setAction(android.R.string.ok, (view) -> snackbar.dismiss());
                         snackbar.show();
                     }
                     eventViewModel.removeEvent(event);
@@ -828,13 +877,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
+        storedUser.set(pid);
+
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.RECORD_AUDIO},
                     REQUEST_AUDIO_CAPTURE);
-            storedUser.set(pid);
             return;
         }
 
@@ -845,7 +895,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.MODIFY_AUDIO_SETTINGS},
                     REQUEST_MODIFY_AUDIO_SETTINGS);
-            storedUser.set(pid);
             return;
         }
 
@@ -1215,6 +1264,77 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
+
+
+    @Override
+    public void clickUserVideoCall(@NonNull String pid) {
+
+        Singleton singleton = Singleton.getInstance(getApplicationContext());
+
+        // CHECKED
+        if (!Network.isConnected(getApplicationContext())) {
+            Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
+            return;
+        }
+        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
+            Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
+            return;
+        }
+
+        storedUser.set(pid);
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECORD_AUDIO},
+                    RTC_VIDEO_AUDIO_CAPTURE);
+            return;
+        }
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA},
+                    RTC_VIDEO_VIDEO_CAPTURE);
+            return;
+        }
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.MODIFY_AUDIO_SETTINGS)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.MODIFY_AUDIO_SETTINGS},
+                    RTC_VIDEO_MODIFY_AUDIO_SETTINGS);
+            return;
+        }
+        try {
+            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+
+                    if (threads.isUserBlocked(pid)) {
+                        Preferences.warning(threads, getString(R.string.peer_is_blocked));
+                    } else {
+                        Intent intent = RTCVideoCallActivity.createIntent(
+                                getApplicationContext(), pid, null, true);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                        intent.setAction(RTCVideoCallActivity.ACTION_OUTGOING_CALL);
+                        startActivity(intent);
+                    }
+                } catch (Throwable e) {
+                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                }
+            });
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
+
 
     @Override
     public void dontShowAgain(@NonNull String key, boolean notShowAgain) {

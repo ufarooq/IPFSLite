@@ -231,7 +231,8 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
             UserActionDialogFragment.newInstance(
                     user.getPID().getPid(), true, true, true,
-                    user.isAutoConnect(), true, user.isBlocked(), true, callActive)
+                    user.isAutoConnect(), true, user.isBlocked(), true,
+                    callActive, false)
                     .show(getChildFragmentManager(), UserActionDialogFragment.TAG);
 
         } catch (Throwable e) {
