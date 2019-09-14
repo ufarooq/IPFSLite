@@ -41,13 +41,13 @@ android {
     }
     buildTypes {
         debug {
-            buildConfigField "boolean", "FDroid", "true"
+            buildConfigField "boolean", "FDroid", "false"
         }
 
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            buildConfigField "boolean", "FDroid", "true"
+            buildConfigField "boolean", "FDroid", "false"
         }
     }
 
@@ -94,10 +94,10 @@ dependencies {
     //implementation 'threads.pow:pow:1.0.9'
 
     // UI+API (LICENSE done)
-    implementation 'threads.core:share:1.4.8'
+    implementation 'threads.core:share:1.5.1'
 
     // UI+API (LICENSE done)
-    implementation 'threads.core:webrtc:0.2.7'
+    implementation 'threads.core:webrtc:0.2.8'
 
     // API (LICENSE done)
     implementation 'threads.core:api:1.2.6'
