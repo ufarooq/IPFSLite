@@ -125,6 +125,5 @@
     <string name="quality_measurement">Note: Quality measurement based on a simple algorithm.</string>
     <string name="notification_received">Peer \"%1$s\" has received notification</string>
     <string name="file_not_found">File could not be downloaded</string>
-    <string name="drag_down_refresh">Update by Drag-Down</string>
 
 </resources>
