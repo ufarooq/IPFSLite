@@ -653,6 +653,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                             threads.setUserConnected(user, value);
 
+                            if (value) {
+                                String publicKey = threads.getUserPublicKey(pid);
+                                checkNotNull(publicKey,
+                                        "Public key should be at least not null");
+                                if (publicKey.isEmpty()) {
+                                    JobServiceLoadPublicKey.publicKey(getApplicationContext(), pid);
+                                }
+                            }
+
+
                         } catch (Throwable e) {
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
                             threads.setUserConnected(user, false);

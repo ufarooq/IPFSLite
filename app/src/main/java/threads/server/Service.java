@@ -508,7 +508,6 @@ class Service {
 
             if (value) {
 
-
                 if (Preferences.isPubsubEnabled(context)) {
                     PID host = Preferences.getPID(context);
                     checkNotNull(host);
@@ -528,13 +527,7 @@ class Service {
 
                 if (threads.getUserPublicKey(user).isEmpty()) {
 
-                    PeerInfo info = ipfs.id(user, timeout);
-                    if (info != null) {
-                        String key = info.getPublicKey();
-                        if (key != null) {
-                            threads.setUserPublicKey(user, key);
-                        }
-                    }
+                    JobServiceLoadPublicKey.publicKey(context, user.getPid());
                 }
 
             }

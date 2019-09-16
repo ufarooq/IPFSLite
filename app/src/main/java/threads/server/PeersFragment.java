@@ -30,6 +30,7 @@ import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.User;
+import threads.core.api.UserType;
 import threads.core.mdl.UsersViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
@@ -217,12 +218,14 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
             }
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            boolean callActive = Preferences.isPubsubEnabled(mContext);
+            boolean valid = user.isValid();
+            boolean verified = user.getType() == UserType.VERIFIED;
+            boolean callActive = verified && Preferences.isPubsubEnabled(mContext);
 
             UserActionDialogFragment.newInstance(
                     user.getPID().getPid(), true, true, true,
-                    user.isAutoConnect(), true, user.isBlocked(), true,
-                    callActive, false)
+                    valid, user.isAutoConnect(), true, true, user.isBlocked(),
+                    !verified, callActive, callActive)
                     .show(getChildFragmentManager(), UserActionDialogFragment.TAG);
 
         } catch (Throwable e) {
