@@ -35,11 +35,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import threads.core.ConnectService;
-import threads.core.GatewayService;
 import threads.core.IdentityService;
 import threads.core.MimeType;
 import threads.core.Preferences;
@@ -89,7 +87,6 @@ class Service {
     private static final String RECEIVE_NOTIFICATIONS_ENABLED_KEY = "receiveNotificationKey";
     private static final String SUPPORT_PEER_DISCOVERY_KEY = "supportPeerDiscoveryKey";
     private static Service SINGLETON = null;
-    private final AtomicBoolean swarmCheckFlag = new AtomicBoolean(false);
 
     private Service() {
     }
@@ -1613,36 +1610,6 @@ class Service {
         });
     }
 
-    void swarmCheckEnable(boolean value) {
-        swarmCheckFlag.set(value);
-    }
-
-    void checkSwarmOnlineStatus(@NonNull Context context) {
-        checkNotNull(context);
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        if (ipfs != null) {
-            try {
-                while (swarmCheckFlag.get() && ipfs.isDaemonRunning()) {
-                    GatewayService.PeerSummary info = GatewayService.evaluateAllPeers(context);
-
-                    String content = SwarmFragment.NONE;
-                    if (info.getLatency() < 150) {
-                        content = SwarmFragment.HIGH;
-                    } else if (info.getLatency() < 500) {
-                        content = SwarmFragment.MEDIUM;
-                    } else if (info.getNumPeers() > 0) {
-                        content = SwarmFragment.LOW;
-                    }
-                    threads.invokeEvent(SwarmFragment.TAG, content);
-                    java.lang.Thread.sleep(15000);
-                }
-                threads.invokeEvent(SwarmFragment.TAG, SwarmFragment.NONE);
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        }
-    }
 
     ArrayList<String> getEnhancedUserPIDs(@NonNull Context context) {
         checkNotNull(context);

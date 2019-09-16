@@ -2,23 +2,22 @@ package threads.server;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -29,34 +28,39 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.GatewayService;
+import threads.core.Preferences;
+import threads.core.Singleton;
+import threads.core.THREADS;
 import threads.core.api.IPeer;
 import threads.core.mdl.EventViewModel;
 import threads.core.mdl.PeersViewModel;
+import threads.ipfs.IPFS;
 import threads.share.DetailsDialogFragment;
 import threads.share.PeerActionDialogFragment;
 import threads.share.PeersViewAdapter;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersViewAdapterListener {
+@SuppressWarnings("ALL")
+public class SwarmFragment extends Fragment implements
+        SwipeRefreshLayout.OnRefreshListener, PeersViewAdapter.PeersViewAdapterListener {
 
     public static final String TAG = SwarmFragment.class.getSimpleName();
     static final String LOW = "LOW";
     static final String HIGH = "HIGH";
     static final String MEDIUM = "MEDIUM";
     static final String NONE = "NONE";
-
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
     private long mLastClickTime = 0;
-
-
     private PeersViewAdapter peersViewAdapter;
     private Context mContext;
     private FloatingActionButton fab_traffic;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+
 
     @Override
     public void onDetach() {
         super.onDetach();
-        Service.getInstance(mContext).swarmCheckEnable(false);
         mContext = null;
     }
 
@@ -64,41 +68,64 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
-        try {
-            Service.getInstance(context).swarmCheckEnable(true);
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
     }
 
-    private void swarmOnlineStatus() {
+    @Override
+    public void onRefresh() {
+        loadPeers(false);
+    }
+
+
+    private void loadPeers(boolean notification) {
+
+        mSwipeRefreshLayout.setRefreshing(true);
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
+
             try {
-                Service.getInstance(mContext).checkSwarmOnlineStatus(mContext);
+                loadPeers(mContext, notification);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            } finally {
+                mHandler.post(() -> mSwipeRefreshLayout.setRefreshing(false));
             }
         });
-    }
 
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
     }
 
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_swarm, menu);
-        super.onCreateOptionsMenu(menu, inflater);
+    private void loadPeers(@NonNull Context context, boolean notification) {
+        checkNotNull(context);
+        THREADS threads = Singleton.getInstance(context).getThreads();
+        IPFS ipfs = Singleton.getInstance(context).getIpfs();
+
+        try {
+            checkNotNull(ipfs, "IPFS not valid");
+            GatewayService.PeerSummary info = GatewayService.evaluateAllPeers(context);
+
+            String content = SwarmFragment.NONE;
+            if (info.getLatency() < 150) {
+                content = SwarmFragment.HIGH;
+            } else if (info.getLatency() < 500) {
+                content = SwarmFragment.MEDIUM;
+            } else if (info.getNumPeers() > 0) {
+                content = SwarmFragment.LOW;
+            }
+            threads.invokeEvent(SwarmFragment.TAG, content);
+
+
+            threads.invokeEvent(SwarmFragment.TAG, SwarmFragment.NONE);
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        } finally {
+            if (notification) {
+                Preferences.info(threads, getString(R.string.drag_down_refresh));
+            }
+        }
+
     }
 
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        return super.onOptionsItemSelected(item);
-    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -151,8 +178,16 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
 
 
         });
-        RecyclerView mRecyclerView = view.findViewById(R.id.recycler_users);
+        RecyclerView mRecyclerView = view.findViewById(R.id.recycler_peers);
         mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
+
+        mSwipeRefreshLayout = view.findViewById(R.id.swipe_container);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.colorAccent,
+                android.R.color.holo_green_dark,
+                android.R.color.holo_orange_dark,
+                android.R.color.holo_blue_dark);
+
 
         LinearLayoutManager linearLayout = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(linearLayout);
@@ -171,7 +206,6 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
                                 connected.add(peer);
                             }
                         }
-
                         connected.sort(Comparator.comparing(IPeer::getAlias));
                         peersViewAdapter.updateData(connected);
                     } catch (Throwable e) {
@@ -213,7 +247,7 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
             }
 
         });
-        swarmOnlineStatus();
+        loadPeers(true);
 
         return view;
     }
@@ -223,7 +257,6 @@ public class SwarmFragment extends Fragment implements PeersViewAdapter.PeersVie
     public void invokeGeneralAction(@NonNull IPeer peer) {
         checkNotNull(peer);
         try {
-
             // mis-clicking prevention, using threshold of 1000 ms
             if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
                 return;
