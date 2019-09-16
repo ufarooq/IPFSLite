@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -28,7 +29,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.GatewayService;
-import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.IPeer;
@@ -72,11 +72,11 @@ public class SwarmFragment extends Fragment implements
 
     @Override
     public void onRefresh() {
-        loadPeers(false);
+        loadPeers();
     }
 
 
-    private void loadPeers(boolean notification) {
+    private void loadPeers() {
 
         mSwipeRefreshLayout.setRefreshing(true);
 
@@ -84,7 +84,7 @@ public class SwarmFragment extends Fragment implements
         executor.submit(() -> {
 
             try {
-                loadPeers(mContext, notification);
+                loadPeers(mContext);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {
@@ -95,7 +95,7 @@ public class SwarmFragment extends Fragment implements
 
     }
 
-    private void loadPeers(@NonNull Context context, boolean notification) {
+    private void loadPeers(@NonNull Context context) {
         checkNotNull(context);
         THREADS threads = Singleton.getInstance(context).getThreads();
         IPFS ipfs = Singleton.getInstance(context).getIpfs();
@@ -118,10 +118,6 @@ public class SwarmFragment extends Fragment implements
             threads.invokeEvent(SwarmFragment.TAG, SwarmFragment.NONE);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        } finally {
-            if (notification) {
-                Preferences.info(threads, getString(R.string.drag_down_refresh));
-            }
         }
 
     }
@@ -247,7 +243,8 @@ public class SwarmFragment extends Fragment implements
             }
 
         });
-        loadPeers(true);
+        loadPeers();
+        Toast.makeText(mContext, R.string.drag_down_refresh, Toast.LENGTH_LONG).show();
 
         return view;
     }
