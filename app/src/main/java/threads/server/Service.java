@@ -228,7 +228,6 @@ class Service {
             Log.e(TAG, "Time Daemon : " + (System.currentTimeMillis() - time));
             SINGLETON.init(context);
 
-
         }
         return SINGLETON;
     }
@@ -1721,10 +1720,12 @@ class Service {
         JobServiceConnect.connect(context, user.getPID());
 
         try {
+            boolean success = false;
+            if (user.getType() == UserType.VERIFIED) {
 
-            boolean success = Service.notify(
-                    context, user.getPID().getPid(), cid.getCid(), start);
-
+                success = Service.notify(
+                        context, user.getPID().getPid(), cid.getCid(), start);
+            }
             // just backup
             if (Preferences.isPubsubEnabled(context)) {
                 singleton.connectPubsubTopic(context, user.getPID().getPid());
@@ -1795,7 +1796,6 @@ class Service {
                         List<Future> futures = new ArrayList<>();
 
                         for (User user : users) {
-
                             futures.add(executorService.submit(() ->
                                     sharePeer(context, user, cid, start)));
                         }
