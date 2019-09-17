@@ -69,6 +69,9 @@ dependencies {
     // Android (LICENSE done)
     implementation 'com.google.android.material:material:1.1.0-alpha10'
 
+    // Android (LICENSE done)
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0-alpha02'
+
     // API (LICENSE done)
     implementation 'com.journeyapps:zxing-android-embedded:3.6.0'
 
