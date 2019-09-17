@@ -41,13 +41,13 @@ android {
     }
     buildTypes {
         debug {
-            buildConfigField "boolean", "FDroid", "false"
+            buildConfigField "boolean", "FDroid", "true"
         }
 
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            buildConfigField "boolean", "FDroid", "false"
+            buildConfigField "boolean", "FDroid", "true"
         }
     }
 
