@@ -416,7 +416,7 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                threadsAPI.resetThreadUnreadNotesNumber(directory.get());
+                threadsAPI.resetThreadNumber(directory.get());
             } catch (Throwable e) {
                 Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
             }

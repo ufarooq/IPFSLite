@@ -206,7 +206,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
             String message = listener.getContent(thread);
             threadViewHolder.content_subtitle.setText(message);
 
-            int number = thread.getUnreadNotes();
+            int number = thread.getNumber();
             int resource = listener.getMediaResource(thread);
 
             threadViewHolder.content_subtitle.setCompoundDrawablesRelativeWithIntrinsicBounds(

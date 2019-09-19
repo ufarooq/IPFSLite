@@ -696,7 +696,7 @@ class Service {
                 CID cid = CID.create(multihash);
                 List<Thread> entries = threads.getThreadsByCID(cid);
                 for (Thread thread : entries) {
-                    threads.incrementUnreadNotesNumber(thread);
+                    threads.incrementThreadNumber(thread);
                 }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -828,7 +828,7 @@ class Service {
         final THREADS threads = Singleton.getInstance(context).getThreads();
 
         try {
-            threads.resetThreadsUnreadNotes();
+            threads.resetThreadsNumber();
             threads.resetThreadsPublishing();
             threads.resetThreadsLeaching();
             threads.resetUsersDialing();
@@ -1722,7 +1722,7 @@ class Service {
             executor.submit(() -> {
                 try {
                     // clean-up (unset the unread number)
-                    threads.resetThreadsUnreadNotesNumber(idxs);
+                    threads.resetThreadsNumber(idxs);
 
                     if (users.isEmpty()) {
                         Preferences.error(threads, context.getString(R.string.no_sharing_peers));
