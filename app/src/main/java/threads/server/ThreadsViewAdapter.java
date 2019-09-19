@@ -19,7 +19,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.amulyakhare.textdrawable.TextDrawable;
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,12 +69,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
     @Override
     public int getItemViewType(int position) {
 
-        Thread thread = threads.get(position);
-
-        if (thread.isRequest()) {
-            return 2;
-        }
-        return listener.getStyle(thread);
+        return 0;
     }
 
     @Override
@@ -92,112 +86,30 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
         final Thread thread = threads.get(position);
 
-        if (holder instanceof ThreadViewHolder) {
-            ThreadViewHolder threadViewHolder = (ThreadViewHolder) holder;
 
-            try {
-                switch (evaluate(thread)) {
-                    case SELECTED:
-                        threadViewHolder.view.setBackgroundColor(Color.LTGRAY);
+        ThreadViewHolder threadViewHolder = (ThreadViewHolder) holder;
 
-                        if (thread.getImage() != null) {
-                            threadViewHolder.main_image.setVisibility(View.VISIBLE);
-                            IPFS ipfs = Singleton.getInstance(context).getIpfs();
-                            IPFSData data = IPFSData.create(ipfs, thread.getImage(), timeout);
-                            if (listener.roundImage(thread)) {
-                                Glide.with(context).
-                                        load(data).
-                                        apply(RequestOptions.circleCropTransform()).
-                                        into(threadViewHolder.main_image);
-                            } else {
-                                Glide.with(context).
-                                        load(data).
-                                        into(threadViewHolder.main_image);
-                            }
-                        } else {
-                            threadViewHolder.main_image.setVisibility(View.GONE);
-                        }
+        try {
+            switch (evaluate(thread)) {
+                case SELECTED:
+                    threadViewHolder.view.setBackgroundColor(Color.LTGRAY);
 
+                    if (thread.getImage() != null) {
+                        threadViewHolder.main_image.setVisibility(View.VISIBLE);
+                        IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                        IPFSData data = IPFSData.create(ipfs, thread.getImage(), timeout);
+                        Glide.with(context).
+                                load(data).
+                                into(threadViewHolder.main_image);
 
-                        break;
-                    case MARKED:
-                        threadViewHolder.view.setBackgroundColor(Color.GRAY);
-
-                        if (thread.getImage() != null) {
-                            TextDrawable drawable = TextDrawable.builder()
-                                    .buildRound("\u2713", Color.DKGRAY);
-                            threadViewHolder.main_image.setImageDrawable(drawable);
-                        } else {
-                            threadViewHolder.main_image.setVisibility(View.GONE);
-                        }
-
-                        break;
-                    default:
-                        threadViewHolder.view.setBackgroundColor(
-                                android.R.drawable.list_selector_background);
-
-                        if (thread.getImage() != null) {
-                            IPFS ipfs = Singleton.getInstance(context).getIpfs();
-                            threadViewHolder.main_image.setVisibility(View.VISIBLE);
-                            IPFSData data = IPFSData.create(ipfs, thread.getImage(), timeout);
-                            if (listener.roundImage(thread)) {
-                                Glide.with(context).
-                                        load(data).
-                                        apply(RequestOptions.circleCropTransform()).
-                                        into(threadViewHolder.main_image);
-                            } else {
-                                Glide.with(context).
-                                        load(data).
-                                        into(threadViewHolder.main_image);
-                            }
-                        } else {
-                            threadViewHolder.main_image.setVisibility(View.GONE);
-                        }
-
-                        break;
-                }
-
-
-                threadViewHolder.view.setOnClickListener((v) -> {
-                    try {
-                        if (evaluate(thread) == State.MARKED) {
-                            if (thread.getImage() != null) {
-                                IPFS ipfs = Singleton.getInstance(context).getIpfs();
-                                threadViewHolder.main_image.setVisibility(View.VISIBLE);
-                                IPFSData data = IPFSData.create(ipfs, thread.getImage(), timeout);
-                                if (listener.roundImage(thread)) {
-                                    Glide.with(context).
-                                            load(data).
-                                            apply(RequestOptions.circleCropTransform()).
-                                            into(threadViewHolder.main_image);
-                                } else {
-                                    Glide.with(context).
-                                            load(data).
-                                            into(threadViewHolder.main_image);
-                                }
-                            } else {
-                                threadViewHolder.main_image.setVisibility(View.GONE);
-                            }
-                            // set new status
-                            states.remove(thread.getIdx());
-                            notifyItemChanged(position);
-                            listener.onUnmarkClick(thread);
-                        } else {
-                            cleanClickedStates();
-                            states.put(thread.getIdx(), State.SELECTED);
-                            notifyItemChanged(position);
-                            listener.onClick(thread);
-                        }
-                    } catch (Throwable e) {
-                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    } else {
+                        threadViewHolder.main_image.setVisibility(View.GONE);
                     }
 
 
-                });
-                threadViewHolder.view.setOnLongClickListener((v) -> {
-
+                    break;
+                case MARKED:
                     threadViewHolder.view.setBackgroundColor(Color.GRAY);
-
 
                     if (thread.getImage() != null) {
                         TextDrawable drawable = TextDrawable.builder()
@@ -207,193 +119,252 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                         threadViewHolder.main_image.setVisibility(View.GONE);
                     }
 
-                    states.put(thread.getIdx(), State.MARKED);
-                    listener.onMarkClick(thread);
-                    return true;
+                    break;
+                default:
+                    threadViewHolder.view.setBackgroundColor(
+                            android.R.drawable.list_selector_background);
 
-                });
+                    if (thread.getImage() != null) {
+                        IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                        threadViewHolder.main_image.setVisibility(View.VISIBLE);
+                        IPFSData data = IPFSData.create(ipfs, thread.getImage(), timeout);
+                        Glide.with(context).
+                                load(data).
+                                into(threadViewHolder.main_image);
+
+                    } else {
+                        threadViewHolder.main_image.setVisibility(View.GONE);
+                    }
+
+                    break;
+            }
 
 
-                if (listener.showDate(thread)) {
-                    String date = listener.getDate(thread);
-                    threadViewHolder.session_date.setText(date);
+            threadViewHolder.view.setOnClickListener((v) -> {
+                try {
+                    if (evaluate(thread) == State.MARKED) {
+                        if (thread.getImage() != null) {
+                            IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                            threadViewHolder.main_image.setVisibility(View.VISIBLE);
+                            IPFSData data = IPFSData.create(ipfs, thread.getImage(), timeout);
+                            Glide.with(context).
+                                    load(data).
+                                    into(threadViewHolder.main_image);
+
+                        } else {
+                            threadViewHolder.main_image.setVisibility(View.GONE);
+                        }
+                        // set new status
+                        states.remove(thread.getIdx());
+                        notifyItemChanged(position);
+                        listener.onUnmarkClick(thread);
+                    } else {
+                        cleanClickedStates();
+                        states.put(thread.getIdx(), State.SELECTED);
+                        notifyItemChanged(position);
+                        listener.onClick(thread);
+                    }
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
 
-                String title = listener.getTitle(thread);
-                threadViewHolder.content_title.setText(title);
-                if (thread.isPinned()) {
-                    threadViewHolder.content_title.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            R.drawable.text_pin_outline, 0, 0, 0);
-                    threadViewHolder.content_title.setCompoundDrawablePadding(8);
+
+            });
+            threadViewHolder.view.setOnLongClickListener((v) -> {
+
+                threadViewHolder.view.setBackgroundColor(Color.GRAY);
+
+
+                if (thread.getImage() != null) {
+                    TextDrawable drawable = TextDrawable.builder()
+                            .buildRound("\u2713", Color.DKGRAY);
+                    threadViewHolder.main_image.setImageDrawable(drawable);
                 } else {
-                    threadViewHolder.content_title.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            0, 0, 0, 0);
-                    threadViewHolder.content_title.setCompoundDrawablePadding(0);
+                    threadViewHolder.main_image.setVisibility(View.GONE);
                 }
 
+                states.put(thread.getIdx(), State.MARKED);
+                listener.onMarkClick(thread);
+                return true;
 
-                String message = listener.getContent(thread);
-                threadViewHolder.content_subtitle.setText(message);
+            });
 
-                int number = thread.getUnreadNotes();
-                int resource = listener.getMediaResource(thread);
 
-                threadViewHolder.content_subtitle.setCompoundDrawablesRelativeWithIntrinsicBounds(
+            String title = listener.getTitle(thread);
+            threadViewHolder.content_title.setText(title);
+            if (thread.isPinned()) {
+                threadViewHolder.content_title.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                        R.drawable.text_pin_outline, 0, 0, 0);
+                threadViewHolder.content_title.setCompoundDrawablePadding(8);
+            } else {
+                threadViewHolder.content_title.setCompoundDrawablesRelativeWithIntrinsicBounds(
                         0, 0, 0, 0);
-                threadViewHolder.content_subtitle.setCompoundDrawablePadding(0);
+                threadViewHolder.content_title.setCompoundDrawablePadding(0);
+            }
 
-                if (resource > 0 && number > 0) {
-                    TextDrawable right = TextDrawable.builder().beginConfig()
-                            .textColor(Color.BLACK).bold().height(dpToPx()).width(dpToPx()).endConfig()
-                            .buildRound("" + number, accentColor);
-                    Drawable left = context.getDrawable(resource);
-                    threadViewHolder.content_subtitle.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            left, null, right, null);
-                    threadViewHolder.content_subtitle.setCompoundDrawablePadding(8);
-                }
-                if (resource > 0 && number <= 0) {
-                    Drawable left = context.getDrawable(resource);
-                    threadViewHolder.content_subtitle.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            left, null, null, null);
-                    threadViewHolder.content_subtitle.setCompoundDrawablePadding(8);
-                }
-                if (resource <= 0 && number > 0) {
-                    TextDrawable right = TextDrawable.builder().beginConfig()
-                            .textColor(Color.BLACK).bold().height(dpToPx()).width(dpToPx()).endConfig()
-                            .buildRound("" + number, accentColor);
-                    threadViewHolder.content_subtitle.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            null, null, right, null);
-                    threadViewHolder.content_subtitle.setCompoundDrawablePadding(8);
-                }
 
-                if (thread.isPublishing()) {
-                    if (listener.generalActionSupport(thread)) {
-                        threadViewHolder.general_action.setVisibility(View.VISIBLE);
-                        threadViewHolder.general_action.setImageResource(R.drawable.dots);
-                        threadViewHolder.general_action.setOnClickListener((v) ->
-                                listener.invokeGeneralAction(thread)
-                        );
-                    } else {
-                        threadViewHolder.general_action.setVisibility(View.GONE);
-                    }
+            String message = listener.getContent(thread);
+            threadViewHolder.content_subtitle.setText(message);
 
-                    threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
-                    threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            0, 0, 0, 0);
-                    threadViewHolder.session_date.setCompoundDrawablePadding(0);
+            int number = thread.getUnreadNotes();
+            int resource = listener.getMediaResource(thread);
 
-                } else if (thread.isLeaching()) {
+            threadViewHolder.content_subtitle.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                    0, 0, 0, 0);
+            threadViewHolder.content_subtitle.setCompoundDrawablePadding(0);
 
-                    if (listener.generalActionSupport(thread)) {
-                        threadViewHolder.general_action.setVisibility(View.VISIBLE);
-                        threadViewHolder.general_action.setImageResource(R.drawable.dots);
-                        threadViewHolder.general_action.setOnClickListener((v) ->
-                                listener.invokeGeneralAction(thread)
-                        );
-                    } else {
-                        threadViewHolder.general_action.setVisibility(View.GONE);
-                    }
+            if (resource > 0 && number > 0) {
+                TextDrawable right = TextDrawable.builder().beginConfig()
+                        .textColor(Color.BLACK).bold().height(dpToPx()).width(dpToPx()).endConfig()
+                        .buildRound("" + number, accentColor);
+                Drawable left = context.getDrawable(resource);
+                threadViewHolder.content_subtitle.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                        left, null, right, null);
+                threadViewHolder.content_subtitle.setCompoundDrawablePadding(8);
+            }
+            if (resource > 0 && number <= 0) {
+                Drawable left = context.getDrawable(resource);
+                threadViewHolder.content_subtitle.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                        left, null, null, null);
+                threadViewHolder.content_subtitle.setCompoundDrawablePadding(8);
+            }
+            if (resource <= 0 && number > 0) {
+                TextDrawable right = TextDrawable.builder().beginConfig()
+                        .textColor(Color.BLACK).bold().height(dpToPx()).width(dpToPx()).endConfig()
+                        .buildRound("" + number, accentColor);
+                threadViewHolder.content_subtitle.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                        null, null, right, null);
+                threadViewHolder.content_subtitle.setCompoundDrawablePadding(8);
+            }
 
-                    threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
-                    threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            0, 0, 0, 0);
-                    threadViewHolder.session_date.setCompoundDrawablePadding(0);
-                } else if (thread.isExpired()) {
-                    threadViewHolder.progress_bar.setVisibility(View.GONE);
-                    if (listener.generalActionSupport(thread)) {
-                        threadViewHolder.general_action.setVisibility(View.VISIBLE);
-                        threadViewHolder.general_action.setImageResource(R.drawable.dots);
-                        threadViewHolder.general_action.setOnClickListener((v) ->
-                                listener.invokeGeneralAction(thread)
-                        );
-                    } else {
-                        threadViewHolder.general_action.setVisibility(View.GONE);
-                    }
-
-                    threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            0, 0, R.drawable.text_timer_off, 0);
-                    threadViewHolder.session_date.setCompoundDrawablePadding(8);
+            if (thread.isPublishing()) {
+                if (listener.generalActionSupport(thread)) {
+                    threadViewHolder.general_action.setVisibility(View.VISIBLE);
+                    threadViewHolder.general_action.setImageResource(R.drawable.dots);
+                    threadViewHolder.general_action.setOnClickListener((v) ->
+                            listener.invokeGeneralAction(thread)
+                    );
                 } else {
-                    switch (thread.getStatus()) {
-                        case ERROR: {
-                            threadViewHolder.progress_bar.setVisibility(View.GONE);
+                    threadViewHolder.general_action.setVisibility(View.GONE);
+                }
+
+                threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
+                threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                        0, 0, 0, 0);
+                threadViewHolder.session_date.setCompoundDrawablePadding(0);
+
+            } else if (thread.isLeaching()) {
+
+                if (listener.generalActionSupport(thread)) {
+                    threadViewHolder.general_action.setVisibility(View.VISIBLE);
+                    threadViewHolder.general_action.setImageResource(R.drawable.dots);
+                    threadViewHolder.general_action.setOnClickListener((v) ->
+                            listener.invokeGeneralAction(thread)
+                    );
+                } else {
+                    threadViewHolder.general_action.setVisibility(View.GONE);
+                }
+
+                threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
+                threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                        0, 0, 0, 0);
+                threadViewHolder.session_date.setCompoundDrawablePadding(0);
+            } else if (thread.isExpired()) {
+                threadViewHolder.progress_bar.setVisibility(View.GONE);
+                if (listener.generalActionSupport(thread)) {
+                    threadViewHolder.general_action.setVisibility(View.VISIBLE);
+                    threadViewHolder.general_action.setImageResource(R.drawable.dots);
+                    threadViewHolder.general_action.setOnClickListener((v) ->
+                            listener.invokeGeneralAction(thread)
+                    );
+                } else {
+                    threadViewHolder.general_action.setVisibility(View.GONE);
+                }
+
+                threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                        0, 0, R.drawable.text_timer_off, 0);
+                threadViewHolder.session_date.setCompoundDrawablePadding(8);
+            } else {
+                switch (thread.getStatus()) {
+                    case ERROR: {
+                        threadViewHolder.progress_bar.setVisibility(View.GONE);
+                        threadViewHolder.general_action.setVisibility(View.VISIBLE);
+                        threadViewHolder.general_action.setImageResource(R.drawable.text_download);
+                        threadViewHolder.general_action.setOnClickListener((v) ->
+                                listener.invokeActionError(thread)
+                        );
+
+
+                        threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                                0, 0, 0, 0);
+                        threadViewHolder.session_date.setCompoundDrawablePadding(8);
+
+                        break;
+                    }
+
+                    case INIT: {
+
+                        if (listener.generalActionSupport(thread)) {
                             threadViewHolder.general_action.setVisibility(View.VISIBLE);
-                            threadViewHolder.general_action.setImageResource(R.drawable.text_download);
+                            threadViewHolder.general_action.setImageResource(R.drawable.dots);
                             threadViewHolder.general_action.setOnClickListener((v) ->
-                                    listener.invokeActionError(thread)
+                                    listener.invokeGeneralAction(thread)
+                            );
+                        } else {
+                            threadViewHolder.general_action.setVisibility(View.GONE);
+                        }
+
+                        threadViewHolder.progress_bar.setVisibility(View.GONE);
+
+
+                        if (thread.getKind() == Kind.IN) {
+                            threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                                    0, 0, R.drawable.text_upload, 0);
+                            threadViewHolder.session_date.setCompoundDrawablePadding(8);
+                        } else {
+                            threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                                    0, 0, R.drawable.text_download, 0);
+                            threadViewHolder.session_date.setCompoundDrawablePadding(8);
+                        }
+
+
+                        break;
+                    }
+                    case DELETING: {
+                        threadViewHolder.progress_bar.setVisibility(View.GONE);
+                        threadViewHolder.general_action.setVisibility(View.GONE);
+
+
+                        threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                                0, 0, R.drawable.text_delete, 0);
+                        threadViewHolder.session_date.setCompoundDrawablePadding(8);
+                        break;
+                    }
+                    default: {
+                        threadViewHolder.progress_bar.setVisibility(View.GONE);
+                        if (listener.generalActionSupport(thread)) {
+                            threadViewHolder.general_action.setImageResource(R.drawable.dots);
+                            threadViewHolder.general_action.setVisibility(View.VISIBLE);
+
+                            threadViewHolder.general_action.setOnClickListener((v) ->
+                                    listener.invokeGeneralAction(thread)
                             );
 
 
-                            threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                                    0, 0, 0, 0);
-                            threadViewHolder.session_date.setCompoundDrawablePadding(8);
-
-                            break;
-                        }
-
-                        case INIT: {
-
-                            if (listener.generalActionSupport(thread)) {
-                                threadViewHolder.general_action.setVisibility(View.VISIBLE);
-                                threadViewHolder.general_action.setImageResource(R.drawable.dots);
-                                threadViewHolder.general_action.setOnClickListener((v) ->
-                                        listener.invokeGeneralAction(thread)
-                                );
-                            } else {
-                                threadViewHolder.general_action.setVisibility(View.GONE);
-                            }
-
-                            threadViewHolder.progress_bar.setVisibility(View.GONE);
-
-
-                            if (thread.getKind() == Kind.IN) {
-                                threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                                        0, 0, R.drawable.text_upload, 0);
-                                threadViewHolder.session_date.setCompoundDrawablePadding(8);
-                            } else {
-                                threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                                        0, 0, R.drawable.text_download, 0);
-                                threadViewHolder.session_date.setCompoundDrawablePadding(8);
-                            }
-
-
-                            break;
-                        }
-                        case DELETING: {
-                            threadViewHolder.progress_bar.setVisibility(View.GONE);
+                        } else {
                             threadViewHolder.general_action.setVisibility(View.GONE);
-
-
-                            threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                                    0, 0, R.drawable.text_delete, 0);
-                            threadViewHolder.session_date.setCompoundDrawablePadding(8);
-                            break;
                         }
-                        default: {
-                            threadViewHolder.progress_bar.setVisibility(View.GONE);
-                            if (listener.generalActionSupport(thread)) {
-                                threadViewHolder.general_action.setImageResource(R.drawable.dots);
-                                threadViewHolder.general_action.setVisibility(View.VISIBLE);
 
-                                threadViewHolder.general_action.setOnClickListener((v) ->
-                                        listener.invokeGeneralAction(thread)
-                                );
-
-
-                            } else {
-                                threadViewHolder.general_action.setVisibility(View.GONE);
-                            }
-
-                            break;
-                        }
+                        break;
                     }
                 }
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
 
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
+
+
     }
 
     private int dpToPx() {
@@ -467,35 +438,19 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
         void onUnmarkClick(@NonNull Thread thread);
 
-        void onRejectClick(@NonNull Thread thread);
-
-        void onAcceptClick(@NonNull Thread thread);
 
         void invokeActionError(@NonNull Thread thread);
 
         @NonNull
         String getContent(@NonNull Thread thread);
 
-        @NonNull
-        String getHeader(@NonNull Thread thread);
-
-        boolean showDate(@NonNull Thread thread);
-
-        int getStyle(@NonNull Thread thread);
-
-        int getHeaderMediaResource(@NonNull Thread thread);
 
         @NonNull
         String getTitle(@NonNull Thread thread);
 
-        boolean roundImage(@NonNull Thread thread);
-
-        boolean showProgress();
 
         int getMediaResource(@NonNull Thread thread);
 
-        @NonNull
-        String getDate(@NonNull Thread thread);
 
     }
 

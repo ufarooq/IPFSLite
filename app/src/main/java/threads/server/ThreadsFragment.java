@@ -28,7 +28,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -697,18 +696,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         }
     }
 
-    @Override
-    public void onRejectClick(@NonNull Thread thread) {
-        checkNotNull(thread);
-        // not relevant here
-    }
-
-    @Override
-    public void onAcceptClick(@NonNull Thread thread) {
-        checkNotNull(thread);
-        // not relevant here
-
-    }
 
     @Override
     public void invokeActionError(@NonNull Thread thread) {
@@ -746,12 +733,6 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         return thread.getSenderAlias();
     }
 
-    @Override
-    @NonNull
-    public String getHeader(@NonNull Thread thread) {
-
-        throw new RuntimeException("Not expected here");
-    }
 
     @NonNull
     @Override
@@ -759,42 +740,11 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         return getCompactString(thread.getAdditionalValue(Content.FILENAME));
     }
 
-    @Override
-    public boolean roundImage(@NonNull Thread thread) {
-        return false;
-    }
-
-    @Override
-    public boolean showProgress() {
-        return true;
-    }
 
     @Override
     public int getMediaResource(@NonNull Thread thread) {
         checkNotNull(thread);
         return -1;
-    }
-
-    @NonNull
-    @Override
-    public String getDate(@NonNull Thread thread) {
-        checkNotNull(thread);
-        return Preferences.getDate(new Date(thread.getDate()));
-    }
-
-    @Override
-    public boolean showDate(@NonNull Thread thread) {
-        return false;
-    }
-
-    @Override
-    public int getStyle(@NonNull Thread thread) {
-        return 0;
-    }
-
-    @Override
-    public int getHeaderMediaResource(@NonNull Thread thread) {
-        return 0;
     }
 
 
