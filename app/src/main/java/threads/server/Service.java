@@ -914,8 +914,8 @@ class Service {
         checkNotNull(user);
 
         Thread thread = threads.createThread(user, Status.INIT, Kind.OUT,
-                "", cid, parent);
-
+                "", parent);
+        thread.setCid(cid);
         String filename = link.getName();
         thread.addAdditional(Content.FILENAME, filename, false);
 
@@ -974,7 +974,8 @@ class Service {
 
 
         Thread thread = threads.createThread(creator, threadStatus, Kind.OUT,
-                "", cid, 0L);
+                "", 0L);
+        thread.setCid(cid);
 
 
         if (filename != null) {
@@ -1494,7 +1495,7 @@ class Service {
                     long size = text.length();
 
                     Thread thread = threads.createThread(host, Status.INIT, Kind.IN,
-                            "", null, 0L);
+                            "", 0L);
                     thread.addAdditional(Content.IMG, String.valueOf(false), true);
                     thread.addAdditional(Content.FILENAME, content, false);
                     thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
@@ -1568,7 +1569,7 @@ class Service {
                 long size = fileDetails.getFileSize();
 
                 Thread thread = threads.createThread(host, Status.INIT, Kind.IN,
-                        "", null, 0L);
+                        "", 0L);
 
                 ThumbnailService.Result res =
                         ThumbnailService.getThumbnail(context, uri, host.getAlias());

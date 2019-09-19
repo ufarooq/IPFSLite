@@ -97,13 +97,13 @@ dependencies {
     //implementation 'threads.pow:pow:1.0.9'
 
     // UI+API (LICENSE done)
-    implementation 'threads.core:share:1.5.8'
+    implementation 'threads.core:share:1.6.1'
 
     // UI+API (LICENSE done)
     implementation 'threads.core:webrtc:0.2.8'
 
     // API (LICENSE done)
-    implementation 'threads.core:api:1.3.2'
+    implementation 'threads.core:api:1.4.0'
 
     // API (LICENSE done)
     implementation 'threads.core:iota:0.1.1'
