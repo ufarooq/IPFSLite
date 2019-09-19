@@ -51,7 +51,6 @@ import threads.share.IPFSVideoActivity;
 import threads.share.ImageDialogFragment;
 import threads.share.PDFView;
 import threads.share.ThreadActionDialogFragment;
-import threads.share.ThreadsViewAdapter;
 import threads.share.VideoDialogFragment;
 import threads.share.WebViewDialogFragment;
 
