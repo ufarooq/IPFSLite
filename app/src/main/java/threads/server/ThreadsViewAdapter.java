@@ -269,21 +269,6 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                 threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
                         0, 0, 0, 0);
                 threadViewHolder.session_date.setCompoundDrawablePadding(0);
-            } else if (thread.isExpired()) {
-                threadViewHolder.progress_bar.setVisibility(View.GONE);
-                if (listener.generalActionSupport(thread)) {
-                    threadViewHolder.general_action.setVisibility(View.VISIBLE);
-                    threadViewHolder.general_action.setImageResource(R.drawable.dots);
-                    threadViewHolder.general_action.setOnClickListener((v) ->
-                            listener.invokeGeneralAction(thread)
-                    );
-                } else {
-                    threadViewHolder.general_action.setVisibility(View.GONE);
-                }
-
-                threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                        0, 0, R.drawable.text_timer_off, 0);
-                threadViewHolder.session_date.setCompoundDrawablePadding(8);
             } else {
                 switch (thread.getStatus()) {
                     case ERROR: {
