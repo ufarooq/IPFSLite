@@ -648,8 +648,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                     getApplicationContext());
                             int timeout = Preferences.getConnectionTimeout(getApplicationContext());
                             boolean value = ConnectService.connectPeer(getApplicationContext(),
-                                    user, "",
-                                    peerDiscovery, true, timeout);
+                                    user, peerDiscovery, true, timeout);
 
                             threads.setUserConnected(user, value);
 
