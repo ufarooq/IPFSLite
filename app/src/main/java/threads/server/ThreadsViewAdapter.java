@@ -26,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.api.Kind;
 import threads.core.api.Thread;
 import threads.ipfs.IPFS;
 import threads.share.IPFSData;
@@ -249,9 +248,6 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                 }
 
                 threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
-                threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                        0, 0, 0, 0);
-                threadViewHolder.session_date.setCompoundDrawablePadding(0);
 
             } else if (thread.isLeaching()) {
 
@@ -266,9 +262,6 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                 }
 
                 threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
-                threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                        0, 0, 0, 0);
-                threadViewHolder.session_date.setCompoundDrawablePadding(0);
             } else {
                 switch (thread.getStatus()) {
                     case ERROR: {
@@ -279,50 +272,12 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                                 listener.invokeActionError(thread)
                         );
 
-
-                        threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                                0, 0, 0, 0);
-                        threadViewHolder.session_date.setCompoundDrawablePadding(8);
-
                         break;
                     }
-
-                    case INIT: {
-
-                        if (listener.generalActionSupport(thread)) {
-                            threadViewHolder.general_action.setVisibility(View.VISIBLE);
-                            threadViewHolder.general_action.setImageResource(R.drawable.dots);
-                            threadViewHolder.general_action.setOnClickListener((v) ->
-                                    listener.invokeGeneralAction(thread)
-                            );
-                        } else {
-                            threadViewHolder.general_action.setVisibility(View.GONE);
-                        }
-
-                        threadViewHolder.progress_bar.setVisibility(View.GONE);
-
-
-                        if (thread.getKind() == Kind.IN) {
-                            threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                                    0, 0, R.drawable.text_upload, 0);
-                            threadViewHolder.session_date.setCompoundDrawablePadding(8);
-                        } else {
-                            threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                                    0, 0, R.drawable.text_download, 0);
-                            threadViewHolder.session_date.setCompoundDrawablePadding(8);
-                        }
-
-
-                        break;
-                    }
+                    case INIT:
                     case DELETING: {
                         threadViewHolder.progress_bar.setVisibility(View.GONE);
                         threadViewHolder.general_action.setVisibility(View.GONE);
-
-
-                        threadViewHolder.session_date.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                                0, 0, R.drawable.text_delete, 0);
-                        threadViewHolder.session_date.setCompoundDrawablePadding(8);
                         break;
                     }
                     default: {
