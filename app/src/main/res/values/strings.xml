@@ -126,5 +126,6 @@
     <string name="notification_received">Peer \"%1$s\" has received notification</string>
     <string name="file_not_found">File could not be downloaded</string>
     <string name="drag_down_refresh">Update by Drag-Down</string>
+    <string name="slow_connection_no_wifi">Internet connection is to slow [WiFi not enabled]</string>
 
 </resources>
