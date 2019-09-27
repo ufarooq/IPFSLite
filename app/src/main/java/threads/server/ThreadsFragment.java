@@ -23,6 +23,7 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -55,7 +56,8 @@ import threads.share.WebViewDialogFragment;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.ThreadsViewAdapterListener {
+public class ThreadsFragment extends Fragment implements
+        SwipeRefreshLayout.OnRefreshListener, ThreadsViewAdapter.ThreadsViewAdapterListener {
 
     private static final String TAG = ThreadsFragment.class.getSimpleName();
     private static final String DIRECTORY = "DIRECTORY";
@@ -81,6 +83,8 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     private Context mContext;
     private ThreadsFragment.ActionListener mListener;
     private RecyclerView mRecyclerView;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+
 
     private static String getCompactString(@NonNull String title) {
         checkNotNull(title);
@@ -246,6 +250,12 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
         mRecyclerView = view.findViewById(R.id.recycler_view_message_list);
         mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
+        mSwipeRefreshLayout = view.findViewById(R.id.swipe_container);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.colorAccent,
+                android.R.color.holo_green_dark,
+                android.R.color.holo_orange_dark,
+                android.R.color.holo_blue_dark);
 
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(mContext);
         mRecyclerView.setLayoutManager(linearLayoutManager);
@@ -745,6 +755,28 @@ public class ThreadsFragment extends Fragment implements ThreadsViewAdapter.Thre
     public int getMediaResource(@NonNull Thread thread) {
         checkNotNull(thread);
         return -1;
+    }
+
+    @Override
+    public void onRefresh() {
+        loadNotifications();
+    }
+
+    private void loadNotifications() {
+
+        mSwipeRefreshLayout.setRefreshing(true);
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+
+            try {
+                Service.notifications(mContext);
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            } finally {
+                mHandler.post(() -> mSwipeRefreshLayout.setRefreshing(false));
+            }
+        });
     }
 
 

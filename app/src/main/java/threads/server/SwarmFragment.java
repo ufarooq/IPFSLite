@@ -91,8 +91,6 @@ public class SwarmFragment extends Fragment implements
                 mHandler.post(() -> mSwipeRefreshLayout.setRefreshing(false));
             }
         });
-
-
     }
 
     private void loadPeers(@NonNull Context context) {
