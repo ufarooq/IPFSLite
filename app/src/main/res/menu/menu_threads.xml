@@ -4,24 +4,6 @@
 
 
     <item
-        android:id="@+id/action_delete"
-        android:icon="@drawable/delete"
-        android:orderInCategory="5"
-        android:title="@string/action_delete"
-        android:visible="true"
-        app:iconTint="?android:textColorSecondary"
-        app:showAsAction="ifRoom" />
-
-    <item
-        android:id="@+id/action_send"
-        android:icon="@drawable/send"
-        android:orderInCategory="10"
-        android:title="@string/action_send"
-        android:visible="true"
-        app:iconTint="?android:textColorSecondary"
-        app:showAsAction="ifRoom" />
-
-    <item
         android:id="@+id/action_mark_all"
         android:icon="@drawable/expand_all_outline"
         android:orderInCategory="55"
@@ -30,12 +12,4 @@
         app:iconTint="?android:textColorSecondary"
         app:showAsAction="never" />
 
-    <item
-        android:id="@+id/action_unmark_all"
-        android:icon="@drawable/expand_all_outline"
-        android:orderInCategory="55"
-        android:title="@string/action_clear_selection"
-        android:visible="true"
-        app:iconTint="?android:textColorSecondary"
-        app:showAsAction="never" />
 </menu>

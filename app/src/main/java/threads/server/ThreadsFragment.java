@@ -18,9 +18,15 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.selection.Selection;
+import androidx.recyclerview.selection.SelectionTracker;
+import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -61,30 +67,29 @@ public class ThreadsFragment extends Fragment implements
 
     private static final String TAG = ThreadsFragment.class.getSimpleName();
     private static final String DIRECTORY = "DIRECTORY";
-    private static final String IDXS = "IDXS";
-    private static final String SELECTION = "SELECTION";
+
+
     private static final int CLICK_OFFSET = 500;
-
-
-    @NonNull
-    private final List<Long> threads = new ArrayList<>();
+    //@NonNull
+    //private final List<Long> threads = new ArrayList<>();
     @NonNull
     private final AtomicReference<LiveData<List<Thread>>> observer = new AtomicReference<>(null);
-    @NonNull
-    private final AtomicReference<Long> directory = new AtomicReference<>();
+    //@NonNull
+    //private final AtomicReference<Long> directory = new AtomicReference<>();
     @NonNull
     private final AtomicBoolean topLevel = new AtomicBoolean(true);
     private final Handler mHandler = new Handler(Looper.getMainLooper());
-    private long threadIdx;
+    private SelectionViewModel mSelectionViewModel;
+    //private long threadIdx;
     private View view;
-    private ThreadsViewAdapter threadsViewAdapter;
+    private ThreadsViewAdapter mThreadsViewAdapter;
     private ThreadViewModel threadViewModel;
     private long mLastClickTime = 0;
     private Context mContext;
     private ThreadsFragment.ActionListener mListener;
     private RecyclerView mRecyclerView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-
+    private ActionMode mActionMode;
 
     private static String getCompactString(@NonNull String title) {
         checkNotNull(title);
@@ -109,21 +114,55 @@ public class ThreadsFragment extends Fragment implements
         mListener = null;
     }
 
+    private SelectionTracker<Long> mSelectionTracker;
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        mSelectionTracker.onSaveInstanceState(outState);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (savedInstanceState != null) {
+            mSelectionTracker.onRestoreInstanceState(savedInstanceState);
+        }
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+
+        mSelectionViewModel = new ViewModelProvider(this).get(SelectionViewModel.class);
+
+
+        final Observer<Long> parentThread = new Observer<Long>() {
+            @Override
+            public void onChanged(@Nullable final Long threadIdx) {
+                if (threadIdx != null) {
+                    updateDirectory(threadIdx);
+                }
+            }
+        };
+        mSelectionViewModel.getParentThread().observe(this, parentThread);
+
+
     }
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.menu_threads, menu);
-        MenuItem action_delete = menu.findItem(R.id.action_delete);
-        action_delete.setVisible(!threads.isEmpty());
-        MenuItem action_send = menu.findItem(R.id.action_send);
-        boolean active = Service.isSendNotificationsEnabled(mContext);
-        action_send.setVisible(!threads.isEmpty() && active);
+
         super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        view = inflater.inflate(R.layout.threads_view, container, false);
+        return view;
     }
 
     @Override
@@ -137,107 +176,12 @@ public class ThreadsFragment extends Fragment implements
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                markThreads();
+                mThreadsViewAdapter.selectAllThreads();
 
-                return true;
-            }
-            case R.id.action_delete: {
-
-                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                deleteAction();
-
-                return true;
-            }
-
-            case R.id.action_send: {
-
-                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                sendAction();
-
-                return true;
-            }
-            case R.id.action_unmark_all: {
-
-                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                clearUnreadNotes();
-                unmarkThreads();
                 return true;
             }
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.threads_view, container, false);
-        return view;
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        try {
-            long[] entries = convert(threads);
-            outState.putLongArray(IDXS, entries);
-            outState.putLong(SELECTION, threadIdx);
-            Long dir = directory.get();
-            if (dir != null) {
-                outState.putLong(DIRECTORY, dir);
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-        super.onSaveInstanceState(outState);
-    }
-
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        if (savedInstanceState != null) {
-            long[] storedThreads = savedInstanceState.getLongArray(IDXS);
-            if (storedThreads != null) {
-                for (long idx : storedThreads) {
-                    threads.add(idx);
-                }
-                if (threadsViewAdapter != null) {
-                    for (long idx : storedThreads) {
-                        threadsViewAdapter.setState(idx, ThreadsViewAdapter.State.MARKED);
-                    }
-                }
-            }
-            long selection = savedInstanceState.getLong(SELECTION);
-            if (selection > 0) {
-                threadIdx = selection;
-                if (threadsViewAdapter != null) {
-                    threadsViewAdapter.setState(threadIdx, ThreadsViewAdapter.State.SELECTED);
-                }
-            }
-
-            Long value = savedInstanceState.getLong(DIRECTORY);
-            directory.set(value);
-        }
-
-        try {
-            Long current = directory.get();
-            if (current == null) {
-                directory.set(0L);
-            }
-            updateDirectory(directory.get());
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
     }
 
     @Override
@@ -260,9 +204,58 @@ public class ThreadsFragment extends Fragment implements
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(mContext);
         mRecyclerView.setLayoutManager(linearLayoutManager);
 
-        threadsViewAdapter = new ThreadsViewAdapter(mContext, this);
-        mRecyclerView.setAdapter(threadsViewAdapter);
+        mThreadsViewAdapter = new ThreadsViewAdapter(mContext, this);
+        mRecyclerView.setAdapter(mThreadsViewAdapter);
 
+        mSelectionTracker = new SelectionTracker.Builder<>(
+                "threds-selection",//unique id
+                mRecyclerView,
+                new ThreadsItemKeyProvider(mThreadsViewAdapter),
+                new ThreadItemDetailsLookup(mRecyclerView),
+                StorageStrategy.createLongStorage())
+                .build();
+
+        mSelectionTracker.addObserver(new SelectionTracker.SelectionObserver<String>() {
+            @Override
+            public void onSelectionChanged() {
+                if (!mSelectionTracker.hasSelection()) {
+                    if (mActionMode != null) {
+                        mActionMode.finish();
+                    }
+                } else {
+                    if (mActionMode == null) {
+                        mActionMode = ((AppCompatActivity)
+                                getActivity()).startSupportActionMode(
+                                createActionModeCallback());
+                    }
+                }
+                if (mActionMode != null) {
+                    mActionMode.setTitle("" + mSelectionTracker.getSelection().size());
+                }
+                super.onSelectionChanged();
+            }
+
+            @Override
+            public void onSelectionRestored() {
+                if (!mSelectionTracker.hasSelection()) {
+                    if (mActionMode != null) {
+                        mActionMode.finish();
+                    }
+                } else {
+                    if (mActionMode == null) {
+                        mActionMode = ((AppCompatActivity)
+                                getActivity()).startSupportActionMode(
+                                createActionModeCallback());
+                    }
+                }
+                if (mActionMode != null) {
+                    mActionMode.setTitle("" + mSelectionTracker.getSelection().size());
+                }
+                super.onSelectionRestored();
+            }
+        });
+
+        mThreadsViewAdapter.setSelectionTracker(mSelectionTracker);
 
         FloatingActionButton fab_action = view.findViewById(R.id.fab_action);
 
@@ -301,8 +294,6 @@ public class ThreadsFragment extends Fragment implements
         try {
             topLevel.set(thread == 0L);
 
-            directory.set(thread);
-
             LiveData<List<Thread>> obs = observer.get();
             if (obs != null) {
                 obs.removeObservers(this);
@@ -311,7 +302,7 @@ public class ThreadsFragment extends Fragment implements
             LiveData<List<Thread>> liveData = threadViewModel.getThreadsByThread(thread);
             observer.set(liveData);
 
-            liveData.observe(this, (threads) -> {
+            liveData.observe(getViewLifecycleOwner(), (threads) -> {
 
                 if (threads != null) {
 
@@ -326,11 +317,11 @@ public class ThreadsFragment extends Fragment implements
                     boolean scrollToTop = false;
 
                     if (!data.isEmpty()) {
-                        int pos = threadsViewAdapter.getPositionOfItem(data.get(0).getIdx());
+                        int pos = mThreadsViewAdapter.getPositionOfItem(data.get(0).getIdx());
                         scrollToTop = pos != 0;
                     }
 
-                    threadsViewAdapter.updateData(data);
+                    mThreadsViewAdapter.updateData(data);
 
                     if (scrollToTop) {
                         mRecyclerView.postDelayed(() -> {
@@ -372,7 +363,8 @@ public class ThreadsFragment extends Fragment implements
 
     private void sendAction() {
 
-        if (threads.isEmpty()) {
+        Selection<Long> selection = mSelectionTracker.getSelection();
+        if (selection.size() == 0) {
             THREADS threads = Singleton.getInstance(mContext).getThreads();
             Preferences.warning(threads,
                     mContext.getString(R.string.no_marked_file_send));
@@ -381,44 +373,16 @@ public class ThreadsFragment extends Fragment implements
 
         try {
 
-            long[] entries = convert(threads);
+            long[] entries = convert(selection);
 
             mListener.clickThreadsSend(entries);
 
-            unmarkThreads();
+            mSelectionTracker.clearSelection();
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
-    private void markThreads() {
-        final THREADS threadsAPI = Singleton.getInstance(mContext).getThreads();
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                List<Thread> threadObjects = threadsAPI.getThreadsByThread(directory.get());
-                for (Thread thread : threadObjects) {
-                    if (!threads.contains(thread.getIdx())) {
-                        threads.add(thread.getIdx());
-                        threadIdx = thread.getIdx();
-                    }
-                }
-
-                for (long idx : threads) {
-                    threadsViewAdapter.setState(idx, ThreadsViewAdapter.State.MARKED);
-                }
-
-                mHandler.post(() -> threadsViewAdapter.notifyDataSetChanged());
-
-            } catch (Throwable e) {
-                Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
-            } finally {
-                mHandler.post(this::evaluateFabDeleteVisibility);
-
-            }
-        });
-    }
 
     private void clearUnreadNotes() {
         final THREADS threadsAPI = Singleton.getInstance(mContext).getThreads();
@@ -426,34 +390,24 @@ public class ThreadsFragment extends Fragment implements
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                threadsAPI.resetThreadNumber(directory.get());
+                Long idx = mSelectionViewModel.getParentThread().getValue();
+                checkNotNull(idx);
+                threadsAPI.resetThreadNumber(idx);
             } catch (Throwable e) {
                 Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
             }
         });
     }
 
-    private void unmarkThreads() {
-        try {
-            for (long idx : threads) {
-                threadsViewAdapter.setState(idx, ThreadsViewAdapter.State.NONE);
-            }
-            threads.clear();
 
-            threadIdx = -1;
-            threadsViewAdapter.notifyDataSetChanged();
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        } finally {
-            evaluateFabDeleteVisibility();
-        }
-    }
-
-    private long[] convert(List<Long> entries) {
+    private long[] convert(Selection<Long> entries) {
         long[] basic = new long[entries.size()];
-        for (int i = 0; i < entries.size(); i++) {
-            basic[i] = entries.get(i);
+        int i = 0;
+        for (Long entry : entries) {
+            basic[i] = entry;
+            i++;
         }
+
         return basic;
     }
 
@@ -467,22 +421,20 @@ public class ThreadsFragment extends Fragment implements
             return;
         }
 
-        if (threads.isEmpty()) {
+        if (!mSelectionTracker.hasSelection()) {
             THREADS threads = Singleton.getInstance(mContext).getThreads();
             Preferences.warning(threads,
                     mContext.getString(R.string.no_marked_file_delete));
             return;
         }
 
-        long[] entries = convert(threads);
+        long[] entries = convert(mSelectionTracker.getSelection());
 
         JobServiceDeleteThreads.removeThreads(mContext, entries);
 
         try {
-            if (threads.contains(threadIdx)) {
-                threadIdx = -1;
-            }
-            threads.clear();
+
+            mSelectionTracker.clearSelection();
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -494,19 +446,19 @@ public class ThreadsFragment extends Fragment implements
 
     private void back() {
 
-        unmarkThreads();
+        mSelectionTracker.clearSelection();
 
         final THREADS threads = Singleton.getInstance(mContext).getThreads();
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                Long idx = directory.get();
-
+                Long idx = mSelectionViewModel.getParentThread().getValue();
+                checkNotNull(idx);
                 Thread thread = threads.getThreadByIdx(idx);
                 if (thread != null) {
                     long parent = thread.getThread();
-                    mHandler.post(() -> updateDirectory(parent));
+                    mSelectionViewModel.setParentThread(parent, true);
                 }
 
             } catch (Throwable e) {
@@ -546,20 +498,64 @@ public class ThreadsFragment extends Fragment implements
         }
     }
 
-    @Override
-    public void onMarkClick(@NonNull Thread thread) {
-        checkNotNull(thread);
-        try {
-            if (!threads.contains(thread.getIdx())) {
-                boolean isEmpty = threads.isEmpty();
-                threads.add(thread.getIdx());
-                if (isEmpty) {
-                    evaluateFabDeleteVisibility();
+
+    private ActionMode.Callback createActionModeCallback() {
+        return new ActionMode.Callback() {
+            @Override
+            public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                mode.getMenuInflater().inflate(R.menu.menu_threads_action_mode, menu);
+                MenuItem action_send = menu.findItem(R.id.action_mode_send);
+                boolean active = Service.isSendNotificationsEnabled(mContext);
+                action_send.setVisible(active);
+                return true;
+            }
+
+            @Override
+            public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+                return true;
+            }
+
+            @Override
+            public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.action_mode_delete: {
+
+                        if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                            break;
+                        }
+                        mLastClickTime = SystemClock.elapsedRealtime();
+
+                        deleteAction();
+
+                        return true;
+                    }
+
+                    case R.id.action_mode_send: {
+
+                        if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                            break;
+                        }
+                        mLastClickTime = SystemClock.elapsedRealtime();
+
+                        sendAction();
+
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            @Override
+            public void onDestroyActionMode(ActionMode mode) {
+
+                mSelectionTracker.clearSelection();
+                clearUnreadNotes();
+
+                if (mActionMode != null) {
+                    mActionMode = null;
                 }
             }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
+        };
 
     }
 
@@ -572,8 +568,8 @@ public class ThreadsFragment extends Fragment implements
             }
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            if (threads.isEmpty()) {
-                threadIdx = thread.getIdx();
+            if (!mSelectionTracker.hasSelection()) {
+                long threadIdx = thread.getIdx();
 
 
                 final THREADS threads = Singleton.getInstance(mContext).getThreads();
@@ -583,7 +579,7 @@ public class ThreadsFragment extends Fragment implements
                     try {
                         int children = threads.getThreadReferences(threadIdx);
                         if (children > 0) {
-                            mHandler.post(() -> updateDirectory(threadIdx));
+                            mSelectionViewModel.setParentThread(threadIdx, true);
                         } else {
                             mHandler.post(() -> clickThreadPlay(threadIdx));
                         }
@@ -693,18 +689,6 @@ public class ThreadsFragment extends Fragment implements
         }
     }
 
-    @Override
-    public void onUnmarkClick(@NonNull Thread thread) {
-        checkNotNull(thread);
-        try {
-            threads.remove(thread.getIdx());
-            if (threads.isEmpty()) {
-                evaluateFabDeleteVisibility();
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
 
 
     @Override

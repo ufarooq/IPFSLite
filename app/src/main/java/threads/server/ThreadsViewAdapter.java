@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -14,6 +15,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.selection.ItemDetailsLookup;
+import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -22,7 +26,6 @@ import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
@@ -31,18 +34,20 @@ import threads.ipfs.IPFS;
 import threads.share.IPFSData;
 import threads.share.ThreadDiffCallback;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.ViewHolder> {
 
     private static final String TAG = ThreadsViewAdapter.class.getSimpleName();
     private final Context context;
     private final ThreadsViewAdapterListener listener;
     private final List<Thread> threads = new ArrayList<>();
-    private final ConcurrentHashMap<Long, State> states = new ConcurrentHashMap<>();
     private final int accentColor;
     private final int timeout;
+    @Nullable
+    private SelectionTracker<Long> mSelectionTracker;
 
+    public void setSelectionTracker(SelectionTracker<Long> selectionTracker) {
+        this.mSelectionTracker = selectionTracker;
+    }
 
     public ThreadsViewAdapter(@NonNull Context context,
                               @NonNull ThreadsViewAdapterListener listener) {
@@ -60,10 +65,6 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
         return value.data;
     }
 
-    public void setState(long idx, @NonNull State state) {
-        checkNotNull(state);
-        states.put(idx, state);
-    }
 
     @Override
     public int getItemViewType(int position) {
@@ -80,6 +81,10 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
         return new ThreadViewHolder(v);
     }
 
+    public long getIdx(int position) {
+        return threads.get(position).getIdx();
+    }
+
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
 
@@ -88,104 +93,35 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
         ThreadViewHolder threadViewHolder = (ThreadViewHolder) holder;
 
-        try {
-            switch (evaluate(thread)) {
-                case SELECTED:
-                    threadViewHolder.view.setBackgroundColor(Color.LTGRAY);
-
-                    if (thread.getImage() != null) {
-                        threadViewHolder.main_image.setVisibility(View.VISIBLE);
-                        IPFS ipfs = Singleton.getInstance(context).getIpfs();
-                        IPFSData data = IPFSData.create(ipfs, thread.getImage(), timeout);
-                        Glide.with(context).
-                                load(data).
-                                into(threadViewHolder.main_image);
-
-                    } else {
-                        threadViewHolder.main_image.setVisibility(View.GONE);
-                    }
-
-
-                    break;
-                case MARKED:
-                    threadViewHolder.view.setBackgroundColor(Color.GRAY);
-
-                    if (thread.getImage() != null) {
-                        TextDrawable drawable = TextDrawable.builder()
-                                .buildRound("\u2713", Color.DKGRAY);
-                        threadViewHolder.main_image.setImageDrawable(drawable);
-                    } else {
-                        threadViewHolder.main_image.setVisibility(View.GONE);
-                    }
-
-                    break;
-                default:
-                    threadViewHolder.view.setBackgroundColor(
-                            android.R.drawable.list_selector_background);
-
-                    if (thread.getImage() != null) {
-                        IPFS ipfs = Singleton.getInstance(context).getIpfs();
-                        threadViewHolder.main_image.setVisibility(View.VISIBLE);
-                        IPFSData data = IPFSData.create(ipfs, thread.getImage(), timeout);
-                        Glide.with(context).
-                                load(data).
-                                into(threadViewHolder.main_image);
-
-                    } else {
-                        threadViewHolder.main_image.setVisibility(View.GONE);
-                    }
-
-                    break;
+        boolean isSelected = false;
+        if (mSelectionTracker != null) {
+            if (mSelectionTracker.isSelected(thread.getIdx())) {
+                isSelected = true;
             }
+        }
 
+        threadViewHolder.bind(position, isSelected, thread);
+        try {
 
-            threadViewHolder.view.setOnClickListener((v) -> {
-                try {
-                    if (evaluate(thread) == State.MARKED) {
-                        if (thread.getImage() != null) {
-                            IPFS ipfs = Singleton.getInstance(context).getIpfs();
-                            threadViewHolder.main_image.setVisibility(View.VISIBLE);
-                            IPFSData data = IPFSData.create(ipfs, thread.getImage(), timeout);
-                            Glide.with(context).
-                                    load(data).
-                                    into(threadViewHolder.main_image);
-
-                        } else {
-                            threadViewHolder.main_image.setVisibility(View.GONE);
-                        }
-                        // set new status
-                        states.remove(thread.getIdx());
-                        notifyItemChanged(position);
-                        listener.onUnmarkClick(thread);
-                    } else {
-                        cleanClickedStates();
-                        states.put(thread.getIdx(), State.SELECTED);
-                        notifyItemChanged(position);
-                        listener.onClick(thread);
-                    }
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-
-
-            });
-            threadViewHolder.view.setOnLongClickListener((v) -> {
-
-                threadViewHolder.view.setBackgroundColor(Color.GRAY);
-
-
+            if (!isSelected) {
                 if (thread.getImage() != null) {
-                    TextDrawable drawable = TextDrawable.builder()
-                            .buildRound("\u2713", Color.DKGRAY);
-                    threadViewHolder.main_image.setImageDrawable(drawable);
+                    IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                    threadViewHolder.main_image.setVisibility(View.VISIBLE);
+                    IPFSData data = IPFSData.create(ipfs, thread.getImage(), timeout);
+                    Glide.with(context).
+                            load(data).
+                            into(threadViewHolder.main_image);
+
                 } else {
                     threadViewHolder.main_image.setVisibility(View.GONE);
                 }
-
-                states.put(thread.getIdx(), State.MARKED);
-                listener.onMarkClick(thread);
-                return true;
-
+            }
+            threadViewHolder.view.setOnClickListener((v) -> {
+                try {
+                    listener.onClick(thread);
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
             });
 
 
@@ -341,30 +277,6 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
         return -1;
     }
 
-    private void cleanClickedStates() {
-        for (Long idx : states.keySet()) {
-            if (states.get(idx) == State.SELECTED) {
-                states.remove(idx);
-                int position = getPositionOfItem(idx);
-                if (position >= 0) {
-                    notifyItemChanged(position);
-                }
-            }
-        }
-    }
-
-    private State evaluate(@NonNull Thread thread) {
-        checkNotNull(thread);
-        State state = states.get(thread.getIdx());
-        if (state == null) {
-            return State.NONE;
-        }
-        return state;
-    }
-
-    public enum State {
-        NONE, SELECTED, MARKED
-    }
 
     public interface ThreadsViewAdapterListener {
 
@@ -372,12 +284,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
         void invokeGeneralAction(@NonNull Thread thread);
 
-        void onMarkClick(@NonNull Thread thread);
-
         void onClick(@NonNull Thread thread);
-
-        void onUnmarkClick(@NonNull Thread thread);
-
 
         void invokeActionError(@NonNull Thread thread);
 
@@ -393,6 +300,23 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
 
     }
+
+    public void selectAllThreads() {
+
+
+        try {
+
+            for (Thread thread : threads) {
+                mSelectionTracker.select(thread.getIdx());
+            }
+
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+
+    }
+
 
     static class ViewHolder extends RecyclerView.ViewHolder {
 
@@ -416,6 +340,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
         final TextView session_date;
         final ImageView general_action;
         final ProgressBar progress_bar;
+        final ThreadItemDetails threadItemDetails;
 
         ThreadViewHolder(View v) {
             super(v);
@@ -423,8 +348,37 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
             general_action = v.findViewById(R.id.general_action);
             progress_bar = v.findViewById(R.id.progress_bar);
             main_image = v.findViewById(R.id.main_image);
+            threadItemDetails = new ThreadItemDetails();
+
         }
 
+        void bind(int position, boolean isSelected, Thread thread) {
+            threadItemDetails.position = position;
+            threadItemDetails.idx = thread.getIdx();
 
+
+            Log.e(TAG, "" + thread.getIdx() + " " + isSelected);
+            itemView.setActivated(isSelected);
+            if (isSelected) {
+                view.setBackgroundColor(Color.GRAY);
+
+                if (thread.getImage() != null) {
+                    TextDrawable drawable = TextDrawable.builder()
+                            .buildRound("\u2713", Color.DKGRAY);
+                    main_image.setImageDrawable(drawable);
+                } else {
+                    main_image.setVisibility(View.GONE);
+                }
+
+            } else {
+                view.setBackgroundColor(
+                        android.R.drawable.list_selector_background);
+
+            }
+        }
+
+        public ItemDetailsLookup.ItemDetails<Long> getThreadsItemDetails(MotionEvent e) {
+            return threadItemDetails;
+        }
     }
 }
