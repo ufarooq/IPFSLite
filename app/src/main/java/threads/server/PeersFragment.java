@@ -18,8 +18,6 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -152,22 +150,6 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         View view = inflater.inflate(R.layout.peers_view, container, false);
 
 
-        FloatingActionButton fab_action = view.findViewById(R.id.fab_action);
-        fab_action.setOnClickListener((v) -> {
-
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                return;
-            }
-            mLastClickTime = SystemClock.elapsedRealtime();
-
-
-            PeersDialogFragment.newInstance()
-                    .show(getChildFragmentManager(), PeersDialogFragment.TAG);
-
-
-        });
-
-
         RecyclerView mRecyclerView = view.findViewById(R.id.recycler_users);
         mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
@@ -178,7 +160,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
         final PID host = Preferences.getPID(mContext);
         UsersViewModel messagesViewModel = new ViewModelProvider(this).get(UsersViewModel.class);
-        messagesViewModel.getUsers().observe(this, (users) -> {
+        messagesViewModel.getUsers().observe(getViewLifecycleOwner(), (users) -> {
 
             try {
                 if (users != null) {

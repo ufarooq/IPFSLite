@@ -5,11 +5,11 @@
 
     <item
         android:id="@+id/action_mark_all"
-        android:icon="@drawable/expand_all_outline"
+        android:icon="@drawable/select_all"
         android:orderInCategory="55"
         android:title="@string/action_select_all"
         android:visible="true"
         app:iconTint="?android:textColorSecondary"
-        app:showAsAction="never" />
+        app:showAsAction="ifRoom" />
 
 </menu>

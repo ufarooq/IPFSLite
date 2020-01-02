@@ -28,10 +28,10 @@ import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager.widget.ViewPager;
 
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
-import com.google.android.material.tabs.TabLayout;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -45,11 +45,13 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import de.psdev.licensesdialog.LicensesDialogFragment;
 import threads.core.ConnectService;
+import threads.core.GatewayService;
 import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.core.api.AddressType;
+import threads.core.api.Thread;
 import threads.core.api.User;
 import threads.core.mdl.EventViewModel;
 import threads.ipfs.IPFS;
@@ -104,8 +106,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private DrawerLayout drawer_layout;
     private FloatingActionButton fab_daemon;
     private long mLastClickTime = 0;
-    private ViewPager viewPager;
-
+    private CustomViewPager mCustomViewPager;
+    private BottomNavigationView mNavigation;
+    private FloatingActionButton mMainFab;
+    private SelectionViewModel mSelectionViewModel;
+    private int mTrafficColorId = android.R.color.holo_red_dark;
 
     @Override
     public void onRequestPermissionsResult
@@ -308,7 +313,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onDestroy();
     }
 
-
     private void daemonStatus() {
 
         try {
@@ -324,13 +328,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
         return super.onOptionsItemSelected(item);
     }
-
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
@@ -474,7 +476,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
-
     @Override
     public void clickConnectPeer() {
         try {
@@ -541,7 +542,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
-
 
     @Override
     public void clickEditPeer() {
@@ -709,33 +709,91 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         Service.getInstance(getApplicationContext());
 
-        TabLayout tabLayout = findViewById(R.id.tabLayout);
+        mSelectionViewModel = new ViewModelProvider(this).get(SelectionViewModel.class);
 
 
-        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
-
-
-        viewPager = findViewById(R.id.viewPager);
-        PagerAdapter adapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
-        viewPager.setAdapter(adapter);
-        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-                viewPager.setCurrentItem(tab.getPosition());
-            }
+        mMainFab = findViewById(R.id.fab_main);
+        mCustomViewPager = findViewById(R.id.customViewPager);
+        PagerAdapter adapter = new PagerAdapter(getSupportFragmentManager(), 3);
+        mCustomViewPager.setAdapter(adapter);
+        // mCustomViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        mCustomViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            private MenuItem prevMenuItem;
 
             @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 
             }
 
             @Override
-            public void onTabReselected(TabLayout.Tab tab) {
+            public void onPageSelected(int position) {
+                if (prevMenuItem != null)
+                    prevMenuItem.setChecked(false);
+                else
+                    mNavigation.getMenu().getItem(0).setChecked(false);
+
+                mNavigation.getMenu().getItem(position).setChecked(true);
+
+                prevMenuItem = mNavigation.getMenu().getItem(position);
+                switch (prevMenuItem.getItemId()) {
+                    case R.id.navigation_files:
+                        mMainFab.setImageResource(R.drawable.dots);
+                        mMainFab.setBackgroundTintList(
+                                ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
+
+                        break;
+                    case R.id.navigation_peers:
+                        mMainFab.setImageResource(R.drawable.dots);
+                        mMainFab.setBackgroundTintList(
+                                ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
+
+                        break;
+                    case R.id.navigation_swarm:
+                        mMainFab.setImageResource(R.drawable.traffic_light);
+                        mMainFab.setBackgroundTintList(
+                                ContextCompat.getColorStateList(getApplicationContext(), mTrafficColorId));
+                        break;
+                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
 
             }
         });
 
+        mNavigation = findViewById(R.id.navigation);
+        mNavigation.refreshDrawableState();
+        mNavigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                Fragment fragment;
+                switch (item.getItemId()) {
+                    case R.id.navigation_files:
+                        mCustomViewPager.setCurrentItem(0);
+                        mMainFab.setImageResource(R.drawable.dots);
+                        mMainFab.setBackgroundTintList(
+                                ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
+
+                        return true;
+                    case R.id.navigation_peers:
+                        mCustomViewPager.setCurrentItem(1);
+                        mMainFab.setImageResource(R.drawable.dots);
+                        mMainFab.setBackgroundTintList(
+                                ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
+
+                        return true;
+                    case R.id.navigation_swarm:
+                        mCustomViewPager.setCurrentItem(2);
+                        mMainFab.setImageResource(R.drawable.traffic_light);
+                        mMainFab.setBackgroundTintList(
+                                ContextCompat.getColorStateList(getApplicationContext(), mTrafficColorId));
+
+                        return true;
+                }
+                return false;
+            }
+        });
 
         drawer_layout = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
@@ -745,6 +803,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer_layout.addDrawerListener(toggle);
         toggle.syncState();
+
+
+        mMainFab.setOnClickListener((v) -> {
+
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+
+            switch (mNavigation.getSelectedItemId()) {
+                case R.id.navigation_files:
+                    threadsFabAction();
+                    break;
+                case R.id.navigation_peers:
+                    PeersDialogFragment.newInstance()
+                            .show(getSupportFragmentManager(), PeersDialogFragment.TAG);
+                    break;
+                case R.id.navigation_swarm:
+                    swarmFabAction();
+                    break;
+            }
+
+        });
 
         fab_daemon = findViewById(R.id.fab_daemon);
         fab_daemon.setOnClickListener((view) -> {
@@ -873,9 +955,99 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
         });
+        eventViewModel.getEvent(SwarmFragment.TAG).observe(this, (event) -> {
+            try {
+                if (event != null) {
+                    String content = event.getContent();
+                    switch (content) {
+                        case SwarmFragment.HIGH:
+                            mTrafficColorId = android.R.color.holo_green_light;
+                            break;
+                        case SwarmFragment.MEDIUM:
+                            mTrafficColorId = android.R.color.holo_orange_light;
+                            break;
+                        case SwarmFragment.LOW:
+                            mTrafficColorId = android.R.color.holo_red_light;
+                            break;
+                        default:
+                            mTrafficColorId = android.R.color.holo_red_dark;
+                    }
+                }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
 
+        });
     }
 
+    private void threadsFabAction() {
+        Long idx = mSelectionViewModel.getParentThread().getValue();
+        checkNotNull(idx);
+        if (idx == 0L) {
+
+            ThreadsDialogFragment.newInstance()
+                    .show(getSupportFragmentManager(), ThreadsDialogFragment.TAG);
+
+
+        } else {
+
+            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+
+                    Thread thread = threads.getThreadByIdx(idx);
+                    if (thread != null) {
+                        long parent = thread.getThread();
+                        mSelectionViewModel.setParentThread(parent, true);
+                    }
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                }
+            });
+
+        }
+    }
+
+    private void swarmFabAction() {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                GatewayService.PeerSummary info = GatewayService.evaluateAllPeers(getApplicationContext());
+
+
+                String html = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Quality</h3><ul>";
+
+
+                String numPeers = "Number Peers : " + info.getNumPeers();
+                html = html.concat("<li><div style=\"width: 80%;" +
+                        "  word-wrap:break-word;\">").concat(numPeers).concat("</div></li>");
+
+
+                String latency = "Average Latency : n.a.";
+                if (info.getLatency() < Long.MAX_VALUE) {
+                    latency = "Average Latency : " + info.getLatency() + " [ms]";
+                }
+
+
+                html = html.concat("<li><div style=\"width: 80%;" +
+                        "  word-wrap:break-word;\">").concat(latency).concat("</div></li>");
+                html = html.concat("</ul></body><footer style=\"color:tomato;\">"
+                        + getString(R.string.quality_measurement) + "</footer></html>");
+
+
+                DetailsDialogFragment.newInstance(
+                        DetailsDialogFragment.Type.HTML, html).show(
+                        getSupportFragmentManager(),
+                        DetailsDialogFragment.TAG);
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        });
+    }
 
     @Override
     public void clickUserCall(@NonNull String pid) {
@@ -1187,6 +1359,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
+    }
+
+    @Override
+    public void showBottomNavigation(boolean visible) {
+        if (visible) {
+            mNavigation.setVisibility(View.VISIBLE);
+        } else {
+            mNavigation.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    public void showMainFab(boolean visible) {
+        if (visible) {
+            mMainFab.setVisibility(View.VISIBLE);
+        } else {
+            mMainFab.setVisibility(View.GONE);
+        }
+    }
+
+    @Override
+    public void setPagingEnabled(boolean enabled) {
+        mCustomViewPager.setPagingEnabled(enabled);
     }
 
     @Override

@@ -31,8 +31,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -66,22 +64,16 @@ public class ThreadsFragment extends Fragment implements
         SwipeRefreshLayout.OnRefreshListener, ThreadsViewAdapter.ThreadsViewAdapterListener {
 
     private static final String TAG = ThreadsFragment.class.getSimpleName();
-    private static final String DIRECTORY = "DIRECTORY";
-
 
     private static final int CLICK_OFFSET = 500;
-    //@NonNull
-    //private final List<Long> threads = new ArrayList<>();
     @NonNull
     private final AtomicReference<LiveData<List<Thread>>> observer = new AtomicReference<>(null);
-    //@NonNull
-    //private final AtomicReference<Long> directory = new AtomicReference<>();
     @NonNull
     private final AtomicBoolean topLevel = new AtomicBoolean(true);
+    @NonNull
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private SelectionViewModel mSelectionViewModel;
-    //private long threadIdx;
-    private View view;
+
     private ThreadsViewAdapter mThreadsViewAdapter;
     private ThreadViewModel threadViewModel;
     private long mLastClickTime = 0;
@@ -90,10 +82,16 @@ public class ThreadsFragment extends Fragment implements
     private RecyclerView mRecyclerView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private ActionMode mActionMode;
+    private SelectionTracker<Long> mSelectionTracker;
 
     private static String getCompactString(@NonNull String title) {
         checkNotNull(title);
         return title.replace("\n", " ");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
     }
 
     @Override
@@ -114,8 +112,6 @@ public class ThreadsFragment extends Fragment implements
         mListener = null;
     }
 
-    private SelectionTracker<Long> mSelectionTracker;
-
     @Override
     public void onSaveInstanceState(Bundle outState) {
         mSelectionTracker.onSaveInstanceState(outState);
@@ -125,9 +121,6 @@ public class ThreadsFragment extends Fragment implements
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        if (savedInstanceState != null) {
-            mSelectionTracker.onRestoreInstanceState(savedInstanceState);
-        }
     }
 
     @Override
@@ -136,7 +129,7 @@ public class ThreadsFragment extends Fragment implements
         setHasOptionsMenu(true);
 
 
-        mSelectionViewModel = new ViewModelProvider(this).get(SelectionViewModel.class);
+        mSelectionViewModel = new ViewModelProvider(getActivity()).get(SelectionViewModel.class);
 
 
         final Observer<Long> parentThread = new Observer<Long>() {
@@ -161,8 +154,7 @@ public class ThreadsFragment extends Fragment implements
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.threads_view, container, false);
-        return view;
+        return inflater.inflate(R.layout.threads_view, container, false);
     }
 
     @Override
@@ -215,6 +207,7 @@ public class ThreadsFragment extends Fragment implements
                 StorageStrategy.createLongStorage())
                 .build();
 
+
         mSelectionTracker.addObserver(new SelectionTracker.SelectionObserver<String>() {
             @Override
             public void onSelectionChanged() {
@@ -257,36 +250,10 @@ public class ThreadsFragment extends Fragment implements
 
         mThreadsViewAdapter.setSelectionTracker(mSelectionTracker);
 
-        FloatingActionButton fab_action = view.findViewById(R.id.fab_action);
 
-        fab_action.setOnClickListener((v) -> {
-
-            if (topLevel.get()) {
-
-                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
-                    return;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-
-                ThreadsDialogFragment.newInstance()
-                        .show(getChildFragmentManager(), ThreadsDialogFragment.TAG);
-
-
-            } else {
-
-                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
-                    return;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-
-                back();
-
-            }
-
-        });
-
+        if (savedInstanceState != null) {
+            mSelectionTracker.onRestoreInstanceState(savedInstanceState);
+        }
 
     }
 
@@ -338,28 +305,9 @@ public class ThreadsFragment extends Fragment implements
             });
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        } finally {
-            evaluateFabDeleteVisibility();
-        }
-
-    }
-
-
-    private void evaluateFabDeleteVisibility() {
-        try {
-            FloatingActionButton fab_action = view.findViewById(R.id.fab_action);
-            if (topLevel.get()) {
-                fab_action.setImageResource(R.drawable.dots);
-            } else {
-                fab_action.setImageResource(R.drawable.arrow_left);
-            }
-
-            mListener.invalidateOptionsMenu();
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
+
 
     private void sendAction() {
 
@@ -438,34 +386,10 @@ public class ThreadsFragment extends Fragment implements
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        } finally {
-            evaluateFabDeleteVisibility();
         }
 
     }
 
-    private void back() {
-
-        mSelectionTracker.clearSelection();
-
-        final THREADS threads = Singleton.getInstance(mContext).getThreads();
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                Long idx = mSelectionViewModel.getParentThread().getValue();
-                checkNotNull(idx);
-                Thread thread = threads.getThreadByIdx(idx);
-                if (thread != null) {
-                    long parent = thread.getThread();
-                    mSelectionViewModel.setParentThread(parent, true);
-                }
-
-            } catch (Throwable e) {
-                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-            }
-        });
-    }
 
     @Override
     public boolean generalActionSupport(@NonNull Thread thread) {
@@ -507,6 +431,12 @@ public class ThreadsFragment extends Fragment implements
                 MenuItem action_send = menu.findItem(R.id.action_mode_send);
                 boolean active = Service.isSendNotificationsEnabled(mContext);
                 action_send.setVisible(active);
+
+                mListener.showBottomNavigation(false);
+                mListener.setPagingEnabled(false);
+                mListener.showMainFab(false);
+                mHandler.post(() -> mThreadsViewAdapter.notifyDataSetChanged());
+
                 return true;
             }
 
@@ -550,10 +480,14 @@ public class ThreadsFragment extends Fragment implements
 
                 mSelectionTracker.clearSelection();
                 clearUnreadNotes();
-
+                mListener.showBottomNavigation(true);
+                mListener.setPagingEnabled(true);
+                mListener.showMainFab(true);
                 if (mActionMode != null) {
                     mActionMode = null;
                 }
+                mHandler.post(() -> mThreadsViewAdapter.notifyDataSetChanged());
+
             }
         };
 
@@ -690,7 +624,6 @@ public class ThreadsFragment extends Fragment implements
     }
 
 
-
     @Override
     public void invokeActionError(@NonNull Thread thread) {
         checkNotNull(thread);
@@ -754,17 +687,14 @@ public class ThreadsFragment extends Fragment implements
 
         mSwipeRefreshLayout.setRefreshing(true);
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
+        try {
+            JobServiceLoadNotifications.notifications(mContext);
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        } finally {
+            mHandler.post(() -> mSwipeRefreshLayout.setRefreshing(false));
+        }
 
-            try {
-                Service.notifications(mContext);
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            } finally {
-                mHandler.post(() -> mSwipeRefreshLayout.setRefreshing(false));
-            }
-        });
     }
 
 
@@ -772,6 +702,10 @@ public class ThreadsFragment extends Fragment implements
 
         void clickThreadsSend(long[] idxs);
 
-        void invalidateOptionsMenu();
+        void showBottomNavigation(boolean visible);
+
+        void showMainFab(boolean visible);
+
+        void setPagingEnabled(boolean enabled);
     }
 }

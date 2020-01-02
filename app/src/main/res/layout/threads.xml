@@ -64,17 +64,18 @@
 
     <ImageView
         android:id="@+id/general_action"
-        android:layout_width="@dimen/threads_general_action_image"
-        android:layout_height="@dimen/threads_general_action_image"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:layout_gravity="center"
-        android:layout_margin="8dp"
+        android:padding="8dp"
         android:background="@android:color/transparent"
         android:clickable="true"
         android:focusable="true"
         android:scaleType="centerCrop"
         android:src="@drawable/dots"
-        android:tint="?android:textColorSecondary"
+        android:tint="@color/colorAccent"
         tools:ignore="ContentDescription" />
+
 
     <ProgressBar
         android:id="@+id/progress_bar"
