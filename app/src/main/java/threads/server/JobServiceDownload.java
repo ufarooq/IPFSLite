@@ -123,7 +123,7 @@ public class JobServiceDownload extends JobService {
         final String cid = bundle.getString(Content.CID);
         checkNotNull(cid);
 
-        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
+        if (!Network.isConnected(getApplicationContext())) {
             return false;
         }
 

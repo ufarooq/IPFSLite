@@ -50,7 +50,7 @@ public class JobServiceLoadNotifications extends JobService {
             return false;
         }
 
-        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
+        if (!Network.isConnected(getApplicationContext())) {
             return false;
         }
 

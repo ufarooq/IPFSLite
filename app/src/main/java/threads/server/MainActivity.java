@@ -235,15 +235,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
-            if (!Network.isConnectedWifi(getApplicationContext())) {
-                Preferences.error(singleton.getThreads(), getString(R.string.slow_connection_no_wifi));
-            } else {
-                Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
-            }
-            return;
-        }
-
 
         try {
             CodecDecider codecDecider = CodecDecider.evaluate(codec);
@@ -611,14 +602,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
-            if (!Network.isConnectedWifi(getApplicationContext())) {
-                Preferences.error(singleton.getThreads(), getString(R.string.slow_connection_no_wifi));
-            } else {
-                Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
-            }
-            return;
-        }
 
         try {
 
@@ -1051,14 +1034,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
-            if (!Network.isConnectedWifi(getApplicationContext())) {
-                Preferences.error(singleton.getThreads(), getString(R.string.slow_connection_no_wifi));
-            } else {
-                Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
-            }
-            return;
-        }
 
         try {
             final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
@@ -1171,14 +1146,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
-            if (!Network.isConnectedWifi(getApplicationContext())) {
-                Preferences.error(singleton.getThreads(), getString(R.string.slow_connection_no_wifi));
-            } else {
-                Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
-            }
-            return;
-        }
 
         try {
 
@@ -1240,14 +1207,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
-        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
-            if (!Network.isConnectedWifi(getApplicationContext())) {
-                Preferences.error(singleton.getThreads(), getString(R.string.slow_connection_no_wifi));
-            } else {
-                Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
-            }
-            return;
-        }
 
         final THREADS threads = Singleton.getInstance(this).getThreads();
 

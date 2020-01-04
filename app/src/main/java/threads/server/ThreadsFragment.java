@@ -634,14 +634,8 @@ public class ThreadsFragment extends Fragment implements
                 Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
                 return;
             }
-            if (!Network.isConnectedMinHighBandwidth(mContext)) {
-                if (!Network.isConnectedWifi(mContext)) {
-                    Preferences.error(singleton.getThreads(), getString(R.string.slow_connection_no_wifi));
-                } else {
-                    Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
-                }
-                return;
-            }
+
+
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {

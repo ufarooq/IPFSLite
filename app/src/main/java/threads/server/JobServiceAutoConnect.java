@@ -55,7 +55,7 @@ public class JobServiceAutoConnect extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
-        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
+        if (!Network.isConnected(getApplicationContext())) {
             return false;
         }
 

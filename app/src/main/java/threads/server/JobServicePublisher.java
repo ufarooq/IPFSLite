@@ -64,7 +64,7 @@ public class JobServicePublisher extends JobService {
     public boolean onStartJob(JobParameters jobParameters) {
 
 
-        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
+        if (!Network.isConnected(getApplicationContext())) {
             return false;
         }
 

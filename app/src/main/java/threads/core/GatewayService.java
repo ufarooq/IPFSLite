@@ -46,7 +46,7 @@ public class GatewayService {
             }
         }
 
-        if (Network.isConnectedMinHighBandwidth(context)) {
+        if (Network.isConnected(context)) {
             List<Peer> stored = threads.getPeers();
             for (Peer peer : stored) {
                 if (!peer.isConnected() &&
@@ -312,7 +312,7 @@ public class GatewayService {
                         threads.setTimestamp(autonat, System.currentTimeMillis());
                         connected.add(autonat);
                     } else {
-                        if (Network.isConnectedMinHighBandwidth(context)) {
+                        if (Network.isConnected(context)) {
                             if (lifeTimeExpired(autonat)) {
                                 threads.removePeer(ipfs, autonat);
                             }
@@ -372,7 +372,7 @@ public class GatewayService {
                         threads.setTimestamp(pubsub, System.currentTimeMillis());
                         connected.add(pubsub);
                     } else {
-                        if (Network.isConnectedMinHighBandwidth(context)) {
+                        if (Network.isConnected(context)) {
 
                             if (lifeTimeExpired(pubsub)) {
                                 threads.removePeer(ipfs, pubsub);
@@ -436,7 +436,7 @@ public class GatewayService {
                         connected.add(relay);
                     } else {
 
-                        if (Network.isConnectedMinHighBandwidth(context)) {
+                        if (Network.isConnected(context)) {
                             if (lifeTimeExpired(relay)) {
                                 threads.removePeer(ipfs, relay);
                             }
@@ -476,7 +476,7 @@ public class GatewayService {
                             IPFS.Style.p2p.name() + "/" + peer.getPid();
 
                     if (!ipfs.swarmConnect(ma, timeout)) {
-                        if (Network.isConnectedMinHighBandwidth(context)) {
+                        if (Network.isConnected(context)) {
                             threads.removePeer(ipfs, peer);
                         }
                     } else {

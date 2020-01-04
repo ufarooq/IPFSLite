@@ -83,7 +83,7 @@ public class JobServiceGatewayLoader extends JobService {
         PersistableBundle bundle = jobParameters.getExtras();
         final long idx = bundle.getLong(IDX);
 
-        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
+        if (!Network.isConnected(getApplicationContext())) {
             return false;
         }
         int timeout = Preferences.getConnectionTimeout(getApplicationContext());

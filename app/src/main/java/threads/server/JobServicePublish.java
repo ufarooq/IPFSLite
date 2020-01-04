@@ -61,7 +61,7 @@ public class JobServicePublish extends JobService {
         final String cid = bundle.getString(Content.CID);
         checkNotNull(cid);
         final boolean connectPeers = bundle.getBoolean(Content.PEERS);
-        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
+        if (!Network.isConnected(getApplicationContext())) {
             return false;
         }
         int timeout = Preferences.getConnectionTimeout(getApplicationContext());

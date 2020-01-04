@@ -58,7 +58,7 @@ public class JobServiceFindPeers extends JobService {
             return false;
         }
 
-        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
+        if (!Network.isConnected(getApplicationContext())) {
             return false;
         }
         ExecutorService executor = Executors.newSingleThreadExecutor();

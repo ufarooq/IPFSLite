@@ -107,7 +107,7 @@ public class Network {
                 && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR);
     }
 
-    public static boolean isConnectedFast(@NonNull Context context) {
+    private static boolean isConnectedFast(@NonNull Context context) {
         checkNotNull(context);
 
         ConnectivityManager connectivityManager = (ConnectivityManager)
@@ -123,7 +123,7 @@ public class Network {
     }
 
 
-    public static boolean isConnectedMinHighBandwidth(@NonNull Context context) {
+    private static boolean isConnectedMinHighBandwidth(@NonNull Context context) {
         checkNotNull(context);
 
         ConnectivityManager connectivityManager = (ConnectivityManager)

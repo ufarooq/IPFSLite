@@ -60,7 +60,7 @@ public class JobServiceConnect extends JobService {
         final String pid = bundle.getString(Content.PID);
         checkNotNull(pid);
 
-        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
+        if (!Network.isConnected(getApplicationContext())) {
             return false;
         }
 
