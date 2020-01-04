@@ -127,4 +127,65 @@
     <string name="file_not_found">File could not be downloaded</string>
     <string name="slow_connection_no_wifi">Internet connection is to slow [WiFi not enabled]</string>
 
+    <string name="start_downloading">Downloading &#8230; </string>
+    <string name="start_uploading">Uploading  &#8230;</string>
+    <string name="link_format">\"%1$s\" [%2$s kB]</string>
+    <string name="timer">00:00.0</string>
+    <string name="voice_recording">Voice Recording</string>
+    <string name="login">Alias</string>
+    <string name="login_name">Name</string>
+    <string name="login_name_error">Please define a name</string>
+    <string name="action_copy">Copy</string>
+
+    <string name="accept">Accept</string>
+    <string name="reject">Reject</string>
+    <string name="join_thread">Do you want to join the session?</string>
+    <string name="action_chat">Secure Chat</string>
+    <string name="gallery">Gallery</string>
+    <string name="camera">Camera</string>
+    <string name="microphone">Micro</string>
+    <string name="pdf">PDF</string>
+    <string name="video">Video</string>
+    <string name="upload">Upload</string>
+    <string name="action_connect">Connect</string>
+    <string name="action_block">Block peer communication</string>
+    <string name="action_view">View</string>
+    <string name="action_pin">Pin</string>
+    <string name="action_play">Play</string>
+    <string name="name">Name</string>
+    <string name="name_not_valid">Name not valid</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_share">Share</string>
+
+    <string name="action_send">Send</string>
+    <string name="dont_show_again">Don\'t show again</string>
+    <string name="action_publish">Publish via a gateway</string>
+    <string name="action_call">Call</string>
+
+
+    <string name="camera_error">Camera error detected</string>
+    <string name="abort">Abort</string>
+    <string name="action_location">Location</string>
+    <string name="rtc_channel_name">Call Notification</string>
+    <string name="rtc_channel_description">Channel for incoming call notifications.</string>
+    <string name="action_video_call">Video Call</string>
+    <string name="timeout_call">Timeout</string>
+    <string name="abort_call">Call aborted</string>
+    <string name="reject_call">Call rejected</string>
+    <string name="call_closed_by">Call closed by \"%1$s\"</string>
+    <string name="call_busy_by">\"%1$s\" is busy</string>
+    <string name="call_timeout_by">Call to \"%1$s\" is timed out</string>
+    <string name="incoming_video_call">Incoming Video Call</string>
+    <string name="call_fail_by">\"%1$s\" could not be connected, maybe offline.</string>
+    <string name="connection">Connecting &#8230;</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="action_unpin">Unpin</string>
+    <string name="text">Text</string>
+    <string name="empty_document">Empty document not supported</string>
+    <string name="video_failure">Video playing failure : \"%1$s\"</string>
+    <string name="action_tangle">Show Tangle Details</string>
+    <string name="action_details">Details</string>
+    <string name="action_auto_connect">Automatic connection during startup</string>
+    <string name="action_peer_add">Add Peer</string>
+    <string name="action_block_user">Block messages from the user</string>
 </resources>

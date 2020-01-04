@@ -19,13 +19,13 @@
             android:id="@+id/app_toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fitsSystemWindows="false">
+            android:fitsSystemWindows="true">
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:elevation="4dp" />
+                android:background="@color/colorToolbar" />
 
         </com.google.android.material.appbar.AppBarLayout>
 

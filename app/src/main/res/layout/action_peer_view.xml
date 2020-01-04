@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <TableRow
+        android:id="@+id/row"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/menu_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:layout_weight="1"
+            android:drawableTop="@drawable/action_info"
+            android:drawablePadding="8dp"
+            android:drawableTint="?android:textColorSecondary"
+            android:singleLine="true"
+            android:text="@string/action_info"
+            android:textAlignment="center" />
+
+        <TextView
+            android:id="@+id/menu_details"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:layout_weight="1"
+            android:drawableTop="@drawable/action_details"
+            android:drawablePadding="8dp"
+            android:drawableTint="?android:textColorSecondary"
+            android:singleLine="true"
+            android:text="@string/action_details"
+            android:textAlignment="center" />
+
+
+        <TextView
+            android:id="@+id/menu_add"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:layout_weight="1"
+            android:drawableTop="@drawable/action_peer_add"
+            android:drawablePadding="8dp"
+            android:drawableTint="?android:textColorSecondary"
+            android:text="@string/action_peer_add"
+            android:textAlignment="center" />
+
+
+    </TableRow>
+
+
+</TableLayout>

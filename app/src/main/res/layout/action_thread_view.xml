@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TableRow
+            android:id="@+id/row_first"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+
+            <TextView
+                android:id="@+id/menu_info"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:layout_weight="1"
+                android:drawableTop="@drawable/action_info"
+                android:drawablePadding="8dp"
+                android:drawableTint="?android:textColorSecondary"
+                android:singleLine="true"
+                android:text="@string/action_info"
+                android:textAlignment="center" />
+
+
+            <TextView
+                android:id="@+id/menu_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:layout_weight="1"
+                android:drawableTop="@drawable/action_view"
+                android:drawablePadding="8dp"
+                android:drawableTint="?android:textColorSecondary"
+                android:singleLine="true"
+                android:text="@string/action_view"
+                android:textAlignment="center" />
+
+            <TextView
+                android:id="@+id/menu_delete"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:layout_weight="1"
+                android:drawableTop="@drawable/action_delete"
+                android:drawablePadding="8dp"
+                android:drawableTint="?android:textColorSecondary"
+                android:singleLine="true"
+                android:text="@string/action_delete"
+                android:textAlignment="center" />
+
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/row_second"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+
+            <TextView
+                android:id="@+id/menu_share"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:layout_weight="1"
+                android:drawableTop="@drawable/action_share"
+                android:drawablePadding="8dp"
+                android:drawableTint="?android:textColorSecondary"
+                android:singleLine="true"
+                android:text="@string/action_share"
+                android:textAlignment="center" />
+
+            <TextView
+                android:id="@+id/menu_send"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:layout_weight="1"
+                android:drawableTop="@drawable/action_send"
+                android:drawablePadding="8dp"
+                android:drawableTint="?android:textColorSecondary"
+                android:singleLine="true"
+                android:text="@string/action_send"
+                android:textAlignment="center" />
+
+
+            <TextView
+                android:id="@+id/menu_download"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:layout_weight="1"
+                android:drawableTop="@drawable/action_download"
+                android:drawablePadding="8dp"
+                android:drawableTint="?android:textColorSecondary"
+                android:singleLine="true"
+                android:text="@string/action_download"
+                android:textAlignment="center" />
+
+        </TableRow>
+
+
+    </TableLayout>
+
+    <CheckBox
+        android:id="@+id/menu_publish"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:drawableStart="@drawable/pin"
+        android:drawablePadding="8dp"
+        android:singleLine="true"
+        android:text="@string/action_publish"
+        android:textAlignment="center" />
+</LinearLayout>

@@ -69,8 +69,6 @@ import threads.share.ThreadActionDialogFragment;
 import threads.share.ThumbnailService;
 import threads.share.UserActionDialogFragment;
 import threads.share.WebViewDialogFragment;
-import threads.webrtc.RTCCallActivity;
-import threads.webrtc.RTCVideoCallActivity;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -90,21 +88,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private static final int REQUEST_VIDEO_CAPTURE = 1;
-    private static final int REQUEST_AUDIO_CAPTURE = 2;
-    private static final int REQUEST_MODIFY_AUDIO_SETTINGS = 3;
     private static final int REQUEST_SELECT_FILES = 4;
     private static final int REQUEST_EXTERNAL_STORAGE = 5;
 
-    private static final int RTC_VIDEO_VIDEO_CAPTURE = 6;
-    private static final int RTC_VIDEO_AUDIO_CAPTURE = 7;
-    private static final int RTC_VIDEO_MODIFY_AUDIO_SETTINGS = 8;
+    private static final int CONTENT_REQUEST_VIDEO_CAPTURE = 9;
+    private static final int PEER_REQUEST_VIDEO_CAPTURE = 10;
 
     private final AtomicReference<Long> storedThread = new AtomicReference<>(null);
     private final AtomicReference<String> storedUser = new AtomicReference<>(null);
     private final AtomicBoolean idScan = new AtomicBoolean(false);
 
-    private DrawerLayout drawer_layout;
-    private FloatingActionButton fab_daemon;
+    private DrawerLayout mDrawerLayout;
+    private FloatingActionButton mFabDaemon;
     private long mLastClickTime = 0;
     private CustomViewPager mCustomViewPager;
     private BottomNavigationView mNavigation;
@@ -126,43 +121,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 break;
             }
-            case REQUEST_AUDIO_CAPTURE: {
-                for (int i = 0, len = permissions.length; i < len; i++) {
-                    if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
-                        Snackbar.make(drawer_layout,
-                                getString(R.string.permission_audio_denied),
-                                Snackbar.LENGTH_LONG)
-                                .setAction(R.string.app_settings, new PermissionAction()).show();
-                    }
-                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                        clickUserCall(storedUser.get());
-                    }
-                }
-
-                break;
-            }
-            case REQUEST_MODIFY_AUDIO_SETTINGS: {
-                for (int i = 0, len = permissions.length; i < len; i++) {
-                    if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
-                        Snackbar.make(drawer_layout,
-                                getString(R.string.permission_audio_settings_denied),
-                                Snackbar.LENGTH_LONG)
-                                .setAction(R.string.app_settings, new PermissionAction()).show();
-                    }
-                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                        clickUserCall(storedUser.get());
-                    }
-                }
-
-                break;
-            }
             case REQUEST_VIDEO_CAPTURE: {
                 for (int i = 0, len = permissions.length; i < len; i++) {
                     if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
-                        Snackbar.make(drawer_layout,
+                        Snackbar snackbar = Snackbar.make(mDrawerLayout,
                                 getString(R.string.permission_camera_denied),
-                                Snackbar.LENGTH_LONG)
-                                .setAction(R.string.app_settings, new PermissionAction()).show();
+                                Snackbar.LENGTH_LONG);
+                        snackbar.setAction(R.string.app_settings, new PermissionAction());
+                        snackbar.setAnchorView(mNavigation);
+                        snackbar.show();
+
                     }
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                         clickUserCall(storedUser.get());
@@ -171,52 +139,42 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 break;
             }
-            case RTC_VIDEO_MODIFY_AUDIO_SETTINGS: {
+            case CONTENT_REQUEST_VIDEO_CAPTURE: {
                 for (int i = 0, len = permissions.length; i < len; i++) {
                     if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
-                        Snackbar.make(drawer_layout,
-                                getString(R.string.permission_audio_settings_denied),
-                                Snackbar.LENGTH_LONG)
-                                .setAction(R.string.app_settings, new threads.share.PermissionAction()).show();
-                    }
-                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                        clickUserVideoCall(storedUser.get());
-                    }
-                }
-
-                break;
-            }
-            case RTC_VIDEO_AUDIO_CAPTURE: {
-                for (int i = 0, len = permissions.length; i < len; i++) {
-                    if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
-                        Snackbar.make(drawer_layout,
-                                getString(R.string.permission_audio_denied),
-                                Snackbar.LENGTH_LONG)
-                                .setAction(R.string.app_settings, new threads.share.PermissionAction()).show();
-                    }
-                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                        clickUserVideoCall(storedUser.get());
-                    }
-                }
-
-                break;
-            }
-            case RTC_VIDEO_VIDEO_CAPTURE: {
-                for (int i = 0, len = permissions.length; i < len; i++) {
-                    if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
-                        Snackbar.make(drawer_layout,
+                        Snackbar snackbar = Snackbar.make(mDrawerLayout,
                                 getString(R.string.permission_camera_denied),
-                                Snackbar.LENGTH_LONG)
-                                .setAction(R.string.app_settings, new threads.share.PermissionAction()).show();
+                                Snackbar.LENGTH_LONG);
+                        snackbar.setAction(R.string.app_settings, new PermissionAction());
+                        snackbar.setAnchorView(mNavigation);
+                        snackbar.show();
+
                     }
                     if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                        clickUserVideoCall(storedUser.get());
+                        clickMultihashWork();
                     }
                 }
 
                 break;
             }
+            case PEER_REQUEST_VIDEO_CAPTURE: {
+                for (int i = 0, len = permissions.length; i < len; i++) {
+                    if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                        Snackbar snackbar = Snackbar.make(mDrawerLayout,
+                                getString(R.string.permission_camera_denied),
+                                Snackbar.LENGTH_LONG);
+                        snackbar.setAction(R.string.app_settings, new PermissionAction());
+                        snackbar.setAnchorView(mNavigation);
+                        snackbar.show();
 
+                    }
+                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                        clickConnectPeerWork();
+                    }
+                }
+
+                break;
+            }
         }
     }
 
@@ -317,9 +275,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         try {
             if (!DaemonService.DAEMON_RUNNING.get()) {
-                fab_daemon.setImageDrawable(getDrawable(R.drawable.play));
+                mFabDaemon.setImageDrawable(getDrawable(R.drawable.play));
             } else {
-                fab_daemon.setImageDrawable(getDrawable(R.drawable.stop));
+                mFabDaemon.setImageDrawable(getDrawable(R.drawable.stop));
             }
             findViewById(R.id.fab_daemon).setVisibility(View.VISIBLE);
         } catch (Throwable e) {
@@ -472,12 +430,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
 
-        drawer_layout.closeDrawer(GravityCompat.START);
+        mDrawerLayout.closeDrawer(GravityCompat.START);
         return true;
     }
 
     @Override
     public void clickConnectPeer() {
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA},
+                    PEER_REQUEST_VIDEO_CAPTURE);
+            return;
+        }
+
+        clickConnectPeerWork();
+    }
+
+    public void clickConnectPeerWork() {
         try {
             PackageManager pm = getPackageManager();
 
@@ -498,6 +470,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickMultihash() {
+
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA},
+                    CONTENT_REQUEST_VIDEO_CAPTURE);
+            return;
+        }
+        clickMultihashWork();
+    }
+
+    private void clickMultihashWork() {
         PackageManager pm = getPackageManager();
         try {
             if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
@@ -795,13 +780,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         });
 
-        drawer_layout = findViewById(R.id.drawer_layout);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer_layout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer_layout.addDrawerListener(toggle);
+                this, mDrawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        mDrawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 
 
@@ -828,8 +813,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         });
 
-        fab_daemon = findViewById(R.id.fab_daemon);
-        fab_daemon.setOnClickListener((view) -> {
+        mFabDaemon = findViewById(R.id.fab_daemon);
+        mFabDaemon.setOnClickListener((view) -> {
 
 
             // mis-clicking prevention, using threshold of 1000 ms
@@ -856,7 +841,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         eventViewModel.getIPFSInstallFailure().observe(this, (event) -> {
             try {
                 if (event != null) {
-                    Snackbar snackbar = Snackbar.make(drawer_layout,
+                    Snackbar snackbar = Snackbar.make(mDrawerLayout,
                             R.string.ipfs_daemon_install_failure,
                             Snackbar.LENGTH_INDEFINITE);
                     snackbar.setAction(R.string.info, (view) -> {
@@ -873,6 +858,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         snackbar.dismiss();
 
                     });
+                    snackbar.setAnchorView(mNavigation);
                     snackbar.show();
                 }
             } catch (Throwable e) {
@@ -883,7 +869,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         eventViewModel.getIPFSStartFailure().observe(this, (event) -> {
             try {
                 if (event != null) {
-                    Snackbar snackbar = Snackbar.make(drawer_layout,
+                    Snackbar snackbar = Snackbar.make(mDrawerLayout,
                             R.string.ipfs_daemon_start_failure,
                             Snackbar.LENGTH_INDEFINITE);
                     snackbar.setAction(R.string.info, (view) -> {
@@ -900,6 +886,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         snackbar.dismiss();
 
                     });
+                    snackbar.setAnchorView(mNavigation);
                     snackbar.show();
                 }
             } catch (Throwable e) {
@@ -912,9 +899,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (event != null) {
                     String content = event.getContent();
                     if (!content.isEmpty()) {
-                        Snackbar snackbar = Snackbar.make(drawer_layout, content,
+                        Snackbar snackbar = Snackbar.make(mDrawerLayout, content,
                                 Snackbar.LENGTH_INDEFINITE);
                         snackbar.setAction(android.R.string.ok, (view) -> snackbar.dismiss());
+                        snackbar.setAnchorView(mNavigation);
                         snackbar.show();
                     }
                     eventViewModel.removeEvent(event);
@@ -1051,72 +1039,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickUserCall(@NonNull String pid) {
-
-        checkNotNull(pid);
-
-        Singleton singleton = Singleton.getInstance(getApplicationContext());
-        // CHECKED
-        if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
-            return;
-        }
-
-        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
-            if (!Network.isConnectedWifi(getApplicationContext())) {
-                Preferences.error(singleton.getThreads(), getString(R.string.slow_connection_no_wifi));
-            } else {
-                Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
-            }
-            return;
-        }
-
-        storedUser.set(pid);
-
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.RECORD_AUDIO},
-                    REQUEST_AUDIO_CAPTURE);
-            return;
-        }
-
-
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.MODIFY_AUDIO_SETTINGS)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.MODIFY_AUDIO_SETTINGS},
-                    REQUEST_MODIFY_AUDIO_SETTINGS);
-            return;
-        }
-
-        try {
-            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    if (threads.isUserBlocked(pid)) {
-                        Preferences.warning(threads, getString(R.string.peer_is_blocked));
-                    } else {
-
-                        Intent intent = RTCCallActivity.createIntent(getApplicationContext(),
-                                pid, null, true);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                        intent.setAction(RTCCallActivity.ACTION_OUTGOING_CALL);
-                        startActivity(intent);
-
-                    }
-                } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-                }
-            });
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
     }
 
     @Override
@@ -1496,74 +1418,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickUserVideoCall(@NonNull String pid) {
-
-        Singleton singleton = Singleton.getInstance(getApplicationContext());
-
-        // CHECKED
-        if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
-            return;
-        }
-        if (!Network.isConnectedMinHighBandwidth(getApplicationContext())) {
-            if (!Network.isConnectedWifi(getApplicationContext())) {
-                Preferences.error(singleton.getThreads(), getString(R.string.slow_connection_no_wifi));
-            } else {
-                Preferences.error(singleton.getThreads(), getString(R.string.slow_connection));
-            }
-            return;
-        }
-
-        storedUser.set(pid);
-
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.RECORD_AUDIO)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.RECORD_AUDIO},
-                    RTC_VIDEO_AUDIO_CAPTURE);
-            return;
-        }
-
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.CAMERA},
-                    RTC_VIDEO_VIDEO_CAPTURE);
-            return;
-        }
-
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.MODIFY_AUDIO_SETTINGS)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.MODIFY_AUDIO_SETTINGS},
-                    RTC_VIDEO_MODIFY_AUDIO_SETTINGS);
-            return;
-        }
-        try {
-            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-
-                    if (threads.isUserBlocked(pid)) {
-                        Preferences.warning(threads, getString(R.string.peer_is_blocked));
-                    } else {
-                        Intent intent = RTCVideoCallActivity.createIntent(
-                                getApplicationContext(), pid, null, true);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                        intent.setAction(RTCVideoCallActivity.ACTION_OUTGOING_CALL);
-                        startActivity(intent);
-                    }
-                } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-                }
-            });
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
     }
 
 

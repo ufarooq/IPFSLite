@@ -202,12 +202,11 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
             boolean valid = user.isValid();
             boolean verified = user.getType() == UserType.VERIFIED;
-            boolean callActive = valid && verified && Preferences.isPubsubEnabled(mContext);
 
             UserActionDialogFragment.newInstance(
                     user.getPID().getPid(), true, true, true,
                     valid, user.isAutoConnect(), true, true, user.isBlocked(),
-                    true, callActive, false)
+                    true, false, false)
                     .show(getChildFragmentManager(), UserActionDialogFragment.TAG);
 
         } catch (Throwable e) {

@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.DiffUtil;
@@ -41,6 +42,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
     private final ThreadsViewAdapterListener listener;
     private final List<Thread> threads = new ArrayList<>();
     private final int accentColor;
+    private final int selectedItemColor;
     private final int timeout;
     @Nullable
     private SelectionTracker<Long> mSelectionTracker;
@@ -50,6 +52,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
         this.context = context;
         this.listener = listener;
         accentColor = getThemeAccentColor(context);
+        selectedItemColor = getThemeSelectedItemColor(context);
         timeout = Preferences.getConnectionTimeout(context);
 
     }
@@ -58,6 +61,10 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
         final TypedValue value = new TypedValue();
         context.getTheme().resolveAttribute(R.attr.colorAccent, value, true);
         return value.data;
+    }
+
+    public static int getThemeSelectedItemColor(final Context context) {
+        return ContextCompat.getColor(context, R.color.colorSelectedItem);
     }
 
     public void setSelectionTracker(SelectionTracker<Long> selectionTracker) {
@@ -106,7 +113,12 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
         threadViewHolder.bind(position, isSelected, thread);
         try {
-
+            if (isSelected) {
+                threadViewHolder.view.setBackgroundColor(selectedItemColor);
+            } else {
+                threadViewHolder.view.setBackgroundColor(
+                        android.R.drawable.list_selector_background);
+            }
 
             if (thread.getImage() != null) {
                 IPFS ipfs = Singleton.getInstance(context).getIpfs();
@@ -360,12 +372,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
             itemView.setActivated(isSelected);
 
-            if (isSelected) {
-                view.setBackgroundColor(Color.DKGRAY);
-            } else {
-                view.setBackgroundColor(
-                        android.R.drawable.list_selector_background);
-            }
+
         }
 
         public ItemDetailsLookup.ItemDetails<Long> getThreadsItemDetails(MotionEvent e) {

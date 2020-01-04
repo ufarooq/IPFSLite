@@ -65,13 +65,12 @@ import threads.ipfs.api.PubsubConfig;
 import threads.ipfs.api.RoutingConfig;
 import threads.share.MimeTypeService;
 import threads.share.ThumbnailService;
-import threads.webrtc.RTCSession;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 
-class Service {
+public class Service {
 
     static final int RELAYS = 5;
     static final String PIN_SERVICE_KEY = "pinServiceKey";
@@ -207,13 +206,12 @@ class Service {
     }
 
     @NonNull
-    static synchronized Service getInstance(@NonNull Context context) {
+    public static synchronized Service getInstance(@NonNull Context context) {
         checkNotNull(context);
         if (SINGLETON == null) {
 
             runUpdatesIfNecessary(context);
 
-            RTCSession.createRTCChannel(context);
             ProgressChannel.createProgressChannel(context);
 
             long time = System.currentTimeMillis();
@@ -1872,8 +1870,6 @@ class Service {
                                             executorService.schedule(() ->
                                                             Service.notifications(context),
                                                     3, TimeUnit.SECONDS);
-                                        } else {
-                                            RTCSession.handleContent(context, topic, content);
                                         }
                                     } else {
                                         Preferences.error(threads, context.getString(

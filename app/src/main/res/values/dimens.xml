@@ -3,4 +3,9 @@
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="users_paddingBottom">4dp</dimen>
     <dimen name="users_paddingTop">4dp</dimen>
+    <dimen name="threads_paddingBottom">0dp</dimen>
+    <dimen name="threads_paddingTop">0dp</dimen>
+    <dimen name="threads_image">60dp</dimen>
+    <dimen name="threads_image_padding">8dp</dimen>
+    <dimen name="threads_general_action_image">36dp</dimen>
 </resources>

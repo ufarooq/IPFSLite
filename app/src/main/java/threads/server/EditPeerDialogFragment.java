@@ -159,7 +159,7 @@ public class EditPeerDialogFragment extends DialogFragment {
 
         Window window = dialog.getWindow();
         if (window != null) {
-            window.getAttributes().windowAnimations = threads.share.R.style.DialogTopAnimation;
+            window.getAttributes().windowAnimations = R.style.DialogTopAnimation;
             window.getAttributes().gravity = Gravity.TOP | Gravity.CENTER;
             window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         }
