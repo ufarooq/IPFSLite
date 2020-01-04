@@ -28,6 +28,7 @@ import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager.widget.ViewPager;
 
+import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
@@ -99,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private final AtomicBoolean idScan = new AtomicBoolean(false);
 
     private DrawerLayout mDrawerLayout;
+    private AppBarLayout mAppBarLayout;
     private FloatingActionButton mFabDaemon;
     private long mLastClickTime = 0;
     private CustomViewPager mCustomViewPager;
@@ -673,6 +675,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.activity_main);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
+        mAppBarLayout = findViewById(R.id.app_toolbar);
+
         setSupportActionBar(toolbar);
 
         Service.getInstance(getApplicationContext());
@@ -701,7 +705,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     mNavigation.getMenu().getItem(0).setChecked(false);
 
                 mNavigation.getMenu().getItem(position).setChecked(true);
-
+                mAppBarLayout.setExpanded(true, false);
                 prevMenuItem = mNavigation.getMenu().getItem(position);
                 switch (prevMenuItem.getItemId()) {
                     case R.id.navigation_files:
@@ -735,7 +739,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mNavigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                Fragment fragment;
+                mAppBarLayout.setExpanded(true, false);
                 switch (item.getItemId()) {
                     case R.id.navigation_files:
                         mCustomViewPager.setCurrentItem(0);
