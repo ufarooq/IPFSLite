@@ -148,7 +148,12 @@ public class ThreadsFragment extends Fragment implements
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.menu_threads, menu);
-
+        MenuItem actionDaemon = menu.findItem(R.id.action_daemon);
+        if (!DaemonService.DAEMON_RUNNING.get()) {
+            actionDaemon.setIcon(R.drawable.play_circle);
+        } else {
+            actionDaemon.setIcon(R.drawable.stop_circle);
+        }
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -170,6 +175,23 @@ public class ThreadsFragment extends Fragment implements
 
                 mThreadsViewAdapter.selectAllThreads();
 
+                return true;
+            }
+            case R.id.action_daemon: {
+
+                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                    break;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+                if (DaemonService.DAEMON_RUNNING.get()) {
+                    DaemonService.DAEMON_RUNNING.set(false);
+                } else {
+                    DaemonService.DAEMON_RUNNING.set(true);
+                }
+                DaemonService.invoke(mContext);
+
+                getActivity().invalidateOptionsMenu();
                 return true;
             }
         }

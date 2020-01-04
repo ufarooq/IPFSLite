@@ -73,7 +73,7 @@
         android:focusable="true"
         android:scaleType="centerCrop"
         android:src="@drawable/dots"
-        android:tint="@color/colorAccent"
+        android:tint="?android:textColorSecondary"
         tools:ignore="ContentDescription" />
 
 

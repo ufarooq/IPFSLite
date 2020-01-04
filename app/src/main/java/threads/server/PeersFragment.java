@@ -78,6 +78,12 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.menu_peers, menu);
+        MenuItem actionDaemon = menu.findItem(R.id.action_daemon);
+        if (!DaemonService.DAEMON_RUNNING.get()) {
+            actionDaemon.setIcon(R.drawable.play_circle);
+        } else {
+            actionDaemon.setIcon(R.drawable.stop_circle);
+        }
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -85,6 +91,23 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
         switch (item.getItemId()) {
+            case R.id.action_daemon: {
+
+                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    break;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+                if (DaemonService.DAEMON_RUNNING.get()) {
+                    DaemonService.DAEMON_RUNNING.set(false);
+                } else {
+                    DaemonService.DAEMON_RUNNING.set(true);
+                }
+                DaemonService.invoke(mContext);
+
+                getActivity().invalidateOptionsMenu();
+                return true;
+            }
             case R.id.action_info: {
 
                 // mis-clicking prevention, using threshold of 1000 ms

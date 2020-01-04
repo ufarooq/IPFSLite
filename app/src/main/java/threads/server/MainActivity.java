@@ -101,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private DrawerLayout mDrawerLayout;
     private AppBarLayout mAppBarLayout;
-    private FloatingActionButton mFabDaemon;
+
     private long mLastClickTime = 0;
     private CustomViewPager mCustomViewPager;
     private BottomNavigationView mNavigation;
@@ -264,20 +264,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onDestroy();
     }
 
-    private void daemonStatus() {
-
-        try {
-            if (!DaemonService.DAEMON_RUNNING.get()) {
-                mFabDaemon.setImageDrawable(getDrawable(R.drawable.play));
-            } else {
-                mFabDaemon.setImageDrawable(getDrawable(R.drawable.stop));
-            }
-            findViewById(R.id.fab_daemon).setVisibility(View.VISIBLE);
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
-    }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -675,7 +661,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         setContentView(R.layout.activity_main);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
-        mAppBarLayout = findViewById(R.id.app_toolbar);
+        mAppBarLayout = findViewById(R.id.app_bar_layout);
 
         setSupportActionBar(toolbar);
 
@@ -799,27 +785,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
         });
-
-        mFabDaemon = findViewById(R.id.fab_daemon);
-        mFabDaemon.setOnClickListener((view) -> {
-
-
-            // mis-clicking prevention, using threshold of 1000 ms
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                return;
-            }
-            mLastClickTime = SystemClock.elapsedRealtime();
-
-            if (DaemonService.DAEMON_RUNNING.get()) {
-                DaemonService.DAEMON_RUNNING.set(false);
-            } else {
-                DaemonService.DAEMON_RUNNING.set(true);
-            }
-            DaemonService.invoke(getApplicationContext());
-            daemonStatus();
-
-        });
-        daemonStatus();
 
 
         EventViewModel eventViewModel = new ViewModelProvider(this).get(EventViewModel.class);

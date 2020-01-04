@@ -3,6 +3,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/action_daemon"
+        android:icon="@drawable/play_circle"
+        android:orderInCategory="1"
+        android:title="@string/daemon_title"
+        android:visible="true"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/action_info"
         android:icon="@drawable/server_network"
         app:iconTint="?android:textColorSecondary"
