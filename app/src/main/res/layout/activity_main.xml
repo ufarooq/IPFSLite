@@ -8,71 +8,74 @@
     android:fitsSystemWindows="true"
     tools:openDrawer="start">
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout
-        android:id="@+id/app_layout"
+    <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:animateLayoutChanges="true">
+        android:fitsSystemWindows="true">
 
-
-        <com.google.android.material.appbar.AppBarLayout
-            android:id="@+id/app_toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fitsSystemWindows="true">
-
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/colorToolbar" />
-
-        </com.google.android.material.appbar.AppBarLayout>
-
-
-        <LinearLayout
+        <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:id="@+id/app_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_above="@+id/navigation"
+            android:fitsSystemWindows="true">
+
+
+            <com.google.android.material.appbar.AppBarLayout
+                android:id="@+id/app_toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fitsSystemWindows="true">
+
+                <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/colorToolbar"
+                    app:layout_scrollFlags="scroll|enterAlways" />
+
+            </com.google.android.material.appbar.AppBarLayout>
+
 
             <threads.server.CustomViewPager
                 android:id="@+id/customViewPager"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-            <com.google.android.material.bottomnavigation.BottomNavigationView
-                android:id="@+id/navigation"
-                android:layout_width="match_parent"
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_daemon"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="0"
-                app:labelVisibilityMode="selected"
-                app:menu="@menu/navigation" />
-        </LinearLayout>
+                android:layout_marginStart="64dp"
+                android:src="@drawable/play"
+                app:fabSize="mini"
+                app:layout_anchor="@id/toolbar"
+                app:layout_anchorGravity="center" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_main"
-            android:layout_width="wrap_content"
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_main"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
+                app:srcCompat="@drawable/dots" />
+
+        </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/navigation"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="48dp"
-            android:layout_marginBottom="64dp"
-            app:layout_anchor="@id/navigation"
-            app:layout_anchorGravity="top|end"
-            app:srcCompat="@drawable/dots" />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fab_daemon"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/play"
-            android:layout_marginStart="64dp"
-            app:fabSize="mini"
-            app:layout_anchor="@id/toolbar"
-            app:layout_anchorGravity="center" />
+            android:layout_alignParentBottom="true"
+            app:labelVisibilityMode="selected"
+            app:menu="@menu/navigation" />
 
 
-    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+    </RelativeLayout>
 
 
     <com.google.android.material.navigation.NavigationView
