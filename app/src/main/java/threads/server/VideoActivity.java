@@ -1,7 +1,6 @@
-package threads.share;
+package threads.server;
 
 import android.app.ActionBar;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.media.AudioManager;
@@ -19,18 +18,19 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
-import threads.server.R;
+import threads.share.IPFSMediaDataSource;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class IPFSVideoActivity extends Activity implements MediaController.MediaPlayerControl,
+public class VideoActivity extends AppCompatActivity implements MediaController.MediaPlayerControl,
         MediaPlayer.OnBufferingUpdateListener, SurfaceHolder.Callback, MediaPlayer.OnCompletionListener {
     public static final String CID_ID = "CID_ID";
-    private static final String TAG = IPFSVideoActivity.class.getSimpleName();
+    private static final String TAG = VideoActivity.class.getSimpleName();
 
     private MediaPlayer mediaPlayer;
     private MediaController mediaController;
@@ -166,7 +166,7 @@ public class IPFSVideoActivity extends Activity implements MediaController.Media
             finish();
         }
 
-        mediaController.setMediaPlayer(IPFSVideoActivity.this);
+        mediaController.setMediaPlayer(VideoActivity.this);
         mediaController.setAnchorView(layoutView);
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
 

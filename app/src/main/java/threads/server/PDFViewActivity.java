@@ -1,4 +1,4 @@
-package threads.share;
+package threads.server;
 
 import android.content.Context;
 import android.content.Intent;
@@ -21,7 +21,10 @@ import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
-import threads.server.R;
+import threads.share.IShowPage;
+import threads.share.PDFAdapter;
+import threads.share.PDFConfig;
+import threads.share.PDFViewPager;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;

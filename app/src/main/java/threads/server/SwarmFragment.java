@@ -210,8 +210,6 @@ public class SwarmFragment extends Fragment implements
         });
 
 
-
-
         return view;
     }
 

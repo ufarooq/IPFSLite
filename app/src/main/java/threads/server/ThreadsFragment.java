@@ -51,7 +51,6 @@ import threads.core.mdl.ThreadViewModel;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.share.AudioDialogFragment;
-import threads.share.IPFSVideoActivity;
 import threads.share.ImageDialogFragment;
 import threads.share.PDFView;
 import threads.share.ThreadActionDialogFragment;
@@ -580,9 +579,9 @@ public class ThreadsFragment extends Fragment implements
                         } else if (mimeType.startsWith("video")) {
 
                             if (size >= 1e+8) { // 100 MB
-                                Intent intent = new Intent(mContext, IPFSVideoActivity.class);
+                                Intent intent = new Intent(mContext, VideoActivity.class);
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                                intent.putExtra(IPFSVideoActivity.CID_ID, cid.getCid());
+                                intent.putExtra(VideoActivity.CID_ID, cid.getCid());
                                 startActivity(intent);
 
                             } else {

@@ -6,6 +6,8 @@ import android.content.Intent;
 
 import androidx.fragment.app.Fragment;
 
+import threads.server.PDFViewActivity;
+
 public class PDFView {
 
     public static Builder with(Activity activity) {

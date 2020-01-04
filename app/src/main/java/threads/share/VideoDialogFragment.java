@@ -33,6 +33,7 @@ import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
 import threads.server.R;
+import threads.server.VideoActivity;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -55,7 +56,7 @@ public class VideoDialogFragment extends DialogFragment implements MediaControll
     public static VideoDialogFragment newInstance(@NonNull String cid) {
         VideoDialogFragment dialogFragment = new VideoDialogFragment();
         Bundle bundle = new Bundle();
-        bundle.putString(IPFSVideoActivity.CID_ID, cid);
+        bundle.putString(VideoActivity.CID_ID, cid);
         dialogFragment.setArguments(bundle);
         return dialogFragment;
     }
