@@ -2,13 +2,6 @@ package threads.core;
 
 import androidx.annotation.NonNull;
 
-import org.iota.jota.utils.Constants;
-import org.iota.jota.utils.TrytesConverter;
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-
 import threads.core.api.EventsDatabase;
 import threads.core.api.PeersDatabase;
 import threads.core.api.PeersInfoDatabase;
@@ -16,7 +9,6 @@ import threads.core.api.Thread;
 import threads.core.api.ThreadsAPI;
 import threads.core.api.ThreadsDatabase;
 import threads.iota.EntityService;
-import threads.iota.IOTA;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 
@@ -30,15 +22,6 @@ public class THREADS extends ThreadsAPI {
         super(builder.threadsDatabase, builder.eventsDatabase, builder.peersInfoDatabase,
                 builder.peersDatabase, builder.entityService);
     }
-
-
-    @NonNull
-    public static String getAddress(@NonNull CID cid) {
-        checkNotNull(cid);
-        String address = TrytesConverter.asciiToTrytes(cid.getCid());
-        return IOTA.addChecksum(address.substring(0, Constants.ADDRESS_LENGTH_WITHOUT_CHECKSUM));
-    }
-
 
     @NonNull
     public static THREADS createThreads(@NonNull ThreadsDatabase threadsDatabase,
@@ -58,90 +41,6 @@ public class THREADS extends ThreadsAPI {
                 .eventsDatabase(eventsDatabase)
                 .entityService(entityService)
                 .build();
-    }
-
-
-
-
-    @NonNull
-    public static Date getTomorrow() {
-        Calendar c = Calendar.getInstance();
-        c.add(Calendar.DATE, 1);
-        c.set(Calendar.HOUR_OF_DAY, 0);
-        c.set(Calendar.MINUTE, 0);
-        c.set(Calendar.SECOND, 0);
-        c.set(Calendar.MILLISECOND, 0);
-        return c.getTime();
-    }
-
-    @NonNull
-    public static Date getYesterday() {
-        Calendar c = Calendar.getInstance();
-        c.add(Calendar.DATE, -1);
-        c.set(Calendar.HOUR_OF_DAY, 0);
-        c.set(Calendar.MINUTE, 0);
-        c.set(Calendar.SECOND, 0);
-        c.set(Calendar.MILLISECOND, 0);
-        return c.getTime();
-    }
-
-
-    @NonNull
-    public static String getDate(@NonNull Date date) {
-        Calendar c = Calendar.getInstance();
-        c.set(Calendar.HOUR_OF_DAY, 0);
-        c.set(Calendar.MINUTE, 0);
-        c.set(Calendar.SECOND, 0);
-        c.set(Calendar.MILLISECOND, 0);
-        Date today = c.getTime();
-        c.set(Calendar.MONTH, 0);
-        c.set(Calendar.DAY_OF_MONTH, 0);
-        Date lastYear = c.getTime();
-
-        if (date.before(today)) {
-            if (date.before(lastYear)) {
-                return android.text.format.DateFormat.format("dd.MM.yyyy", date).toString();
-            } else {
-                return android.text.format.DateFormat.format("dd.MMMM", date).toString();
-            }
-        } else {
-            return android.text.format.DateFormat.format("HH:mm", date).toString();
-        }
-    }
-
-    @NonNull
-    public static Calendar getUserAgeOffsetCalendar(int offset) {
-        Date now = new Date();
-        Calendar init = new GregorianCalendar();
-        init.setTime(now);
-        int mYear = init.get(Calendar.YEAR);
-        int mMonth = init.get(Calendar.MONTH);
-        int mDay = init.get(Calendar.DAY_OF_MONTH);
-
-        return new GregorianCalendar(mYear - offset, mMonth, mDay);
-    }
-
-    static long getOffsetDate(int offsetInYears) {
-        return getUserAgeOffsetCalendar(offsetInYears).getTime().getTime();
-    }
-
-    @NonNull
-    public static Date getOffsetYearDate(int offsetInYears) {
-        return getUserAgeOffsetCalendar(offsetInYears).getTime();
-    }
-
-    public static long getTodayDate() {
-        return getToday().getTime();
-    }
-
-    @NonNull
-    public static Date getToday() {
-        Calendar c = Calendar.getInstance();
-        c.set(Calendar.HOUR_OF_DAY, 0);
-        c.set(Calendar.MINUTE, 0);
-        c.set(Calendar.SECOND, 0);
-        c.set(Calendar.MILLISECOND, 0);
-        return c.getTime();
     }
 
 

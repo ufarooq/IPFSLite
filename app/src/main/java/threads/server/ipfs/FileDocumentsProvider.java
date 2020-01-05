@@ -284,7 +284,6 @@ public class FileDocumentsProvider extends DocumentsProvider {
         }
 
         final String displayName = file.getName();
-        ;
 
         final String mimeType = file.getMimeType();
 

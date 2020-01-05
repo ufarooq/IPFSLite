@@ -15,7 +15,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import threads.core.THREADS;
 import threads.iota.Entity;
 import threads.iota.EntityService;
 import threads.iota.Hash;
@@ -76,7 +75,6 @@ public class ThreadsAPI {
     }
 
 
-
     @NonNull
     public String getRandomAddress() {
         return IOTA.generateAddress();
@@ -114,14 +112,10 @@ public class ThreadsAPI {
     }
 
 
-
     public void setThreadStatus(@NonNull Status oldStatus, @NonNull Status newStatus) {
         checkNotNull(oldStatus);
         getThreadsDatabase().threadDao().setStatus(oldStatus, newStatus);
     }
-
-
-
 
 
     public void setImage(@NonNull Thread thread, @NonNull CID image) {
@@ -145,7 +139,6 @@ public class ThreadsAPI {
     }
 
 
-
     @Nullable
     public String getThreadMimeType(long idx) {
         return getThreadsDatabase().threadDao().getMimeType(idx);
@@ -166,10 +159,6 @@ public class ThreadsAPI {
     }
 
 
-
-
-
-
     public boolean isUserBlocked(@NonNull PID user) {
         checkNotNull(user);
         return isUserBlocked(user.getPid());
@@ -179,74 +168,6 @@ public class ThreadsAPI {
         checkNotNull(pid);
         return getThreadsDatabase().userDao().isBlocked(pid);
     }
-
-    @NonNull
-
-    public List<Thread> loadPublishedThreads(@NonNull Context context,
-                                             @NonNull String aesKey,
-                                             @NonNull String address) {
-        checkNotNull(context);
-        checkNotNull(address);
-        checkNotNull(aesKey);
-
-        List<Thread> threads = new ArrayList<>();
-        try {
-            List<Entity> entities = getEntityService().loadEntities(context, address);
-            for (Entity entity : entities) {
-                Thread thread = ThreadDecoder.convert(entity, aesKey);
-                if (thread != null) {
-                    if (isUserBlocked(thread.getSenderPid())) {
-                        continue;
-                    }
-
-                    if (existsSameThread(thread)) { // maybe not yet necessary
-                        continue;
-                    }
-
-                    long today = THREADS.getToday().getTime();
-                    if (thread.getExpireDate() > today) {
-                        threads.add(thread);
-                    }
-                }
-            }
-
-        } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage(), e);
-        }
-
-        return threads;
-
-    }
-
-
-
-    public boolean insertThread(@NonNull Context context,
-                                @NonNull Thread thread,
-                                @NonNull String address,
-                                @NonNull String aesKey) {
-        checkNotNull(context);
-        checkNotNull(thread);
-        checkNotNull(address);
-        checkNotNull(aesKey);
-
-
-        try {
-
-            String dataTransaction = ThreadEncoder.convert(thread, aesKey);
-
-            Entity entity = getEntityService().insertData(context, address, dataTransaction);
-            checkNotNull(entity);
-
-            String hash = entity.getHash();
-            setHash(thread, hash);
-            return true;
-        } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage(), e);
-            return false;
-        }
-    }
-
-
 
 
     @NonNull
@@ -272,8 +193,6 @@ public class ThreadsAPI {
                 thread);
 
     }
-
-
 
 
     @Nullable
@@ -448,7 +367,6 @@ public class ThreadsAPI {
     }
 
 
-
     @Nullable
     public PeerInfo getPeer(@NonNull Context context, @NonNull PID pid) {
         checkNotNull(context);
@@ -536,9 +454,6 @@ public class ThreadsAPI {
             updatePeerInfo(newer);
         }
     }
-
-
-
 
 
     public void removeUser(@NonNull IPFS ipfs, @NonNull User user) {
@@ -660,7 +575,6 @@ public class ThreadsAPI {
     }
 
 
-
     public void resetThreadsNumber(long... idxs) {
         getThreadsDatabase().threadDao().resetNumber(idxs);
     }
@@ -713,40 +627,6 @@ public class ThreadsAPI {
     }
 
 
-
-
-
-
-
-
-
-
-    public boolean insertUser(@NonNull Context context,
-                              @NonNull User user,
-                              @NonNull String address,
-                              @NonNull String aesKey) {
-        checkNotNull(context);
-        checkNotNull(user);
-        checkNotNull(aesKey);
-
-        try {
-            String dataTransaction = UserEncoder.convert(user, aesKey);
-
-
-            Entity entity = getEntityService().insertData(context, address, dataTransaction);
-            checkNotNull(entity);
-
-            String hash = entity.getHash();
-            setHash(user, hash);
-
-            return true;
-        } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage(), e);
-            return false;
-        }
-    }
-
-
     public void setHash(@NonNull Thread thread, @Nullable String hash) {
         checkNotNull(thread);
         long idx = thread.getIdx();
@@ -781,12 +661,6 @@ public class ThreadsAPI {
         return getThreadsDatabase().threadDao().getThreadByHash(hash);
     }
 
-
-    public void updateSettings(@NonNull Settings settings) {
-        checkNotNull(settings);
-        getThreadsDatabase().settingsDao().updateSettings(settings);
-    }
-
     public boolean hasHash(@NonNull String hash) {
         return entityService.getHashDatabase().hashDao().hasHash(hash) > 0;
     }
@@ -801,114 +675,6 @@ public class ThreadsAPI {
     }
 
 
-    @Nullable
-    public PeerInfo getPeerInfoByHash(@NonNull Context context,
-                                      @NonNull PID pid,
-                                      @NonNull String hash) {
-        checkNotNull(context);
-        checkNotNull(hash);
-        checkNotNull(pid);
-        PeerInfo peer = getPeerInfoByHash(hash);
-
-        if (peer != null) {
-            return peer;
-        } // already loaded
-
-        peer = loadPeerInfoByHash(context, pid, hash);
-        if (peer != null) {
-
-            // now we have to check if this peer is newer
-            // then the latest store peer
-            boolean store = true;
-            PeerInfo storedPeer = getPeerInfoByPID(pid);
-            if (storedPeer != null) {
-                if (peer.getTimestamp() < storedPeer.getTimestamp()) {
-                    store = false;
-                }
-            }
-
-            if (store) {
-                storePeerInfo(peer);
-            }
-        }
-        return peer;
-    }
-
-
-    @Nullable
-    public PeerInfo loadPeerInfoByHash(@NonNull Context context,
-                                       @NonNull PID pid,
-                                       @NonNull String hash) {
-
-        checkNotNull(context);
-        checkNotNull(pid);
-        checkNotNull(hash);
-        try {
-            Entity entity = getEntityService().loadEntityByHash(context, hash);
-            if (entity != null) {
-                PeerInfo peer = PeerInfoDecoder.convert(pid, entity);
-                if (peer != null) {
-                    return peer;
-                }
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage(), e);
-        }
-        return null;
-    }
-
-    @Nullable
-    public User loadUserByHash(@NonNull Context context,
-                               @NonNull String hash,
-                               @NonNull String aesKey) {
-
-        checkNotNull(context);
-        checkNotNull(hash);
-        checkNotNull(aesKey);
-
-        try {
-            Entity entity = getEntityService().loadEntityByHash(context, hash);
-            if (entity != null) {
-                User user = UserDecoder.convert(entity, aesKey);
-                if (user != null) {
-                    return user;
-                }
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage(), e);
-        }
-        return null;
-    }
-
-
-    @Nullable
-    public User loadUserByAddress(@NonNull Context context,
-                                  @NonNull String address,
-                                  @NonNull String aesKey) {
-        checkNotNull(context);
-        checkNotNull(address);
-        checkNotNull(aesKey);
-
-        List<User> users = new ArrayList<>();
-
-        try {
-            List<Entity> entities = getEntityService().loadEntities(context, address);
-            for (Entity entity : entities) {
-                User user = UserDecoder.convert(entity, aesKey);
-                if (user != null) {
-                    users.add(user);
-                }
-            }
-            if (users.isEmpty()) {
-                return null;
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage(), e);
-        }
-        return users.get(0);
-
-    }
-
     public void setDate(@NonNull Thread thread, @NonNull Date date) {
         checkNotNull(thread);
         checkNotNull(date);
@@ -919,12 +685,11 @@ public class ThreadsAPI {
         checkNotNull(thread);
         getThreadsDatabase().threadDao().resetNumber(thread.getIdx());
     }
+
     public long storeThread(@NonNull Thread thread) {
         checkNotNull(thread);
         return getThreadsDatabase().threadDao().insertThread(thread);
     }
-
-
 
 
     public void setStatus(@NonNull Thread thread, @NonNull Status status) {
@@ -955,9 +720,6 @@ public class ThreadsAPI {
         getThreadsDatabase().threadDao().setCid(idx, cid);
 
     }
-
-
-
 
 
     public void setConnected(@NonNull User user, boolean connected) {
@@ -1195,9 +957,6 @@ public class ThreadsAPI {
     }
 
 
-
-
-
     public void storeThreads(@NonNull List<Thread> threads) {
         checkNotNull(threads);
         getThreadsDatabase().threadDao().insertThreads(Iterables.toArray(threads, Thread.class));
@@ -1240,10 +999,6 @@ public class ThreadsAPI {
     }
 
 
-
-
-
-
     public void blockUser(@NonNull PID user) {
         checkNotNull(user);
         getThreadsDatabase().userDao().setBlocked(user.getPid(), true);
@@ -1264,20 +1019,6 @@ public class ThreadsAPI {
     public void unblockUser(@NonNull PID user) {
         checkNotNull(user);
         getThreadsDatabase().userDao().setBlocked(user.getPid(), false);
-    }
-
-
-    @Nullable
-
-    public Settings getSettings(@NonNull String id) {
-        checkNotNull(id);
-        return getThreadsDatabase().settingsDao().getSettings(id);
-    }
-
-
-    public void storeSettings(@NonNull Settings settings) {
-        checkNotNull(settings);
-        getThreadsDatabase().settingsDao().insertSettings(settings);
     }
 
 
@@ -1323,7 +1064,6 @@ public class ThreadsAPI {
     }
 
 
-
     @NonNull
     private Thread createThread(@NonNull Status status,
                                 @NonNull Kind kind,
@@ -1337,7 +1077,6 @@ public class ThreadsAPI {
                 senderPid, senderAlias, senderKey,
                 sesKey, kind, date.getTime(), thread);
     }
-
 
 
     @NonNull

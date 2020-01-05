@@ -8,7 +8,6 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public enum Status {
     INIT(0),       // note just created
-    SEMI(1),       // note is not full defined
     DONE(2),       // note is fully defined
     DELETING(3),   // note will be deleted
     ERROR(4);      // note is in error state
@@ -25,8 +24,6 @@ public enum Status {
         checkNotNull(status);
         if (status.equals(Status.DONE.getCode())) {
             return Status.DONE;
-        } else if (status.equals(Status.SEMI.getCode())) {
-            return Status.SEMI;
         } else if (status.equals(Status.INIT.getCode())) {
             return Status.INIT;
         } else if (status.equals(Status.DELETING.getCode())) {

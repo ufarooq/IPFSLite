@@ -16,7 +16,6 @@ import java.util.concurrent.Executors;
 
 import threads.core.Singleton;
 import threads.core.THREADS;
-import threads.core.api.Content;
 import threads.core.api.Status;
 import threads.ipfs.IPFS;
 
@@ -26,7 +25,7 @@ public class JobServiceDeleteThreads extends JobService {
 
 
     private static final String TAG = JobServiceDeleteThreads.class.getSimpleName();
-
+    private static final String ICES = "ices";
 
     public static void removeThreads(@NonNull Context context, long... idxs) {
         checkNotNull(context);
@@ -36,7 +35,7 @@ public class JobServiceDeleteThreads extends JobService {
         if (jobScheduler != null) {
             ComponentName componentName = new ComponentName(context, JobServiceDeleteThreads.class);
             PersistableBundle bundle = new PersistableBundle();
-            bundle.putLongArray(Content.ICES, idxs);
+            bundle.putLongArray(ICES, idxs);
 
             JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
                     .setExtras(bundle)
@@ -57,7 +56,7 @@ public class JobServiceDeleteThreads extends JobService {
 
 
         PersistableBundle bundle = jobParameters.getExtras();
-        final long[] idxs = bundle.getLongArray(Content.ICES);
+        final long[] idxs = bundle.getLongArray(ICES);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
