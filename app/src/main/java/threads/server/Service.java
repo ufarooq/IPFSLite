@@ -925,28 +925,6 @@ public class Service {
             thread.setMimeType(evaluateMimeType(context, filename));
         }
 
-
-        if (link.isDirectory()) {
-            try {
-                CID image = ThumbnailService.createResourceImage(context, ipfs,
-                        R.drawable.folder_outline);
-                if (image != null) {
-                    thread.addAdditional(Content.IMG, String.valueOf(false), true);
-                    thread.setImage(image);
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-            }
-        } else {
-            try {
-                CID image = ThumbnailService.getImage(context.getApplicationContext(),
-                        user.getAlias(), R.drawable.file);
-                thread.addAdditional(Content.IMG, String.valueOf(false), true);
-                thread.setImage(image);
-            } catch (Throwable e) {
-                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-            }
-        }
         return threads.storeThread(thread);
     }
 
@@ -991,19 +969,7 @@ public class Service {
             thread.setName(cid.getCid());
         }
         thread.setSize(filesize);
-
-
-        try {
-            if (image == null) {
-                thread.addAdditional(Content.IMG, String.valueOf(false), true);
-            } else {
-                thread.addAdditional(Content.IMG, String.valueOf(true), true);
-                thread.setImage(image);
-            }
-        } catch (Throwable e) {
-            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
-        }
-
+        thread.setImage(image);
         return threads.storeThread(thread);
     }
 
@@ -1170,14 +1136,11 @@ public class Service {
                     }
                 }
 
-                // check if image was imported
+                // check if image was not imported
                 try {
-                    String img = thread.getAdditionalValue(Content.IMG);
-                    if (img.isEmpty() || !Boolean.valueOf(img)) {
+                    if (thread.getImage() == null) {
                         ThumbnailService.Result res = ThumbnailService.getThumbnail(
                                 context, file, filename);
-                        threads.setAdditional(thread,
-                                Content.IMG, String.valueOf(res.isThumbnail()), true);
                         CID image = res.getCid();
                         if (image != null) {
                             threads.setImage(thread, image);
@@ -1482,7 +1445,6 @@ public class Service {
 
                     Thread thread = threads.createThread(host, Status.INIT, Kind.IN,
                             "", 0L);
-                    thread.addAdditional(Content.IMG, String.valueOf(false), true);
                     thread.setName(content);
                     thread.setSize(size);
                     thread.setMimeType(mimeType);
@@ -1553,10 +1515,8 @@ public class Service {
                 ThumbnailService.Result res =
                         ThumbnailService.getThumbnail(context, uri, host.getAlias());
 
-                thread.addAdditional(Content.IMG, String.valueOf(res.isThumbnail()), true);
                 thread.setName(name);
                 thread.setSize(size);
-
                 thread.setImage(res.getCid());
                 thread.setMimeType(fileDetails.getMimeType());
                 long idx = threads.storeThread(thread);
