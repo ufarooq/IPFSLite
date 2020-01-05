@@ -16,6 +16,7 @@ import threads.core.api.Additional;
 import threads.core.api.Additionals;
 import threads.core.api.Peer;
 import threads.core.api.User;
+import threads.iota.EntityService;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.PeerInfo;
 
@@ -111,11 +112,13 @@ public class IdentityService {
                                       @NonNull threads.core.api.PeerInfo peer) {
 
         THREADS threads = Singleton.getInstance(context).getThreads();
+        EntityService entityService = Singleton.getInstance(context).getEntityService();
+
         threads.setHash(peer, null);
 
         long start = System.currentTimeMillis();
 
-        boolean success = threads.insertPeerInfo(context, peer);
+        boolean success = threads.insertPeerInfo(context, entityService, peer);
 
         long time = (System.currentTimeMillis() - start) / 1000;
         if (success) {
@@ -136,7 +139,8 @@ public class IdentityService {
         checkNotNull(pid);
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
-        threads.core.api.PeerInfo peerInfo = threads.getPeer(context, pid);
+        final EntityService entityService = Singleton.getInstance(context).getEntityService();
+        threads.core.api.PeerInfo peerInfo = threads.getPeer(context, entityService, pid);
         if (peerInfo != null && updateUser) {
             boolean update = false;
             User user = threads.getUserByPID(pid);

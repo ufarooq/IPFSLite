@@ -7,7 +7,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -35,23 +34,21 @@ public class ThreadsAPI {
     private final EventsDatabase eventsDatabase;
     private final PeersInfoDatabase peersInfoDatabase;
     private final PeersDatabase peersDatabase;
-    private final EntityService entityService;
 
     public ThreadsAPI(@NonNull ThreadsDatabase threadsDatabase,
                       @NonNull EventsDatabase eventsDatabase,
                       @NonNull PeersInfoDatabase peersInfoDatabase,
-                      @NonNull PeersDatabase peersDatabase,
-                      @NonNull EntityService entityService) {
+                      @NonNull PeersDatabase peersDatabase) {
         checkNotNull(threadsDatabase);
         checkNotNull(eventsDatabase);
         checkNotNull(peersInfoDatabase);
         checkNotNull(peersDatabase);
-        checkNotNull(entityService);
+
         this.threadsDatabase = threadsDatabase;
         this.eventsDatabase = eventsDatabase;
         this.peersInfoDatabase = peersInfoDatabase;
         this.peersDatabase = peersDatabase;
-        this.entityService = entityService;
+
     }
 
     @NonNull
@@ -357,10 +354,7 @@ public class ThreadsAPI {
     }
 
 
-    public void insertHash(@NonNull Hash hash) {
-        checkNotNull(hash);
-        entityService.getHashDatabase().hashDao().insertHash(hash);
-    }
+
 
     public List<Thread> getExpiredThreads() {
         return getThreadsDatabase().threadDao().getExpiredThreads(System.currentTimeMillis());
@@ -368,12 +362,14 @@ public class ThreadsAPI {
 
 
     @Nullable
-    public PeerInfo getPeer(@NonNull Context context, @NonNull PID pid) {
+    public PeerInfo getPeer(@NonNull Context context,
+                            @NonNull EntityService entityService,
+                            @NonNull PID pid) {
         checkNotNull(context);
         checkNotNull(pid);
 
 
-        PeerInfo peer = loadPeer(context, pid);
+        PeerInfo peer = loadPeer(context, entityService, pid);
         if (peer != null) {
 
             PeerInfo storePeer = getPeerInfoByPID(pid);
@@ -397,8 +393,10 @@ public class ThreadsAPI {
 
     @Nullable
     public PeerInfo loadPeer(@NonNull Context context,
+                             @NonNull EntityService entityService,
                              @NonNull PID pid) {
         checkNotNull(context);
+        checkNotNull(entityService);
         checkNotNull(pid);
 
         String address = AddressType.getAddress(pid, AddressType.PEER);
@@ -406,7 +404,7 @@ public class ThreadsAPI {
         AtomicReference<PeerInfo> reference = new AtomicReference<>(null);
 
         try {
-            List<Entity> entities = getEntityService().loadEntities(context, address);
+            List<Entity> entities = entityService.loadEntities(context, address);
             for (Entity entity : entities) {
                 PeerInfo peer = PeerInfoDecoder.convert(pid, entity);
 
@@ -554,12 +552,6 @@ public class ThreadsAPI {
     }
 
 
-    public List<PID> getMembers(@NonNull Thread thread) {
-        checkNotNull(thread);
-        return Lists.newArrayList(thread.getMembers());
-    }
-
-
     public List<Thread> getThreads() {
         return getThreadsDatabase().threadDao().getThreads();
     }
@@ -612,21 +604,6 @@ public class ThreadsAPI {
         return getThreadsDatabase().userDao().getBlockedUsers(blocked);
     }
 
-    @NonNull
-    public List<User> getUsers(@NonNull Thread thread) {
-        checkNotNull(thread);
-
-        List<User> users = new ArrayList<>();
-        for (PID pid : thread.getMembers()) {
-            User user = getUserByPID(pid);
-            if (user != null) {
-                users.add(user);
-            }
-        }
-        return users;
-    }
-
-
     public void setHash(@NonNull Thread thread, @Nullable String hash) {
         checkNotNull(thread);
         long idx = thread.getIdx();
@@ -661,14 +638,6 @@ public class ThreadsAPI {
         return getThreadsDatabase().threadDao().getThreadByHash(hash);
     }
 
-    public boolean hasHash(@NonNull String hash) {
-        return entityService.getHashDatabase().hashDao().hasHash(hash) > 0;
-    }
-
-
-    public void removeHash(@NonNull String hash) {
-        entityService.getHashDatabase().hashDao().removeHash(hash);
-    }
 
     public void updateUser(@NonNull User user) {
         getThreadsDatabase().userDao().updateUser(user);
@@ -1037,25 +1006,7 @@ public class ThreadsAPI {
     }
 
 
-    public void addMember(@NonNull Thread thread, @NonNull PID user) {
-        checkNotNull(thread);
-        checkNotNull(user);
-        thread.addMember(user);
-        Thread update = getThreadByIdx(thread.getIdx());
-        checkNotNull(update);
-        update.addMember(user);
-        updateThread(update);
-    }
 
-    public void removeMember(@NonNull Thread thread, @NonNull PID user) {
-        checkNotNull(thread);
-        checkNotNull(user);
-        thread.removeMember(user);
-        Thread update = getThreadByIdx(thread.getIdx());
-        checkNotNull(update);
-        update.removeMember(user);
-        updateThread(update);
-    }
 
     @NonNull
     public Hash createHash(@NonNull String hash) {
@@ -1090,8 +1041,10 @@ public class ThreadsAPI {
     }
 
     public boolean insertPeerInfo(@NonNull Context context,
+                                  @NonNull EntityService entityService,
                                   @NonNull threads.core.api.PeerInfo peer) {
         checkNotNull(context);
+        checkNotNull(entityService);
         checkNotNull(peer);
         try {
 
@@ -1099,7 +1052,6 @@ public class ThreadsAPI {
 
             String data = PeerInfoEncoder.convert(peer);
 
-            EntityService entityService = getEntityService();
 
             Entity entity = entityService.insertData(context, address, data);
             checkNotNull(entity);
@@ -1113,10 +1065,6 @@ public class ThreadsAPI {
         }
     }
 
-    @NonNull
-    private EntityService getEntityService() {
-        return entityService;
-    }
 
     @NonNull
     public List<Thread> getThreadsByCIDAndThread(@NonNull CID cid, long thread) {

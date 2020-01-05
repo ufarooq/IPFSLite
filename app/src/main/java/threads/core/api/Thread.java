@@ -1,5 +1,7 @@
 package threads.core.api;
 
+import android.provider.DocumentsContract;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
@@ -60,10 +62,6 @@ public class Thread extends Entity {
     @TypeConverters(Status.class)
     @ColumnInfo(name = "status")
     private Status status;
-    @NonNull
-    @TypeConverters(Members.class)
-    @ColumnInfo(name = "members")
-    private Members members = new Members();
     @NonNull
     @ColumnInfo(name = "mimeType")
     private String mimeType;
@@ -249,24 +247,6 @@ public class Thread extends Entity {
         return kind;
     }
 
-    @NonNull
-    public Members getMembers() {
-        return members;
-    }
-
-    public void setMembers(@NonNull Members members) {
-        this.members = members;
-    }
-
-    public boolean addMember(@NonNull PID pid) {
-        checkNotNull(pid);
-        return this.members.add(pid);
-    }
-
-    public boolean removeMember(@NonNull PID pid) {
-        checkNotNull(pid);
-        return this.members.remove(pid);
-    }
 
     public boolean sameThread(@NonNull Thread o) {
         checkNotNull(o);
@@ -390,5 +370,9 @@ public class Thread extends Entity {
 
     public void setName(@NonNull String name) {
         this.name = name;
+    }
+
+    public boolean isDir() {
+        return DocumentsContract.Document.MIME_TYPE_DIR.equals(getMimeType());
     }
 }

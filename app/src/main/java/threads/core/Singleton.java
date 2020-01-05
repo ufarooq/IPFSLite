@@ -74,7 +74,7 @@ public class Singleton {
         entityService = EntityService.getInstance(context);
 
         threads = THREADS.createThreads(
-                threadsDatabase, eventsDatabase, peersInfoDatabase, peersDatabase, entityService);
+                threadsDatabase, eventsDatabase, peersInfoDatabase, peersDatabase);
 
 
         IOTA.Builder iotaBuilder = new IOTA.Builder();

@@ -129,7 +129,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         while (!pending.isEmpty()) {
             // Take a file from the list of unprocessed files
             final Thread file = pending.removeFirst();
-            if (!file.isMarked()) { // todo check if dir
+            if (!file.isDir()) {
                 lastModifiedFiles.add(file);
             }
         }
@@ -170,8 +170,8 @@ public class FileDocumentsProvider extends DocumentsProvider {
         while (!pending.isEmpty() && result.getCount() < MAX_SEARCH_RESULTS) {
             // Take a file from the list of unprocessed files
             final Thread file = pending.removeFirst();
-            if (!file.isMarked()) { // todo should be directory
-                // If it's a directory, add all its children to the unprocessed list
+            if (!file.isDir()) {
+
                 final String displayName = file.getName();
 
                 // If it's a file and it matches, add it to the result cursor.
@@ -225,8 +225,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
             row.add(Document.COLUMN_LAST_MODIFIED, new Date());
             row.add(Document.COLUMN_FLAGS, flags);
 
-            // Add a custom icon
-            row.add(Document.COLUMN_ICON, R.drawable.server_threads_icon);
+
         } else {
             Thread file = threads.getThreadByIdx(idx);
             includeFile(result, file);
@@ -267,16 +266,16 @@ public class FileDocumentsProvider extends DocumentsProvider {
 
     private void includeFile(MatrixCursor result, Thread file) {
         int flags = 0;
-        if (false) { // todo when dir
+        if (file.isDir()) {
             // Request the folder to lay out as a grid rather than a list. This also allows a larger
             // thumbnail to be displayed for each image.
             //            flags |= Document.FLAG_DIR_PREFERS_GRID;
 
             // Add FLAG_DIR_SUPPORTS_CREATE if the file is a writable directory.
-            if (file.isMarked() && false) {
+            if (file.isDir() && false) {
                 flags |= Document.FLAG_DIR_SUPPORTS_CREATE;
             }
-        } else if (file.isMarked()) {
+        } else if (file.isMarked() && false) {
             // If the file is writable set FLAG_SUPPORTS_WRITE and
             // FLAG_SUPPORTS_DELETE
             flags |= Document.FLAG_SUPPORTS_WRITE;
@@ -297,11 +296,9 @@ public class FileDocumentsProvider extends DocumentsProvider {
         row.add(Document.COLUMN_DISPLAY_NAME, displayName);
         row.add(Document.COLUMN_SIZE, file.getSize());
         row.add(Document.COLUMN_MIME_TYPE, mimeType);
-        row.add(Document.COLUMN_LAST_MODIFIED, new Date());
+        row.add(Document.COLUMN_LAST_MODIFIED, file.getDate());
         row.add(Document.COLUMN_FLAGS, flags);
 
-        // Add a custom icon
-        row.add(Document.COLUMN_ICON, R.drawable.server_threads_icon);
     }
 
     @Override

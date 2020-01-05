@@ -5,15 +5,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
 import threads.core.api.Addresses;
-import threads.core.api.Members;
-import threads.core.api.Thread;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
 
@@ -126,58 +118,7 @@ public class ConnectService {
         return false;
     }
 
-    public static List<Future<Boolean>> connectMembersAsync(
-            @NonNull Context context, @NonNull Thread thread,
-            boolean supportDiscovery, boolean updateUser, int timeout) {
-        checkNotNull(context);
-        checkNotNull(thread);
 
 
-        checkArgument(timeout > 0);
 
-
-        ArrayList<Future<Boolean>> futures = new ArrayList<>();
-        ExecutorService executorService = Executors.newFixedThreadPool(5);
-        Members members = thread.getMembers();
-        for (PID pid : members) {
-            Future<Boolean> future = executorService.submit(() -> {
-                try {
-                    return connectPeer(context, pid, supportDiscovery, updateUser, timeout);
-                } catch (Throwable e) {
-                    Log.e(TAG, e.getLocalizedMessage(), e);
-                    return false;
-                }
-            });
-            futures.add(future);
-        }
-        return futures;
-    }
-
-
-    public static boolean connectMembers(@NonNull Context context, @NonNull Thread thread,
-                                         boolean supportDiscovery, boolean updateUser, int timeout, boolean shortcut) {
-
-        checkNotNull(context);
-        checkNotNull(thread);
-
-        checkArgument(timeout > 0);
-        boolean result = true;
-        List<Future<Boolean>> futures = connectMembersAsync(
-                context, thread, supportDiscovery,
-                updateUser, timeout);
-        for (Future<Boolean> future : futures) {
-            try {
-                if (!future.get()) {
-                    result = false;
-                    if (shortcut) {
-                        return result;
-                    }
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, e.getLocalizedMessage(), e);
-                result = false;
-            }
-        }
-        return result;
-    }
 }
