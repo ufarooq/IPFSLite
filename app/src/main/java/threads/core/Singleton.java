@@ -57,10 +57,10 @@ public class Singleton {
     private Singleton(@NonNull Context context) {
         checkNotNull(context);
 
-
+        // TODO bug allow on main thread
         threadsDatabase = Room.databaseBuilder(context,
                 ThreadsDatabase.class,
-                ThreadsDatabase.class.getSimpleName()).fallbackToDestructiveMigration().build();
+                ThreadsDatabase.class.getSimpleName()).allowMainThreadQueries().fallbackToDestructiveMigration().build();
 
         eventsDatabase =
                 Room.inMemoryDatabaseBuilder(context, EventsDatabase.class).build();

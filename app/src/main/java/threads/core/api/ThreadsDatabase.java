@@ -3,7 +3,7 @@ package threads.core.api;
 import androidx.room.RoomDatabase;
 
 @androidx.room.Database(entities = {User.class,
-        Thread.class, Note.class, Settings.class}, version = 74, exportSchema = false)
+        Thread.class, Settings.class}, version = 1, exportSchema = false)
 public abstract class ThreadsDatabase extends RoomDatabase {
 
 
@@ -11,7 +11,6 @@ public abstract class ThreadsDatabase extends RoomDatabase {
 
     public abstract ThreadDao threadDao();
 
-    public abstract NoteDao noteDao();
 
     public abstract SettingsDao settingsDao();
 
@@ -19,7 +18,6 @@ public abstract class ThreadsDatabase extends RoomDatabase {
     public void clear() {
         userDao().clear();
         threadDao().clear();
-        noteDao().clear();
         settingsDao().clear();
     }
 

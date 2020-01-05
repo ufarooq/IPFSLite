@@ -54,6 +54,8 @@ public class Thread extends Entity {
     private CID cid;
     @ColumnInfo(name = "expire")
     private long expire;
+    @ColumnInfo(name = "size")
+    private long size;
     @NonNull
     @TypeConverters(Status.class)
     @ColumnInfo(name = "status")
@@ -76,9 +78,10 @@ public class Thread extends Entity {
     @ColumnInfo(name = "blocked")
     private boolean blocked;
 
-    @Nullable
-    @ColumnInfo(name = "title")
-    private String title;
+
+    @NonNull
+    @ColumnInfo(name = "name")
+    private String name = "";
 
     Thread(@NonNull Status status,
            @NonNull PID senderPid,
@@ -125,14 +128,6 @@ public class Thread extends Entity {
                 sesKey, kind, date, thread);
     }
 
-    @Nullable
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(@Nullable String title) {
-        this.title = title;
-    }
 
     public boolean isLeaching() {
         return leaching;
@@ -279,7 +274,7 @@ public class Thread extends Entity {
         return Objects.equals(cid, o.getCid()) &&
                 Objects.equals(senderPid, o.getSenderPid()) &&
                 Objects.equals(image, o.getImage()) &&
-                Objects.equals(title, o.getTitle());
+                Objects.equals(name, o.getName());
     }
 
     public boolean sameContent(@NonNull Thread o) {
@@ -374,5 +369,26 @@ public class Thread extends Entity {
 
     public boolean isExpired() {
         return getExpire() < System.currentTimeMillis();
+    }
+
+    public boolean hasImage() {
+        return image != null;
+    }
+
+    public long getSize() {
+        return size;
+    }
+
+    public void setSize(long size) {
+        this.size = size;
+    }
+
+    @NonNull
+    public String getName() {
+        return name;
+    }
+
+    public void setName(@NonNull String name) {
+        this.name = name;
     }
 }

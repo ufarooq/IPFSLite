@@ -296,23 +296,25 @@ public class ThumbnailService {
         checkNotNull(context);
         checkNotNull(uri);
 
-        String mimeType = context.getContentResolver().getType(uri);
-        if (mimeType == null) {
-            mimeType = MimeType.OCTET_MIME_TYPE;
-        }
+
         ContentResolver contentResolver = context.getContentResolver();
         try (Cursor cursor = contentResolver.query(uri, new String[]{
+                DocumentsContract.Document.COLUMN_MIME_TYPE,
                 DocumentsContract.Document.COLUMN_DISPLAY_NAME,
                 DocumentsContract.Document.COLUMN_SIZE}, null, null, null)) {
 
             checkNotNull(cursor);
             cursor.moveToFirst();
 
-            String fileName = cursor.getString(0);
+            String mimeType = cursor.getString(0);
+            if (mimeType == null) {
+                mimeType = MimeType.OCTET_MIME_TYPE;
+            }
+            String fileName = cursor.getString(1);
             if (fileName == null) {
                 fileName = "";
             }
-            long fileSize = cursor.getLong(1);
+            long fileSize = cursor.getLong(2);
             return FileDetails.create(fileName, mimeType, fileSize);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -332,6 +334,7 @@ public class ThumbnailService {
         CID cid = null;
         boolean thumbnail = false;
         byte[] bytes;
+
         try {
             bytes = getPreviewImage(context, uri);
             if (bytes == null) {

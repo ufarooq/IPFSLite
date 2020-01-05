@@ -24,8 +24,7 @@ public class Content extends Hashtable<String, String> {
     public static final String TEXT = "text";
 
     // other stuff
-    public static final String FILENAME = "fn";
-    public static final String FILESIZE = "fs";
+    //public static final String FILENAME = "fn";
     public static final String HASH = "hash";
 
     public static final String ERROR = "error";

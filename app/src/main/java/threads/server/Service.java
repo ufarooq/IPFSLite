@@ -915,10 +915,10 @@ public class Service {
                 "", parent);
         thread.setCid(cid);
         String filename = link.getName();
-        thread.addAdditional(Content.FILENAME, filename, false);
+        thread.setName(filename);
 
         long size = link.getSize();
-        thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
+        thread.setSize(size);
 
         if (link.isDirectory()) {
             thread.setMimeType(DocumentsContract.Document.MIME_TYPE_DIR);
@@ -957,7 +957,7 @@ public class Service {
                              @NonNull CID cid,
                              @NonNull Status threadStatus,
                              @Nullable String filename,
-                             @Nullable String filesize,
+                             long filesize,
                              @Nullable String mimeType,
                              @Nullable CID image) {
 
@@ -977,7 +977,7 @@ public class Service {
 
 
         if (filename != null) {
-            thread.addAdditional(Content.FILENAME, filename, false);
+            thread.setName(filename);
             if (mimeType != null) {
                 thread.setMimeType(mimeType);
             } else {
@@ -989,13 +989,9 @@ public class Service {
             } else {
                 thread.setMimeType(MimeType.OCTET_MIME_TYPE); // not known yet
             }
-            thread.addAdditional(Content.FILENAME, cid.getCid(), false);
+            thread.setName(cid.getCid());
         }
-        if (filesize != null) {
-            thread.addAdditional(Content.FILESIZE, filesize, false);
-        } else {
-            thread.addAdditional(Content.FILESIZE, "-1", false);
-        }
+        thread.setSize(filesize);
 
 
         try {
@@ -1041,10 +1037,10 @@ public class Service {
 
                         int timeout = Preferences.getConnectionTimeout(context);
 
-                        String name = threadObject.getAdditionalValue(Content.FILENAME);
+                        String name = threadObject.getName();
                         long size = -1;
                         try {
-                            size = Long.valueOf(threadObject.getAdditionalValue(Content.FILESIZE));
+                            size = threadObject.getSize();
                         } catch (Throwable e) {
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
                         }
@@ -1120,10 +1116,10 @@ public class Service {
         CID cid = thread.getCid();
         checkNotNull(cid);
 
-        String filename = thread.getAdditionalValue(Content.FILENAME);
-        String filesize = thread.getAdditionalValue(Content.FILESIZE);
+        String filename = thread.getName();
+        long filesize = thread.getSize();
 
-        return download(context, threads, ipfs, thread, cid, filename, Long.valueOf(filesize));
+        return download(context, threads, ipfs, thread, cid, filename, filesize);
     }
 
     private static boolean download(@NonNull Context context,
@@ -1495,8 +1491,8 @@ public class Service {
                     Thread thread = threads.createThread(host, Status.INIT, Kind.IN,
                             "", 0L);
                     thread.addAdditional(Content.IMG, String.valueOf(false), true);
-                    thread.addAdditional(Content.FILENAME, content, false);
-                    thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
+                    thread.setName(content);
+                    thread.setSize(size);
 
                     int resource = MimeTypeService.getMediaResource(
                             mimeType, false);
@@ -1573,8 +1569,8 @@ public class Service {
                         ThumbnailService.getThumbnail(context, uri, host.getAlias());
 
                 thread.addAdditional(Content.IMG, String.valueOf(res.isThumbnail()), true);
-                thread.addAdditional(Content.FILENAME, name, false);
-                thread.addAdditional(Content.FILESIZE, String.valueOf(size), false);
+                thread.setName(name);
+                thread.setSize(size);
 
                 thread.setImage(res.getCid());
                 thread.setMimeType(fileDetails.getMimeType());

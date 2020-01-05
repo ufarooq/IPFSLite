@@ -16,8 +16,8 @@ class Contents extends ArrayList<ContentEntry> {
     private void add(@NonNull Thread thread) {
         CID cid = thread.getCid();
         checkNotNull(cid);
-        String filename = thread.getAdditionalValue(Content.FILENAME);
-        String filesize = thread.getAdditionalValue(Content.FILESIZE);
+        String filename = thread.getName();
+        long filesize = thread.getSize();
         String mimeType = thread.getMimeType();
 
         String image = null;

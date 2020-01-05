@@ -1,7 +1,6 @@
 package threads.core;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import org.iota.jota.utils.Constants;
 import org.iota.jota.utils.TrytesConverter;
@@ -11,9 +10,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import threads.core.api.EventsDatabase;
-import threads.core.api.LinkType;
-import threads.core.api.Note;
-import threads.core.api.NoteType;
 import threads.core.api.PeersDatabase;
 import threads.core.api.PeersInfoDatabase;
 import threads.core.api.Thread;
@@ -64,43 +60,8 @@ public class THREADS extends ThreadsAPI {
                 .build();
     }
 
-    @Nullable
-    public static LinkType getLinkType(@NonNull Note note) {
-        checkNotNull(note);
 
-        if (note.getNoteType() == NoteType.LINK) {
-            String linkType = note.getAdditionalValue(LinkType.class.getSimpleName());
-            return LinkType.valueOf(linkType);
-        }
-        return null;
-    }
 
-    public static double getLatitude(@NonNull Note note) {
-        checkNotNull(note);
-
-        if (note.getNoteType() == NoteType.LOCATION) {
-            return Double.valueOf(note.getAdditionalValue(Preferences.LATITUDE));
-        }
-        return Double.NaN;
-    }
-
-    public static double getLongitude(@NonNull Note note) {
-        checkNotNull(note);
-
-        if (note.getNoteType() == NoteType.LOCATION) {
-            return Double.valueOf(note.getAdditionalValue(Preferences.LONGITUDE));
-        }
-        return Double.NaN;
-    }
-
-    public static double getZoom(@NonNull Note note) {
-        checkNotNull(note);
-
-        if (note.getNoteType() == NoteType.LOCATION) {
-            return Double.valueOf(note.getAdditionalValue(Preferences.ZOOM));
-        }
-        return Double.NaN;
-    }
 
     @NonNull
     public static Date getTomorrow() {

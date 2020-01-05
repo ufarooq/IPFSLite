@@ -131,7 +131,7 @@ class ContentsService {
             @NonNull PID sender,
             @NonNull CID cid,
             @Nullable String filename,
-            @Nullable String filesize,
+            long filesize,
             @Nullable String mimeType,
             @Nullable String image) {
 
@@ -171,7 +171,7 @@ class ContentsService {
             @NonNull User user,
             @NonNull CID cid,
             @Nullable String filename,
-            @Nullable String filesize,
+            long filesize,
             @Nullable String mimeType,
             @Nullable CID thumbnail) {
 

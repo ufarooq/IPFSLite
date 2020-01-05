@@ -99,7 +99,7 @@ public class JobServiceDownload extends JobService {
 
                 }
                 long idx = Service.createThread(context, ipfs, user, cid,
-                        Status.INIT, null, null, null, null);
+                        Status.INIT, null, -1, null, null);
 
 
                 Thread thread = threads.getThreadByIdx(idx);

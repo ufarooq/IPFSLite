@@ -500,6 +500,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
             intent.setAction(Intent.ACTION_GET_CONTENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
             startActivityForResult(Intent.createChooser(intent,
                     getString(R.string.select_files)), REQUEST_SELECT_FILES);
         } catch (Throwable e) {

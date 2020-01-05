@@ -9,14 +9,14 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 class ContentEntry {
     private final String filename;
-    private final String size;
+    private final long size;
     private final String cid;
     private final String image;
     private final String mimeType;
 
     ContentEntry(@NonNull String cid,
                  @NonNull String filename,
-                 @NonNull String size,
+                 long size,
                  @NonNull String mimeType,
                  @Nullable String image) {
         checkNotNull(cid);
@@ -53,7 +53,7 @@ class ContentEntry {
                 '}';
     }
 
-    String getSize() {
+    long getSize() {
         return size;
     }
 

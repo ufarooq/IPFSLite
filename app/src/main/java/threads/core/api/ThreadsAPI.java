@@ -10,16 +10,11 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 
-import org.iota.jota.utils.Constants;
-import org.iota.jota.utils.TrytesConverter;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import threads.core.MimeType;
-import threads.core.Preferences;
 import threads.core.THREADS;
 import threads.iota.Entity;
 import threads.iota.EntityService;
@@ -81,11 +76,7 @@ public class ThreadsAPI {
     }
 
 
-    /**
-     * Generates a random address
-     *
-     * @return a random address for a specific address usage
-     */
+
     @NonNull
     public String getRandomAddress() {
         return IOTA.generateAddress();
@@ -123,41 +114,14 @@ public class ThreadsAPI {
     }
 
 
-    public void setNoteLeaching(long idx, boolean leaching) {
-        getThreadsDatabase().noteDao().setLeaching(idx, leaching);
-    }
-
-    public void setNotePublishing(long idx, boolean publish) {
-        getThreadsDatabase().noteDao().setPublishing(idx, publish);
-    }
-
-    public void setNotesLeaching(boolean publish, long... idxs) {
-        getThreadsDatabase().noteDao().setNotesLeaching(publish, idxs);
-    }
-
-    public void setNotesPublishing(boolean publish, long... idxs) {
-        getThreadsDatabase().noteDao().setNotesPublishing(publish, idxs);
-    }
 
     public void setThreadStatus(@NonNull Status oldStatus, @NonNull Status newStatus) {
         checkNotNull(oldStatus);
         getThreadsDatabase().threadDao().setStatus(oldStatus, newStatus);
     }
 
-    public void setNoteStatus(@NonNull Status oldStatus, @NonNull Status newStatus) {
-        checkNotNull(oldStatus);
-        getThreadsDatabase().noteDao().setStatus(oldStatus, newStatus);
-    }
 
-    public void setNoteStatus(long idx, @NonNull Status status) {
-        checkNotNull(status);
-        getThreadsDatabase().noteDao().setStatus(idx, status);
-    }
 
-    public void setNotesStatus(@NonNull Status status, long... idxs) {
-        checkNotNull(status);
-        getThreadsDatabase().noteDao().setNotesStatus(status, idxs);
-    }
 
 
     public void setImage(@NonNull Thread thread, @NonNull CID image) {
@@ -173,11 +137,6 @@ public class ThreadsAPI {
         getThreadsDatabase().userDao().setImage(user.getPid(), image);
     }
 
-    public void setImage(@NonNull Note note, @NonNull CID image) {
-        checkNotNull(note);
-        checkNotNull(image);
-        getThreadsDatabase().noteDao().setImage(note.getIdx(), image);
-    }
 
     @NonNull
     public String getMimeType(@NonNull Thread thread) {
@@ -185,11 +144,6 @@ public class ThreadsAPI {
         return getThreadsDatabase().threadDao().getMimeType(thread.getIdx());
     }
 
-    @NonNull
-    public String getMimeType(@NonNull Note note) {
-        checkNotNull(note);
-        return getThreadsDatabase().noteDao().getMimeType(note.getIdx());
-    }
 
 
     @Nullable
@@ -197,10 +151,6 @@ public class ThreadsAPI {
         return getThreadsDatabase().threadDao().getMimeType(idx);
     }
 
-    @Nullable
-    public String getNoteMimeType(long idx) {
-        return getThreadsDatabase().noteDao().getMimeType(idx);
-    }
 
     public void setThreadSenderAlias(@NonNull PID pid, @NonNull String alias) {
         checkNotNull(pid);
@@ -208,11 +158,6 @@ public class ThreadsAPI {
         getThreadsDatabase().threadDao().setSenderAlias(pid, alias);
     }
 
-    public void setNoteSenderAlias(@NonNull PID pid, @NonNull String alias) {
-        checkNotNull(pid);
-        checkNotNull(alias);
-        getThreadsDatabase().noteDao().setSenderAlias(pid, alias);
-    }
 
     public void setMimeType(@NonNull Thread thread, @NonNull String mimeType) {
         checkNotNull(thread);
@@ -220,41 +165,9 @@ public class ThreadsAPI {
         getThreadsDatabase().threadDao().setMimeType(thread.getIdx(), mimeType);
     }
 
-    public void setMimeType(@NonNull Note note, @NonNull String mimeType) {
-        checkNotNull(note);
-        checkNotNull(mimeType);
-        getThreadsDatabase().noteDao().setMimeType(note.getIdx(), mimeType);
-    }
 
 
-    @NonNull
-    public List<Note> getNotes(@NonNull Thread thread) {
-        checkNotNull(thread);
-        return getNotesByThread(thread.getIdx());
-    }
 
-    @NonNull
-    private List<Note> getNotesByThread(long thread) {
-        return getThreadsDatabase().noteDao().getNotesByThread(thread);
-    }
-
-    @NonNull
-    public List<Note> loadNotes(@NonNull Context context,
-                                @NonNull User user,
-                                @NonNull Status status) {
-        checkNotNull(context);
-        checkNotNull(user);
-        checkNotNull(status);
-
-        List<Note> notes = new ArrayList<>();
-
-        List<Thread> threads = getThreadsByThreadStatus(status);
-
-        for (Thread thread : threads) {
-            notes.addAll(loadNotes(context, thread));
-        }
-        return notes;
-    }
 
 
     public boolean isUserBlocked(@NonNull PID user) {
@@ -305,59 +218,7 @@ public class ThreadsAPI {
 
     }
 
-    public int getThreadRequestNoteTransactionSize(
-            @NonNull User user, @NonNull Note note, boolean addImage, boolean addTitle) {
-        try {
-            Thread thread = getThread(note);
-            checkNotNull(thread);
-            Content content = NoteRequestEncoder.convert(thread, note, user.getPublicKey(),
-                    addImage, addTitle);
-            checkNotNull(content);
-            String data = gson.toJson(content);
-            int length = 1;
-            String trytes = TrytesConverter.asciiToTrytes(data);
-            length += Math.floor(trytes.length() / Constants.MESSAGE_LENGTH);
-            return length;
 
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-        return Integer.MAX_VALUE;
-    }
-
-    public boolean insertThreadRequestNote(@NonNull Context context,
-                                           @NonNull User user,
-                                           @NonNull Note note,
-                                           boolean addImage,
-                                           boolean addTitle) {
-        checkNotNull(context);
-        checkNotNull(user);
-        checkNotNull(note);
-
-        checkArgument(note.getKind() == Kind.OUT);
-        checkArgument(note.getNoteType() == NoteType.THREAD_REQUEST);
-        checkArgument(!user.getPid().isEmpty());
-
-        try {
-            Thread thread = getThread(note);
-            checkNotNull(thread);
-            Content content = NoteRequestEncoder.convert(thread, note, user.getPublicKey(),
-                    addImage, addTitle);
-            checkNotNull(content);
-            String address = AddressType.getAddress(user.getPID(), AddressType.INBOX);
-            checkNotNull(address);
-            Entity entity = getEntityService().insertData(context, address, gson.toJson(content));
-            checkNotNull(entity);
-
-            String hash = entity.getHash();
-            setHash(note, hash);
-
-            return true;
-        } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage(), e);
-            return false;
-        }
-    }
 
     public boolean insertThread(@NonNull Context context,
                                 @NonNull Thread thread,
@@ -386,92 +247,6 @@ public class ThreadsAPI {
     }
 
 
-    public boolean insertThreadPublishNote(@NonNull Context context,
-                                           @NonNull Note note,
-                                           @NonNull String address,
-                                           @NonNull String aesKey) {
-        checkNotNull(context);
-        checkNotNull(note);
-        checkNotNull(address);
-        checkNotNull(aesKey);
-
-
-        checkArgument(note.getKind() == Kind.OUT);
-        checkArgument(note.getNoteType() == NoteType.THREAD_PUBLISH);
-
-        try {
-            Thread thread = getThread(note);
-            checkNotNull(thread);
-
-            String dataTransaction = ThreadEncoder.convert(thread, aesKey);
-
-            Entity entity = getEntityService().insertData(context, address, dataTransaction);
-            checkNotNull(entity);
-
-            String hash = entity.getHash();
-            setHash(note, hash);
-            return true;
-        } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage(), e);
-            return false;
-        }
-    }
-
-
-    public boolean insertNote(@NonNull Context context,
-                              @NonNull Note note) {
-        checkNotNull(context);
-        checkNotNull(note);
-
-        checkArgument(note.getKind() == Kind.OUT);
-        checkArgument(note.getNoteType() != NoteType.THREAD_REQUEST);
-        checkArgument(note.getNoteType() != NoteType.THREAD_PUBLISH);
-        checkArgument(note.getNoteType() != NoteType.INFO);
-
-        try {
-
-            Thread thread = getThread(note);
-            checkNotNull(thread);
-            CID cid = thread.getCid();
-            checkNotNull(cid);
-            String address = THREADS.getAddress(cid);
-
-            Content content = NoteEncoder.convert(thread, note);
-
-            Entity entity = getEntityService().insertData(context, address, gson.toJson(content));
-            checkNotNull(entity);
-
-            String hash = entity.getHash();
-            setHash(note, hash);
-            return true;
-        } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage(), e);
-            return false;
-        }
-    }
-
-    public boolean publishNote(@NonNull IPFS ipfs, @NonNull String topic, @NonNull Note note) {
-        checkNotNull(ipfs);
-        checkNotNull(topic);
-        checkNotNull(note);
-
-        checkArgument(note.getKind() == Kind.OUT);
-        checkArgument(note.getNoteType() != NoteType.THREAD_REQUEST);
-        checkArgument(note.getNoteType() != NoteType.THREAD_PUBLISH);
-        checkArgument(note.getNoteType() != NoteType.INFO);
-
-        try {
-            Thread thread = getThread(note);
-            checkNotNull(thread);
-            Content content = NoteEncoder.convert(thread, note);
-            String message = gson.toJson(content);
-            ipfs.pubsubPub(topic, message, 50);
-            return true;
-        } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage(), e);
-            return false;
-        }
-    }
 
 
     @NonNull
@@ -499,312 +274,6 @@ public class ThreadsAPI {
     }
 
 
-    /**
-     * Thread request note to the given sender
-     *
-     * @param sender Sender user which creates the thread
-     * @param thread Thread the message belongs too
-     * @return a note to the sender which is not yet added to the database and
-     * not insert into the tangle
-     */
-    @NonNull
-    public Note createThreadRequestNote(@NonNull User sender, @NonNull Thread thread) {
-        checkNotNull(sender);
-        checkNotNull(thread);
-
-        return createNote(
-                thread.getIdx(),
-                sender.getPID(),
-                sender.getAlias(),
-                sender.getPublicKey(),
-                thread.getSesKey(),
-                NoteType.THREAD_REQUEST,
-                null,
-                MimeType.PLAIN_MIME_TYPE,
-                new Date());
-    }
-
-
-    @NonNull
-    public Note createThreadRejectNote(@NonNull User sender,
-                                       @NonNull Thread thread) {
-        checkNotNull(sender);
-        checkNotNull(thread);
-
-        return createNote(
-                thread.getIdx(),
-                sender.getPID(),
-                sender.getAlias(),
-                sender.getPublicKey(),
-                thread.getSesKey(),
-                NoteType.THREAD_REJECT,
-                null,
-                MimeType.PLAIN_MIME_TYPE,
-                new Date());
-
-    }
-
-
-    @NonNull
-    public Note createThreadJoinNote(@NonNull User sender,
-                                     @NonNull Thread thread) {
-        checkNotNull(sender);
-        checkNotNull(thread);
-
-        return createNote(
-                thread.getIdx(),
-                sender.getPID(),
-                sender.getAlias(),
-                sender.getPublicKey(),
-                thread.getSesKey(),
-                NoteType.THREAD_JOIN,
-                null,
-                MimeType.PLAIN_MIME_TYPE,
-                new Date());
-
-    }
-
-
-    @NonNull
-    public Note createThreadPublishNote(@NonNull User sender, @NonNull Thread thread) {
-        checkNotNull(sender);
-        checkNotNull(thread);
-
-        return createNote(
-                thread.getIdx(),
-                sender.getPID(),
-                sender.getAlias(),
-                sender.getPublicKey(),
-                thread.getSesKey(),
-                NoteType.THREAD_PUBLISH,
-                thread.getCid(),
-                MimeType.PLAIN_MIME_TYPE,
-                new Date());
-
-    }
-
-
-    @NonNull
-    public Note createThreadLeaveNote(@NonNull User sender, @NonNull Thread thread) {
-        checkNotNull(sender);
-        checkNotNull(thread);
-
-
-        return createNote(
-                thread.getIdx(),
-                sender.getPID(),
-                sender.getAlias(),
-                sender.getPublicKey(),
-                thread.getSesKey(),
-                NoteType.THREAD_LEAVE,
-                null,
-                MimeType.PLAIN_MIME_TYPE,
-                new Date());
-
-    }
-
-
-    @NonNull
-    public Note createHtmlNote(@NonNull User sender, @NonNull Thread thread, @NonNull CID html) {
-        checkNotNull(sender);
-        checkNotNull(thread);
-        checkNotNull(html);
-
-        return createNote(
-                thread.getIdx(),
-                sender.getPID(),
-                sender.getAlias(),
-                sender.getPublicKey(),
-                thread.getSesKey(),
-                NoteType.HTML,
-                html,
-                MimeType.HTML_MIME_TYPE,
-                new Date());
-
-    }
-
-
-    @NonNull
-    public Note createMessageNote(@NonNull User sender,
-                                  @NonNull Thread thread,
-                                  @NonNull CID cid) {
-        checkNotNull(sender);
-        checkNotNull(thread);
-
-
-        return createNote(
-                thread.getIdx(),
-                sender.getPID(),
-                sender.getAlias(),
-                sender.getPublicKey(),
-                thread.getSesKey(),
-                NoteType.MESSAGE,
-                cid,
-                MimeType.PLAIN_MIME_TYPE,
-                new Date());
-
-    }
-
-    @NonNull
-    public Note createVideoCallNote(@NonNull User sender, @NonNull Thread thread) {
-        checkNotNull(sender);
-        checkNotNull(thread);
-
-
-        return createNote(
-                thread.getIdx(),
-                sender.getPID(),
-                sender.getAlias(),
-                sender.getPublicKey(),
-                thread.getSesKey(),
-                NoteType.VIDEO_CALL,
-                null,
-                MimeType.PLAIN_MIME_TYPE,
-                new Date());
-
-    }
-
-    @NonNull
-    public Note createCallNote(@NonNull User sender, @NonNull Thread thread) {
-        checkNotNull(sender);
-        checkNotNull(thread);
-
-
-        return createNote(
-                thread.getIdx(),
-                sender.getPID(),
-                sender.getAlias(),
-                sender.getPublicKey(),
-                thread.getSesKey(),
-                NoteType.CALL,
-                null,
-                MimeType.PLAIN_MIME_TYPE,
-                new Date());
-
-    }
-
-    @NonNull
-    public Note createLocationNote(@NonNull User sender,
-                                   @NonNull Thread thread,
-                                   double latitude,
-                                   double longitude,
-                                   double zoom) {
-        checkNotNull(sender);
-        checkNotNull(thread);
-
-        Note note = createNote(
-                thread.getIdx(),
-                sender.getPID(),
-                sender.getAlias(),
-                sender.getPublicKey(),
-                thread.getSesKey(),
-                NoteType.LOCATION,
-                null,
-                MimeType.GEO_MIME_TYPE,
-                new Date());
-
-        note.addAdditional(Preferences.LATITUDE, String.valueOf(latitude), false);
-        note.addAdditional(Preferences.LONGITUDE, String.valueOf(longitude), false);
-        note.addAdditional(Preferences.ZOOM, String.valueOf(zoom), false);
-
-        return note;
-    }
-
-    @NonNull
-    public Note createLinkNote(@NonNull User sender,
-                               @NonNull Thread thread,
-                               @NonNull LinkType linkType,
-                               @Nullable CID cid,
-                               @NonNull String fileName,
-                               @NonNull String mimeType,
-                               long fileSize) {
-        checkNotNull(sender);
-        checkNotNull(thread);
-        checkNotNull(linkType);
-        checkNotNull(fileName);
-        checkNotNull(mimeType);
-
-        Note note = createNote(
-                thread.getIdx(),
-                sender.getPID(),
-                sender.getAlias(),
-                sender.getPublicKey(),
-                thread.getSesKey(),
-                NoteType.LINK,
-                cid,
-                mimeType,
-                new Date());
-        note.addAdditional(LinkType.class.getSimpleName(), linkType.name(), false);
-        note.addAdditional(Content.FILENAME, fileName, false);
-        note.addAdditional(Content.FILESIZE, String.valueOf(fileSize), false);
-
-        return note;
-    }
-
-
-    @NonNull
-    public Note createDataNote(@NonNull User sender,
-                               @NonNull Thread thread,
-                               @NonNull String mimeType,
-                               @Nullable CID cid) {
-        checkNotNull(sender);
-        checkNotNull(thread);
-        checkNotNull(mimeType);
-
-        return createNote(thread.getIdx(),
-                sender.getPID(),
-                sender.getAlias(),
-                sender.getPublicKey(),
-                thread.getSesKey(),
-                NoteType.DATA,
-                cid,
-                mimeType,
-                new Date());
-
-    }
-
-
-    @NonNull
-    public Note createAudioNote(@NonNull User sender,
-                                @NonNull Thread thread,
-                                @NonNull String mimeType,
-                                @Nullable CID cid) {
-        checkNotNull(sender);
-        checkNotNull(thread);
-        checkNotNull(mimeType);
-
-        return createNote(thread.getIdx(),
-                sender.getPID(),
-                sender.getAlias(),
-                sender.getPublicKey(),
-                thread.getSesKey(),
-                NoteType.AUDIO,
-                cid,
-                mimeType,
-                new Date());
-
-    }
-
-
-    @NonNull
-    public Note createInfoNote(@NonNull Thread thread,
-                               @NonNull String info,
-                               @NonNull Date date) {
-        checkNotNull(thread);
-
-        Note note = createNote(
-                thread.getIdx(),
-                thread.getSenderPid(),
-                thread.getSenderAlias(),
-                thread.getSenderKey(),
-                thread.getSesKey(),
-                NoteType.INFO,
-                null,
-                MimeType.PLAIN_MIME_TYPE,
-                date);
-        note.addAdditional(Content.TEXT, info, true);
-        return note;
-    }
 
 
     @Nullable
@@ -917,19 +386,6 @@ public class ThreadsAPI {
         updateUser(update);
     }
 
-    public void setAdditional(@NonNull Note note,
-                              @NonNull String key,
-                              @NonNull String value,
-                              boolean internal) {
-        checkNotNull(note);
-        checkNotNull(key);
-        checkNotNull(value);
-        Note update = getNoteByIdx(note.getIdx());
-        checkNotNull(update);
-        update.addAdditional(key, value, internal);
-        updateNote(update);
-    }
-
     public void setAdditional(@NonNull Thread thread,
                               @NonNull String key,
                               @NonNull String value,
@@ -947,7 +403,6 @@ public class ThreadsAPI {
     public boolean isReferenced(@NonNull CID cid) {
         checkNotNull(cid);
         int counter = getThreadsDatabase().threadDao().references(cid);
-        counter += getThreadsDatabase().noteDao().references(cid);
         counter += getPeersDatabase().peersDao().references(cid);
         return counter > 0;
     }
@@ -956,9 +411,6 @@ public class ThreadsAPI {
         checkNotNull(ipfs);
         checkNotNull(thread);
 
-
-        // delete thread notes children
-        removeThreadNotes(ipfs, thread);
 
         getThreadsDatabase().threadDao().removeThreads(thread);
 
@@ -985,22 +437,6 @@ public class ThreadsAPI {
         }
     }
 
-    /**
-     * Utility function to remove a note from DB and from local RELAY
-     *
-     * @param ipfs RELAY client
-     * @param note Note object
-     */
-    public void removeNote(@NonNull IPFS ipfs, @NonNull Note note) {
-        checkNotNull(ipfs);
-        checkNotNull(note);
-
-        getThreadsDatabase().noteDao().removeNote(note);
-
-        unpin(ipfs, note.getCid());
-        unpin(ipfs, note.getImage());
-
-    }
 
     public void insertHash(@NonNull Hash hash) {
         checkNotNull(hash);
@@ -1012,44 +448,6 @@ public class ThreadsAPI {
     }
 
 
-    public List<Note> getExpiredNotes() {
-        return getThreadsDatabase().noteDao().getExpiredNotes(System.currentTimeMillis());
-    }
-
-    @NonNull
-    public List<Thread> loadThreadRequests(@NonNull Context context,
-                                           @NonNull User user,
-                                           @NonNull String privateKey) {
-
-        checkNotNull(context);
-        checkNotNull(user);
-        checkNotNull(privateKey);
-
-        List<Thread> threads = new ArrayList<>();
-        String address = AddressType.getAddress(user.getPID(), AddressType.INBOX);
-        checkNotNull(address);
-        try {
-            List<Entity> entities = getEntityService().loadEntities(context, address);
-            for (Entity entity : entities) {
-                Thread thread = NoteRequestDecoder.convert(entity, privateKey);
-                if (thread != null) {
-                    if (isUserBlocked(thread.getSenderPid())) {
-                        continue;
-                    }
-
-                    if (existsSameThread(thread)) {
-                        continue;
-                    }
-                    threads.add(thread); // handle later
-                }
-            }
-
-        } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage(), e);
-        }
-
-        return threads;
-    }
 
     @Nullable
     public PeerInfo getPeer(@NonNull Context context, @NonNull PID pid) {
@@ -1140,38 +538,7 @@ public class ThreadsAPI {
     }
 
 
-    @NonNull
-    public List<Note> loadNotes(@NonNull Context context, @NonNull Thread thread) {
 
-        checkNotNull(context);
-        checkNotNull(thread);
-
-        List<Note> notes = new ArrayList<>();
-        CID cid = thread.getCid();
-        checkNotNull(cid);
-        String address = THREADS.getAddress(cid);
-
-        try {
-            List<Entity> entities = getEntityService().loadEntities(context, address);
-            for (Entity entity : entities) {
-                Note note = NoteDecoder.convert(thread, entity);
-                if (note != null) {
-                    if (isUserBlocked(note.getSenderPid())) {
-                        continue;
-                    }
-
-                    if (existsSameNote(note)) {
-                        continue;
-                    }
-                    notes.add(note); // handle later
-                }
-            }
-
-        } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage(), e);
-        }
-        return notes;
-    }
 
 
     public void removeUser(@NonNull IPFS ipfs, @NonNull User user) {
@@ -1214,9 +581,6 @@ public class ThreadsAPI {
         checkNotNull(ipfs);
         checkNotNull(threads);
 
-        for (Thread thread : threads) {
-            removeThreadNotes(ipfs, thread);
-        }
         getThreadsDatabase().threadDao().removeThreads(
                 Iterables.toArray(threads, Thread.class));
     }
@@ -1295,14 +659,7 @@ public class ThreadsAPI {
         getThreadsDatabase().threadDao().incrementNumber(idxs);
     }
 
-    public void incrementNoteNumber(@NonNull Note note) {
-        checkNotNull(note);
-        incrementNotesNumber(note.getIdx());
-    }
 
-    public void incrementNotesNumber(long... idxs) {
-        getThreadsDatabase().noteDao().incrementNumber(idxs);
-    }
 
     public void resetThreadsNumber(long... idxs) {
         getThreadsDatabase().threadDao().resetNumber(idxs);
@@ -1316,9 +673,6 @@ public class ThreadsAPI {
         getThreadsDatabase().threadDao().resetThreadsNumber();
     }
 
-    public void resetNotesNumber() {
-        getThreadsDatabase().noteDao().resetNotesNumber();
-    }
 
     @Nullable
     public User getUserByPID(@NonNull PID pid) {
@@ -1358,50 +712,13 @@ public class ThreadsAPI {
         return users;
     }
 
-    @NonNull
-    public String getFileName(@NonNull Note note) {
-        checkNotNull(note);
-        return note.getAdditionalValue(Content.FILENAME);
-    }
 
 
-    public long getFileSize(@NonNull Note note) {
-        checkNotNull(note);
-        return Long.valueOf(note.getAdditionalValue(Content.FILESIZE));
-    }
-
-    @NonNull
-    public LinkType getLinkNoteLinkType(@NonNull Note note) {
-        checkNotNull(note);
-        checkArgument(note.getNoteType() == NoteType.LINK);
-        return LinkType.valueOf(note.getAdditionalValue(LinkType.class.getSimpleName()));
-    }
 
 
-    private void removeThreadNotes(@NonNull IPFS ipfs, @NonNull Thread thread) {
-        checkNotNull(thread);
-        checkNotNull(ipfs);
-
-        List<Note> notes = getNotes(thread);
-        for (Note note : notes) {
-            removeNote(ipfs, note);
-        }
-    }
 
 
-    @NonNull
-    public List<Note> getNotesByNoteType(@NonNull NoteType type) {
-        checkNotNull(type);
-        return getThreadsDatabase().noteDao().getNotesByType(type);
-    }
 
-
-    @NonNull
-    public List<Note> getNotesByKindAndStatus(@NonNull Kind kind, @NonNull Status status) {
-        checkNotNull(kind);
-        checkNotNull(status);
-        return getThreadsDatabase().noteDao().getNotesByKindAndStatus(kind, status);
-    }
 
 
     public boolean insertUser(@NonNull Context context,
@@ -1457,17 +774,6 @@ public class ThreadsAPI {
         getThreadsDatabase().userDao().setHash(user.getPid(), hash);
     }
 
-    @Nullable
-    public String getHash(@NonNull Note note) {
-        checkNotNull(note);
-        return getThreadsDatabase().noteDao().getHash(note.getIdx());
-    }
-
-    @Nullable
-    public Note getNoteByHash(@NonNull String hash) {
-        checkNotNull(hash);
-        return getThreadsDatabase().noteDao().getNoteByHash(hash);
-    }
 
     @Nullable
     public Thread getThreadByHash(@NonNull String hash) {
@@ -1475,11 +781,6 @@ public class ThreadsAPI {
         return getThreadsDatabase().threadDao().getThreadByHash(hash);
     }
 
-    public void setHash(@NonNull Note note, @Nullable String hash) {
-        checkNotNull(note);
-        note.setHash(hash);
-        getThreadsDatabase().noteDao().setHash(note.getIdx(), hash);
-    }
 
     public void updateSettings(@NonNull Settings settings) {
         checkNotNull(settings);
@@ -1618,22 +919,12 @@ public class ThreadsAPI {
         checkNotNull(thread);
         getThreadsDatabase().threadDao().resetNumber(thread.getIdx());
     }
-
-    public void setSenderBlocked(PID sender, boolean blocked) {
-        getThreadsDatabase().noteDao().setSenderBlocked(sender, blocked);
-        getThreadsDatabase().threadDao().setSenderBlocked(sender, blocked);
-    }
-
     public long storeThread(@NonNull Thread thread) {
         checkNotNull(thread);
         return getThreadsDatabase().threadDao().insertThread(thread);
     }
 
 
-    public long storeNote(@NonNull Note note) {
-        checkNotNull(note);
-        return getThreadsDatabase().noteDao().insertNote(note);
-    }
 
 
     public void setStatus(@NonNull Thread thread, @NonNull Status status) {
@@ -1665,31 +956,8 @@ public class ThreadsAPI {
 
     }
 
-    public void setNoteCID(long idx, @NonNull CID cid) {
-        checkNotNull(cid);
-        getThreadsDatabase().noteDao().setCid(idx, cid);
-
-    }
-
-    public void setCID(@NonNull Note note, @NonNull CID cid) {
-        checkNotNull(note);
-        checkNotNull(cid);
-        getThreadsDatabase().noteDao().setCid(note.getIdx(), cid);
-
-    }
 
 
-    public void setStatus(@NonNull Note note, @NonNull Status status) {
-        checkNotNull(note);
-        checkNotNull(status);
-        getThreadsDatabase().noteDao().setStatus(note.getIdx(), status);
-    }
-
-
-    public void setNoteStatus(@NonNull Status status, long idx) {
-        checkNotNull(status);
-        getThreadsDatabase().noteDao().setStatus(idx, status);
-    }
 
 
     public void setConnected(@NonNull User user, boolean connected) {
@@ -1763,15 +1031,6 @@ public class ThreadsAPI {
         getThreadsDatabase().threadDao().resetThreadsLeaching();
     }
 
-    public void resetNotesPublishing() {
-        getThreadsDatabase().noteDao().resetNotesPublishing();
-    }
-
-    public void resetNotesLeaching() {
-        getThreadsDatabase().noteDao().resetNotesLeaching();
-    }
-
-
     public void resetUsersDialing() {
         getThreadsDatabase().userDao().resetUsersDialing();
     }
@@ -1806,11 +1065,6 @@ public class ThreadsAPI {
     }
 
     @NonNull
-    public List<Note> getNotesByDate(long date) {
-        return getThreadsDatabase().noteDao().getNotesByDate(date);
-    }
-
-    @NonNull
     public List<Thread> getPinnedThreads() {
         return getThreadsDatabase().threadDao().getThreadsByPinned(true);
     }
@@ -1820,18 +1074,6 @@ public class ThreadsAPI {
         return getThreadsDatabase().threadDao().getThreadsByDate(date);
     }
 
-    private boolean existsSameNote(@NonNull Note note) {
-        checkNotNull(note);
-        boolean result = false;
-        List<Note> notes = getNotesByDate(note.getDate());
-        for (Note cmp : notes) {
-            if (note.sameNote(cmp)) {
-                result = true;
-                break;
-            }
-        }
-        return result;
-    }
 
     private boolean existsSameThread(@NonNull Thread thread) {
         checkNotNull(thread);
@@ -1846,26 +1088,12 @@ public class ThreadsAPI {
         return result;
     }
 
-    @NonNull
-    public Status getStatus(@NonNull Note note) {
-        checkNotNull(note);
-        return getThreadsDatabase().noteDao().getStatus(note.getIdx());
-    }
-
-    @Nullable
-    public Status getNoteStatus(long idx) {
-        return getThreadsDatabase().noteDao().getStatus(idx);
-    }
 
     @Nullable
     public Status getThreadStatus(long idx) {
         return getThreadsDatabase().threadDao().getStatus(idx);
     }
 
-    @Nullable
-    public NoteType getNoteType(long idx) {
-        return getThreadsDatabase().noteDao().getNoteType(idx);
-    }
 
     public void setUserPublicKey(@NonNull User user, @NonNull String publicKey) {
         checkNotNull(user);
@@ -1967,17 +1195,7 @@ public class ThreadsAPI {
     }
 
 
-    @NonNull
-    public Settings createSettings(@NonNull String id) {
-        checkNotNull(id);
-        return Settings.createSettings(id);
-    }
 
-
-    public void storeNotes(@NonNull List<Note> notes) {
-        checkNotNull(notes);
-        getThreadsDatabase().noteDao().insertNotes(Iterables.toArray(notes, Note.class));
-    }
 
 
     public void storeThreads(@NonNull List<Thread> threads) {
@@ -2022,34 +1240,8 @@ public class ThreadsAPI {
     }
 
 
-    @Nullable
-    public CID getNoteCID(long idx) {
-        // TODO bug in generation of database
-        Note note = getThreadsDatabase().noteDao().getNoteByIdx(idx);
-        if (note != null) {
-            return note.getCid();
-        }
-        return null;
-    }
-
-    @Nullable
-    public Thread getThread(@NonNull Note note) {
-        checkNotNull(note);
-        long tidx = note.getThread();
-
-        return getThreadByIdx(tidx);
-    }
-
-    @Nullable
-    public Note getNoteByIdx(long idx) {
-        return getThreadsDatabase().noteDao().getNoteByIdx(idx);
-    }
 
 
-    private void updateNote(@NonNull Note note) {
-        checkNotNull(note);
-        getThreadsDatabase().noteDao().updateNote(note);
-    }
 
 
     public void blockUser(@NonNull PID user) {
@@ -2131,22 +1323,6 @@ public class ThreadsAPI {
     }
 
 
-    private Note createNote(long thread,
-                            @NonNull PID senderPid,
-                            @NonNull String senderAuthor,
-                            @NonNull String senderKey,
-                            @NonNull String sesKey,
-                            @NonNull NoteType noteType,
-                            @Nullable CID cid,
-                            @NonNull String mimeType,
-                            @NonNull Date date) {
-        Note note = Note.createNote(thread, senderPid, senderAuthor, senderKey,
-                sesKey, Status.INIT, Kind.OUT, noteType, mimeType, date.getTime());
-        note.setCid(cid);
-
-        return note;
-    }
-
 
     @NonNull
     private Thread createThread(@NonNull Status status,
@@ -2162,19 +1338,6 @@ public class ThreadsAPI {
                 sesKey, kind, date.getTime(), thread);
     }
 
-
-    @NonNull
-    public List<Note> getNotesByCID(@NonNull CID cid) {
-        checkNotNull(cid);
-        return getThreadsDatabase().noteDao().getNotesByCID(cid);
-    }
-
-    @NonNull
-    public List<Note> getNotesBySenderPIDAndStatus(@NonNull PID pid, @NonNull Status status) {
-        checkNotNull(pid);
-        checkNotNull(status);
-        return getThreadsDatabase().noteDao().getNotesBySenderPIDAndStatus(pid, status);
-    }
 
 
     @NonNull

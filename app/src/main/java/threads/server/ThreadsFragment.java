@@ -44,7 +44,6 @@ import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.THREADS;
-import threads.core.api.Content;
 import threads.core.api.Status;
 import threads.core.api.Thread;
 import threads.core.mdl.ThreadViewModel;
@@ -567,10 +566,9 @@ public class ThreadsFragment extends Fragment implements
                         CID cid = thread.getCid();
                         checkNotNull(cid);
 
-                        String filename = thread.getAdditionalValue(Content.FILENAME);
+                        String filename = thread.getName();
                         String mimeType = thread.getMimeType();
-                        String fileSize = thread.getAdditionalValue(Content.FILESIZE);
-                        long size = Long.valueOf(fileSize);
+                        long size = thread.getSize();
 
                         if (mimeType.startsWith("image")) {
                             ImageDialogFragment.newInstance(cid.getCid()).show(
@@ -683,7 +681,7 @@ public class ThreadsFragment extends Fragment implements
     @NonNull
     @Override
     public String getTitle(@NonNull Thread thread) {
-        return getCompactString(thread.getAdditionalValue(Content.FILENAME));
+        return getCompactString(thread.getName());
     }
 
 
