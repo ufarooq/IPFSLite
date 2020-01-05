@@ -17,18 +17,12 @@ public class MimeTypeService {
     }
 
 
-    public static int getMediaResource(@NonNull String mimeType, boolean ignorePlainMimeType) {
-
-
+    public static int getMediaResource(@NonNull String mimeType) {
         checkNotNull(mimeType);
         if (!mimeType.isEmpty()) {
 
             if (mimeType.equals(MimeType.PLAIN_MIME_TYPE)) {
-                if (ignorePlainMimeType) {
-                    return 0;
-                } else {
-                    return R.drawable.text_file;
-                }
+                return R.drawable.text_file;
             }
             if (mimeType.equals(MimeType.PDF_MIME_TYPE)) {
                 return R.drawable.text_pdf;

@@ -63,7 +63,6 @@ import threads.ipfs.api.PID;
 import threads.ipfs.api.PeerInfo;
 import threads.ipfs.api.PubsubConfig;
 import threads.ipfs.api.RoutingConfig;
-import threads.share.MimeTypeService;
 import threads.share.ThumbnailService;
 
 import static androidx.core.util.Preconditions.checkArgument;
@@ -996,14 +995,7 @@ public class Service {
 
         try {
             if (image == null) {
-                int resource = MimeTypeService.getMediaResource(thread.getMimeType(),
-                        false);
-                if (resource <= 0) {
-                    resource = R.drawable.file;
-                }
                 thread.addAdditional(Content.IMG, String.valueOf(false), true);
-                thread.setImage(ThumbnailService.getImage(context.getApplicationContext(),
-                        creator.getAlias(), resource));
             } else {
                 thread.addAdditional(Content.IMG, String.valueOf(true), true);
                 thread.setImage(image);
@@ -1493,13 +1485,6 @@ public class Service {
                     thread.addAdditional(Content.IMG, String.valueOf(false), true);
                     thread.setName(content);
                     thread.setSize(size);
-
-                    int resource = MimeTypeService.getMediaResource(
-                            mimeType, false);
-
-                    CID image = ThumbnailService.getImage(
-                            context, host.getAlias(), resource);
-                    thread.setImage(image);
                     thread.setMimeType(mimeType);
 
                     long idx = threads.storeThread(thread);

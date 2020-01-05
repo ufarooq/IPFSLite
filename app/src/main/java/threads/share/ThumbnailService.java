@@ -335,16 +335,10 @@ public class ThumbnailService {
         boolean thumbnail = false;
         byte[] bytes;
 
+
         try {
             bytes = getPreviewImage(context, uri);
-            if (bytes == null) {
-                FileDetails fileDetails = getFileDetails(context, uri);
-                if (fileDetails != null) {
-                    int resource = MimeTypeService.getMediaResource(
-                            fileDetails.getMimeType(), false);
-                    bytes = getImageData(context, name, resource);
-                }
-            } else {
+            if (bytes != null) {
                 thumbnail = true;
             }
         } catch (Throwable e) {
@@ -387,6 +381,7 @@ public class ThumbnailService {
         byte[] bytes = null;
         CID cid = null;
         boolean thumbnail = false;
+
 
         if (!filename.isEmpty()) {
             Optional<String> result = getExtension(filename);

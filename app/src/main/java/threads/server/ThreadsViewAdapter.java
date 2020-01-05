@@ -33,6 +33,7 @@ import threads.core.Singleton;
 import threads.core.api.Thread;
 import threads.ipfs.IPFS;
 import threads.share.IPFSData;
+import threads.share.MimeTypeService;
 import threads.share.ThreadDiffCallback;
 
 public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.ViewHolder> {
@@ -122,14 +123,14 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
             if (thread.getImage() != null) {
                 IPFS ipfs = Singleton.getInstance(context).getIpfs();
-                threadViewHolder.main_image.setVisibility(View.VISIBLE);
                 IPFSData data = IPFSData.create(ipfs, thread.getImage(), timeout);
                 Glide.with(context).
                         load(data).
                         into(threadViewHolder.main_image);
 
             } else {
-                threadViewHolder.main_image.setVisibility(View.GONE);
+                int resId = MimeTypeService.getMediaResource(thread.getMimeType());
+                threadViewHolder.main_image.setImageResource(resId);
             }
 
             threadViewHolder.view.setOnClickListener((v) -> {
