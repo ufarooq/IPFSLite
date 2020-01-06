@@ -5,7 +5,7 @@ import androidx.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 
-import threads.core.api.Thread;
+import threads.core.threads.Thread;
 import threads.ipfs.api.CID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -21,11 +21,11 @@ class Contents extends ArrayList<ContentEntry> {
 
         String image = null;
 
-            CID imageCID = thread.getImage();
+        CID imageCID = thread.getImage();
 
-            if (imageCID != null) {
-                image = imageCID.getCid();
-            }
+        if (imageCID != null) {
+            image = imageCID.getCid();
+        }
 
 
         this.add(new ContentEntry(cid.getCid(), filename, filesize, mimeType, image));

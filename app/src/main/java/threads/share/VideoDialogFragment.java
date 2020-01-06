@@ -31,7 +31,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.THREADS;
+import threads.core.events.EVENTS;
+import threads.core.threads.THREADS;
 import threads.server.R;
 import threads.server.VideoActivity;
 
@@ -163,7 +164,8 @@ public class VideoDialogFragment extends DialogFragment implements MediaControll
             dataSource = new IPFSMediaDataSource(mContext, cid);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            Preferences.error(threads, mContext.getString(R.string.video_failure,
+            final EVENTS events = Singleton.getInstance(mContext).getEvents();
+            Preferences.error(events, mContext.getString(R.string.video_failure,
                     e.getLocalizedMessage()));
             dismiss();
         }
@@ -385,7 +387,8 @@ public class VideoDialogFragment extends DialogFragment implements MediaControll
                     mediaPlayer.start();
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    Preferences.error(threads, mContext.getString(R.string.video_failure,
+                    final EVENTS events = Singleton.getInstance(mContext).getEvents();
+                    Preferences.error(events, mContext.getString(R.string.video_failure,
                             e.getLocalizedMessage()));
                     dismiss();
                 }
@@ -395,7 +398,8 @@ public class VideoDialogFragment extends DialogFragment implements MediaControll
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            Preferences.error(threads, mContext.getString(R.string.video_failure,
+            final EVENTS events = Singleton.getInstance(mContext).getEvents();
+            Preferences.error(events, mContext.getString(R.string.video_failure,
                     e.getLocalizedMessage()));
             dismiss();
         }

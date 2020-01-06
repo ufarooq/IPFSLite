@@ -14,17 +14,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.Status;
-import threads.core.api.Thread;
-import threads.core.api.User;
+import threads.core.events.EVENTS;
+import threads.core.peers.PEERS;
+import threads.core.peers.User;
+import threads.core.threads.Status;
+import threads.core.threads.THREADS;
+import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
+import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -57,7 +59,8 @@ class ContentsService {
         checkNotNull(context);
 
         final ContentService contentService = ContentService.getInstance(context);
-        final THREADS threads = Singleton.getInstance(context).getThreads();
+        final PEERS threads = Singleton.getInstance(context).getPeers();
+
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         final PID host = Preferences.getPID(context);
 
@@ -140,12 +143,14 @@ class ContentsService {
         checkNotNull(cid);
 
 
+        final PEERS peers = Singleton.getInstance(context).getPeers();
         final THREADS threads = Singleton.getInstance(context).getThreads();
+        final EVENTS events = Singleton.getInstance(context).getEvents();
         try {
 
-            User user = threads.getUserByPID(sender);
+            User user = peers.getUserByPID(sender);
             if (user == null) {
-                Preferences.error(threads, context.getString(R.string.unknown_peer_sends_data));
+                Preferences.error(events, context.getString(R.string.unknown_peer_sends_data));
                 return;
             }
 
@@ -155,11 +160,11 @@ class ContentsService {
                 thumbnail = downloadImage(context, image);
             }
 
-            createThread(context, threads, user, cid, filename, filesize, mimeType, thumbnail);
+            createThread(context, user, cid, filename, filesize, mimeType, thumbnail);
 
 
         } catch (Throwable e) {
-            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+            Preferences.evaluateException(events, Preferences.EXCEPTION, e);
         }
 
 
@@ -167,7 +172,6 @@ class ContentsService {
 
     private static synchronized void createThread(
             @NonNull Context context,
-            @NonNull THREADS threads,
             @NonNull User user,
             @NonNull CID cid,
             @Nullable String filename,
@@ -175,7 +179,7 @@ class ContentsService {
             @Nullable String mimeType,
             @Nullable CID thumbnail) {
 
-
+        final THREADS threads = Singleton.getInstance(context).getThreads();
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         checkNotNull(ipfs, "IPFS not valid");
         List<Thread> entries = threads.getThreadsByCIDAndThread(cid, 0L);
@@ -247,7 +251,8 @@ class ContentsService {
         checkNotNull(cid);
 
         final ContentService contentService = ContentService.getInstance(context);
-        final THREADS threads = Singleton.getInstance(context).getThreads();
+        final PEERS threads = Singleton.getInstance(context).getPeers();
+
 
         boolean success = false;
         try {

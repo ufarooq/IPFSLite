@@ -15,17 +15,19 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.Content;
-import threads.core.api.Status;
-import threads.core.api.Thread;
-import threads.core.api.User;
+import threads.core.events.EVENTS;
+import threads.core.peers.Content;
+import threads.core.peers.PEERS;
+import threads.core.peers.User;
+import threads.core.threads.Status;
+import threads.core.threads.THREADS;
+import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
+import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -44,8 +46,8 @@ public class JobServiceDownload extends JobService {
             ComponentName componentName = new ComponentName(context, JobServiceDownload.class);
 
             PersistableBundle bundle = new PersistableBundle();
-            bundle.putString(threads.core.api.Content.PID, pid.getPid());
-            bundle.putString(threads.core.api.Content.CID, cid.getCid());
+            bundle.putString(Content.PID, pid.getPid());
+            bundle.putString(Content.CID, cid.getCid());
 
             JobInfo jobInfo = new JobInfo.Builder(cid.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
@@ -69,6 +71,8 @@ public class JobServiceDownload extends JobService {
         checkNotNull(cid);
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
+        final PEERS peers = Singleton.getInstance(context).getPeers();
+        final EVENTS events = Singleton.getInstance(context).getEvents();
 
 
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
@@ -76,9 +80,9 @@ public class JobServiceDownload extends JobService {
 
             try {
 
-                User user = threads.getUserByPID(pid);
+                User user = peers.getUserByPID(pid);
                 if (user == null) {
-                    Preferences.error(threads, context.getString(R.string.unknown_peer_sends_data));
+                    Preferences.error(events, context.getString(R.string.unknown_peer_sends_data));
                     return;
                 }
 
@@ -108,7 +112,7 @@ public class JobServiceDownload extends JobService {
 
 
             } catch (Throwable e) {
-                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
             }
 
         }
@@ -118,7 +122,7 @@ public class JobServiceDownload extends JobService {
     public boolean onStartJob(JobParameters jobParameters) {
 
         PersistableBundle bundle = jobParameters.getExtras();
-        final String pid = bundle.getString(threads.core.api.Content.PID);
+        final String pid = bundle.getString(Content.PID);
         checkNotNull(pid);
         final String cid = bundle.getString(Content.CID);
         checkNotNull(cid);

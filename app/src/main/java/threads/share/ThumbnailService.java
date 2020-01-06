@@ -30,9 +30,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 
-import threads.core.MimeType;
 import threads.core.Singleton;
-import threads.core.api.Thread;
+import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.server.R;

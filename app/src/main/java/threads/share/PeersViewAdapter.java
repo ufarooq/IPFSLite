@@ -20,8 +20,8 @@ import java.util.List;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.api.IPeer;
-import threads.core.api.Peer;
+import threads.core.peers.IPeer;
+import threads.core.peers.Peer;
 import threads.ipfs.IPFS;
 import threads.server.R;
 

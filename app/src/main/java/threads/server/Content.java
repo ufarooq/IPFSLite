@@ -5,7 +5,7 @@ import androidx.room.ColumnInfo;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
-import threads.core.api.Converter;
+import threads.core.peers.Converter;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
 

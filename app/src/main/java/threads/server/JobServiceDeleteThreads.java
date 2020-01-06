@@ -15,8 +15,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.Status;
+import threads.core.threads.Status;
+import threads.core.threads.THREADS;
 import threads.ipfs.IPFS;
 
 import static androidx.core.util.Preconditions.checkNotNull;

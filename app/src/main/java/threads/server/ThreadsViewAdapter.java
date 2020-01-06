@@ -30,7 +30,7 @@ import java.util.List;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.api.Thread;
+import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
 import threads.share.IPFSData;
 import threads.share.MimeTypeService;

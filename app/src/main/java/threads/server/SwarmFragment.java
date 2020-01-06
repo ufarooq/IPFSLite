@@ -28,12 +28,14 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.GatewayService;
 import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.IPeer;
-import threads.core.mdl.PeersViewModel;
+import threads.core.events.EVENTS;
+import threads.core.peers.IPeer;
+import threads.core.peers.Peer;
+import threads.core.threads.THREADS;
 import threads.ipfs.IPFS;
+import threads.server.mdl.PeersViewModel;
+import threads.share.GatewayService;
 import threads.share.PeerActionDialogFragment;
 import threads.share.PeersViewAdapter;
 
@@ -140,7 +142,7 @@ public class SwarmFragment extends Fragment implements
         checkNotNull(context);
         THREADS threads = Singleton.getInstance(context).getThreads();
         IPFS ipfs = Singleton.getInstance(context).getIpfs();
-
+        EVENTS events = Singleton.getInstance(context).getEvents();
         try {
             checkNotNull(ipfs, "IPFS not valid");
             GatewayService.PeerSummary info = GatewayService.evaluateAllPeers(context);
@@ -153,10 +155,10 @@ public class SwarmFragment extends Fragment implements
             } else if (info.getNumPeers() > 0) {
                 content = SwarmFragment.LOW;
             }
-            threads.invokeEvent(SwarmFragment.TAG, content);
+            events.invokeEvent(SwarmFragment.TAG, content);
 
 
-            threads.invokeEvent(SwarmFragment.TAG, SwarmFragment.NONE);
+            events.invokeEvent(SwarmFragment.TAG, SwarmFragment.NONE);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -191,8 +193,8 @@ public class SwarmFragment extends Fragment implements
             try {
                 if (peers != null) {
                     try {
-                        List<threads.core.api.Peer> connected = new ArrayList<>();
-                        for (threads.core.api.Peer peer : peers) {
+                        List<Peer> connected = new ArrayList<>();
+                        for (Peer peer : peers) {
                             if (peer.isConnected()) {
                                 connected.add(peer);
                             }

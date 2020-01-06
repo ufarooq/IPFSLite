@@ -24,8 +24,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.User;
+import threads.core.peers.PEERS;
+import threads.core.peers.User;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -74,12 +74,12 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
         contactsViewAdapter = new ContactsViewAdapter(getActivity(), this);
         recycler_view_contact_list.setAdapter(contactsViewAdapter);
 
-        final THREADS threads = Singleton.getInstance(mContext).getThreads();
+        final PEERS peers = Singleton.getInstance(mContext).getPeers();
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                List<User> users = threads.getUsersByPID(Iterables.toArray(pids, String.class));
+                List<User> users = peers.getUsersByPID(Iterables.toArray(pids, String.class));
                 contactsViewAdapter.setAccounts(users);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

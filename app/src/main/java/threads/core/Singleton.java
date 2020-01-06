@@ -12,12 +12,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import threads.core.api.EventsDatabase;
-import threads.core.api.Message;
-import threads.core.api.MessageKind;
-import threads.core.api.PeersDatabase;
-import threads.core.api.PeersInfoDatabase;
-import threads.core.api.ThreadsDatabase;
+import threads.core.events.EVENTS;
+import threads.core.events.EventsDatabase;
+import threads.core.events.Message;
+import threads.core.events.MessageKind;
+import threads.core.peers.PEERS;
+import threads.core.peers.PeersDatabase;
+import threads.core.peers.PeersInfoDatabase;
+import threads.core.threads.THREADS;
+import threads.core.threads.ThreadsDatabase;
 import threads.iota.EntityService;
 import threads.iota.IOTA;
 import threads.ipfs.IPFS;
@@ -30,6 +33,7 @@ import threads.ipfs.api.PubsubInfo;
 import threads.ipfs.api.PubsubReader;
 import threads.ipfs.api.RoutingConfig;
 import threads.ipfs.api.SwarmConfig;
+import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -45,6 +49,8 @@ public class Singleton {
     private final Hashtable<String, Future> topics = new Hashtable<>();
     private final PeersDatabase peersDatabase;
     private final THREADS threads;
+    private final PEERS peers;
+    private final EVENTS events;
     private final EntityService entityService;
     private final ConsoleListener consoleListener = new ConsoleListener();
     private final PubsubReader pubsubReader;
@@ -73,9 +79,11 @@ public class Singleton {
 
         entityService = EntityService.getInstance(context);
 
-        threads = THREADS.createThreads(
-                threadsDatabase, eventsDatabase, peersInfoDatabase, peersDatabase);
+        threads = THREADS.createThreads(threadsDatabase);
 
+        events = EVENTS.createEvents(eventsDatabase);
+
+        peers = PEERS.createPeers(peersInfoDatabase, peersDatabase);
 
         IOTA.Builder iotaBuilder = new IOTA.Builder();
         iotaBuilder.protocol(EntityService.getTangleProtocol(context));
@@ -142,7 +150,7 @@ public class Singleton {
 
             Preferences.setPID(context, ipfs.getPeerID());
         } catch (Throwable e) {
-            Preferences.evaluateException(threads, Preferences.IPFS_INSTALL_FAILURE, e);
+            Preferences.evaluateException(events, Preferences.IPFS_INSTALL_FAILURE, e);
         }
 
     }
@@ -223,6 +231,17 @@ public class Singleton {
     }
 
     @NonNull
+    public EVENTS getEvents() {
+        return events;
+    }
+
+
+    @NonNull
+    public PEERS getPeers() {
+        return peers;
+    }
+
+    @NonNull
     public ThreadsDatabase getThreadsDatabase() {
         return threadsDatabase;
     }
@@ -244,8 +263,8 @@ public class Singleton {
 
             long timestamp = System.currentTimeMillis();
             new Thread(() -> {
-                Message em = threads.createMessage(MessageKind.DEBUG, message, timestamp);
-                threads.storeMessage(em);
+                Message em = events.createMessage(MessageKind.DEBUG, message, timestamp);
+                events.storeMessage(em);
             }).start();
 
         }
@@ -255,8 +274,8 @@ public class Singleton {
 
             long timestamp = System.currentTimeMillis();
             new Thread(() -> {
-                Message em = threads.createMessage(MessageKind.INFO, message, timestamp);
-                threads.storeMessage(em);
+                Message em = events.createMessage(MessageKind.INFO, message, timestamp);
+                events.storeMessage(em);
             }).start();
 
         }
@@ -266,8 +285,8 @@ public class Singleton {
 
             long timestamp = System.currentTimeMillis();
             new Thread(() -> {
-                Message em = threads.createMessage(MessageKind.ERROR, message, timestamp);
-                threads.storeMessage(em);
+                Message em = events.createMessage(MessageKind.ERROR, message, timestamp);
+                events.storeMessage(em);
             }).start();
 
         }

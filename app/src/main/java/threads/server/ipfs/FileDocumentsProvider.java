@@ -27,8 +27,8 @@ import java.util.PriorityQueue;
 
 import mobile.Reader;
 import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.Thread;
+import threads.core.threads.THREADS;
+import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.server.R;

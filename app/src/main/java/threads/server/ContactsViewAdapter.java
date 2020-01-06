@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.api.User;
+import threads.core.peers.User;
 import threads.share.IPFSData;
 
 

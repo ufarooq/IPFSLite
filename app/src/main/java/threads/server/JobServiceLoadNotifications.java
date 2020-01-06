@@ -13,7 +13,7 @@ import androidx.annotation.NonNull;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.Network;
+import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

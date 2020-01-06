@@ -17,6 +17,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Hashtable;
 
+import threads.core.events.EVENTS;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.ConnMgrConfig;
@@ -28,16 +29,6 @@ import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class Preferences {
-    public static final String THREAD_TITLE = "TITLE";
-    public static final String THREAD_CONTENT = "THREAD_CONTENT";
-    public static final String THREAD_MIME_TYPE = "THREAD_MIME_TYPE";
-
-    public static final String THREAD_DATE = "THREAD_DATE";
-    public static final String THREAD_KIND = "THREAD_KIND";
-
-    public static final String LATITUDE = "LATITUDE";
-    public static final String LONGITUDE = "LONGITUDE";
-    public static final String ZOOM = "ZOOM";
 
 
     public static final String EXCEPTION = "EXCEPTION";
@@ -45,11 +36,9 @@ public class Preferences {
     public static final String IPFS_INSTALL_FAILURE = "IPFS_INSTALL_FAILURE";
     public static final String WARNING = "WARNING";
     public static final String INFO = "INFO";
-    public static final String SEARCH_SETTINGS_ID = "SEARCH_SETTINGS_ID";
     private static final String PREF_KEY = "prefKey";
     private static final String PID_KEY = "pidKey";
     private static final String TOKEN_KEY = "tokenKey";
-
     private static final String LOGIN_FLAG_KEY = "loginFlagKey";
     private static final String SWARM_PORT_KEY = "swarmPortKey";
     private static final String TOPIC_KEY = "prefTopicKey";
@@ -402,48 +391,48 @@ public class Preferences {
     }
 
 
-    public static void event(@NonNull THREADS threads,
+    public static void event(@NonNull EVENTS events,
                              @NonNull String identifier,
                              @NonNull String content) {
-        checkNotNull(threads);
+        checkNotNull(events);
         checkNotNull(identifier);
         checkNotNull(content);
 
         new Thread(() -> {
-            threads.invokeEvent(identifier, content);
+            events.invokeEvent(identifier, content);
         }).start();
     }
 
-    public static void error(@NonNull THREADS threads,
+    public static void error(@NonNull EVENTS events,
                              @NonNull String message) {
-        checkNotNull(threads);
+        checkNotNull(events);
         checkNotNull(message);
-        event(threads, EXCEPTION, message);
+        event(events, EXCEPTION, message);
     }
 
 
-    public static void warning(@NonNull THREADS threads,
+    public static void warning(@NonNull EVENTS events,
                                @NonNull String message) {
-        checkNotNull(threads);
+        checkNotNull(events);
         checkNotNull(message);
-        event(threads, WARNING, message);
+        event(events, WARNING, message);
     }
 
-    public static void info(@NonNull THREADS threads,
+    public static void info(@NonNull EVENTS events,
                             @NonNull String message) {
-        checkNotNull(threads);
+        checkNotNull(events);
         checkNotNull(message);
-        event(threads, INFO, message);
+        event(events, INFO, message);
     }
 
-    public static void evaluateException(@NonNull THREADS threads,
+    public static void evaluateException(@NonNull EVENTS events,
                                          @NonNull String eventKey,
                                          @NonNull Throwable e) {
-        checkNotNull(threads);
+        checkNotNull(events);
         checkNotNull(eventKey);
         checkNotNull(e);
 
-        event(threads, eventKey, "" + e.getLocalizedMessage());
+        event(events, eventKey, "" + e.getLocalizedMessage());
 
     }
 

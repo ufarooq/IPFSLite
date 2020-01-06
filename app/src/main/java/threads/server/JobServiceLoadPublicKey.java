@@ -16,7 +16,7 @@ import java.util.concurrent.Executors;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.THREADS;
+import threads.core.peers.PEERS;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
 
@@ -66,8 +66,8 @@ public class JobServiceLoadPublicKey extends JobService {
             try {
                 IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
                 checkNotNull(ipfs, "IPFS not valid");
+                PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
 
-                THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
                 PID pid = PID.create(peerID);
 
                 threads.ipfs.api.PeerInfo pInfo = ipfs.id(pid, timeout);
@@ -75,7 +75,7 @@ public class JobServiceLoadPublicKey extends JobService {
                     String pKey = pInfo.getPublicKey();
                     if (pKey != null) {
                         if (!pKey.isEmpty()) {
-                            threads.setUserPublicKey(pid, pKey);
+                            peers.setUserPublicKey(pid, pKey);
                         }
                     }
                 }

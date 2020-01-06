@@ -12,8 +12,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
-import threads.core.MimeType;
-
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class WebViewDialogFragment extends DialogFragment {

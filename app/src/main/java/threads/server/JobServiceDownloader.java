@@ -14,7 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import threads.core.Network;
+import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

@@ -4,7 +4,7 @@ import androidx.recyclerview.widget.DiffUtil;
 
 import java.util.List;
 
-import threads.core.api.User;
+import threads.core.peers.User;
 
 public class UserDiffCallback extends DiffUtil.Callback {
     private final List<User> mOldList;

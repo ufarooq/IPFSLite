@@ -26,13 +26,14 @@ import java.util.concurrent.Executors;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.User;
-import threads.core.api.UserType;
-import threads.core.mdl.UsersViewModel;
+import threads.core.events.EVENTS;
+import threads.core.peers.User;
+import threads.core.peers.UserType;
+import threads.core.threads.THREADS;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.PeerInfo;
+import threads.server.mdl.UsersViewModel;
 import threads.share.DetailsDialogFragment;
 import threads.share.UserActionDialogFragment;
 import threads.share.UsersViewAdapter;
@@ -129,6 +130,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                 }
                 mLastClickTime = SystemClock.elapsedRealtime();
 
+                final EVENTS events = Singleton.getInstance(mContext).getEvents();
 
                 final THREADS threads = Singleton.getInstance(mContext).getThreads();
                 final IPFS ipfs = Singleton.getInstance(mContext).getIpfs();
@@ -155,7 +157,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
                         } catch (Throwable e) {
                             // ignore exception for now
-                            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                            Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                         }
                     });
 

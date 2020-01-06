@@ -39,18 +39,19 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import threads.core.MimeType;
-import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.Status;
-import threads.core.api.Thread;
-import threads.core.mdl.ThreadViewModel;
+import threads.core.events.EVENTS;
+import threads.core.threads.Status;
+import threads.core.threads.THREADS;
+import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
+import threads.server.mdl.ThreadViewModel;
 import threads.share.AudioDialogFragment;
 import threads.share.ImageDialogFragment;
+import threads.share.MimeType;
+import threads.share.Network;
 import threads.share.PDFView;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.VideoDialogFragment;
@@ -330,11 +331,12 @@ public class ThreadsFragment extends Fragment implements
 
 
     private void sendAction() {
+        final EVENTS events = Singleton.getInstance(mContext).getEvents();
 
         Selection<Long> selection = mSelectionTracker.getSelection();
         if (selection.size() == 0) {
-            THREADS threads = Singleton.getInstance(mContext).getThreads();
-            Preferences.warning(threads,
+
+            Preferences.warning(events,
                     mContext.getString(R.string.no_marked_file_send));
             return;
         }
@@ -354,7 +356,7 @@ public class ThreadsFragment extends Fragment implements
 
     private void clearUnreadNotes() {
         final THREADS threadsAPI = Singleton.getInstance(mContext).getThreads();
-
+        final EVENTS events = Singleton.getInstance(mContext).getEvents();
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
@@ -362,7 +364,7 @@ public class ThreadsFragment extends Fragment implements
                 checkNotNull(idx);
                 threadsAPI.resetThreadNumber(idx);
             } catch (Throwable e) {
-                Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
+                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
             }
         });
     }
@@ -381,17 +383,16 @@ public class ThreadsFragment extends Fragment implements
 
     private void deleteAction() {
 
-
+        final EVENTS events = Singleton.getInstance(mContext).getEvents();
         if (!topLevel.get()) {
-            THREADS threads = Singleton.getInstance(mContext).getThreads();
-            Preferences.warning(threads,
+            Preferences.warning(events,
                     mContext.getString(R.string.deleting_files_within_directory_not_supported));
             return;
         }
 
         if (!mSelectionTracker.hasSelection()) {
             THREADS threads = Singleton.getInstance(mContext).getThreads();
-            Preferences.warning(threads,
+            Preferences.warning(events,
                     mContext.getString(R.string.no_marked_file_delete));
             return;
         }
@@ -525,7 +526,7 @@ public class ThreadsFragment extends Fragment implements
             if (!mSelectionTracker.hasSelection()) {
                 long threadIdx = thread.getIdx();
 
-
+                final EVENTS events = Singleton.getInstance(mContext).getEvents();
                 final THREADS threads = Singleton.getInstance(mContext).getThreads();
 
                 ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -538,7 +539,7 @@ public class ThreadsFragment extends Fragment implements
                             mHandler.post(() -> clickThreadPlay(threadIdx));
                         }
                     } catch (Throwable e) {
-                        Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                        Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                     }
                 });
             }
@@ -550,7 +551,7 @@ public class ThreadsFragment extends Fragment implements
 
 
     private void clickThreadPlay(long idx) {
-
+        final EVENTS events = Singleton.getInstance(mContext).getEvents();
         final THREADS threads = Singleton.getInstance(mContext).getThreads();
         final IPFS ipfs = Singleton.getInstance(mContext).getIpfs();
         final int timeout = Preferences.getConnectionTimeout(mContext);
@@ -636,7 +637,7 @@ public class ThreadsFragment extends Fragment implements
                         }
                     }
                 } catch (Throwable ex) {
-                    Preferences.error(threads, getString(R.string.no_activity_found_to_handle_uri));
+                    Preferences.error(events, getString(R.string.no_activity_found_to_handle_uri));
                 }
             });
         }
@@ -650,7 +651,7 @@ public class ThreadsFragment extends Fragment implements
             // CHECKED
             Singleton singleton = Singleton.getInstance(mContext);
             if (!Network.isConnected(mContext)) {
-                Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
+                Preferences.error(singleton.getEvents(), getString(R.string.offline_mode));
                 return;
             }
 

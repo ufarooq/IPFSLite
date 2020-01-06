@@ -15,13 +15,13 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.IdentityService;
-import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.Content;
+import threads.core.peers.Content;
+import threads.core.peers.PEERS;
 import threads.ipfs.api.PID;
+import threads.share.IdentityService;
+import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -67,14 +67,14 @@ public class JobServiceIdentity extends JobService {
 
                 Singleton.getInstance(getApplicationContext());
 
-                THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+                PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
 
                 PID host = Preferences.getPID(getApplicationContext());
 
 
                 Map<String, String> params = new HashMap<>();
                 if (host != null) {
-                    String alias = threads.getUserAlias(host);
+                    String alias = peers.getUserAlias(host);
                     params.put(Content.ALIAS, alias);
                 }
 

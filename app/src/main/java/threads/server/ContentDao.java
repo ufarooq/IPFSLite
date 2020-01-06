@@ -9,7 +9,7 @@ import androidx.room.TypeConverters;
 
 import java.util.List;
 
-import threads.core.api.Converter;
+import threads.core.peers.Converter;
 import threads.ipfs.api.PID;
 
 @Dao

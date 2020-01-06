@@ -21,7 +21,7 @@ import java.util.List;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.api.User;
+import threads.core.peers.User;
 import threads.ipfs.IPFS;
 import threads.server.R;
 

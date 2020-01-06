@@ -45,25 +45,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.psdev.licensesdialog.LicensesDialogFragment;
-import threads.core.ConnectService;
-import threads.core.GatewayService;
-import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.AddressType;
-import threads.core.api.Thread;
-import threads.core.api.User;
-import threads.core.mdl.EventViewModel;
+import threads.core.events.EVENTS;
+import threads.core.peers.AddressType;
+import threads.core.peers.PEERS;
+import threads.core.peers.User;
+import threads.core.threads.THREADS;
+import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.PeerInfo;
+import threads.server.mdl.EventViewModel;
+import threads.share.ConnectService;
 import threads.share.DetailsDialogFragment;
 import threads.share.DontShowAgainDialog;
+import threads.share.GatewayService;
 import threads.share.InfoDialogFragment;
 import threads.share.NameDialogFragment;
+import threads.share.Network;
 import threads.share.PeerActionDialogFragment;
 import threads.share.PermissionAction;
 import threads.share.ThreadActionDialogFragment;
@@ -233,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // CHECKED
         Singleton singleton = Singleton.getInstance(getApplicationContext());
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
+            Preferences.error(singleton.getEvents(), getString(R.string.offline_mode));
             return;
         }
 
@@ -251,7 +253,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         host, CID.create(multihash));
             } else {
 
-                Preferences.error(singleton.getThreads(),
+                Preferences.error(singleton.getEvents(),
                         getString(R.string.codec_not_supported));
             }
         } catch (Throwable e) {
@@ -526,12 +528,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+                PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
 
                 if (!value) {
-                    threads.unblockUser(PID.create(pid));
+                    peers.unblockUser(PID.create(pid));
                 } else {
-                    threads.blockUser(PID.create(pid));
+                    peers.blockUser(PID.create(pid));
                 }
 
             } catch (Throwable e) {
@@ -561,17 +563,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         try {
             final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
             final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+            final PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
+            final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
+
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
                     checkNotNull(ipfs, "IPFS is not valid");
-                    User user = threads.getUserByPID(PID.create(pid));
+                    User user = peers.getUserByPID(PID.create(pid));
                     if (user != null) {
-                        threads.removeUser(ipfs, user);
+                        peers.removeUser(ipfs, user);
                     }
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                 }
             });
         } catch (Throwable e) {
@@ -587,7 +592,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Singleton singleton = Singleton.getInstance(getApplicationContext());
 
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
+            Preferences.error(singleton.getEvents(), getString(R.string.offline_mode));
             return;
         }
 
@@ -595,6 +600,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         try {
 
             final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+            final PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
+            final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
 
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
@@ -602,12 +609,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     PID user = PID.create(pid);
 
-                    if (threads.isUserBlocked(user)) {
-                        Preferences.warning(threads, getString(R.string.peer_is_blocked));
+                    if (peers.isUserBlocked(user)) {
+                        Preferences.warning(events, getString(R.string.peer_is_blocked));
                     } else {
 
                         try {
-                            threads.setUserDialing(user, true);
+                            peers.setUserDialing(user, true);
 
                             boolean peerDiscovery = Service.isSupportPeerDiscovery(
                                     getApplicationContext());
@@ -615,10 +622,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             boolean value = ConnectService.connectPeer(getApplicationContext(),
                                     user, peerDiscovery, true, timeout);
 
-                            threads.setUserConnected(user, value);
+                            peers.setUserConnected(user, value);
 
                             if (value) {
-                                String publicKey = threads.getUserPublicKey(pid);
+                                String publicKey = peers.getUserPublicKey(pid);
                                 checkNotNull(publicKey,
                                         "Public key should be at least not null");
                                 if (publicKey.isEmpty()) {
@@ -629,13 +636,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                         } catch (Throwable e) {
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                            threads.setUserConnected(user, false);
+                            peers.setUserConnected(user, false);
                         } finally {
-                            threads.setUserDialing(user, false);
+                            peers.setUserDialing(user, false);
                         }
                     }
                 } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                 }
             });
 
@@ -933,6 +940,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else {
 
             final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+            final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
 
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
@@ -945,7 +953,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                 }
             });
 
@@ -1000,7 +1008,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Singleton singleton = Singleton.getInstance(getApplicationContext());
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
+            Preferences.error(singleton.getEvents(), getString(R.string.offline_mode));
             return;
         }
 
@@ -1009,6 +1017,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
             final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
             final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+            final PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
+            final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
+
             final PID host = Preferences.getPID(getApplicationContext());
             checkNotNull(host);
             if (ipfs != null) {
@@ -1017,7 +1028,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     PID peer = PID.create(pid);
                     try {
 
-                        threads.setUserDialing(peer, true);
+                        peers.setUserDialing(peer, true);
 
                         String protocolVersion = "n.a.";
                         String agentVersion = "n.a.";
@@ -1057,9 +1068,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                                 getSupportFragmentManager(),
                                 DetailsDialogFragment.TAG);
                     } catch (Throwable e) {
-                        Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                        Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                     } finally {
-                        threads.setUserDialing(peer, false);
+                        peers.setUserDialing(peer, false);
                     }
                 });
             }
@@ -1076,9 +1087,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+                PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
 
-                threads.setUserAutoConnect(PID.create(pid), autoConnect);
+                peers.setUserAutoConnect(PID.create(pid), autoConnect);
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -1097,7 +1108,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         try {
             Multihash.fromBase58(pid);
         } catch (Throwable e) {
-            Preferences.error(singleton.getThreads(), getString(R.string.multihash_not_valid));
+            Preferences.error(singleton.getEvents(), getString(R.string.multihash_not_valid));
             return;
         }
 
@@ -1106,13 +1117,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         PID user = PID.create(pid);
 
         if (user.equals(host)) {
-            Preferences.error(singleton.getThreads(), getString(R.string.same_pid_like_host));
+            Preferences.error(singleton.getEvents(), getString(R.string.same_pid_like_host));
             return;
         }
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
+            Preferences.error(singleton.getEvents(), getString(R.string.offline_mode));
             return;
         }
 
@@ -1137,6 +1148,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadInfo(long idx) {
         try {
+            final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
+
             final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
             final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
             if (ipfs != null) {
@@ -1154,7 +1167,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                     } catch (Throwable e) {
-                        Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                        Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                     }
                 });
             }
@@ -1173,12 +1186,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(singleton.getThreads(), getString(R.string.offline_mode));
+            Preferences.error(singleton.getEvents(), getString(R.string.offline_mode));
             return;
         }
 
 
         final THREADS threads = Singleton.getInstance(this).getThreads();
+        final PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
+        final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -1187,11 +1202,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         getEnhancedUserPIDs(getApplicationContext());
 
                 if (pids.isEmpty()) {
-                    Preferences.error(threads,
+                    Preferences.error(events,
                             getApplicationContext().getString(R.string.no_sharing_peers));
                 } else if (pids.size() == 1) {
                     List<User> users = new ArrayList<>();
-                    users.add(threads.getUserByPID(PID.create(pids.get(0))));
+                    users.add(peers.getUserByPID(PID.create(pids.get(0))));
                     Service.getInstance(getApplicationContext()).sendThreads(
                             getApplicationContext(), users, idxs);
                 } else {
@@ -1244,6 +1259,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickThreadView(long idx) {
 
         final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+        final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -1263,7 +1279,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startActivity(intent);
 
             } catch (Throwable e) {
-                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
             }
         });
 
@@ -1271,6 +1287,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickThreadShare(long idx) {
+        final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
 
         final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
         final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
@@ -1309,7 +1326,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                 }
             });
         }
@@ -1371,12 +1388,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
         }
         final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
+        final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
                 threads.setThreadPinned(idx, pinned);
             } catch (Throwable e) {
-                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
             }
         });
 
@@ -1389,6 +1408,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
         final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+        final PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
+        final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
 
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -1399,15 +1420,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     CID image = ThumbnailService.getImage(getApplicationContext(),
                             name, R.drawable.server_network);
-                    threads.setUserImage(user, image);
+                    peers.setUserImage(user, image);
 
-                    threads.setUserAlias(user, name);
+                    peers.setUserAlias(user, name);
 
 
                     threads.setThreadSenderAlias(user, name);
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                 }
             });
         }

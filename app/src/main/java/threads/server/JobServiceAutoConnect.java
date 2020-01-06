@@ -16,12 +16,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.User;
+import threads.core.peers.PEERS;
+import threads.core.peers.User;
 import threads.ipfs.IPFS;
+import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -75,8 +75,9 @@ public class JobServiceAutoConnect extends JobService {
                 IPFS ipfs = singleton.getIpfs();
                 checkNotNull(ipfs, "IPFS not defined");
 
-                THREADS threads = singleton.getThreads();
-                List<User> users = threads.getAutoConnectUsers();
+                PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
+
+                List<User> users = peers.getAutoConnectUsers();
 
                 ExecutorService executorService = Executors.newFixedThreadPool(5);
                 List<Future> futures = new ArrayList<>();

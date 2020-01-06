@@ -24,7 +24,7 @@ import java.io.File;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.THREADS;
+import threads.core.events.EVENTS;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.server.R;
@@ -158,14 +158,15 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
 
         IPFS ipfs = Singleton.getInstance(mContext).getIpfs();
         int timeout = Preferences.getConnectionTimeout(mContext);
-        THREADS threads = Singleton.getInstance(mContext).getThreads();
+
+        final EVENTS events = Singleton.getInstance(mContext).getEvents();
         if (ipfs != null) {
             try {
                 Bitmap imageBitmap = ThumbnailService.getImage(
                         ipfs, bitmap, timeout, true);
                 imageView.setImageBitmap(imageBitmap);
             } catch (Throwable e) {
-                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
             }
         }
 

@@ -4,7 +4,7 @@ import androidx.recyclerview.widget.DiffUtil;
 
 import java.util.List;
 
-import threads.core.api.Thread;
+import threads.core.threads.Thread;
 
 public class ThreadDiffCallback extends DiffUtil.Callback {
     private final List<Thread> mOldList;

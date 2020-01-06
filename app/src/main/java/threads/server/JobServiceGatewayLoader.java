@@ -19,13 +19,13 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.GatewayService;
-import threads.core.Network;
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.Thread;
+import threads.core.threads.THREADS;
+import threads.core.threads.Thread;
 import threads.ipfs.api.CID;
+import threads.share.GatewayService;
+import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

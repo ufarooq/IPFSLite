@@ -22,7 +22,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.THREADS;
+import threads.core.events.EVENTS;
+import threads.core.threads.THREADS;
 import threads.share.IPFSMediaDataSource;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -156,12 +157,12 @@ public class VideoActivity extends AppCompatActivity implements MediaController.
         checkNotNull(cid);
 
         mediaPlayer = new MediaPlayer();
-
+        final EVENTS events = Singleton.getInstance(this).getEvents();
         threads = Singleton.getInstance(this).getThreads();
         try {
             dataSource = new IPFSMediaDataSource(this, cid);
         } catch (Throwable e) {
-            Preferences.error(threads, getString(R.string.video_failure,
+            Preferences.error(events, getString(R.string.video_failure,
                     e.getLocalizedMessage()));
             finish();
         }
@@ -292,7 +293,8 @@ public class VideoActivity extends AppCompatActivity implements MediaController.
                     mediaPlayer.start();
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    Preferences.error(threads, getString(R.string.video_failure,
+                    final EVENTS events = Singleton.getInstance(this).getEvents();
+                    Preferences.error(events, getString(R.string.video_failure,
                             e.getLocalizedMessage()));
                     finish();
                 }
@@ -302,7 +304,8 @@ public class VideoActivity extends AppCompatActivity implements MediaController.
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            Preferences.error(threads, getString(R.string.video_failure,
+            final EVENTS events = Singleton.getInstance(this).getEvents();
+            Preferences.error(events, getString(R.string.video_failure,
                     e.getLocalizedMessage()));
             finish();
         }

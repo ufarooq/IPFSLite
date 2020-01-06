@@ -7,13 +7,13 @@ import androidx.annotation.Nullable;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
-import threads.core.ConnectService;
-import threads.core.IdentityService;
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.api.PeerInfo;
+import threads.core.peers.PeerInfo;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
+import threads.share.ConnectService;
+import threads.share.IdentityService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -36,7 +36,7 @@ public class SwarmService {
             } else {
 
                 if (peerDiscovery) {
-                    threads.core.api.PeerInfo peerInfo = IdentityService.getPeerInfo(
+                    PeerInfo peerInfo = IdentityService.getPeerInfo(
                             context, pid, true);
 
                     if (peerInfo != null) {
@@ -86,7 +86,7 @@ public class SwarmService {
         private final String tag;
         private boolean connected;
         @Nullable
-        private threads.core.api.PeerInfo peerInfo;
+        private PeerInfo peerInfo;
 
         ConnectInfo(PID pid, String tag) {
 

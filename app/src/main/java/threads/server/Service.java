@@ -37,19 +37,18 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import threads.core.ConnectService;
-import threads.core.IdentityService;
-import threads.core.MimeType;
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.THREADS;
-import threads.core.api.AddressType;
-import threads.core.api.Content;
-import threads.core.api.Kind;
-import threads.core.api.Status;
-import threads.core.api.Thread;
-import threads.core.api.User;
-import threads.core.api.UserType;
+import threads.core.events.EVENTS;
+import threads.core.peers.AddressType;
+import threads.core.peers.Content;
+import threads.core.peers.PEERS;
+import threads.core.peers.User;
+import threads.core.peers.UserType;
+import threads.core.threads.Kind;
+import threads.core.threads.Status;
+import threads.core.threads.THREADS;
+import threads.core.threads.Thread;
 import threads.iota.Entity;
 import threads.iota.EntityService;
 import threads.iota.HashDatabase;
@@ -63,6 +62,9 @@ import threads.ipfs.api.PID;
 import threads.ipfs.api.PeerInfo;
 import threads.ipfs.api.PubsubConfig;
 import threads.ipfs.api.RoutingConfig;
+import threads.share.ConnectService;
+import threads.share.IdentityService;
+import threads.share.MimeType;
 import threads.share.ThumbnailService;
 
 import static androidx.core.util.Preconditions.checkArgument;
@@ -327,14 +329,16 @@ public class Service {
         boolean success = true;
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
+        final PEERS peers = Singleton.getInstance(context).getPeers();
         final PID host = Preferences.getPID(context);
+        final EVENTS events = Singleton.getInstance(context).getEvents();
         checkNotNull(host);
         final EntityService entityService = Singleton.getInstance(context).getEntityService();
         try {
             String address = AddressType.getAddress(
                     PID.create(pid), AddressType.NOTIFICATION);
 
-            String publicKey = threads.getUserPublicKey(pid);
+            String publicKey = peers.getUserPublicKey(pid);
             if (publicKey.isEmpty()) {
                 IPFS ipfs = Singleton.getInstance(context).getIpfs();
                 checkNotNull(ipfs, "IPFS not valid");
@@ -343,7 +347,7 @@ public class Service {
                 if (info != null) {
                     String key = info.getPublicKey();
                     if (key != null) {
-                        threads.setUserPublicKey(pid, key);
+                        peers.setUserPublicKey(pid, key);
                         publicKey = key;
                     }
                 }
@@ -359,14 +363,14 @@ public class Service {
                 content.put(Content.CID, Encryption.encryptRSA(cid, publicKey));
 
 
-                String alias = threads.getUserAlias(pid);
+                String alias = peers.getUserAlias(pid);
                 String json = gson.toJson(content);
 
                 try {
                     entityService.insertData(context, address, json);
                     long time = (System.currentTimeMillis() - startTime) / 1000;
 
-                    threads.invokeEvent(Preferences.INFO,
+                    events.invokeEvent(Preferences.INFO,
                             context.getString(R.string.success_notification,
                                     alias, String.valueOf(time)));
 
@@ -375,7 +379,7 @@ public class Service {
                     success = false;
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
 
-                    threads.invokeEvent(Preferences.EXCEPTION,
+                    events.invokeEvent(Preferences.EXCEPTION,
                             context.getString(R.string.failed_notification, alias));
                 }
 
@@ -433,17 +437,18 @@ public class Service {
 
         IPFS ipfs = Singleton.getInstance(context).getIpfs();
         THREADS threads = Singleton.getInstance(context).getThreads();
+        PEERS peers = Singleton.getInstance(context).getPeers();
         checkNotNull(ipfs, "IPFS not defined");
 
 
-        if (threads.getUserByPID(pid) == null) {
+        if (peers.getUserByPID(pid) == null) {
             threads.ipfs.api.PeerInfo info = ipfs.id(pid, 3);
             if (info != null) {
                 if (info.isLiteAgent()) {
                     String pubKey = info.getPublicKey();
                     if (pubKey != null && !pubKey.isEmpty()) {
 
-                        threads.core.api.PeerInfo peerInfo = IdentityService.getPeerInfo(
+                        threads.core.peers.PeerInfo peerInfo = IdentityService.getPeerInfo(
                                 context, pid, false);
                         if (peerInfo != null) {
                             String alias = peerInfo.getAdditionalValue(Content.ALIAS);
@@ -453,10 +458,10 @@ public class Service {
                                         alias,
                                         R.drawable.server_network);
 
-                                User user = threads.createUser(pid, pubKey, alias,
+                                User user = peers.createUser(pid, pubKey, alias,
                                         UserType.UNKNOWN, image);
                                 user.setBlocked(true);
-                                threads.storeUser(user);
+                                peers.storeUser(user);
                             }
                         }
                     }
@@ -470,10 +475,11 @@ public class Service {
         checkNotNull(user);
 
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-
+        final PEERS peers = Singleton.getInstance(context).getPeers();
         final THREADS threads = Singleton.getInstance(context).getThreads();
+        final EVENTS events = Singleton.getInstance(context).getEvents();
 
-        if (!threads.existsUser(user)) {
+        if (!peers.existsUser(user)) {
 
             String alias = user.getPid();
 
@@ -481,24 +487,24 @@ public class Service {
             CID image = ThumbnailService.getImage(
                     context, alias, R.drawable.server_network);
 
-            User newUser = threads.createUser(user, "",
+            User newUser = peers.createUser(user, "",
                     alias, UserType.VERIFIED, image);
-            threads.storeUser(newUser);
+            peers.storeUser(newUser);
 
         } else {
-            Preferences.warning(threads, context.getString(R.string.peer_exists_with_pid));
+            Preferences.warning(events, context.getString(R.string.peer_exists_with_pid));
             return;
         }
 
 
         try {
-            threads.setUserDialing(user, true);
+            peers.setUserDialing(user, true);
 
             final int timeout = Preferences.getConnectionTimeout(context);
             final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
             boolean value = ConnectService.connectPeer(context, user,
                     peerDiscovery, true, timeout);
-            threads.setUserConnected(user, value);
+            peers.setUserConnected(user, value);
 
             if (value) {
 
@@ -508,8 +514,8 @@ public class Service {
 
                     Content map = new Content();
                     map.put(Content.EST, "CONNECT");
-                    map.put(Content.ALIAS, threads.getUserAlias(host));
-                    map.put(Content.PKEY, threads.getUserPublicKey(host));
+                    map.put(Content.ALIAS, peers.getUserAlias(host));
+                    map.put(Content.PKEY, peers.getUserPublicKey(host));
 
                     Singleton.getInstance(context).
                             getConsoleListener().info(
@@ -519,28 +525,28 @@ public class Service {
                     ipfs.pubsubPub(user.getPid(), gson.toJson(map), 50);
                 }
 
-                if (threads.getUserPublicKey(user).isEmpty()) {
+                if (peers.getUserPublicKey(user).isEmpty()) {
 
                     JobServiceLoadPublicKey.publicKey(context, user.getPid());
                 }
 
             }
 
-            threads.core.api.PeerInfo peerInfo = IdentityService.getPeerInfo(
+            threads.core.peers.PeerInfo peerInfo = IdentityService.getPeerInfo(
                     context, user, true);
             if (peerInfo != null) {
                 String alias = peerInfo.getAdditionalValue(Content.ALIAS);
                 if (!alias.isEmpty()) {
-                    threads.setUserAlias(user, alias);
+                    peers.setUserAlias(user, alias);
                 }
             }
 
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            threads.setUserConnected(user, false);
+            peers.setUserConnected(user, false);
         } finally {
-            threads.setUserDialing(user, false);
+            peers.setUserDialing(user, false);
         }
     }
 
@@ -549,14 +555,14 @@ public class Service {
         checkNotNull(topic);
         Gson gson = new Gson();
         IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        THREADS threads = Singleton.getInstance(context).getThreads();
+        PEERS peers = Singleton.getInstance(context).getPeers();
         if (Preferences.isPubsubEnabled(context)) {
             PID host = Preferences.getPID(context);
             checkNotNull(host);
 
             Content map = new Content();
             map.put(Content.EST, "RECEIVED");
-            map.put(Content.ALIAS, threads.getUserAlias(host));
+            map.put(Content.ALIAS, peers.getUserAlias(host));
 
             checkNotNull(ipfs, "IPFS not valid");
             ipfs.pubsubPub(topic, gson.toJson(map), 50);
@@ -655,9 +661,8 @@ public class Service {
         checkNotNull(pubKey);
 
         try {
-            final THREADS threadsAPI = Singleton.getInstance(context).getThreads();
-
-            User sender = threadsAPI.getUserByPID(senderPid);
+            final PEERS peers = Singleton.getInstance(context).getPeers();
+            User sender = peers.getUserByPID(senderPid);
             checkNotNull(sender);
 
 
@@ -669,7 +674,7 @@ public class Service {
             sender.setImage(image);
             sender.setType(UserType.VERIFIED);
 
-            threadsAPI.storeUser(sender);
+            peers.storeUser(sender);
 
 
         } catch (Throwable e) {
@@ -719,26 +724,28 @@ public class Service {
 
         try {
             final THREADS threads = Singleton.getInstance(context).getThreads();
+            final PEERS peers = Singleton.getInstance(context).getPeers();
             final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+            final EVENTS events = Singleton.getInstance(context).getEvents();
             if (ipfs != null) {
-                User sender = threads.getUserByPID(senderPid);
+                User sender = peers.getUserByPID(senderPid);
                 if (sender == null) {
 
                     // create a new user which is blocked (User has to unblock and verified the user)
                     CID image = ThumbnailService.getImage(
                             context, alias, R.drawable.server_network);
 
-                    sender = threads.createUser(senderPid, pubKey, alias, UserType.VERIFIED, image);
+                    sender = peers.createUser(senderPid, pubKey, alias, UserType.VERIFIED, image);
                     sender.setBlocked(true);
-                    threads.storeUser(sender);
+                    peers.storeUser(sender);
 
-                    Preferences.error(threads, context.getString(R.string.user_connect_try, alias));
+                    Preferences.error(events, context.getString(R.string.user_connect_try, alias));
                 }
 
                 if (Preferences.isPubsubEnabled(context)) {
                     PID host = Preferences.getPID(context);
                     checkNotNull(host);
-                    User hostUser = threads.getUserByPID(host);
+                    User hostUser = peers.getUserByPID(host);
                     checkNotNull(hostUser);
                     Content map = new Content();
                     map.put(Content.EST, "CONNECT_REPLY");
@@ -823,14 +830,14 @@ public class Service {
         checkNotNull(context);
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
-
+        final PEERS peers = Singleton.getInstance(context).getPeers();
         try {
             threads.resetThreadsNumber();
             threads.resetThreadsPublishing();
             threads.resetThreadsLeaching();
-            threads.resetUsersDialing();
-            threads.resetPeersConnected();
-            threads.resetUsersConnected();
+            peers.resetUsersDialing();
+            peers.resetPeersConnected();
+            peers.resetUsersConnected();
             threads.setThreadStatus(Status.INIT, Status.ERROR);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -841,14 +848,17 @@ public class Service {
     private static void createHost(@NonNull Context context) {
         checkNotNull(context);
 
-        final THREADS threads = Singleton.getInstance(context).getThreads();
+
+        final PEERS peers = Singleton.getInstance(context).getPeers();
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final EVENTS events = Singleton.getInstance(context).getEvents();
+
         if (ipfs != null) {
             try {
                 PID pid = Preferences.getPID(context);
                 checkNotNull(pid);
 
-                User user = threads.getUserByPID(pid);
+                User user = peers.getUserByPID(pid);
                 if (user == null) {
                     String publicKey = ipfs.getPublicKey();
 
@@ -856,19 +866,19 @@ public class Service {
                             context, pid.getPid(), R.drawable.server_network);
 
 
-                    user = threads.createUser(pid, publicKey, getDeviceName(),
+                    user = peers.createUser(pid, publicKey, getDeviceName(),
                             UserType.VERIFIED, image);
                     user.setBlocked(true);
-                    threads.storeUser(user);
+                    peers.storeUser(user);
 
 
                     JobServiceIdentity.identity(context);
 
                 } else {
-                    threads.blockUser(pid);
+                    peers.blockUser(pid);
                 }
             } catch (Throwable e) {
-                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
             }
         }
     }
@@ -877,6 +887,8 @@ public class Service {
     @NonNull
     private static String evaluateMimeType(@NonNull Context context, @NonNull String filename) {
         final THREADS threads = Singleton.getInstance(context).getThreads();
+        final EVENTS events = Singleton.getInstance(context).getEvents();
+
         try {
             Optional<String> extension = ThumbnailService.getExtension(filename);
             if (extension.isPresent()) {
@@ -886,7 +898,7 @@ public class Service {
                 }
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+            Preferences.evaluateException(events, Preferences.EXCEPTION, e);
         }
         return MimeType.OCTET_MIME_TYPE;
     }
@@ -906,8 +918,8 @@ public class Service {
 
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
-
-        User user = threads.getUserByPID(creator);
+        final PEERS peers = Singleton.getInstance(context).getPeers();
+        User user = peers.getUserByPID(creator);
         checkNotNull(user);
 
         Thread thread = threads.createThread(user, Status.INIT, Kind.OUT,
@@ -982,6 +994,8 @@ public class Service {
             checkNotNull(downloadManager);
 
             final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+            final EVENTS events = Singleton.getInstance(context).getEvents();
+
 
             if (ipfs != null) {
                 ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -1043,7 +1057,7 @@ public class Service {
                                         file.length(), true);
                             }
                         } catch (Throwable e) {
-                            Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
+                            Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                         } finally {
 
                             if (notificationManager != null) {
@@ -1052,7 +1066,7 @@ public class Service {
                         }
 
                     } catch (Throwable e) {
-                        Preferences.evaluateException(threadsAPI, Preferences.EXCEPTION, e);
+                        Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                     }
                 });
             }
@@ -1268,6 +1282,7 @@ public class Service {
         checkNotNull(ipfs);
         checkNotNull(thread);
 
+        final EVENTS events = Singleton.getInstance(context).getEvents();
 
         try {
             threads.setThreadLeaching(thread.getIdx(), true);
@@ -1303,7 +1318,7 @@ public class Service {
                             checkNotNull(image);
                             threads.setImage(thread, image);
                         } catch (Throwable e) {
-                            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                            Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                         }
                     }
 
@@ -1377,30 +1392,31 @@ public class Service {
         try {
             final PID host = Preferences.getPID(context);
             final THREADS threads = Singleton.getInstance(context).getThreads();
-
+            final PEERS peers = Singleton.getInstance(context).getPeers();
+            final EVENTS events = Singleton.getInstance(context).getEvents();
 
             final IPFS ipfs = Singleton.getInstance(context).getIpfs();
             if (ipfs != null) {
 
-                List<PID> users = threads.getUsersPIDs();
+                List<PID> users = peers.getUsersPIDs();
 
                 users.remove(host);
 
                 for (PID user : users) {
-                    if (!threads.isUserBlocked(user) && !threads.getUserDialing(user)) {
+                    if (!peers.isUserBlocked(user) && !peers.getUserDialing(user)) {
 
                         try {
                             boolean value = ipfs.isConnected(user);
 
-                            boolean preValue = threads.isUserConnected(user);
+                            boolean preValue = peers.isUserConnected(user);
 
                             if (preValue != value) {
-                                threads.setUserConnected(user, value);
+                                peers.setUserConnected(user, value);
                             }
 
                         } catch (Throwable e) {
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                            threads.setUserConnected(user, false);
+                            peers.setUserConnected(user, false);
                         }
                     }
                 }
@@ -1417,9 +1433,10 @@ public class Service {
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
 
+        final EVENTS events = Singleton.getInstance(context).getEvents();
 
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-
+        final PEERS peers = Singleton.getInstance(context).getPeers();
         if (ipfs != null) {
 
             UPLOAD_SERVICE.submit(() -> {
@@ -1427,7 +1444,7 @@ public class Service {
 
                     PID pid = Preferences.getPID(context);
                     checkNotNull(pid);
-                    User host = threads.getUserByPID(pid);
+                    User host = peers.getUserByPID(pid);
                     checkNotNull(host);
 
                     String content;
@@ -1473,7 +1490,7 @@ public class Service {
                     }
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                 }
             });
         }
@@ -1482,11 +1499,13 @@ public class Service {
     void storeData(@NonNull Context context, @NonNull Uri uri) {
         checkNotNull(context);
         checkNotNull(uri);
+        final EVENTS events = Singleton.getInstance(context).getEvents();
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
+        final PEERS peers = Singleton.getInstance(context).getPeers();
         ThumbnailService.FileDetails fileDetails = ThumbnailService.getFileDetails(context, uri);
         if (fileDetails == null) {
-            Preferences.error(threads, context.getString(R.string.file_not_supported));
+            Preferences.error(events, context.getString(R.string.file_not_supported));
             return;
         }
 
@@ -1502,7 +1521,7 @@ public class Service {
 
                 PID pid = Preferences.getPID(context);
                 checkNotNull(pid);
-                User host = threads.getUserByPID(pid);
+                User host = peers.getUserByPID(pid);
                 checkNotNull(host);
 
 
@@ -1543,9 +1562,9 @@ public class Service {
                 }
 
             } catch (FileNotFoundException e) {
-                Preferences.error(threads, context.getString(R.string.file_not_found));
+                Preferences.error(events, context.getString(R.string.file_not_found));
             } catch (Throwable e) {
-                Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
             }
         });
     }
@@ -1555,13 +1574,14 @@ public class Service {
         checkNotNull(context);
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
+        final PEERS peers = Singleton.getInstance(context).getPeers();
         final PID pid = Preferences.getPID(context);
         ArrayList<String> users = new ArrayList<>();
         checkNotNull(pid);
 
-        for (User user : threads.getUsers()) {
+        for (User user : peers.getUsers()) {
             if (!user.getPID().equals(pid)) {
-                if (!threads.isUserBlocked(user.getPID())) {
+                if (!peers.isUserBlocked(user.getPID())) {
                     users.add(user.getPID().getPid());
                 }
             }
@@ -1615,6 +1635,7 @@ public class Service {
 
         final Singleton singleton = Singleton.getInstance(context);
         final THREADS threads = singleton.getThreads();
+        final EVENTS events = Singleton.getInstance(context).getEvents();
 
 
         JobServiceConnect.connect(context, user.getPID());
@@ -1638,7 +1659,7 @@ public class Service {
                 }
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+            Preferences.evaluateException(events, Preferences.EXCEPTION, e);
         }
 
 
@@ -1655,6 +1676,7 @@ public class Service {
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         final ContentService contentService = ContentService.getInstance(context);
         final PID host = Preferences.getPID(context);
+        final EVENTS events = Singleton.getInstance(context).getEvents();
 
         if (ipfs != null) {
 
@@ -1665,7 +1687,7 @@ public class Service {
                     threads.resetThreadsNumber(idxs);
 
                     if (users.isEmpty()) {
-                        Preferences.error(threads, context.getString(R.string.no_sharing_peers));
+                        Preferences.error(events, context.getString(R.string.no_sharing_peers));
                     } else {
                         checkNotNull(host);
 
@@ -1709,7 +1731,7 @@ public class Service {
                     }
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.EXCEPTION, e);
+                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                 }
             });
         }
@@ -1735,6 +1757,9 @@ public class Service {
         try {
             final IPFS ipfs = Singleton.getInstance(context).getIpfs();
             final THREADS threads = Singleton.getInstance(context).getThreads();
+            final PEERS peers = Singleton.getInstance(context).getPeers();
+            final EVENTS events = Singleton.getInstance(context).getEvents();
+
             if (ipfs != null) {
 
                 try {
@@ -1752,7 +1777,7 @@ public class Service {
                             PID senderPid = PID.create(sender);
 
 
-                            if (!threads.isUserBlocked(senderPid)) {
+                            if (!peers.isUserBlocked(senderPid)) {
 
                                 String code = message.getMessage().trim();
 
@@ -1802,7 +1827,7 @@ public class Service {
                                                 String alias = content.get(Content.ALIAS);
                                                 checkNotNull(alias);
 
-                                                Preferences.error(threads, context.getString(
+                                                Preferences.error(events, context.getString(
                                                         R.string.notification_received, alias));
                                             }
                                         } else if ("SHARE".equals(est)) {
@@ -1813,13 +1838,13 @@ public class Service {
                                                     3, TimeUnit.SECONDS);
                                         }
                                     } else {
-                                        Preferences.error(threads, context.getString(
+                                        Preferences.error(events, context.getString(
                                                 R.string.unsupported_pubsub_message,
                                                 senderPid.getPid()));
                                     }
                                 } else if (result.getCodex() == CodecDecider.Codec.UNKNOWN) {
 
-                                    Preferences.error(threads, context.getString(
+                                    Preferences.error(events, context.getString(
                                             R.string.unsupported_pubsub_message,
                                             senderPid.getPid()));
                                 }
@@ -1835,7 +1860,7 @@ public class Service {
                     });
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(threads, Preferences.IPFS_START_FAILURE, e);
+                    Preferences.evaluateException(events, Preferences.IPFS_START_FAILURE, e);
                 }
 
             }

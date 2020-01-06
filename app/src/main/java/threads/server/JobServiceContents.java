@@ -16,10 +16,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import threads.core.Network;
-import threads.core.api.Content;
+import threads.core.peers.Content;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
+import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -39,7 +39,7 @@ public class JobServiceContents extends JobService {
             ComponentName componentName = new ComponentName(context, JobServiceContents.class);
 
             PersistableBundle bundle = new PersistableBundle();
-            bundle.putString(threads.core.api.Content.PID, pid.getPid());
+            bundle.putString(Content.PID, pid.getPid());
             bundle.putString(Content.CID, cid.getCid());
 
             JobInfo jobInfo = new JobInfo.Builder(cid.hashCode(), componentName)
