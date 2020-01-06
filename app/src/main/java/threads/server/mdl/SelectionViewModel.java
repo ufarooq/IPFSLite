@@ -1,4 +1,4 @@
-package threads.server;
+package threads.server.mdl;
 
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;

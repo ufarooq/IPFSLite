@@ -58,19 +58,14 @@ import threads.ipfs.api.CID;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.PeerInfo;
-import threads.server.jobs.JobServiceAutoConnect;
-import threads.server.jobs.JobServiceCleanup;
 import threads.server.jobs.JobServiceDeleteThreads;
 import threads.server.jobs.JobServiceDownload;
-import threads.server.jobs.JobServiceDownloader;
-import threads.server.jobs.JobServiceFindPeers;
 import threads.server.jobs.JobServiceIdentity;
-import threads.server.jobs.JobServiceLoadNotifications;
 import threads.server.jobs.JobServiceLoadPublicKey;
-import threads.server.jobs.JobServicePeers;
 import threads.server.jobs.JobServicePublish;
-import threads.server.jobs.JobServicePublisher;
+import threads.server.mdl.ApplicationViewModel;
 import threads.server.mdl.EventViewModel;
+import threads.server.mdl.SelectionViewModel;
 import threads.share.ConnectService;
 import threads.share.DetailsDialogFragment;
 import threads.share.DontShowAgainDialog;
@@ -808,7 +803,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-        EventViewModel eventViewModel = new ViewModelProvider(this).get(EventViewModel.class);
+        new ViewModelProvider(this).get(ApplicationViewModel.class);
+        EventViewModel eventViewModel =
+                new ViewModelProvider(this).get(EventViewModel.class);
 
 
         eventViewModel.getIPFSInstallFailure().observe(this, (event) -> {
@@ -940,29 +937,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         });
 
-        onLoad();
+        handleIntents();
+
+
     }
 
-    private void onLoad() {
+    private void handleIntents() {
 
         Intent intent = getIntent();
         final String action = intent.getAction();
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                Service.getInstance(getApplicationContext());
 
-                // jobs
-                JobServiceLoadNotifications.notifications(getApplicationContext());
-                JobServiceDownloader.downloader(getApplicationContext());
-                JobServicePublisher.publish(getApplicationContext());
-                JobServicePeers.peers(getApplicationContext());
-                JobServiceFindPeers.findPeers(getApplicationContext());
-                JobServiceAutoConnect.autoConnect(getApplicationContext());
-                JobServiceCleanup.cleanup(getApplicationContext());
-                ContentsService.contents(getApplicationContext());
-
+        try {
 
                 if (Intent.ACTION_SEND.equals(action)) {
                     String type = intent.getType();
@@ -988,7 +974,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Log.e(TAG, "" + e.getLocalizedMessage());
             }
 
-        });
+
     }
 
     private void handleSendText(Intent intent) {
