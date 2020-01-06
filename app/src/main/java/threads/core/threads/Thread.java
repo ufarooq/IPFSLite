@@ -31,8 +31,8 @@ public class Thread {
     @ColumnInfo(name = "sender")
     private final PID sender; // checked
 
-    @ColumnInfo(name = "date")
-    private long date; // todo
+    @ColumnInfo(name = "lastModified")
+    private long lastModified; // checked
 
     @NonNull
     @ColumnInfo(name = "senderAlias")
@@ -75,15 +75,11 @@ public class Thread {
     @ColumnInfo(name = "name")
     private String name = "";
 
-    @ColumnInfo(name = "lastModified")
-    private long lastModified; // checked
-
 
     Thread(@NonNull Status status,
            @NonNull PID sender,
            @NonNull String senderAlias,
            @NonNull Kind kind,
-           long date,
            long thread) {
         this.thread = thread;
         this.sender = sender;
@@ -92,34 +88,24 @@ public class Thread {
         this.expire = System.currentTimeMillis();
         this.status = status;
         this.marked = false;
-        this.date = date;
+        this.lastModified = System.currentTimeMillis();
         this.mimeType = MimeType.PLAIN_MIME_TYPE;
         this.pinned = false;
         this.publishing = false;
         this.leaching = false;
-        this.lastModified = System.currentTimeMillis();
     }
 
     public static Thread createThread(@NonNull Status status,
                                       @NonNull PID senderPid,
                                       @NonNull String senderAlias,
                                       @NonNull Kind kind,
-                                      long date,
                                       long thread) {
         checkNotNull(status);
         checkNotNull(senderPid);
         checkNotNull(senderAlias);
         checkNotNull(kind);
         return new Thread(status,
-                senderPid, senderAlias, kind, date, thread);
-    }
-
-    public long getLastModified() {
-        return lastModified;
-    }
-
-    void setLastModified(long lastModified) {
-        this.lastModified = lastModified;
+                senderPid, senderAlias, kind, thread);
     }
 
     public boolean isLeaching() {
@@ -138,12 +124,12 @@ public class Thread {
         this.marked = marked;
     }
 
-    public long getDate() {
-        return date;
+    public long getLastModified() {
+        return lastModified;
     }
 
-    public void setDate(long date) {
-        this.date = date;
+    public void setLastModified(long lastModified) {
+        this.lastModified = lastModified;
     }
 
 
@@ -218,14 +204,6 @@ public class Thread {
     }
 
 
-    public boolean sameThread(@NonNull Thread o) {
-        checkNotNull(o);
-        if (this == o) return true;
-        return Objects.equals(cid, o.getCid()) &&
-                Objects.equals(sender, o.getSender()) &&
-                Objects.equals(image, o.getImage()) &&
-                Objects.equals(name, o.getName());
-    }
 
     public boolean sameContent(@NonNull Thread o) {
         checkNotNull(o);
@@ -240,7 +218,7 @@ public class Thread {
                 Objects.equals(cid, o.getCid()) &&
                 Objects.equals(senderAlias, o.getSenderAlias()) &&
                 Objects.equals(image, o.getImage()) &&
-                Objects.equals(date, o.getDate());
+                Objects.equals(lastModified, o.getLastModified());
     }
 
     @Nullable

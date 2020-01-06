@@ -113,7 +113,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         // Create a queue to store the most recent documents, which orders by last modified.
         PriorityQueue<Thread> lastModifiedFiles = new PriorityQueue<Thread>(5, new Comparator<Thread>() {
             public int compare(Thread i, Thread j) {
-                return Long.compare(i.getDate(), j.getDate());
+                return Long.compare(i.getLastModified(), j.getLastModified());
             }
         });
 
@@ -296,7 +296,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         row.add(Document.COLUMN_DISPLAY_NAME, displayName);
         row.add(Document.COLUMN_SIZE, file.getSize());
         row.add(Document.COLUMN_MIME_TYPE, mimeType);
-        row.add(Document.COLUMN_LAST_MODIFIED, file.getDate());
+        row.add(Document.COLUMN_LAST_MODIFIED, file.getLastModified());
         row.add(Document.COLUMN_FLAGS, flags);
 
     }

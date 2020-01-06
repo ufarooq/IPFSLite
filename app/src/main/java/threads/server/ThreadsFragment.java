@@ -300,7 +300,7 @@ public class ThreadsFragment extends Fragment implements
                             data.add(threadObject);
                         }
                     }
-                    data.sort(Comparator.comparing(Thread::getDate).reversed());
+                    data.sort(Comparator.comparing(Thread::getLastModified).reversed());
 
                     boolean scrollToTop = false;
 

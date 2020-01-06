@@ -123,7 +123,6 @@ public class ThreadsAPI {
                 kind,
                 user.getPID(),
                 user.getAlias(),
-                new Date(),
                 thread);
 
     }
@@ -309,20 +308,6 @@ public class ThreadsAPI {
     }
 
 
-    private boolean existsSameThread(@NonNull Thread thread) {
-        checkNotNull(thread);
-        boolean result = false;
-        List<Thread> notes = getThreadsByDate(thread.getDate());
-        for (Thread cmp : notes) {
-            if (thread.sameThread(cmp)) {
-                result = true;
-                break;
-            }
-        }
-        return result;
-    }
-
-
     @Nullable
     public Status getThreadStatus(long idx) {
         return getThreadsDatabase().threadDao().getStatus(idx);
@@ -352,11 +337,6 @@ public class ThreadsAPI {
     @Nullable
     public Thread getThreadByIdx(long idx) {
         return getThreadsDatabase().threadDao().getThreadByIdx(idx);
-    }
-
-    @Nullable
-    public Thread getThreadByTimestamp(long timestamp) {
-        return getThreadsDatabase().threadDao().getThreadByTimestamp(timestamp);
     }
 
 
@@ -390,10 +370,8 @@ public class ThreadsAPI {
                                 @NonNull Kind kind,
                                 @NonNull PID senderPid,
                                 @NonNull String senderAlias,
-                                @NonNull Date date,
                                 long thread) {
-        return Thread.createThread(status,
-                senderPid, senderAlias, kind, date.getTime(), thread);
+        return Thread.createThread(status, senderPid, senderAlias, kind, thread);
     }
 
 

@@ -33,7 +33,7 @@ public interface ThreadDao {
     @Query("DELETE FROM Thread")
     void clear();
 
-    @Query("SELECT * FROM Thread WHERE date =:date")
+    @Query("SELECT * FROM Thread WHERE lastModified =:date")
     List<Thread> getThreadsByDate(long date);
 
     @Query("SELECT * FROM Thread WHERE expire < :date")
@@ -63,7 +63,7 @@ public interface ThreadDao {
     @Query("UPDATE Thread SET leaching = :leaching  WHERE idx = :idx")
     void setLeaching(long idx, boolean leaching);
 
-    @Query("UPDATE Thread SET date = :date  WHERE idx = :idx")
+    @Query("UPDATE Thread SET lastModified = :date  WHERE idx = :idx")
     void setThreadDate(long idx, long date);
 
     @Query("UPDATE Thread SET status = :status  WHERE idx IN (:idxs)")
@@ -141,9 +141,6 @@ public interface ThreadDao {
 
     @Query("SELECT * FROM Thread WHERE idx =:idx")
     Thread getThreadByIdx(long idx);
-
-    @Query("SELECT * FROM Thread WHERE lastModified =:timestamp")
-    Thread getThreadByTimestamp(long timestamp);
 
     @Query("SELECT * FROM Thread WHERE idx IN(:idxs)")
     List<Thread> getThreadByIdxs(long... idxs);
