@@ -204,7 +204,6 @@ public class Thread {
     }
 
 
-
     public boolean sameContent(@NonNull Thread o) {
         checkNotNull(o);
         if (this == o) return true;

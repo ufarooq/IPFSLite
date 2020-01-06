@@ -165,17 +165,7 @@ public class ThreadsFragment extends Fragment implements
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
         switch (item.getItemId()) {
-            case R.id.action_mark_all: {
 
-                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                mThreadsViewAdapter.selectAllThreads();
-
-                return true;
-            }
             case R.id.action_daemon: {
 
                 if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
@@ -469,6 +459,17 @@ public class ThreadsFragment extends Fragment implements
             @Override
             public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
                 switch (item.getItemId()) {
+                    case R.id.action_mode_mark_all: {
+
+                        if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                            break;
+                        }
+                        mLastClickTime = SystemClock.elapsedRealtime();
+
+                        mThreadsViewAdapter.selectAllThreads();
+
+                        return true;
+                    }
                     case R.id.action_mode_delete: {
 
                         if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {

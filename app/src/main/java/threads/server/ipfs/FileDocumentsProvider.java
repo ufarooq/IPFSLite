@@ -306,7 +306,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
 
         long idx = Long.parseLong(parentDocumentId);
 
-        List<Thread> entries = threads.getThreadsByThread(idx);
+        List<Thread> entries = threads.getThreadsByThread(idx); // todo only valid threads
 
         final MatrixCursor result = new MatrixCursor(resolveDocumentProjection(projection));
 
@@ -341,11 +341,11 @@ public class FileDocumentsProvider extends DocumentsProvider {
     public boolean onCreate() {
 
         // TODO remove this
-        Service.getInstance(getContext());
+        Service.getInstance(getContext()); //todo
 
         threads = THREADS.getInstance(getContext());
 
-        ipfs = Singleton.getInstance(getContext()).getIpfs();
+        ipfs = Singleton.getInstance(getContext()).getIpfs(); //todo
         return true;
     }
 

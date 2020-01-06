@@ -21,20 +21,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
-import threads.core.events.EVENTS;
 import threads.core.peers.User;
 import threads.core.peers.UserType;
-import threads.core.threads.THREADS;
-import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
-import threads.ipfs.api.PeerInfo;
 import threads.server.mdl.UsersViewModel;
-import threads.share.DetailsDialogFragment;
 import threads.share.UserActionDialogFragment;
 import threads.share.UsersViewAdapter;
 
@@ -109,63 +101,8 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
                 getActivity().invalidateOptionsMenu();
                 return true;
             }
-            case R.id.action_info: {
-
-                // mis-clicking prevention, using threshold of 1000 ms
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                mListener.clickInfoPeer();
-
-                return true;
-            }
-
-            case R.id.action_id: {
-
-                // mis-clicking prevention, using threshold of 1000 ms
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                final EVENTS events = Singleton.getInstance(mContext).getEvents();
-
-                final THREADS threads = Singleton.getInstance(mContext).getThreads();
-                final IPFS ipfs = Singleton.getInstance(mContext).getIpfs();
-                if (ipfs != null) {
-                    ExecutorService executor = Executors.newSingleThreadExecutor();
-                    executor.submit(() -> {
-                        try {
-                            PeerInfo info = ipfs.id();
-                            checkNotNull(info);
-                            String html = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Addresses</h3><ul>";
-                            List<String> addresses = info.getMultiAddresses();
-                            for (String address : addresses) {
-                                html = html.concat("<li><div style=\"width: 80%;" +
-                                        "  word-wrap:break-word;\">").concat(address).concat("</div></li>");
-                            }
-                            String agentVersion = info.getAgentVersion();
-                            html = html.concat("</ul><br/></body><footer>Agent : <strong style=\"color:teal;\">" + agentVersion + "</strong></footer></html>");
 
 
-                            DetailsDialogFragment.newInstance(
-                                    DetailsDialogFragment.Type.HTML, html).show(
-                                    getChildFragmentManager(),
-                                    DetailsDialogFragment.TAG);
-
-                        } catch (Throwable e) {
-                            // ignore exception for now
-                            Preferences.evaluateException(events, Preferences.EXCEPTION, e);
-                        }
-                    });
-
-                }
-
-
-                return true;
-            }
         }
         return super.onOptionsItemSelected(item);
     }

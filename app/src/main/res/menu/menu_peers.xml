@@ -10,19 +10,5 @@
         android:visible="true"
         app:showAsAction="ifRoom" />
 
-    <item
-        android:id="@+id/action_info"
-        android:icon="@drawable/server_network"
-        app:iconTint="?android:textColorSecondary"
-        android:orderInCategory="50"
-        android:title="@string/action_info"
-        android:visible="true"
-        app:showAsAction="ifRoom" />
 
-    <item
-        android:id="@+id/action_id"
-        android:orderInCategory="60"
-        android:title="@string/peer_info"
-        android:visible="true"
-        app:showAsAction="never" />
 </menu>
