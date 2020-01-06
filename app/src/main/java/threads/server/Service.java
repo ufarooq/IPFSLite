@@ -335,7 +335,6 @@ public class Service {
 
         boolean success = true;
 
-        final THREADS threads = Singleton.getInstance(context).getThreads();
         final PEERS peers = Singleton.getInstance(context).getPeers();
         final PID host = Preferences.getPID(context);
         final EVENTS events = Singleton.getInstance(context).getEvents();
