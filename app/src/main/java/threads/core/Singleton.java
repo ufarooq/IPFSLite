@@ -20,7 +20,6 @@ import threads.core.peers.PEERS;
 import threads.core.peers.PeersDatabase;
 import threads.core.peers.PeersInfoDatabase;
 import threads.core.threads.THREADS;
-import threads.core.threads.ThreadsDatabase;
 import threads.iota.EntityService;
 import threads.iota.IOTA;
 import threads.ipfs.IPFS;
@@ -43,7 +42,7 @@ public class Singleton {
 
     private static Singleton SINGLETON = null;
     private final IOTA iota;
-    private final ThreadsDatabase threadsDatabase;
+
     private final EventsDatabase eventsDatabase;
     private final PeersInfoDatabase peersInfoDatabase;
     private final Hashtable<String, Future> topics = new Hashtable<>();
@@ -63,11 +62,6 @@ public class Singleton {
     private Singleton(@NonNull Context context) {
         checkNotNull(context);
 
-        // TODO bug allow on main thread
-        threadsDatabase = Room.databaseBuilder(context,
-                ThreadsDatabase.class,
-                ThreadsDatabase.class.getSimpleName()).allowMainThreadQueries().fallbackToDestructiveMigration().build();
-
         eventsDatabase =
                 Room.inMemoryDatabaseBuilder(context, EventsDatabase.class).build();
 
@@ -79,7 +73,7 @@ public class Singleton {
 
         entityService = EntityService.getInstance(context);
 
-        threads = THREADS.createThreads(threadsDatabase);
+        threads = THREADS.getInstance(context);
 
         events = EVENTS.createEvents(eventsDatabase);
 
@@ -239,11 +233,6 @@ public class Singleton {
     @NonNull
     public PEERS getPeers() {
         return peers;
-    }
-
-    @NonNull
-    public ThreadsDatabase getThreadsDatabase() {
-        return threadsDatabase;
     }
 
     @NonNull

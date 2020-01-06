@@ -340,10 +340,10 @@ public class FileDocumentsProvider extends DocumentsProvider {
     @Override
     public boolean onCreate() {
 
-
+        // TODO remove this
         Service.getInstance(getContext());
 
-        threads = Singleton.getInstance(getContext()).getThreads();
+        threads = THREADS.getInstance(getContext());
 
         ipfs = Singleton.getInstance(getContext()).getIpfs();
         return true;

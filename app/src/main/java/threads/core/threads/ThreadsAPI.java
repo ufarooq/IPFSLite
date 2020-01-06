@@ -32,7 +32,7 @@ public class ThreadsAPI {
 
 
     @NonNull
-    private ThreadsDatabase getThreadsDatabase() {
+    public ThreadsDatabase getThreadsDatabase() {
         return threadsDatabase;
     }
 

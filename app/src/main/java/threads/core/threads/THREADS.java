@@ -1,6 +1,9 @@
 package threads.core.threads;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
+import androidx.room.Room;
 
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
@@ -9,19 +12,36 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class THREADS extends ThreadsAPI {
     public static final String TAG = THREADS.class.getSimpleName();
-
+    private static THREADS INSTANCE = null;
 
     private THREADS(final THREADS.Builder builder) {
         super(builder.threadsDatabase);
     }
 
     @NonNull
-    public static THREADS createThreads(@NonNull ThreadsDatabase threadsDatabase) {
+    private static THREADS createThreads(@NonNull ThreadsDatabase threadsDatabase) {
         checkNotNull(threadsDatabase);
 
         return new THREADS.Builder()
                 .threadsDatabase(threadsDatabase)
                 .build();
+    }
+
+    public static THREADS getInstance(@NonNull Context context) {
+        checkNotNull(context);
+
+        if (INSTANCE == null) {
+            synchronized (THREADS.class) {
+                if (INSTANCE == null) {
+                    // TODO bug allow on main thread
+                    ThreadsDatabase threadsDatabase = Room.databaseBuilder(context,
+                            ThreadsDatabase.class,
+                            ThreadsDatabase.class.getSimpleName()).allowMainThreadQueries().fallbackToDestructiveMigration().build();
+                    INSTANCE = THREADS.createThreads(threadsDatabase);
+                }
+            }
+        }
+        return INSTANCE;
     }
 
 

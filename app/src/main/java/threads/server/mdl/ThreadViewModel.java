@@ -8,7 +8,7 @@ import androidx.lifecycle.LiveData;
 
 import java.util.List;
 
-import threads.core.Singleton;
+import threads.core.threads.THREADS;
 import threads.core.threads.Thread;
 import threads.core.threads.ThreadsDatabase;
 
@@ -18,7 +18,7 @@ public class ThreadViewModel extends AndroidViewModel {
 
     public ThreadViewModel(@NonNull Application application) {
         super(application);
-        threadsDatabase = Singleton.getInstance(
+        threadsDatabase = THREADS.getInstance(
                 application.getApplicationContext()).getThreadsDatabase();
     }
 
