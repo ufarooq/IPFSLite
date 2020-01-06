@@ -922,8 +922,7 @@ public class Service {
         User user = peers.getUserByPID(creator);
         checkNotNull(user);
 
-        Thread thread = threads.createThread(user, Status.INIT, Kind.OUT,
-                "", parent);
+        Thread thread = threads.createThread(user, Status.INIT, Kind.OUT, parent);
         thread.setCid(cid);
         String filename = link.getName();
         thread.setName(filename);
@@ -960,8 +959,7 @@ public class Service {
         final THREADS threads = Singleton.getInstance(context).getThreads();
 
 
-        Thread thread = threads.createThread(creator, threadStatus, Kind.OUT,
-                "", 0L);
+        Thread thread = threads.createThread(creator, threadStatus, Kind.OUT, 0L);
         thread.setCid(cid);
 
 
@@ -1234,7 +1232,7 @@ public class Service {
             } else {
 
                 long idx = createThread(context, ipfs,
-                        thread.getSenderPid(), cid, link, thread.getIdx());
+                        thread.getSender(), cid, link, thread.getIdx());
                 entry = threads.getThreadByIdx(idx);
                 checkNotNull(entry);
                 boolean success = downloadLink(context, threads, ipfs, entry, link);
@@ -1460,8 +1458,7 @@ public class Service {
 
                     long size = text.length();
 
-                    Thread thread = threads.createThread(host, Status.INIT, Kind.IN,
-                            "", 0L);
+                    Thread thread = threads.createThread(host, Status.INIT, Kind.IN, 0L);
                     thread.setName(content);
                     thread.setSize(size);
                     thread.setMimeType(mimeType);
@@ -1528,8 +1525,7 @@ public class Service {
                 String name = fileDetails.getFileName();
                 long size = fileDetails.getFileSize();
 
-                Thread thread = threads.createThread(host, Status.INIT, Kind.IN,
-                        "", 0L);
+                Thread thread = threads.createThread(host, Status.INIT, Kind.IN, 0L);
 
                 ThumbnailService.Result res =
                         ThumbnailService.getThumbnail(context, uri, host.getAlias());
@@ -1602,7 +1598,7 @@ public class Service {
                 threads.setThreadLeaching(thread.getIdx(), false);
                 PID host = Preferences.getPID(context);
                 checkNotNull(host);
-                PID sender = thread.getSenderPid();
+                PID sender = thread.getSender();
 
 
                 if (!host.equals(sender)) {

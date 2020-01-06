@@ -6,7 +6,6 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 
 public class EventsAPI {
-    private final static String TAG = EventsAPI.class.getSimpleName();
 
 
     private final EventsDatabase eventsDatabase;

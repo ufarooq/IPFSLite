@@ -10,6 +10,7 @@ import androidx.room.TypeConverters;
 import java.util.Comparator;
 import java.util.Objects;
 
+import threads.core.Converter;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
 

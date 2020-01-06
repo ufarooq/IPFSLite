@@ -11,7 +11,7 @@ import androidx.room.Update;
 
 import java.util.List;
 
-import threads.core.peers.Converter;
+import threads.core.Converter;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
 
@@ -85,7 +85,7 @@ public interface ThreadDao {
     @Query("SELECT pinned FROM Thread WHERE idx = :idx")
     boolean isPinned(long idx);
 
-    @Query("UPDATE Thread SET senderAlias = :alias  WHERE senderPid = :pid")
+    @Query("UPDATE Thread SET senderAlias = :alias  WHERE sender = :pid")
     @TypeConverters(Converter.class)
     void setSenderAlias(PID pid, String alias);
 
@@ -142,16 +142,13 @@ public interface ThreadDao {
     @Query("SELECT * FROM Thread WHERE idx =:idx")
     Thread getThreadByIdx(long idx);
 
-    @Query("SELECT * FROM Thread WHERE timestamp =:timestamp")
+    @Query("SELECT * FROM Thread WHERE lastModified =:timestamp")
     Thread getThreadByTimestamp(long timestamp);
 
     @Query("SELECT * FROM Thread WHERE idx IN(:idxs)")
     List<Thread> getThreadByIdxs(long... idxs);
 
-    @Query("SELECT * FROM Thread WHERE hash = :hash")
-    Thread getThreadByHash(String hash);
-
-    @Query("SELECT * FROM Thread WHERE senderPid =:senderPid")
+    @Query("SELECT * FROM Thread WHERE sender =:senderPid")
     @TypeConverters({Converter.class})
     List<Thread> getThreadsBySenderPid(PID senderPid);
 
@@ -168,8 +165,6 @@ public interface ThreadDao {
     @Query("UPDATE Thread SET mimeType =:mimeType  WHERE idx = :idx")
     void setMimeType(long idx, String mimeType);
 
-    @Query("UPDATE Thread SET hash = :hash WHERE idx = :idx")
-    void setHash(long idx, String hash);
 
     @Query("UPDATE Thread SET image = :image WHERE idx = :idx")
     @TypeConverters({Converter.class})
@@ -185,7 +180,4 @@ public interface ThreadDao {
     @Query("UPDATE Thread SET marked = :marked WHERE idx = :idx")
     void setMarkedFlag(long idx, boolean marked);
 
-    @Query("UPDATE Thread SET blocked = :blocked WHERE senderPid = :pid")
-    @TypeConverters({Converter.class})
-    void setSenderBlocked(PID pid, boolean blocked);
 }

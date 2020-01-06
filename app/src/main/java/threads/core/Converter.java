@@ -1,4 +1,4 @@
-package threads.core.peers;
+package threads.core;
 
 import androidx.room.TypeConverter;
 

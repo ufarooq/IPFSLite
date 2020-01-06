@@ -112,21 +112,17 @@ public class ThreadsAPI {
     public Thread createThread(@NonNull User user,
                                @NonNull Status status,
                                @NonNull Kind kind,
-                               @NonNull String sesKey,
                                long thread) {
 
         checkNotNull(user);
         checkNotNull(status);
         checkNotNull(kind);
-        checkNotNull(sesKey);
         checkArgument(thread >= 0);
         return createThread(
                 status,
                 kind,
                 user.getPID(),
                 user.getAlias(),
-                user.getPublicKey(),
-                sesKey,
                 new Date(),
                 thread);
 
@@ -227,22 +223,6 @@ public class ThreadsAPI {
 
     public void resetThreadsNumber() {
         getThreadsDatabase().threadDao().resetThreadsNumber();
-    }
-
-
-    public void setHash(@NonNull Thread thread, @Nullable String hash) {
-        checkNotNull(thread);
-        long idx = thread.getIdx();
-        thread.setHash(hash);
-        getThreadsDatabase().threadDao().setHash(idx, hash);
-
-    }
-
-
-    @Nullable
-    public Thread getThreadByHash(@NonNull String hash) {
-        checkNotNull(hash);
-        return getThreadsDatabase().threadDao().getThreadByHash(hash);
     }
 
 
@@ -410,13 +390,10 @@ public class ThreadsAPI {
                                 @NonNull Kind kind,
                                 @NonNull PID senderPid,
                                 @NonNull String senderAlias,
-                                @NonNull String senderKey,
-                                @NonNull String sesKey,
                                 @NonNull Date date,
                                 long thread) {
         return Thread.createThread(status,
-                senderPid, senderAlias, senderKey,
-                sesKey, kind, date.getTime(), thread);
+                senderPid, senderAlias, kind, date.getTime(), thread);
     }
 
 

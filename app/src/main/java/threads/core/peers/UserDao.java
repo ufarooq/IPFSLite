@@ -11,6 +11,7 @@ import androidx.room.Update;
 
 import java.util.List;
 
+import threads.core.Converter;
 import threads.ipfs.api.CID;
 
 @Dao

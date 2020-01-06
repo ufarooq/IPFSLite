@@ -10,8 +10,7 @@ import androidx.room.TypeConverters;
 
 import java.util.Objects;
 
-import threads.core.peers.AddressType;
-import threads.core.peers.Converter;
+import threads.core.Converter;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
 import threads.share.MimeType;
@@ -22,89 +21,73 @@ import static androidx.core.util.Preconditions.checkNotNull;
 public class Thread {
 
     @ColumnInfo(name = "thread")
-    private final long thread;
+    private final long thread; // checked
     @NonNull
     @TypeConverters(Kind.class)
     @ColumnInfo(name = "kind")
-    private final Kind kind;
+    private final Kind kind; // checked
     @NonNull
     @TypeConverters(Converter.class)
-    @ColumnInfo(name = "senderPid")
-    private final PID senderPid;
-    @NonNull
-    @ColumnInfo(name = "senderKey")
-    private final String senderKey;
-    @NonNull
-    @ColumnInfo(name = "sesKey")
-    private final String sesKey;
+    @ColumnInfo(name = "sender")
+    private final PID sender; // checked
+
     @ColumnInfo(name = "date")
-    private long date;
+    private long date; // todo
+
     @NonNull
     @ColumnInfo(name = "senderAlias")
-    private String senderAlias;
+    private String senderAlias; // checked
     @PrimaryKey(autoGenerate = true)
-    private long idx;
+    private long idx; // checked
     @Nullable
     @ColumnInfo(name = "image")
     @TypeConverters(Converter.class)
-    private CID image;
+    private CID image;  // checked
     @ColumnInfo(name = "marked")
-    private boolean marked;
+    private boolean marked;  // todo
     @ColumnInfo(name = "number")
-    private int number = 0;
+    private int number = 0;  // checked
+    @ColumnInfo(name = "progress")
+    private int progress = 0;  // checked
     @Nullable
     @TypeConverters(Converter.class)
     @ColumnInfo(name = "cid")
-    private CID cid;
+    private CID cid;  // checked
     @ColumnInfo(name = "expire")
-    private long expire;
+    private long expire;  // checked
     @ColumnInfo(name = "size")
-    private long size;
+    private long size;  // checked
     @NonNull
     @TypeConverters(Status.class)
     @ColumnInfo(name = "status")
-    private Status status;
+    private Status status;  // todo
     @NonNull
     @ColumnInfo(name = "mimeType")
-    private String mimeType;
+    private String mimeType;  // checked
     @ColumnInfo(name = "pinned")
-    private boolean pinned;
+    private boolean pinned; // todo
     @ColumnInfo(name = "publishing")
-    private boolean publishing;
+    private boolean publishing; // todo
     @ColumnInfo(name = "leaching")
-    private boolean leaching;
-    @ColumnInfo(name = "request")
-    private boolean request;
-    @ColumnInfo(name = "blocked")
-    private boolean blocked;
-
+    private boolean leaching; // todo
 
     @NonNull
     @ColumnInfo(name = "name")
     private String name = "";
 
-
-    @Nullable
-    @ColumnInfo(name = "hash")
-    private String hash;
-
-    @ColumnInfo(name = "timestamp")
-    private long timestamp;
+    @ColumnInfo(name = "lastModified")
+    private long lastModified; // checked
 
 
     Thread(@NonNull Status status,
-           @NonNull PID senderPid,
+           @NonNull PID sender,
            @NonNull String senderAlias,
-           @NonNull String senderKey,
-           @NonNull String sesKey,
            @NonNull Kind kind,
            long date,
            long thread) {
         this.thread = thread;
-        this.senderPid = senderPid;
+        this.sender = sender;
         this.senderAlias = senderAlias;
-        this.senderKey = senderKey;
-        this.sesKey = sesKey;
         this.kind = kind;
         this.expire = System.currentTimeMillis();
         this.status = status;
@@ -113,52 +96,31 @@ public class Thread {
         this.mimeType = MimeType.PLAIN_MIME_TYPE;
         this.pinned = false;
         this.publishing = false;
-        this.request = false;
-        this.blocked = false;
         this.leaching = false;
-        this.timestamp = System.currentTimeMillis();
+        this.lastModified = System.currentTimeMillis();
     }
 
     public static Thread createThread(@NonNull Status status,
                                       @NonNull PID senderPid,
                                       @NonNull String senderAlias,
-                                      @NonNull String senderKey,
-                                      @NonNull String sesKey,
                                       @NonNull Kind kind,
                                       long date,
                                       long thread) {
         checkNotNull(status);
         checkNotNull(senderPid);
         checkNotNull(senderAlias);
-        checkNotNull(senderKey);
-        checkNotNull(sesKey);
         checkNotNull(kind);
         return new Thread(status,
-                senderPid, senderAlias, senderKey,
-                sesKey, kind, date, thread);
+                senderPid, senderAlias, kind, date, thread);
     }
 
-    public long getTimestamp() {
-        return timestamp;
+    public long getLastModified() {
+        return lastModified;
     }
 
-    void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
+    void setLastModified(long lastModified) {
+        this.lastModified = lastModified;
     }
-
-    @Nullable
-    public String getHash() {
-        return hash;
-    }
-
-    public void setHash(@Nullable String hash) {
-        this.hash = hash;
-    }
-
-    public boolean hasHash() {
-        return hash != null;
-    }
-
 
     public boolean isLeaching() {
         return leaching;
@@ -193,21 +155,6 @@ public class Thread {
         this.expire = expire;
     }
 
-    public boolean isBlocked() {
-        return blocked;
-    }
-
-    public void setBlocked(boolean blocked) {
-        this.blocked = blocked;
-    }
-
-    public boolean isRequest() {
-        return request;
-    }
-
-    public void setRequest(boolean request) {
-        this.request = request;
-    }
 
     public boolean isPublishing() {
         return publishing;
@@ -234,16 +181,6 @@ public class Thread {
     }
 
     @NonNull
-    public String getSenderBox() {
-        return AddressType.getAddress(getSenderPid(), AddressType.INBOX);
-    }
-
-    @NonNull
-    public String getSenderKey() {
-        return senderKey;
-    }
-
-    @NonNull
     public String getMimeType() {
         return mimeType;
     }
@@ -253,8 +190,8 @@ public class Thread {
     }
 
     @NonNull
-    public PID getSenderPid() {
-        return senderPid;
+    public PID getSender() {
+        return sender;
     }
 
     public long getExpireDate() {
@@ -285,7 +222,7 @@ public class Thread {
         checkNotNull(o);
         if (this == o) return true;
         return Objects.equals(cid, o.getCid()) &&
-                Objects.equals(senderPid, o.getSenderPid()) &&
+                Objects.equals(sender, o.getSender()) &&
                 Objects.equals(image, o.getImage()) &&
                 Objects.equals(name, o.getName());
     }
@@ -297,10 +234,9 @@ public class Thread {
                 marked == o.isMarked() &&
                 status == o.getStatus() &&
                 pinned == o.isPinned() &&
+                progress == o.getProgress() &&
                 publishing == o.isPublishing() &&
                 leaching == o.isLeaching() &&
-                request == o.isRequest() &&
-                blocked == o.isBlocked() &&
                 Objects.equals(cid, o.getCid()) &&
                 Objects.equals(senderAlias, o.getSenderAlias()) &&
                 Objects.equals(image, o.getImage()) &&
@@ -367,17 +303,8 @@ public class Thread {
         return thread;
     }
 
-    @NonNull
-    public String getSesKey() {
-        return sesKey;
-    }
-
     public void increaseUnreadMessagesNumber() {
         number++;
-    }
-
-    public boolean isEncrypted() {
-        return !sesKey.isEmpty();
     }
 
     public boolean isExpired() {
@@ -407,5 +334,13 @@ public class Thread {
 
     public boolean isDir() {
         return DocumentsContract.Document.MIME_TYPE_DIR.equals(getMimeType());
+    }
+
+    public int getProgress() {
+        return progress;
+    }
+
+    public void setProgress(int progress) {
+        this.progress = progress;
     }
 }
