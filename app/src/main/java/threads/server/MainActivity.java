@@ -58,11 +58,18 @@ import threads.ipfs.api.CID;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.PeerInfo;
+import threads.server.jobs.JobServiceAutoConnect;
+import threads.server.jobs.JobServiceCleanup;
 import threads.server.jobs.JobServiceDeleteThreads;
 import threads.server.jobs.JobServiceDownload;
+import threads.server.jobs.JobServiceDownloader;
+import threads.server.jobs.JobServiceFindPeers;
 import threads.server.jobs.JobServiceIdentity;
+import threads.server.jobs.JobServiceLoadNotifications;
 import threads.server.jobs.JobServiceLoadPublicKey;
+import threads.server.jobs.JobServicePeers;
 import threads.server.jobs.JobServicePublish;
+import threads.server.jobs.JobServicePublisher;
 import threads.server.mdl.EventViewModel;
 import threads.share.ConnectService;
 import threads.share.DetailsDialogFragment;
@@ -670,6 +677,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.ThreadsTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -930,6 +938,99 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
 
+        });
+
+        onLoad();
+    }
+
+    private void onLoad() {
+
+        Intent intent = getIntent();
+        final String action = intent.getAction();
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                Service.getInstance(getApplicationContext());
+
+                // jobs
+                JobServiceLoadNotifications.notifications(getApplicationContext());
+                JobServiceDownloader.downloader(getApplicationContext());
+                JobServicePublisher.publish(getApplicationContext());
+                JobServicePeers.peers(getApplicationContext());
+                JobServiceFindPeers.findPeers(getApplicationContext());
+                JobServiceAutoConnect.autoConnect(getApplicationContext());
+                JobServiceCleanup.cleanup(getApplicationContext());
+                ContentsService.contents(getApplicationContext());
+
+
+                if (Intent.ACTION_SEND.equals(action)) {
+                    String type = intent.getType();
+                    if ("text/plain".equals(type)) {
+                        handleSendText(intent);
+                    } else {
+                        handleSend(intent, false);
+                    }
+                } else if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
+                    if (intent.hasExtra(Intent.EXTRA_STREAM)) {
+                        handleSend(intent, true);
+                    } else {
+                        String type = intent.getType();
+                        if ("text/plain".equals(type)) {
+                            handleSendText(intent);
+                        } else {
+                            handleSend(intent, true);
+                        }
+                    }
+                }
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage());
+            }
+
+        });
+    }
+
+    private void handleSendText(Intent intent) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+
+            try {
+                String text = intent.getStringExtra(Intent.EXTRA_TEXT);
+                if (text != null) {
+                    Service.getInstance(this).storeData(getApplicationContext(), text);
+                }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        });
+    }
+
+    private void handleSend(Intent intent, boolean multi) {
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                if (multi) {
+                    ClipData mClipData = intent.getClipData();
+                    if (mClipData != null) {
+                        for (int i = 0; i < mClipData.getItemCount(); i++) {
+                            ClipData.Item item = mClipData.getItemAt(i);
+                            Service.getInstance(this).storeData(getApplicationContext(), item.getUri());
+                        }
+                    } else if (uri != null) {
+                        Service.getInstance(this).storeData(getApplicationContext(), uri);
+                    }
+
+                } else if (uri != null) {
+                    Service.getInstance(this).storeData(getApplicationContext(), uri);
+                }
+
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
         });
     }
 

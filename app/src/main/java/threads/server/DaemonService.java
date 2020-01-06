@@ -126,9 +126,10 @@ public class DaemonService extends Service {
         builder.setSmallIcon(R.drawable.server_network);
         builder.setPriority(NotificationManager.IMPORTANCE_MAX);
 
-        Intent defaultIntent = new Intent(getApplicationContext(), LoginActivity.class);
+        Intent defaultIntent = new Intent(getApplicationContext(), MainActivity.class);
         int requestID = (int) System.currentTimeMillis();
-        defaultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        defaultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
+                Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent defaultPendingIntent = PendingIntent.getActivity(
                 getApplicationContext(), requestID, defaultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder.setContentIntent(defaultPendingIntent);
