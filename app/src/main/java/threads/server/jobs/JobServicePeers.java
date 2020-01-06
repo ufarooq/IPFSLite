@@ -1,4 +1,4 @@
-package threads.server;
+package threads.server.jobs;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -10,34 +10,28 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
-import threads.core.Preferences;
-import threads.core.Singleton;
-import threads.core.peers.PEERS;
-import threads.core.peers.User;
-import threads.ipfs.IPFS;
+import threads.server.Service;
+import threads.share.GatewayService;
 import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class JobServiceAutoConnect extends JobService {
+public class JobServicePeers extends JobService {
 
 
-    private static final String TAG = JobServiceAutoConnect.class.getSimpleName();
+    private static final String TAG = JobServicePeers.class.getSimpleName();
 
 
-    public static void autoConnect(@NonNull Context context) {
+    public static void peers(@NonNull Context context) {
         checkNotNull(context);
 
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
-            ComponentName componentName = new ComponentName(context, JobServiceAutoConnect.class);
+            ComponentName componentName = new ComponentName(context, JobServicePeers.class);
 
             JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
@@ -59,44 +53,18 @@ public class JobServiceAutoConnect extends JobService {
             return false;
         }
 
-        final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
-
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             long start = System.currentTimeMillis();
 
             try {
-
-
                 Service.getInstance(getApplicationContext());
 
-                Singleton singleton = Singleton.getInstance(getApplicationContext());
+                GatewayService.connectStoredAutonat(getApplicationContext(),
+                        3, 3);
 
-                IPFS ipfs = singleton.getIpfs();
-                checkNotNull(ipfs, "IPFS not defined");
-
-                PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
-
-                List<User> users = peers.getAutoConnectUsers();
-
-                ExecutorService executorService = Executors.newFixedThreadPool(5);
-                List<Future> futures = new ArrayList<>();
-
-                for (User user : users) {
-                    if (!ipfs.isConnected(user.getPID())) {
-
-                        singleton.connectPubsubTopic(
-                                getApplicationContext(), user.getPID().getPid());
-
-
-                        futures.add(executorService.submit(() ->
-                                ipfs.swarmConnect(user.getPID(), timeout)));
-                    }
-                }
-
-                for (Future future : futures) {
-                    future.get();
-                }
+                GatewayService.connectStoredRelays(getApplicationContext(), "",
+                        Service.RELAYS, 3);
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -114,4 +82,3 @@ public class JobServiceAutoConnect extends JobService {
         return false;
     }
 }
-

@@ -1,4 +1,4 @@
-package threads.server;
+package threads.server.jobs;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -16,29 +16,29 @@ import java.util.concurrent.Executors;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.peers.Content;
+import threads.core.peers.PEERS;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
-import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class JobServiceConnect extends JobService {
+public class JobServiceLoadPublicKey extends JobService {
 
+    private static final String TAG = JobServiceLoadPublicKey.class.getSimpleName();
+    private static final String PEER_ID = "PEER_ID";
 
-    private static final String TAG = JobServiceConnect.class.getSimpleName();
-
-
-    public static void connect(@NonNull Context context, @NonNull PID pid) {
+    public static void publicKey(@NonNull Context context, @NonNull String pid) {
         checkNotNull(context);
+        checkNotNull(pid);
 
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
-        if (jobScheduler != null) {
-            ComponentName componentName = new ComponentName(context, JobServiceConnect.class);
 
+        if (jobScheduler != null) {
+            ComponentName componentName = new ComponentName(context, JobServiceLoadPublicKey.class);
             PersistableBundle bundle = new PersistableBundle();
-            bundle.putString(Content.PID, pid.getPid());
+            bundle.putString(PEER_ID, pid);
+
             JobInfo jobInfo = new JobInfo.Builder(pid.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                     .setExtras(bundle)
@@ -52,49 +52,42 @@ public class JobServiceConnect extends JobService {
         }
     }
 
-
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
         PersistableBundle bundle = jobParameters.getExtras();
-        final String pid = bundle.getString(Content.PID);
-        checkNotNull(pid);
-
-        if (!Network.isConnected(getApplicationContext())) {
-            return false;
-        }
-
-        final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
-
+        final String peerID = bundle.getString(PEER_ID);
+        checkNotNull(peerID);
+        int timeout = Preferences.getConnectionTimeout(getApplicationContext());
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             long start = System.currentTimeMillis();
 
             try {
+                IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+                checkNotNull(ipfs, "IPFS not valid");
+                PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
 
+                PID pid = PID.create(peerID);
 
-                Service.getInstance(getApplicationContext());
-
-                Singleton singleton = Singleton.getInstance(getApplicationContext());
-
-                IPFS ipfs = singleton.getIpfs();
-                checkNotNull(ipfs, "IPFS not defined");
-
-                if (!ipfs.isConnected(PID.create(pid))) {
-
-                    singleton.connectPubsubTopic(getApplicationContext(), pid);
-
-                    ipfs.swarmConnect(PID.create(pid), timeout);
+                threads.ipfs.api.PeerInfo pInfo = ipfs.id(pid, timeout);
+                if (pInfo != null) {
+                    String pKey = pInfo.getPublicKey();
+                    if (pKey != null) {
+                        if (!pKey.isEmpty()) {
+                            peers.setUserPublicKey(pid, pKey);
+                        }
+                    }
                 }
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {
-                Log.e(TAG, " finish onStart [" + (System.currentTimeMillis() - start) + "]...");
+                Log.e(TAG, " finish running [" + (System.currentTimeMillis() - start) + "]...");
                 jobFinished(jobParameters, false);
             }
-
         });
+
         return true;
     }
 

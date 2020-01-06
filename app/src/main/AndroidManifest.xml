@@ -31,7 +31,9 @@
         android:usesCleartextTraffic="true"
         android:theme="@style/ThreadsTheme">
 
-        <activity android:name=".LoginActivity">
+        <activity
+            android:name=".LoginActivity"
+            android:theme="@style/SplashTheme">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -78,91 +80,91 @@
             tools:replace="screenOrientation" />
 
         <service
-            android:name=".JobServiceIdentity"
+            android:name=".jobs.JobServiceIdentity"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServicePeers"
+            android:name=".jobs.JobServicePeers"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServiceContents"
+            android:name=".jobs.JobServiceContents"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServiceDownload"
+            android:name=".jobs.JobServiceDownload"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServicePublish"
+            android:name=".jobs.JobServicePublish"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServicePublisher"
+            android:name=".jobs.JobServicePublisher"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServiceGatewayLoader"
+            android:name=".jobs.JobServiceGatewayLoader"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServiceFindPeers"
+            android:name=".jobs.JobServiceFindPeers"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServiceDeleteThreads"
+            android:name=".jobs.JobServiceDeleteThreads"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServiceCleanup"
+            android:name=".jobs.JobServiceCleanup"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServiceDownloader"
+            android:name=".jobs.JobServiceDownloader"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServiceLoadNotifications"
+            android:name=".jobs.JobServiceLoadNotifications"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServiceConnect"
+            android:name=".jobs.JobServiceConnect"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServiceAutoConnect"
+            android:name=".jobs.JobServiceAutoConnect"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".JobServiceLoadPublicKey"
+            android:name=".jobs.JobServiceLoadPublicKey"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />

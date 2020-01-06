@@ -1,20 +1,24 @@
 package threads.core.peers;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
+import androidx.room.Room;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class PEERS extends PeersAPI {
     public static final String TAG = PEERS.class.getSimpleName();
 
+    private static PEERS INSTANCE = null;
 
     private PEERS(final PEERS.Builder builder) {
         super(builder.peersInfoDatabase, builder.peersDatabase);
     }
 
     @NonNull
-    public static PEERS createPeers(@NonNull PeersInfoDatabase peersInfoDatabase,
-                                    @NonNull PeersDatabase peersDatabase) {
+    private static PEERS createPeers(@NonNull PeersInfoDatabase peersInfoDatabase,
+                                     @NonNull PeersDatabase peersDatabase) {
         checkNotNull(peersInfoDatabase);
         checkNotNull(peersDatabase);
 
@@ -22,6 +26,24 @@ public class PEERS extends PeersAPI {
                 .peersInfoDatabase(peersInfoDatabase)
                 .peersDatabase(peersDatabase)
                 .build();
+    }
+
+    public static PEERS getInstance(@NonNull Context context) {
+        checkNotNull(context);
+
+        if (INSTANCE == null) {
+            synchronized (PEERS.class) {
+                if (INSTANCE == null) {
+                    PeersInfoDatabase peersInfoDatabase =
+                            Room.inMemoryDatabaseBuilder(context, PeersInfoDatabase.class).build();
+                    PeersDatabase peersDatabase = Room.databaseBuilder(context, PeersDatabase.class,
+                            PeersDatabase.class.getSimpleName()).fallbackToDestructiveMigration().build();
+
+                    INSTANCE = PEERS.createPeers(peersInfoDatabase, peersDatabase);
+                }
+            }
+        }
+        return INSTANCE;
     }
 
 

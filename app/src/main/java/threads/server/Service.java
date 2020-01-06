@@ -62,6 +62,13 @@ import threads.ipfs.api.PID;
 import threads.ipfs.api.PeerInfo;
 import threads.ipfs.api.PubsubConfig;
 import threads.ipfs.api.RoutingConfig;
+import threads.server.jobs.JobServiceConnect;
+import threads.server.jobs.JobServiceContents;
+import threads.server.jobs.JobServiceDownload;
+import threads.server.jobs.JobServiceIdentity;
+import threads.server.jobs.JobServiceLoadNotifications;
+import threads.server.jobs.JobServiceLoadPublicKey;
+import threads.server.jobs.JobServicePublish;
 import threads.share.ConnectService;
 import threads.share.IdentityService;
 import threads.share.MimeType;
@@ -73,7 +80,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class Service {
 
-    static final int RELAYS = 5;
+    public static final int RELAYS = 5;
     static final String PIN_SERVICE_KEY = "pinServiceKey";
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
@@ -91,7 +98,7 @@ public class Service {
     private Service() {
     }
 
-    static boolean isSupportPeerDiscovery(@NonNull Context context) {
+    public static boolean isSupportPeerDiscovery(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         return sharedPref.getBoolean(SUPPORT_PEER_DISCOVERY_KEY, true);
@@ -124,7 +131,7 @@ public class Service {
     }
 
     @NonNull
-    static String getGateway(@NonNull Context context) {
+    public static String getGateway(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(
                 APP_KEY, Context.MODE_PRIVATE);
@@ -142,7 +149,7 @@ public class Service {
 
     }
 
-    static int getPublishServiceTime(@NonNull Context context) {
+    public static int getPublishServiceTime(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         return sharedPref.getInt(PIN_SERVICE_TIME_KEY, 6);
@@ -192,7 +199,7 @@ public class Service {
     }
 
 
-    static boolean isReceiveNotificationsEnabled(@NonNull Context context) {
+    public static boolean isReceiveNotificationsEnabled(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         return sharedPref.getBoolean(RECEIVE_NOTIFICATIONS_ENABLED_KEY, true);
@@ -233,7 +240,7 @@ public class Service {
         return System.currentTimeMillis() - TimeUnit.DAYS.toMillis(days);
     }
 
-    static void notifications(@NonNull Context context) {
+    public static void notifications(@NonNull Context context) {
         checkNotNull(context);
         final PID host = Preferences.getPID(context);
         if (host != null) {
@@ -353,7 +360,7 @@ public class Service {
                 }
             }
             if (publicKey.isEmpty()) {
-                Singleton.getInstance(context).getConsoleListener().error(
+                Log.w(TAG,
                         "Failed sending notification to PID Inbox :"
                                 + pid + " Reason : Public Key not available");
             } else {
@@ -391,7 +398,7 @@ public class Service {
         return success;
     }
 
-    static void cleanup(@NonNull Context context) {
+    public static void cleanup(@NonNull Context context) {
 
 
         try {
@@ -431,7 +438,7 @@ public class Service {
 
     }
 
-    static void createUnknownUser(@NonNull Context context, @NonNull PID pid) throws Exception {
+    public static void createUnknownUser(@NonNull Context context, @NonNull PID pid) throws Exception {
         checkNotNull(context);
         checkNotNull(pid);
 
@@ -517,9 +524,7 @@ public class Service {
                     map.put(Content.ALIAS, peers.getUserAlias(host));
                     map.put(Content.PKEY, peers.getUserPublicKey(host));
 
-                    Singleton.getInstance(context).
-                            getConsoleListener().info(
-                            "Send Pubsub Notification to PID :" + user);
+                    Log.w(TAG, "Send Pubsub Notification to PID :" + user);
 
 
                     ipfs.pubsubPub(user.getPid(), gson.toJson(map), 50);
@@ -753,9 +758,7 @@ public class Service {
                     map.put(Content.PKEY, hostUser.getPublicKey());
 
 
-                    Singleton.getInstance(context).
-                            getConsoleListener().info(
-                            "Send Pubsub Notification to PID :" + senderPid);
+                    Log.w(TAG, "Send Pubsub Notification to PID :" + senderPid);
 
                     ipfs.pubsubPub(senderPid.getPid(), gson.toJson(map), 50);
                 }
@@ -767,10 +770,10 @@ public class Service {
         }
     }
 
-    static void replySender(@NonNull Context context,
-                            @NonNull IPFS ipfs,
-                            @NonNull PID sender,
-                            @NonNull Thread thread) {
+    public static void replySender(@NonNull Context context,
+                                   @NonNull IPFS ipfs,
+                                   @NonNull PID sender,
+                                   @NonNull Thread thread) {
         try {
             if (Preferences.isPubsubEnabled(context)) {
                 CID cid = thread.getCid();
@@ -781,8 +784,7 @@ public class Service {
                 map.put(Content.CID, cid.getCid());
 
 
-                Singleton.getInstance(context).getConsoleListener().info(
-                        "Send Pubsub Notification to PID :" + sender);
+                Log.w(TAG, "Send Pubsub Notification to PID :" + sender);
 
                 ipfs.pubsubPub(sender.getPid(), gson.toJson(map), 50);
             }
@@ -939,15 +941,15 @@ public class Service {
         return threads.storeThread(thread);
     }
 
-    static long createThread(@NonNull Context context,
-                             @NonNull IPFS ipfs,
-                             @NonNull User creator,
-                             @NonNull CID cid,
-                             @NonNull Status threadStatus,
-                             @Nullable String filename,
-                             long filesize,
-                             @Nullable String mimeType,
-                             @Nullable CID image) {
+    public static long createThread(@NonNull Context context,
+                                    @NonNull IPFS ipfs,
+                                    @NonNull User creator,
+                                    @NonNull CID cid,
+                                    @NonNull Status threadStatus,
+                                    @Nullable String filename,
+                                    long filesize,
+                                    @Nullable String mimeType,
+                                    @Nullable CID image) {
 
         checkNotNull(context);
         checkNotNull(ipfs);
@@ -1270,11 +1272,11 @@ public class Service {
         return result;
     }
 
-    static void downloadMultihash(@NonNull Context context,
-                                  @NonNull THREADS threads,
-                                  @NonNull IPFS ipfs,
-                                  @NonNull Thread thread,
-                                  @Nullable PID sender) {
+    public static void downloadMultihash(@NonNull Context context,
+                                         @NonNull THREADS threads,
+                                         @NonNull IPFS ipfs,
+                                         @NonNull Thread thread,
+                                         @Nullable PID sender) {
         checkNotNull(context);
         checkNotNull(threads);
         checkNotNull(ipfs);
@@ -1760,7 +1762,7 @@ public class Service {
 
                 try {
                     Singleton singleton = Singleton.getInstance(context);
-                    singleton.getConsoleListener().debug("Start Daemon");
+                    Log.w(TAG, "Start Daemon");
 
                     boolean pubSubEnabled = Preferences.isPubsubEnabled(context);
                     ipfs.daemon(pubSubEnabled);

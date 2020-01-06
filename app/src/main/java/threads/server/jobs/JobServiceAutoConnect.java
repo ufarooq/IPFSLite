@@ -1,4 +1,4 @@
-package threads.server;
+package threads.server.jobs;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -10,32 +10,35 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
-import threads.core.peers.Content;
 import threads.core.peers.PEERS;
-import threads.ipfs.api.PID;
-import threads.share.IdentityService;
+import threads.core.peers.User;
+import threads.ipfs.IPFS;
+import threads.server.Service;
 import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class JobServiceIdentity extends JobService {
-    private static final String TAG = JobServiceIdentity.class.getSimpleName();
+public class JobServiceAutoConnect extends JobService {
 
 
-    public static void identity(@NonNull Context context) {
+    private static final String TAG = JobServiceAutoConnect.class.getSimpleName();
+
+
+    public static void autoConnect(@NonNull Context context) {
         checkNotNull(context);
 
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
-            ComponentName componentName = new ComponentName(context, JobServiceIdentity.class);
+            ComponentName componentName = new ComponentName(context, JobServiceAutoConnect.class);
 
             JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
@@ -49,37 +52,52 @@ public class JobServiceIdentity extends JobService {
         }
     }
 
+
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
-        boolean peerDiscovery =
-                Service.isSupportPeerDiscovery(getApplicationContext());
-        if (!peerDiscovery) {
-            return false;
-        }
+
         if (!Network.isConnected(getApplicationContext())) {
             return false;
         }
+
+        final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             long start = System.currentTimeMillis();
 
             try {
 
-                Singleton.getInstance(getApplicationContext());
+
+                Service.getInstance(getApplicationContext());
+
+                Singleton singleton = Singleton.getInstance(getApplicationContext());
+
+                IPFS ipfs = singleton.getIpfs();
+                checkNotNull(ipfs, "IPFS not defined");
 
                 PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
 
-                PID host = Preferences.getPID(getApplicationContext());
+                List<User> users = peers.getAutoConnectUsers();
+
+                ExecutorService executorService = Executors.newFixedThreadPool(5);
+                List<Future> futures = new ArrayList<>();
+
+                for (User user : users) {
+                    if (!ipfs.isConnected(user.getPID())) {
+
+                        singleton.connectPubsubTopic(
+                                getApplicationContext(), user.getPID().getPid());
 
 
-                Map<String, String> params = new HashMap<>();
-                if (host != null) {
-                    String alias = peers.getUserAlias(host);
-                    params.put(Content.ALIAS, alias);
+                        futures.add(executorService.submit(() ->
+                                ipfs.swarmConnect(user.getPID(), timeout)));
+                    }
                 }
 
-                IdentityService.publishIdentity(getApplicationContext(), params, Service.RELAYS);
-
+                for (Future future : futures) {
+                    future.get();
+                }
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -97,3 +115,4 @@ public class JobServiceIdentity extends JobService {
         return false;
     }
 }
+

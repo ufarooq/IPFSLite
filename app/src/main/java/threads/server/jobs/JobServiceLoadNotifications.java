@@ -1,4 +1,4 @@
-package threads.server;
+package threads.server.jobs;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -12,33 +12,28 @@ import androidx.annotation.NonNull;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
+import threads.server.Service;
 import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class JobServiceDownloader extends JobService {
+public class JobServiceLoadNotifications extends JobService {
 
-    private static final String TAG = JobServiceDownloader.class.getSimpleName();
+    private static final String TAG = JobServiceLoadNotifications.class.getSimpleName();
 
-    public static void downloader(@NonNull Context context) {
+    public static void notifications(@NonNull Context context) {
         checkNotNull(context);
 
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
-            ComponentName componentName = new ComponentName(context, JobServiceDownloader.class);
+            ComponentName componentName = new ComponentName(context, JobServiceLoadNotifications.class);
 
 
             JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                    .setRequiresCharging(true)
-                    .setPeriodic(TimeUnit.HOURS.toMillis(12))
                     .build();
-
-            // cancel a running job with same tag
-            jobScheduler.cancel(TAG.hashCode());
 
             int resultCode = jobScheduler.schedule(jobInfo);
             if (resultCode == JobScheduler.RESULT_SUCCESS) {
@@ -52,6 +47,9 @@ public class JobServiceDownloader extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
+        if (!Service.isReceiveNotificationsEnabled(getApplicationContext())) {
+            return false;
+        }
 
         if (!Network.isConnected(getApplicationContext())) {
             return false;
@@ -65,7 +63,7 @@ public class JobServiceDownloader extends JobService {
 
                 Service.getInstance(getApplicationContext());
 
-                ContentsService.contents(getApplicationContext());
+                Service.notifications(getApplicationContext());
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

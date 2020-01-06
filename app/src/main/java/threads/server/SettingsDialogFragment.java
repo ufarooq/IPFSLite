@@ -24,6 +24,7 @@ import java.util.List;
 import threads.core.Preferences;
 import threads.ipfs.api.PubsubConfig;
 import threads.ipfs.api.RoutingConfig;
+import threads.server.jobs.JobServicePublisher;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

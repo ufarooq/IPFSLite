@@ -128,10 +128,10 @@ public class IdentityService {
 
         long time = (System.currentTimeMillis() - start) / 1000;
         if (success) {
-            Singleton.getInstance(context).getConsoleListener().info(
+            Log.w(TAG,
                     "Success store peer discovery information: " + time + " [s]");
         } else {
-            Singleton.getInstance(context).getConsoleListener().error(
+            Log.w(TAG,
                     "Failed store peer discovery information: " + time + " [s]");
         }
         return success;

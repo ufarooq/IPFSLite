@@ -1,4 +1,4 @@
-package threads.server;
+package threads.server.jobs;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -24,6 +24,7 @@ import threads.core.Singleton;
 import threads.core.threads.THREADS;
 import threads.core.threads.Thread;
 import threads.ipfs.api.CID;
+import threads.server.Service;
 import threads.share.GatewayService;
 import threads.share.Network;
 

@@ -1,4 +1,4 @@
-package threads.server;
+package threads.server.jobs;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -11,36 +11,35 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
+import threads.core.Preferences;
+import threads.core.Singleton;
 import threads.core.peers.Content;
+import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
-import threads.ipfs.api.PID;
+import threads.server.Service;
+import threads.share.GatewayService;
 import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class JobServiceContents extends JobService {
+public class JobServicePublish extends JobService {
 
-    private static final String TAG = JobServiceContents.class.getSimpleName();
+    private static final String TAG = JobServicePublish.class.getSimpleName();
 
-    public static void contents(@NonNull Context context,
-                                @NonNull PID pid,
-                                @NonNull CID cid) {
+    public static void publish(@NonNull Context context, @NonNull CID cid, boolean connectStoredRelays) {
         checkNotNull(context);
-        checkNotNull(pid);
         checkNotNull(cid);
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
-            ComponentName componentName = new ComponentName(context, JobServiceContents.class);
+            ComponentName componentName = new ComponentName(context, JobServicePublish.class);
 
             PersistableBundle bundle = new PersistableBundle();
-            bundle.putString(Content.PID, pid.getPid());
             bundle.putString(Content.CID, cid.getCid());
+            bundle.putBoolean(Content.PEERS, connectStoredRelays);
 
             JobInfo jobInfo = new JobInfo.Builder(cid.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
@@ -60,45 +59,39 @@ public class JobServiceContents extends JobService {
     public boolean onStartJob(JobParameters jobParameters) {
 
         PersistableBundle bundle = jobParameters.getExtras();
-        final String pid = bundle.getString(Content.PID);
-        checkNotNull(pid);
         final String cid = bundle.getString(Content.CID);
         checkNotNull(cid);
-
+        final boolean connectPeers = bundle.getBoolean(Content.PEERS);
         if (!Network.isConnected(getApplicationContext())) {
             return false;
         }
+        int timeout = Preferences.getConnectionTimeout(getApplicationContext());
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             long start = System.currentTimeMillis();
-
             try {
+
                 Service.getInstance(getApplicationContext());
 
-                final ContentService contentService =
-                        ContentService.getInstance(getApplicationContext());
 
-                // work of download is done here
-                boolean connected = ContentsService.download(getApplicationContext(),
-                        PID.create(pid), CID.create(cid));
+                final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
 
-                if (connected) {
-                    // notifications old entries when connected
-                    long timestamp = System.currentTimeMillis() -
-                            TimeUnit.MINUTES.toMillis(30);
+                checkNotNull(ipfs, "IPFS not valid");
 
+                // first notifications stored relays
 
-                    List<threads.server.Content> contents =
-                            contentService.getContentDatabase().
-                                    contentDao().getContents(
-                                    PID.create(pid), timestamp, false);
-
-                    for (threads.server.Content entry : contents) {
-                        ContentsService.download(
-                                getApplicationContext(), entry.getPid(), entry.getCID());
-                    }
+                if (connectPeers) {
+                    GatewayService.connectStoredRelays(getApplicationContext(), "",
+                            20, 3);
                 }
+
+                ipfs.dhtPublish(CID.create(cid), true, timeout);
+
+
+                GatewayService.evaluatePeers(getApplicationContext(), false);
+
+
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {

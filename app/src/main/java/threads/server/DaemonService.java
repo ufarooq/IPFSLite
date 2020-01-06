@@ -20,6 +20,9 @@ import androidx.core.content.ContextCompat;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import threads.server.jobs.JobServiceAutoConnect;
+import threads.server.jobs.JobServicePeers;
+
 import static androidx.core.util.Preconditions.checkNotNull;
 
 

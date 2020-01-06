@@ -8,7 +8,7 @@ import androidx.lifecycle.LiveData;
 
 import java.util.List;
 
-import threads.core.Singleton;
+import threads.core.peers.PEERS;
 import threads.core.peers.PeersDatabase;
 import threads.core.peers.User;
 
@@ -19,7 +19,7 @@ public class UsersViewModel extends AndroidViewModel {
 
     public UsersViewModel(@NonNull Application application) {
         super(application);
-        peersDatabase = Singleton.getInstance(
+        peersDatabase = PEERS.getInstance(
                 application.getApplicationContext()).getPeersDatabase();
     }
 

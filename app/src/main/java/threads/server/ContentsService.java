@@ -26,16 +26,17 @@ import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Multihash;
 import threads.ipfs.api.PID;
+import threads.server.jobs.JobServiceDownload;
 import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-class ContentsService {
+public class ContentsService {
 
     private static final String TAG = ContentsService.class.getSimpleName();
 
 
-    static void contents(@NonNull Context context) {
+    public static void contents(@NonNull Context context) {
         checkNotNull(context);
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -245,7 +246,7 @@ class ContentsService {
         return null;
     }
 
-    static boolean download(@NonNull Context context, @NonNull PID pid, @NonNull CID cid) {
+    public static boolean download(@NonNull Context context, @NonNull PID pid, @NonNull CID cid) {
         checkNotNull(context);
         checkNotNull(pid);
         checkNotNull(cid);

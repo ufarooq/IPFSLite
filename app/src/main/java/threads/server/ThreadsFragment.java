@@ -47,6 +47,8 @@ import threads.core.threads.THREADS;
 import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
+import threads.server.jobs.JobServiceDeleteThreads;
+import threads.server.jobs.JobServiceLoadNotifications;
 import threads.server.mdl.ThreadViewModel;
 import threads.share.AudioDialogFragment;
 import threads.share.ImageDialogFragment;

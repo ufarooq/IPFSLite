@@ -5,7 +5,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.room.Room;
 
 import java.util.Hashtable;
 import java.util.concurrent.ExecutorService;
@@ -13,15 +12,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import threads.core.events.EVENTS;
-import threads.core.events.EventsDatabase;
-import threads.core.events.Message;
-import threads.core.events.MessageKind;
 import threads.core.peers.PEERS;
-import threads.core.peers.PeersDatabase;
-import threads.core.peers.PeersInfoDatabase;
 import threads.core.threads.THREADS;
 import threads.iota.EntityService;
-import threads.iota.IOTA;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.AddressesConfig;
 import threads.ipfs.api.ConnMgrConfig;
@@ -41,17 +34,12 @@ public class Singleton {
     private static final String TAG = Singleton.class.getSimpleName();
 
     private static Singleton SINGLETON = null;
-    private final IOTA iota;
 
-    private final EventsDatabase eventsDatabase;
-    private final PeersInfoDatabase peersInfoDatabase;
     private final Hashtable<String, Future> topics = new Hashtable<>();
-    private final PeersDatabase peersDatabase;
     private final THREADS threads;
     private final PEERS peers;
     private final EVENTS events;
     private final EntityService entityService;
-    private final ConsoleListener consoleListener = new ConsoleListener();
     private final PubsubReader pubsubReader;
 
     @Nullable
@@ -62,30 +50,14 @@ public class Singleton {
     private Singleton(@NonNull Context context) {
         checkNotNull(context);
 
-        eventsDatabase =
-                Room.inMemoryDatabaseBuilder(context, EventsDatabase.class).build();
-
-        peersInfoDatabase =
-                Room.inMemoryDatabaseBuilder(context, PeersInfoDatabase.class).build();
-
-        peersDatabase = Room.databaseBuilder(context, PeersDatabase.class,
-                PeersDatabase.class.getSimpleName()).fallbackToDestructiveMigration().build();
 
         entityService = EntityService.getInstance(context);
 
         threads = THREADS.getInstance(context);
 
-        events = EVENTS.createEvents(eventsDatabase);
+        events = EVENTS.getInstance(context);
 
-        peers = PEERS.createPeers(peersInfoDatabase, peersDatabase);
-
-        IOTA.Builder iotaBuilder = new IOTA.Builder();
-        iotaBuilder.protocol(EntityService.getTangleProtocol(context));
-        iotaBuilder.host(EntityService.getTangleHost(context));
-        iotaBuilder.port(EntityService.getTanglePort(context));
-        iotaBuilder.timeout(EntityService.getTangleTimeout(context));
-        iota = iotaBuilder.build();
-
+        peers = PEERS.getInstance(context);
 
         pubsubReader = (message) -> {
             if (pubsubHandler != null) {
@@ -190,33 +162,10 @@ public class Singleton {
         return false;
     }
 
-    public PeersDatabase getPeersDatabase() {
-        return peersDatabase;
-    }
-
-    @NonNull
-    public PeersInfoDatabase getPeersInfoDatabase() {
-        return peersInfoDatabase;
-    }
-
-    @NonNull
-    public ConsoleListener getConsoleListener() {
-        return consoleListener;
-    }
-
-    @NonNull
-    public IOTA getIota() {
-        return iota;
-    }
 
     @Nullable
     public IPFS getIpfs() {
         return ipfs;
-    }
-
-    @NonNull
-    public EventsDatabase getEventsDatabase() {
-        return eventsDatabase;
     }
 
     @NonNull
@@ -228,7 +177,6 @@ public class Singleton {
     public EVENTS getEvents() {
         return events;
     }
-
 
     @NonNull
     public PEERS getPeers() {
@@ -243,43 +191,6 @@ public class Singleton {
 
     public interface PubsubHandler {
         void receive(@NonNull PubsubInfo message);
-    }
-
-    public class ConsoleListener {
-
-
-        public void debug(@NonNull String message) {
-
-            long timestamp = System.currentTimeMillis();
-            new Thread(() -> {
-                Message em = events.createMessage(MessageKind.DEBUG, message, timestamp);
-                events.storeMessage(em);
-            }).start();
-
-        }
-
-
-        public void info(@NonNull String message) {
-
-            long timestamp = System.currentTimeMillis();
-            new Thread(() -> {
-                Message em = events.createMessage(MessageKind.INFO, message, timestamp);
-                events.storeMessage(em);
-            }).start();
-
-        }
-
-
-        public void error(@NonNull String message) {
-
-            long timestamp = System.currentTimeMillis();
-            new Thread(() -> {
-                Message em = events.createMessage(MessageKind.ERROR, message, timestamp);
-                events.storeMessage(em);
-            }).start();
-
-        }
-
     }
 
 }

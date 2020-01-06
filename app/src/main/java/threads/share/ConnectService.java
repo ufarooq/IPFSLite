@@ -82,9 +82,6 @@ public class ConnectService {
 
         final int timeout = Preferences.getSwarmTimeout(context);
 
-        final Singleton.ConsoleListener consoleListener =
-                Singleton.getInstance(context).getConsoleListener();
-
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         if (ipfs != null) {
             Addresses addresses = peer.getAddresses();

@@ -7,7 +7,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
+import threads.core.events.EVENTS;
 import threads.core.events.Event;
 import threads.core.events.EventsDatabase;
 
@@ -19,7 +19,7 @@ public class EventViewModel extends AndroidViewModel {
 
     public EventViewModel(@NonNull Application application) {
         super(application);
-        eventsDatabase = Singleton.getInstance(
+        eventsDatabase = EVENTS.getInstance(
                 application.getApplicationContext()).getEventsDatabase();
     }
 

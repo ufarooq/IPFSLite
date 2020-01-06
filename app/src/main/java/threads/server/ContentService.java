@@ -34,7 +34,7 @@ public class ContentService {
     }
 
     @NonNull
-    ContentDatabase getContentDatabase() {
+    public ContentDatabase getContentDatabase() {
         return contentDatabase;
     }
 

@@ -1,4 +1,4 @@
-package threads.server;
+package threads.server.jobs;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -27,6 +27,8 @@ import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
+import threads.server.R;
+import threads.server.Service;
 import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;

@@ -1,4 +1,4 @@
-package threads.server;
+package threads.server.jobs;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -6,40 +6,39 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
-import android.os.PersistableBundle;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.Singleton;
-import threads.core.threads.Status;
-import threads.core.threads.THREADS;
 import threads.ipfs.IPFS;
+import threads.ipfs.api.PID;
+import threads.ipfs.api.Peer;
+import threads.server.Service;
+import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class JobServiceDeleteThreads extends JobService {
+public class JobServiceFindPeers extends JobService {
 
 
-    private static final String TAG = JobServiceDeleteThreads.class.getSimpleName();
-    private static final String ICES = "ices";
+    private static final String TAG = JobServiceFindPeers.class.getSimpleName();
 
-    public static void removeThreads(@NonNull Context context, long... idxs) {
+
+    public static void findPeers(@NonNull Context context) {
         checkNotNull(context);
 
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
-            ComponentName componentName = new ComponentName(context, JobServiceDeleteThreads.class);
-            PersistableBundle bundle = new PersistableBundle();
-            bundle.putLongArray(ICES, idxs);
+            ComponentName componentName = new ComponentName(context, JobServiceFindPeers.class);
 
             JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
-                    .setExtras(bundle)
-                    .setOverrideDeadline(0)
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                     .build();
             int resultCode = jobScheduler.schedule(jobInfo);
             if (resultCode == JobScheduler.RESULT_SUCCESS) {
@@ -54,30 +53,34 @@ public class JobServiceDeleteThreads extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
+        boolean peerDiscovery =
+                Service.isSupportPeerDiscovery(getApplicationContext());
+        if (!peerDiscovery) {
+            return false;
+        }
 
-        PersistableBundle bundle = jobParameters.getExtras();
-        final long[] idxs = bundle.getLongArray(ICES);
-
+        if (!Network.isConnected(getApplicationContext())) {
+            return false;
+        }
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             long start = System.currentTimeMillis();
 
             try {
 
-                Singleton.getInstance(getApplicationContext());
 
+                Service.getInstance(getApplicationContext());
 
-                THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
                 IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+                checkNotNull(ipfs, "IPFS not defined");
 
-                checkNotNull(ipfs, "IPFS is not valid");
-                threads.setThreadsStatus(Status.DELETING, idxs);
 
-                threads.removeThreads(ipfs, idxs);
+                List<Peer> peers = ipfs.swarmPeers();
 
-                ipfs.gc();
-
-                ipfs.logBaseDir();
+                for (Peer peer : peers) {
+                    PID pid = peer.getPid();
+                    Service.createUnknownUser(getApplicationContext(), pid);
+                }
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -95,4 +98,3 @@ public class JobServiceDeleteThreads extends JobService {
         return false;
     }
 }
-

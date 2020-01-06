@@ -39,7 +39,7 @@ public class PeersAPI {
     }
 
     @NonNull
-    private PeersDatabase getPeersDatabase() {
+    public PeersDatabase getPeersDatabase() {
         return peersDatabase;
     }
 

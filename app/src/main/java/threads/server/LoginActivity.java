@@ -16,6 +16,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import threads.server.jobs.JobServiceAutoConnect;
+import threads.server.jobs.JobServiceCleanup;
+import threads.server.jobs.JobServiceDownloader;
+import threads.server.jobs.JobServiceFindPeers;
+import threads.server.jobs.JobServiceLoadNotifications;
+import threads.server.jobs.JobServicePeers;
+import threads.server.jobs.JobServicePublisher;
+
 public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = LoginActivity.class.getSimpleName();

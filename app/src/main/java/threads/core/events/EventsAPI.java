@@ -19,7 +19,7 @@ public class EventsAPI {
 
 
     @NonNull
-    private EventsDatabase getEventsDatabase() {
+    public EventsDatabase getEventsDatabase() {
         return eventsDatabase;
     }
 
@@ -52,30 +52,5 @@ public class EventsAPI {
         checkNotNull(event);
         getEventsDatabase().eventDao().insertEvent(event);
     }
-
-
-    public Message createMessage(@NonNull MessageKind messageKind, @NonNull String message, long timestamp) {
-        checkNotNull(messageKind);
-        checkNotNull(message);
-        return Message.createMessage(messageKind, message, timestamp);
-    }
-
-
-    public void removeMessage(@NonNull Message message) {
-        checkNotNull(message);
-        getEventsDatabase().messageDao().deleteMessage(message);
-    }
-
-
-    public void storeMessage(@NonNull Message message) {
-        checkNotNull(message);
-        getEventsDatabase().messageDao().insertMessages(message);
-    }
-
-
-    public void clearMessages() {
-        getEventsDatabase().messageDao().clear();
-    }
-
 
 }
