@@ -280,147 +280,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-
-        switch (menuItem.getItemId()) {
-            case R.id.nav_privacy_policy: {
-                try {
-                    String url = "file:///android_res/raw/privacy_policy.html";
-                    WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.URL, url)
-                            .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
-
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-                break;
-            }
-            case R.id.nav_issues: {
-                try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse("https://gitlab.com/remmer.wilts/threads-server/issues"));
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-                break;
-            }
-            case R.id.nav_documentation: {
-                try {
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse("https://gitlab.com/remmer.wilts/threads-server"));
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-                break;
-            }
-            case R.id.nav_licences: {
-                try {
-
-                    LicensesDialogFragment fragment =
-                            new LicensesDialogFragment.Builder(this)
-                                    .setNotices(R.raw.licenses)
-                                    .setShowFullLicenseText(false)
-                                    .setIncludeOwnLicense(true)
-                                    .build();
-
-                    fragment.show(getSupportFragmentManager(), null);
-
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-                break;
-            }
-            case R.id.nav_settings: {
-                try {
-                    FragmentManager fm = getSupportFragmentManager();
-                    SettingsDialogFragment settingsDialogFragment = new SettingsDialogFragment();
-                    settingsDialogFragment.show(fm, SettingsDialogFragment.TAG);
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-                break;
-            }
-            case R.id.nav_config: {
-                try {
-                    IPFS ipfs = Singleton.getInstance(this).getIpfs();
-                    if (ipfs != null) {
-                        String data = "<html><h2>Config</h2><pre>" + ipfs.config_show() + "</pre></html>";
-                        WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.HTML, data)
-                                .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
-                    }
-
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-                break;
-            }
-            case R.id.nav_inbox: {
-                try {
-                    PID pid = Preferences.getPID(this);
-                    checkNotNull(pid);
-                    String address = AddressType.getAddress(pid, AddressType.NOTIFICATION);
-                    Uri uri = Uri.parse(Service.getAddressLink(address));
-
-                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-                break;
-            }
-
-            case R.id.nav_outbox: {
-                try {
-                    PID pid = Preferences.getPID(this);
-                    checkNotNull(pid);
-                    String address = AddressType.getAddress(pid, AddressType.PEER);
-                    Uri uri = Uri.parse(Service.getAddressLink(address));
-
-                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-                break;
-            }
-
-            case R.id.nav_share: {
-                try {
-                    Intent i = new Intent(Intent.ACTION_SEND);
-                    i.setType("text/plain");
-                    i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name_full));
-                    String sAux = "\n" + getString(R.string.store_mail) + "\n\n";
-                    if (BuildConfig.FDroid) {
-                        sAux = sAux + getString(R.string.fdroid_url) + "\n\n";
-                    } else {
-                        sAux = sAux + getString(R.string.play_store_url) + "\n\n";
-                    }
-                    i.putExtra(Intent.EXTRA_TEXT, sAux);
-                    startActivity(Intent.createChooser(i, getString(R.string.choose_one)));
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-                break;
-            }
-        }
-
-        mDrawerLayout.closeDrawer(GravityCompat.START);
-        return true;
-    }
+    private Toolbar mToolbar;
 
     @Override
     public void clickConnectPeer() {
@@ -671,15 +531,158 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+
+        switch (menuItem.getItemId()) {
+            case R.id.nav_privacy_policy: {
+                try {
+                    String url = "file:///android_res/raw/privacy_policy.html";
+                    WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.URL, url)
+                            .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
+
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+                break;
+            }
+            case R.id.nav_issues: {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse("https://gitlab.com/remmer.wilts/threads-server/issues"));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+                break;
+            }
+            case R.id.nav_documentation: {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse("https://gitlab.com/remmer.wilts/threads-server"));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+                break;
+            }
+            case R.id.nav_licences: {
+                try {
+
+                    LicensesDialogFragment fragment =
+                            new LicensesDialogFragment.Builder(this)
+                                    .setNotices(R.raw.licenses)
+                                    .setShowFullLicenseText(false)
+                                    .setIncludeOwnLicense(true)
+                                    .build();
+
+                    fragment.show(getSupportFragmentManager(), null);
+
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+                break;
+            }
+            case R.id.nav_settings: {
+                try {
+                    FragmentManager fm = getSupportFragmentManager();
+                    SettingsDialogFragment settingsDialogFragment = new SettingsDialogFragment();
+                    settingsDialogFragment.show(fm, SettingsDialogFragment.TAG);
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+                break;
+            }
+            case R.id.nav_config: {
+                try {
+                    IPFS ipfs = Singleton.getInstance(this).getIpfs();
+                    if (ipfs != null) {
+                        String data = "<html><h2>Config</h2><pre>" + ipfs.config_show() + "</pre></html>";
+                        WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.HTML, data)
+                                .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
+                    }
+
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+                break;
+            }
+            case R.id.nav_inbox: {
+                try {
+                    PID pid = Preferences.getPID(this);
+                    checkNotNull(pid);
+                    String address = AddressType.getAddress(pid, AddressType.NOTIFICATION);
+                    Uri uri = Uri.parse(Service.getAddressLink(address));
+
+                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+                break;
+            }
+
+            case R.id.nav_outbox: {
+                try {
+                    PID pid = Preferences.getPID(this);
+                    checkNotNull(pid);
+                    String address = AddressType.getAddress(pid, AddressType.PEER);
+                    Uri uri = Uri.parse(Service.getAddressLink(address));
+
+                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+                break;
+            }
+
+            case R.id.nav_share: {
+                try {
+                    Intent i = new Intent(Intent.ACTION_SEND);
+                    i.setType("text/plain");
+                    i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name));
+                    String sAux = "\n" + getString(R.string.store_mail) + "\n\n";
+                    if (BuildConfig.FDroid) {
+                        sAux = sAux + getString(R.string.fdroid_url) + "\n\n";
+                    } else {
+                        sAux = sAux + getString(R.string.play_store_url) + "\n\n";
+                    }
+                    i.putExtra(Intent.EXTRA_TEXT, sAux);
+                    startActivity(Intent.createChooser(i, getString(R.string.choose_one)));
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+                break;
+            }
+        }
+
+        mDrawerLayout.closeDrawer(GravityCompat.START);
+        return true;
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.ThreadsTheme);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = findViewById(R.id.toolbar);
+        mToolbar = findViewById(R.id.toolbar);
         mAppBarLayout = findViewById(R.id.app_bar_layout);
 
-        setSupportActionBar(toolbar);
+        setSupportActionBar(mToolbar);
+        mToolbar.setSubtitle(R.string.files);
 
         Service.getInstance(getApplicationContext());
 
@@ -711,18 +714,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 prevMenuItem = mNavigation.getMenu().getItem(position);
                 switch (prevMenuItem.getItemId()) {
                     case R.id.navigation_files:
+                        mToolbar.setSubtitle(R.string.files);
                         mMainFab.setImageResource(R.drawable.dots);
                         mMainFab.setBackgroundTintList(
                                 ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
 
                         break;
                     case R.id.navigation_peers:
+                        mToolbar.setSubtitle(R.string.peers);
                         mMainFab.setImageResource(R.drawable.dots);
                         mMainFab.setBackgroundTintList(
                                 ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
 
                         break;
                     case R.id.navigation_swarm:
+                        mToolbar.setSubtitle(R.string.swarm);
                         mMainFab.setImageResource(R.drawable.traffic_light);
                         mMainFab.setBackgroundTintList(
                                 ContextCompat.getColorStateList(getApplicationContext(), mTrafficColorId));
@@ -745,6 +751,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 switch (item.getItemId()) {
                     case R.id.navigation_files:
                         mCustomViewPager.setCurrentItem(0);
+                        mToolbar.setSubtitle(R.string.files);
                         mMainFab.setImageResource(R.drawable.dots);
                         mMainFab.setBackgroundTintList(
                                 ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
@@ -752,6 +759,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         return true;
                     case R.id.navigation_peers:
                         mCustomViewPager.setCurrentItem(1);
+                        mToolbar.setSubtitle(R.string.peers);
                         mMainFab.setImageResource(R.drawable.dots);
                         mMainFab.setBackgroundTintList(
                                 ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
@@ -759,6 +767,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         return true;
                     case R.id.navigation_swarm:
                         mCustomViewPager.setCurrentItem(2);
+                        mToolbar.setSubtitle(R.string.swarm);
                         mMainFab.setImageResource(R.drawable.traffic_light);
                         mMainFab.setBackgroundTintList(
                                 ContextCompat.getColorStateList(getApplicationContext(), mTrafficColorId));
@@ -774,7 +783,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         navigationView.setNavigationItemSelectedListener(this);
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, mDrawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+                this, mDrawerLayout, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         mDrawerLayout.addDrawerListener(toggle);
         toggle.syncState();
 

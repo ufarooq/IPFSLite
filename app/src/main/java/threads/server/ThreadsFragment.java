@@ -54,7 +54,6 @@ import threads.server.mdl.SelectionViewModel;
 import threads.server.mdl.ThreadViewModel;
 import threads.share.MimeType;
 import threads.share.Network;
-import threads.share.PDFView;
 import threads.share.ThreadActionDialogFragment;
 import threads.share.WebViewDialogFragment;
 
@@ -617,10 +616,17 @@ public class ThreadsFragment extends Fragment implements
 
                         } else if (mimeType.startsWith(MimeType.PDF_MIME_TYPE)) {
 
+                            Uri uri = FileDocumentsProvider.getUriForThread(thread);
+
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            intent.setDataAndType(uri, MimeType.PDF_MIME_TYPE);
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            startActivity(intent);
+                            /*
                             PDFView.with(getActivity())
                                     .cid(cid.getCid())
                                     .swipeHorizontal(true)
-                                    .start();
+                                    .start();*/
 
                         } else if (mimeType.equals(MimeType.LINK_MIME_TYPE)) {
                             byte[] data = ipfs.getData(cid, timeout, true);

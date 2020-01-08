@@ -9,7 +9,7 @@
         android:layout_height="wrap_content"
         android:layout_alignTop="@id/app_image"
         android:layout_alignEnd="@id/app_image"
-        android:text="@string/app_name_full"
+        android:text="@string/app_name"
         android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6" />
 
     <ImageView

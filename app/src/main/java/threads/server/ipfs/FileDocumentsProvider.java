@@ -100,7 +100,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         MatrixCursor.RowBuilder row = result.newRow();
         row.add(DocumentsContract.Root.COLUMN_ROOT_ID, rootId);
         row.add(DocumentsContract.Root.COLUMN_ICON, R.mipmap.ic_launcher);
-        row.add(DocumentsContract.Root.COLUMN_TITLE, getContext().getString(R.string.app_name_full));
+        row.add(DocumentsContract.Root.COLUMN_TITLE, getContext().getString(R.string.app_name));
         row.add(DocumentsContract.Root.COLUMN_FLAGS,
                 DocumentsContract.Root.FLAG_LOCAL_ONLY |
                         DocumentsContract.Root.FLAG_SUPPORTS_RECENTS |
