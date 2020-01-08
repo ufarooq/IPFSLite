@@ -39,6 +39,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
+import threads.core.contents.CDS;
+import threads.core.contents.ContentDatabase;
+import threads.core.contents.Contents;
 import threads.core.events.EVENTS;
 import threads.core.peers.AddressType;
 import threads.core.peers.Content;
@@ -246,7 +249,7 @@ public class Service {
         if (host != null) {
 
             final EntityService entityService = EntityService.getInstance(context);
-            final ContentService contentService = ContentService.getInstance(context);
+            final CDS contentService = CDS.getInstance(context);
             try {
                 String address = AddressType.getAddress(host, AddressType.NOTIFICATION);
                 List<Entity> entities = entityService.loadEntities(context, address);
@@ -303,7 +306,7 @@ public class Service {
                                 singleton.connectPubsubTopic(context, pid.getPid());
 
 
-                                threads.server.Content content =
+                                threads.core.contents.Content content =
                                         contentService.getContent(cid);
                                 if (content == null) {
                                     contentService.insertContent(pid, cid, false);
@@ -401,7 +404,7 @@ public class Service {
 
 
         try {
-            final ContentService contentService = ContentService.getInstance(context);
+            final CDS contentService = CDS.getInstance(context);
             final EntityService entityService = EntityService.getInstance(context);
             final IPFS ipfs = Singleton.getInstance(context).getIpfs();
 
@@ -414,13 +417,13 @@ public class Service {
             // remove all content
             timestamp = getDaysAgo(14);
             ContentDatabase contentDatabase = contentService.getContentDatabase();
-            List<threads.server.Content> entries = contentDatabase.contentDao().
+            List<threads.core.contents.Content> entries = contentDatabase.contentDao().
                     getContentWithSmallerTimestamp(timestamp);
 
             checkNotNull(ipfs, "IPFS not valid");
 
             try {
-                for (threads.server.Content content : entries) {
+                for (threads.core.contents.Content content : entries) {
 
                     contentDatabase.contentDao().removeContent(content);
 
@@ -1671,7 +1674,7 @@ public class Service {
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        final ContentService contentService = ContentService.getInstance(context);
+        final CDS contentService = CDS.getInstance(context);
         final PID host = Preferences.getPID(context);
         final EVENTS events = Singleton.getInstance(context).getEvents();
 

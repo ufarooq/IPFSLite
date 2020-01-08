@@ -16,6 +16,10 @@ import java.util.concurrent.TimeUnit;
 
 import threads.core.Preferences;
 import threads.core.Singleton;
+import threads.core.contents.CDS;
+import threads.core.contents.Content;
+import threads.core.contents.ContentEntry;
+import threads.core.contents.Contents;
 import threads.core.events.EVENTS;
 import threads.core.peers.PEERS;
 import threads.core.peers.User;
@@ -59,7 +63,7 @@ public class ContentsService {
     private static void downloadContents(@NonNull Context context) {
         checkNotNull(context);
 
-        final ContentService contentService = ContentService.getInstance(context);
+        final CDS contentService = CDS.getInstance(context);
         final PEERS threads = Singleton.getInstance(context).getPeers();
 
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
@@ -87,7 +91,7 @@ public class ContentsService {
                         SwarmService.ConnectInfo info = SwarmService.connect(context, user);
 
                         if (info.isConnected()) {
-                            for (threads.server.Content entry : contents) {
+                            for (Content entry : contents) {
                                 ContentsService.download(context, entry.getPid(), entry.getCID());
                             }
                         }
@@ -251,7 +255,7 @@ public class ContentsService {
         checkNotNull(pid);
         checkNotNull(cid);
 
-        final ContentService contentService = ContentService.getInstance(context);
+        final CDS contentService = CDS.getInstance(context);
         final PEERS threads = Singleton.getInstance(context).getPeers();
 
 

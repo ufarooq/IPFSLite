@@ -1,4 +1,4 @@
-package threads.server;
+package threads.core.contents;
 
 import androidx.annotation.NonNull;
 
@@ -10,7 +10,7 @@ import threads.ipfs.api.CID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-class Contents extends ArrayList<ContentEntry> {
+public class Contents extends ArrayList<ContentEntry> {
 
     private void add(@NonNull Thread thread) {
         CID cid = thread.getContent();

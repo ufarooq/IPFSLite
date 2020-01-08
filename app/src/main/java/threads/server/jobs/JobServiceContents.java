@@ -16,10 +16,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import threads.core.contents.CDS;
 import threads.core.peers.Content;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.PID;
-import threads.server.ContentService;
 import threads.server.ContentsService;
 import threads.server.Service;
 import threads.share.Network;
@@ -79,8 +79,8 @@ public class JobServiceContents extends JobService {
             try {
                 Service.getInstance(getApplicationContext());
 
-                final ContentService contentService =
-                        ContentService.getInstance(getApplicationContext());
+                final CDS contentService =
+                        CDS.getInstance(getApplicationContext());
 
                 // work of download is done here
                 boolean connected = ContentsService.download(getApplicationContext(),
@@ -92,12 +92,12 @@ public class JobServiceContents extends JobService {
                             TimeUnit.MINUTES.toMillis(30);
 
 
-                    List<threads.server.Content> contents =
+                    List<threads.core.contents.Content> contents =
                             contentService.getContentDatabase().
                                     contentDao().getContents(
                                     PID.create(pid), timestamp, false);
 
-                    for (threads.server.Content entry : contents) {
+                    for (threads.core.contents.Content entry : contents) {
                         ContentsService.download(
                                 getApplicationContext(), entry.getPid(), entry.getCID());
                     }

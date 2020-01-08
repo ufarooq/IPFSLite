@@ -1,4 +1,4 @@
-package threads.server;
+package threads.core.contents;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -7,7 +7,7 @@ import java.util.Objects;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-class ContentEntry {
+public class ContentEntry {
     private final String filename;
     private final long size;
     private final String cid;
@@ -29,15 +29,15 @@ class ContentEntry {
         this.image = image;
     }
 
-    String getImage() {
+    public String getImage() {
         return image;
     }
 
-    String getMimeType() {
+    public String getMimeType() {
         return mimeType;
     }
 
-    String getFilename() {
+    public String getFilename() {
         return filename;
     }
 
@@ -53,7 +53,7 @@ class ContentEntry {
                 '}';
     }
 
-    long getSize() {
+    public long getSize() {
         return size;
     }
 

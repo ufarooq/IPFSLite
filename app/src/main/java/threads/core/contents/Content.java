@@ -1,4 +1,4 @@
-package threads.server;
+package threads.core.contents;
 
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;

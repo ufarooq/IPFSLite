@@ -1,4 +1,4 @@
-package threads.server;
+package threads.core.contents;
 
 import android.content.Context;
 
@@ -11,12 +11,12 @@ import threads.ipfs.api.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class ContentService {
-    private static ContentService SINGLETON = null;
+public class CDS {
+    private static CDS INSTANCE = null;
     @NonNull
     private final ContentDatabase contentDatabase;
 
-    private ContentService(@NonNull Context context) {
+    private CDS(@NonNull Context context) {
         checkNotNull(context);
 
         contentDatabase = Room.databaseBuilder(context,
@@ -25,12 +25,16 @@ public class ContentService {
     }
 
     @NonNull
-    public static ContentService getInstance(@NonNull Context context) {
+    public static CDS getInstance(@NonNull Context context) {
         checkNotNull(context);
-        if (SINGLETON == null) {
-            SINGLETON = new ContentService(context);
+        if (INSTANCE == null) {
+            synchronized (CDS.class) {
+                if (INSTANCE == null) {
+                    INSTANCE = new CDS(context);
+                }
+            }
         }
-        return SINGLETON;
+        return INSTANCE;
     }
 
     @NonNull
@@ -40,20 +44,20 @@ public class ContentService {
 
 
     @Nullable
-    Content getContent(@NonNull CID cid) {
+    public Content getContent(@NonNull CID cid) {
         checkNotNull(cid);
         return getContentDatabase().contentDao().getContent(cid.getCid());
     }
 
 
-    void insertContent(@NonNull PID pid, @NonNull CID cid, boolean finished) {
+    public void insertContent(@NonNull PID pid, @NonNull CID cid, boolean finished) {
         checkNotNull(pid);
         checkNotNull(cid);
         Content content = Content.create(pid, cid, finished);
         getContentDatabase().contentDao().insertContent(content);
     }
 
-    void finishContent(CID cid) {
+    public void finishContent(CID cid) {
         checkNotNull(cid);
         getContentDatabase().contentDao().setFinished(cid.getCid(), true);
     }
