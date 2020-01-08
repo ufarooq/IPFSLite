@@ -51,7 +51,8 @@
                 android:layout_gravity="bottom|end"
                 android:layout_marginEnd="16dp"
                 android:layout_marginBottom="16dp"
-                app:srcCompat="@drawable/dots" />
+                app:srcCompat="@drawable/plus_thick"
+                app:tint="@color/colorBackground" />
 
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

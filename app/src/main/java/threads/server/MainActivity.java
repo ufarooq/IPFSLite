@@ -715,14 +715,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 switch (prevMenuItem.getItemId()) {
                     case R.id.navigation_files:
                         mToolbar.setSubtitle(R.string.files);
-                        mMainFab.setImageResource(R.drawable.dots);
+                        mMainFab.setImageResource(R.drawable.plus_thick);
                         mMainFab.setBackgroundTintList(
                                 ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
 
                         break;
                     case R.id.navigation_peers:
                         mToolbar.setSubtitle(R.string.peers);
-                        mMainFab.setImageResource(R.drawable.dots);
+                        mMainFab.setImageResource(R.drawable.account_plus);
                         mMainFab.setBackgroundTintList(
                                 ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
 
@@ -752,7 +752,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     case R.id.navigation_files:
                         mCustomViewPager.setCurrentItem(0);
                         mToolbar.setSubtitle(R.string.files);
-                        mMainFab.setImageResource(R.drawable.dots);
+                        mMainFab.setImageResource(R.drawable.plus_thick);
                         mMainFab.setBackgroundTintList(
                                 ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
 
@@ -760,7 +760,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     case R.id.navigation_peers:
                         mCustomViewPager.setCurrentItem(1);
                         mToolbar.setSubtitle(R.string.peers);
-                        mMainFab.setImageResource(R.drawable.dots);
+                        mMainFab.setImageResource(R.drawable.account_plus);
                         mMainFab.setBackgroundTintList(
                                 ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
 
