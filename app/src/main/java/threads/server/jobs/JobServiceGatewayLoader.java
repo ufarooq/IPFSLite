@@ -105,7 +105,7 @@ public class JobServiceGatewayLoader extends JobService {
                 Thread thread = threads.getThreadByIdx(idx);
                 checkNotNull(thread);
 
-                CID cid = thread.getCid();
+                CID cid = thread.getContent();
                 if (cid != null) {
                     contents.add(cid);
                 }

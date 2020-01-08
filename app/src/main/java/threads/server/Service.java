@@ -775,7 +775,7 @@ public class Service {
                                    @NonNull Thread thread) {
         try {
             if (Preferences.isPubsubEnabled(context)) {
-                CID cid = thread.getCid();
+                CID cid = thread.getContent();
                 checkNotNull(cid);
 
                 Content map = new Content();
@@ -924,7 +924,7 @@ public class Service {
         checkNotNull(user);
 
         Thread thread = threads.createThread(user, Status.INIT, Kind.OUT, parent);
-        thread.setCid(cid);
+        thread.setContent(cid);
         String filename = link.getName();
         thread.setName(filename);
 
@@ -961,7 +961,7 @@ public class Service {
 
 
         Thread thread = threads.createThread(creator, threadStatus, Kind.OUT, 0L);
-        thread.setCid(cid);
+        thread.setContent(cid);
 
 
         if (filename != null) {
@@ -980,7 +980,7 @@ public class Service {
             thread.setName(cid.getCid());
         }
         thread.setSize(filesize);
-        thread.setImage(image);
+        thread.setThumbnail(image);
         return threads.storeThread(thread);
     }
 
@@ -1003,7 +1003,7 @@ public class Service {
                         Thread threadObject = threadsAPI.getThreadByIdx(idx);
                         checkNotNull(threadObject);
 
-                        CID cid = threadObject.getCid();
+                        CID cid = threadObject.getContent();
                         checkNotNull(cid);
 
                         int timeout = Preferences.getConnectionTimeout(context);
@@ -1084,7 +1084,7 @@ public class Service {
         checkNotNull(ipfs);
         checkNotNull(thread);
 
-        CID cid = thread.getCid();
+        CID cid = thread.getContent();
         checkNotNull(cid);
 
         String filename = thread.getName();
@@ -1151,7 +1151,7 @@ public class Service {
 
                 // check if image was not imported
                 try {
-                    if (thread.getImage() == null) {
+                    if (thread.getThumbnail() == null) {
                         ThumbnailService.Result res = ThumbnailService.getThumbnail(
                                 context, file, filename);
                         CID image = res.getCid();
@@ -1286,7 +1286,7 @@ public class Service {
         try {
             threads.setThreadLeaching(thread.getIdx(), true);
 
-            CID cid = thread.getCid();
+            CID cid = thread.getContent();
             checkNotNull(cid);
 
             List<LinkInfo> links = getLinks(context, ipfs, cid);
@@ -1529,11 +1529,11 @@ public class Service {
                 Thread thread = threads.createThread(host, Status.INIT, Kind.IN, 0L);
 
                 ThumbnailService.Result res =
-                        ThumbnailService.getThumbnail(context, uri, host.getAlias());
+                        ThumbnailService.getThumbnail(context, uri);
 
                 thread.setName(name);
                 thread.setSize(size);
-                thread.setImage(res.getCid());
+                thread.setThumbnail(res.getCid());
                 thread.setMimeType(fileDetails.getMimeType());
                 long idx = threads.storeThread(thread);
 

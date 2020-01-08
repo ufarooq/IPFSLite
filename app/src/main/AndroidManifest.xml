@@ -182,7 +182,7 @@
 
         <provider
             android:name="threads.server.ipfs.FileDocumentsProvider"
-            android:authorities="threads.server.ipfs"
+            android:authorities="${documentsAuthority}"
             android:exported="true"
             android:grantUriPermissions="true"
             android:permission="android.permission.MANAGE_DOCUMENTS">

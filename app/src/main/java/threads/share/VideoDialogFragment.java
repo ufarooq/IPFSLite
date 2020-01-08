@@ -7,6 +7,7 @@ import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -34,30 +35,29 @@ import threads.core.Singleton;
 import threads.core.events.EVENTS;
 import threads.core.threads.THREADS;
 import threads.server.R;
-import threads.server.VideoActivity;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class VideoDialogFragment extends DialogFragment implements MediaController.MediaPlayerControl,
         MediaPlayer.OnBufferingUpdateListener, SurfaceHolder.Callback, MediaPlayer.OnCompletionListener {
     public static final String TAG = VideoDialogFragment.class.getSimpleName();
-    private static final String CID_ID = "CID_ID";
+    private static final String URI = "URI";
 
     private final AtomicBoolean stopped = new AtomicBoolean(false);
     private MediaPlayer mediaPlayer;
     private MediaController mediaController;
     private int mCurrentBufferPercentage = 0;
     private ProgressBar progress_bar;
-    private String cid;
+    private Uri uri;
     private SurfaceView surfaceView;
     private Context mContext;
-    private IPFSMediaDataSource dataSource;
+    //private IPFSMediaDataSource dataSource;
     private THREADS threads;
 
-    public static VideoDialogFragment newInstance(@NonNull String cid) {
+    public static VideoDialogFragment newInstance(@NonNull Uri uri) {
         VideoDialogFragment dialogFragment = new VideoDialogFragment();
         Bundle bundle = new Bundle();
-        bundle.putString(VideoActivity.CID_ID, cid);
+        bundle.putParcelable(VideoDialogFragment.URI, uri);
         dialogFragment.setArguments(bundle);
         return dialogFragment;
     }
@@ -155,20 +155,10 @@ public class VideoDialogFragment extends DialogFragment implements MediaControll
         Bundle args = getArguments();
         checkNotNull(args);
 
-        cid = args.getString(CID_ID);
-        checkNotNull(cid);
-
+        uri = args.getParcelable(URI);
+        checkNotNull(uri);
 
         mediaPlayer = new MediaPlayer();
-        try {
-            dataSource = new IPFSMediaDataSource(mContext, cid);
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            final EVENTS events = Singleton.getInstance(mContext).getEvents();
-            Preferences.error(events, mContext.getString(R.string.video_failure,
-                    e.getLocalizedMessage()));
-            dismiss();
-        }
 
         mediaController.setMediaPlayer(VideoDialogFragment.this);
         mediaController.setAnchorView(layoutView);
@@ -311,7 +301,7 @@ public class VideoDialogFragment extends DialogFragment implements MediaControll
 
     @Override
     public int getAudioSessionId() {
-        return cid.hashCode();
+        return uri.hashCode();
     }
 
 
@@ -376,8 +366,8 @@ public class VideoDialogFragment extends DialogFragment implements MediaControll
             mediaPlayer.setScreenOnWhilePlaying(true);
             mediaPlayer.setOnCompletionListener(this);
             mediaPlayer.setOnBufferingUpdateListener(this);
-
-            mediaPlayer.setDataSource(dataSource);
+            mediaPlayer.setDataSource(mContext, uri);
+            //mediaPlayer.setDataSource(dataSource);
 
             mediaPlayer.setOnPreparedListener((mp) -> {
                 try {

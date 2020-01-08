@@ -38,6 +38,16 @@ android {
         versionName "1.0.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
+        def documentsAuthorityValue = applicationId + ".ipfs"
+
+        // Now we can use ${documentsAuthority} in our Manifest
+        manifestPlaceholders =
+                [documentsAuthority: documentsAuthorityValue]
+        // Now we can use BuildConfig.DOCUMENTS_AUTHORITY in our code
+        buildConfigField "String",
+                "DOCUMENTS_AUTHORITY",
+                "\"${documentsAuthorityValue}\""
+
     }
     buildTypes {
         debug {

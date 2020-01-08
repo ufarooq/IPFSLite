@@ -4,15 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:paddingTop="6dp"
-    android:paddingBottom="@dimen/threads_paddingBottom">
+    android:orientation="horizontal">
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="0"
-        android:padding="12dp"
+        android:padding="8dp"
         android:orientation="vertical">
 
         <ImageView
@@ -25,7 +23,7 @@
         <ProgressBar
             android:id="@+id/progress_bar"
             style="?android:attr/progressBarStyleHorizontal"
-            android:layout_marginTop="-10dp"
+            android:layout_marginTop="-12dp"
             android:maxHeight="26dip"
             android:minHeight="26dip"
             android:layout_width="match_parent"
@@ -48,7 +46,6 @@
                 android:id="@+id/content_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:maxLines="2"
                 android:padding="2dp"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
@@ -59,7 +56,6 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
                 android:layout_marginEnd="8dp"
-                android:layout_weight="0"
                 android:maxLines="1"
                 android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
         </LinearLayout>
@@ -72,7 +68,6 @@
             android:maxLines="1"
             android:textAlignment="viewStart"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Body2" />
-
 
     </LinearLayout>
 

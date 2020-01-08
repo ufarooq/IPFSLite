@@ -31,7 +31,7 @@
                     android:id="@+id/toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="@color/colorToolbar"
+                    android:background="@color/colorSpashBackground"
                     app:layout_scrollFlags="scroll|enterAlways" />
 
             </com.google.android.material.appbar.AppBarLayout>

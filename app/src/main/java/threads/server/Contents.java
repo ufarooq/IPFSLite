@@ -13,7 +13,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 class Contents extends ArrayList<ContentEntry> {
 
     private void add(@NonNull Thread thread) {
-        CID cid = thread.getCid();
+        CID cid = thread.getContent();
         checkNotNull(cid);
         String filename = thread.getName();
         long filesize = thread.getSize();
@@ -21,7 +21,7 @@ class Contents extends ArrayList<ContentEntry> {
 
         String image = null;
 
-        CID imageCID = thread.getImage();
+        CID imageCID = thread.getThumbnail();
 
         if (imageCID != null) {
             image = imageCID.getCid();

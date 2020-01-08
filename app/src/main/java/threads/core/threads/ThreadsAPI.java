@@ -77,7 +77,7 @@ public class ThreadsAPI {
     public void setImage(@NonNull Thread thread, @NonNull CID image) {
         checkNotNull(thread);
         checkNotNull(image);
-        getThreadsDatabase().threadDao().setImage(thread.getIdx(), image);
+        getThreadsDatabase().threadDao().setThumbnail(thread.getIdx(), image);
     }
 
 
@@ -143,8 +143,8 @@ public class ThreadsAPI {
         getThreadsDatabase().threadDao().removeThreads(thread);
 
 
-        unpin(ipfs, thread.getCid());
-        unpin(ipfs, thread.getImage());
+        unpin(ipfs, thread.getContent());
+        unpin(ipfs, thread.getThumbnail());
 
         // delete all children
         List<Thread> entries = getThreadsByThread(thread.getIdx());
@@ -261,16 +261,19 @@ public class ThreadsAPI {
         checkNotNull(thread);
         checkNotNull(cid);
         Multihash.fromBase58(cid.getCid()); // check if cid  is valid (otherwise exception)
-        getThreadsDatabase().threadDao().setCid(thread.getIdx(), cid);
+        getThreadsDatabase().threadDao().setContent(thread.getIdx(), cid);
 
     }
 
     public void setThreadCID(long idx, @NonNull CID cid) {
         checkNotNull(cid);
-        getThreadsDatabase().threadDao().setCid(idx, cid);
-
+        getThreadsDatabase().threadDao().setContent(idx, cid);
     }
 
+    public void setThreadThumbnail(long idx, @NonNull CID image) {
+        checkNotNull(image);
+        getThreadsDatabase().threadDao().setThumbnail(idx, image);
+    }
 
     public void resetThreadsPublishing() {
         getThreadsDatabase().threadDao().resetThreadsPublishing();
@@ -346,10 +349,14 @@ public class ThreadsAPI {
 
 
     @Nullable
-    public CID getThreadCID(long idx) {
-        return getThreadsDatabase().threadDao().getCID(idx);
+    public CID getThreadContent(long idx) {
+        return getThreadsDatabase().threadDao().getContent(idx);
     }
 
+    @Nullable
+    public CID getThreadThumbnail(long idx) {
+        return getThreadsDatabase().threadDao().getThumbnail(idx);
+    }
 
     @NonNull
     public List<Thread> getThreadsByThreadStatus(@NonNull Status status) {

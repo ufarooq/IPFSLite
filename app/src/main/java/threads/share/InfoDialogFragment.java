@@ -27,6 +27,7 @@ import threads.core.Singleton;
 import threads.core.events.EVENTS;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
+import threads.server.BuildConfig;
 import threads.server.R;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -83,9 +84,8 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
                 }
 
 
-                Uri uri = FileProvider.getUriForFile(
-                        context, context.getApplicationContext()
-                                .getPackageName() + ".provider", file);
+                Uri uri = FileProvider.getUriForFile(context,
+                        BuildConfig.DOCUMENTS_AUTHORITY, file);
 
                 Intent shareIntent = new Intent();
                 shareIntent.setAction(Intent.ACTION_SEND);

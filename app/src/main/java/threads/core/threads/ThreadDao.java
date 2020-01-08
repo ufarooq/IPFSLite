@@ -49,9 +49,13 @@ public interface ThreadDao {
     @Query("SELECT mimeType FROM Thread WHERE idx = :idx")
     String getMimeType(long idx);
 
-    @Query("SELECT cid FROM Thread WHERE idx = :idx")
+    @Query("SELECT content FROM Thread WHERE idx = :idx")
     @TypeConverters({Converter.class})
-    CID getCID(long idx);
+    CID getContent(long idx);
+
+    @Query("SELECT content FROM Thread WHERE idx = :idx")
+    @TypeConverters({Converter.class})
+    CID getThumbnail(long idx);
 
     @Query("UPDATE Thread SET status = :status  WHERE idx = :idx")
     @TypeConverters({Status.class})
@@ -97,11 +101,11 @@ public interface ThreadDao {
     @TypeConverters({Status.class})
     List<Thread> getThreadsByStatus(Status status);
 
-    @Query("SELECT * FROM Thread WHERE cid = :cid")
+    @Query("SELECT * FROM Thread WHERE content = :cid")
     @TypeConverters({Converter.class})
     List<Thread> getThreadsByCid(CID cid);
 
-    @Query("SELECT * FROM Thread WHERE cid = :cid AND thread = :thread")
+    @Query("SELECT * FROM Thread WHERE content = :cid AND thread = :thread")
     @TypeConverters({Converter.class})
     List<Thread> getThreadsByCidAndThread(CID cid, long thread);
 
@@ -129,7 +133,7 @@ public interface ThreadDao {
     @Query("Select SUM(number) FROM THREAD")
     int getThreadsNumber();
 
-    @Query("SELECT COUNT(idx) FROM Thread WHERE cid =:cid OR image =:cid")
+    @Query("SELECT COUNT(idx) FROM Thread WHERE content =:cid OR thumbnail =:cid")
     @TypeConverters({Converter.class})
     int references(CID cid);
 
@@ -155,17 +159,17 @@ public interface ThreadDao {
     @Query("UPDATE Thread SET number = number + 1  WHERE idx IN(:idxs)")
     void incrementNumber(long... idxs);
 
-    @Query("UPDATE Thread SET cid =:cid  WHERE idx = :idx")
+    @Query("UPDATE Thread SET content =:cid  WHERE idx = :idx")
     @TypeConverters({Converter.class})
-    void setCid(long idx, CID cid);
+    void setContent(long idx, CID cid);
 
     @Query("UPDATE Thread SET mimeType =:mimeType  WHERE idx = :idx")
     void setMimeType(long idx, String mimeType);
 
 
-    @Query("UPDATE Thread SET image = :image WHERE idx = :idx")
+    @Query("UPDATE Thread SET thumbnail = :image WHERE idx = :idx")
     @TypeConverters({Converter.class})
-    void setImage(long idx, CID image);
+    void setThumbnail(long idx, CID image);
 
     @Query("SELECT status FROM Thread WHERE idx = :idx")
     @TypeConverters({Status.class})

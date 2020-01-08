@@ -121,9 +121,9 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                         android.R.drawable.list_selector_background);
             }
 
-            if (thread.getImage() != null) {
+            if (thread.getThumbnail() != null) {
                 IPFS ipfs = Singleton.getInstance(context).getIpfs();
-                IPFSData data = IPFSData.create(ipfs, thread.getImage(), timeout);
+                IPFSData data = IPFSData.create(ipfs, thread.getThumbnail(), timeout);
                 Glide.with(context).
                         load(data).
                         into(threadViewHolder.main_image);
@@ -197,7 +197,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                     threadViewHolder.general_action.setVisibility(View.VISIBLE);
                     threadViewHolder.general_action.setImageResource(R.drawable.checkbox_blank_circle_outline);
                 }
-                threadViewHolder.progress_bar.setVisibility(View.GONE);
+                threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
             } else if (thread.isPublishing()) {
                 if (listener.generalActionSupport(thread)) {
                     threadViewHolder.general_action.setVisibility(View.VISIBLE);
@@ -206,7 +206,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                             listener.invokeGeneralAction(thread)
                     );
                 } else {
-                    threadViewHolder.general_action.setVisibility(View.GONE);
+                    threadViewHolder.general_action.setVisibility(View.INVISIBLE);
                 }
 
                 threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
@@ -220,14 +220,14 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                             listener.invokeGeneralAction(thread)
                     );
                 } else {
-                    threadViewHolder.general_action.setVisibility(View.GONE);
+                    threadViewHolder.general_action.setVisibility(View.INVISIBLE);
                 }
 
                 threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
             } else {
                 switch (thread.getStatus()) {
                     case ERROR: {
-                        threadViewHolder.progress_bar.setVisibility(View.GONE);
+                        threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
                         threadViewHolder.general_action.setVisibility(View.VISIBLE);
                         threadViewHolder.general_action.setImageResource(R.drawable.text_download);
                         threadViewHolder.general_action.setOnClickListener((v) ->
@@ -238,12 +238,12 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                     }
                     case INIT:
                     case DELETING: {
-                        threadViewHolder.progress_bar.setVisibility(View.GONE);
-                        threadViewHolder.general_action.setVisibility(View.GONE);
+                        threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
+                        threadViewHolder.general_action.setVisibility(View.INVISIBLE);
                         break;
                     }
                     default: {
-                        threadViewHolder.progress_bar.setVisibility(View.GONE);
+                        threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
                         if (listener.generalActionSupport(thread)) {
                             threadViewHolder.general_action.setImageResource(R.drawable.dots);
                             threadViewHolder.general_action.setVisibility(View.VISIBLE);
@@ -254,7 +254,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
 
                         } else {
-                            threadViewHolder.general_action.setVisibility(View.GONE);
+                            threadViewHolder.general_action.setVisibility(View.INVISIBLE);
                         }
 
                         break;

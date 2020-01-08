@@ -508,7 +508,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             String[] mimeTypes = {"*/*"};
             intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-            intent.setAction(Intent.ACTION_GET_CONTENT);
+            intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             startActivityForResult(Intent.createChooser(intent,
                     getString(R.string.select_files)), REQUEST_SELECT_FILES);
@@ -950,29 +950,29 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         try {
 
-                if (Intent.ACTION_SEND.equals(action)) {
+            if (Intent.ACTION_SEND.equals(action)) {
+                String type = intent.getType();
+                if ("text/plain".equals(type)) {
+                    handleSendText(intent);
+                } else {
+                    handleSend(intent, false);
+                }
+            } else if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
+                if (intent.hasExtra(Intent.EXTRA_STREAM)) {
+                    handleSend(intent, true);
+                } else {
                     String type = intent.getType();
                     if ("text/plain".equals(type)) {
                         handleSendText(intent);
                     } else {
-                        handleSend(intent, false);
-                    }
-                } else if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
-                    if (intent.hasExtra(Intent.EXTRA_STREAM)) {
                         handleSend(intent, true);
-                    } else {
-                        String type = intent.getType();
-                        if ("text/plain".equals(type)) {
-                            handleSendText(intent);
-                        } else {
-                            handleSend(intent, true);
-                        }
                     }
                 }
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage());
             }
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage());
+        }
 
 
     }
@@ -1248,7 +1248,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() -> {
                     try {
-                        CID cid = threads.getThreadCID(idx);
+                        CID cid = threads.getThreadContent(idx);
                         checkNotNull(cid);
                         String multihash = cid.getCid();
 
@@ -1357,7 +1357,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         executor.submit(() -> {
             try {
 
-                CID cid = threads.getThreadCID(idx);
+                CID cid = threads.getThreadContent(idx);
                 checkNotNull(cid);
 
                 JobServicePublish.publish(getApplicationContext(), cid, true);
@@ -1388,7 +1388,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    CID cid = threads.getThreadCID(idx);
+                    CID cid = threads.getThreadContent(idx);
                     checkNotNull(cid);
                     String multihash = cid.getCid();
 

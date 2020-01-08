@@ -10,11 +10,13 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.graphics.pdf.PdfRenderer;
 import android.media.MediaMetadataRetriever;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.provider.DocumentsContract;
+import android.provider.MediaStore;
 import android.util.Log;
-import android.webkit.MimeTypeMap;
+import android.util.Size;
 
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
@@ -26,15 +28,13 @@ import com.j256.simplemagic.ContentInfo;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.util.Optional;
 
 import threads.core.Singleton;
 import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
-import threads.server.R;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -68,7 +68,7 @@ public class ThumbnailService {
                                   int timeout, boolean offline) {
         checkNotNull(ipfs);
         checkNotNull(thread);
-        CID image = thread.getImage();
+        CID image = thread.getThumbnail();
 
         if (image != null) {
             return getImage(ipfs, image, timeout, offline);
@@ -185,25 +185,36 @@ public class ThumbnailService {
 
         if (mimeType.startsWith("video")) {
 
+
             MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
             mediaMetadataRetriever.setDataSource(context, uri);
-            // mediaMetadataRetriever.getPrimaryImage(); // TODO support in the future
-            Bitmap bitmap;
-            try {
-                String time = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-                Long timeUs = Long.decode(time);
-                long timeFrame = (timeUs / 100) * 5;
 
-                bitmap = mediaMetadataRetriever.getFrameAtTime(timeFrame);
+            Bitmap bitmap = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+
+                try {
+                    bitmap = mediaMetadataRetriever.getPrimaryImage();
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage());
+                }
+            }
+            try {
+                if (bitmap == null) {
+                    final WeakReference<Bitmap> weakBmp = new WeakReference<>(mediaMetadataRetriever.getFrameAtTime());
+                    bitmap = weakBmp.get();
+                }
             } catch (Throwable e) {
                 bitmap = mediaMetadataRetriever.getFrameAtTime();
             }
             mediaMetadataRetriever.release();
             return bitmap;
+
         } else if (mimeType.startsWith("application/pdf")) {
             return getPDFBitmap(context, uri);
         } else if (mimeType.startsWith("image")) {
-            return getThumbnail(context, uri);
+
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), uri);
+            return ThumbnailUtils.extractThumbnail(bitmap, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
         }
         return null;
     }
@@ -239,41 +250,6 @@ public class ThumbnailService {
     }
 
 
-    @NonNull
-    private static Bitmap getThumbnail(@NonNull Context context, @NonNull Uri uri) throws IOException {
-        checkNotNull(context);
-        checkNotNull(uri);
-
-        InputStream input = context.getContentResolver().openInputStream(uri);
-        BitmapFactory.Options onlyBoundsOptions = new BitmapFactory.Options();
-        onlyBoundsOptions.inJustDecodeBounds = true;
-        onlyBoundsOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;//optional
-        BitmapFactory.decodeStream(input, null, onlyBoundsOptions);
-        input.close();
-        if ((onlyBoundsOptions.outWidth == -1) || (onlyBoundsOptions.outHeight == -1))
-            return null;
-
-        int originalSize = (onlyBoundsOptions.outHeight > onlyBoundsOptions.outWidth) ?
-                onlyBoundsOptions.outHeight : onlyBoundsOptions.outWidth;
-
-        double ratio = (originalSize > THUMBNAIL_SIZE) ? (originalSize / THUMBNAIL_SIZE) : 1.0;
-
-        int k = Integer.highestOneBit((int) Math.floor(ratio));
-        int sampleSize = k;
-        if (k == 0) {
-            sampleSize = 1;
-        }
-
-
-        BitmapFactory.Options bitmapOptions = new BitmapFactory.Options();
-        bitmapOptions.inSampleSize = sampleSize;
-        bitmapOptions.inPreferredConfig = Bitmap.Config.ARGB_8888;//optional
-        input = context.getContentResolver().openInputStream(uri);
-        Bitmap bitmap = BitmapFactory.decodeStream(input, null, bitmapOptions);
-        input.close();
-        return bitmap;
-    }
-
     @Nullable
     private static byte[] getPreviewImage(@NonNull Context context, @NonNull Uri uri) throws Exception {
         checkNotNull(context);
@@ -289,13 +265,36 @@ public class ThumbnailService {
         return null;
     }
 
+    public static Bitmap getBitmapThumbnail(@NonNull Context context, @NonNull Uri uri) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            try {
+
+                return context.getContentResolver().loadThumbnail(
+                        uri, new Size(THUMBNAIL_SIZE, THUMBNAIL_SIZE), null);
+
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        } else {
+            try {
+
+                return getThumbnailBitmap(context, uri);
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        }
+        return null;
+    }
+
     @Nullable
     public static FileDetails getFileDetails(@NonNull Context context,
                                              @NonNull Uri uri) {
         checkNotNull(context);
         checkNotNull(uri);
 
-
+        Log.e(TAG, uri.toString());
         ContentResolver contentResolver = context.getContentResolver();
         try (Cursor cursor = contentResolver.query(uri, new String[]{
                 DocumentsContract.Document.COLUMN_MIME_TYPE,
@@ -319,20 +318,39 @@ public class ThumbnailService {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
+
         return null;
     }
 
+    public static Bitmap getThumbnailBitmap(Context context, Uri uri) {
+        String[] proj = {MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA};
+
+
+        Cursor cursor = MediaStore.Images.Thumbnails.queryMiniThumbnails(
+                context.getContentResolver(), uri, MediaStore.Images.Thumbnails.MINI_KIND, proj);
+
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID);
+        cursor.moveToFirst();
+        long imageId = cursor.getLong(column_index);
+
+        cursor.close();
+
+        Bitmap bitmap = MediaStore.Images.Thumbnails.getThumbnail(
+                context.getContentResolver(), imageId,
+                MediaStore.Images.Thumbnails.MINI_KIND,
+                null);
+
+        return bitmap;
+    }
+
     @NonNull
-    public static Result getThumbnail(@NonNull Context context,
-                                      @NonNull Uri uri,
-                                      @NonNull String name) {
+    public static Result getThumbnail(@NonNull Context context, @NonNull Uri uri) {
         checkNotNull(context);
         checkNotNull(uri);
-        checkNotNull(name);
 
         CID cid = null;
         boolean thumbnail = false;
-        byte[] bytes;
+        byte[] bytes = null;
 
 
         try {
@@ -341,8 +359,7 @@ public class ThumbnailService {
                 thumbnail = true;
             }
         } catch (Throwable e) {
-            // ignore exception
-            bytes = getImageData(context, name, R.drawable.text_file);
+            Log.e(TAG, "" + e.getLocalizedMessage());
         }
 
         if (bytes != null) {
@@ -371,10 +388,10 @@ public class ThumbnailService {
     @NonNull
     public static Result getThumbnail(@NonNull Context context,
                                       @NonNull File file,
-                                      @NonNull String filename) throws Exception {
+                                      @NonNull String mimeType) throws Exception {
         checkNotNull(context);
         checkNotNull(file);
-        checkNotNull(filename);
+        checkNotNull(mimeType);
 
         Bitmap bitmap = null;
         byte[] bytes = null;
@@ -382,18 +399,14 @@ public class ThumbnailService {
         boolean thumbnail = false;
 
 
-        if (!filename.isEmpty()) {
-            Optional<String> result = getExtension(filename);
-            if (result.isPresent()) {
-                String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(
-                        result.get());
-                if (mimeType != null) {
-                    bitmap = getPreview(context, file, mimeType);
-                    if (bitmap != null) {
-                        thumbnail = true;
-                    }
-                }
+        if (!mimeType.isEmpty()) {
+
+            bitmap = getPreview(context, file, mimeType);
+            if (bitmap != null) {
+                thumbnail = true;
             }
+
+
         }
 
         if (bitmap == null) {
@@ -401,7 +414,7 @@ public class ThumbnailService {
             if (ipfs != null) {
                 ContentInfo contentInfo = ipfs.getContentInfo(file);
                 if (contentInfo != null) {
-                    String mimeType = contentInfo.getMimeType();
+                    mimeType = contentInfo.getMimeType();
                     if (mimeType != null) {
                         bitmap = getPreview(context, file, mimeType);
                     }
@@ -444,28 +457,38 @@ public class ThumbnailService {
 
 
         if (mimeType.startsWith("video")) {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                return ThumbnailUtils.createVideoThumbnail(file, new Size(THUMBNAIL_SIZE, THUMBNAIL_SIZE), null);
+            } else {
+                MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+                mediaMetadataRetriever.setDataSource(context, Uri.fromFile(file));
 
-            MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-            mediaMetadataRetriever.setDataSource(context, Uri.fromFile(file));
+                // mediaMetadataRetriever.getPrimaryImage(); // TODO support in the future
+                Bitmap bitmap;
+                try {
+                    String time = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                    Long timeUs = Long.decode(time);
+                    long timeFrame = (timeUs / 100) * 5;
 
-            // mediaMetadataRetriever.getPrimaryImage(); // TODO support in the future
-            Bitmap bitmap;
-            try {
-                String time = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-                Long timeUs = Long.decode(time);
-                long timeFrame = (timeUs / 100) * 5;
-
-                bitmap = mediaMetadataRetriever.getFrameAtTime(timeFrame);
-            } catch (Throwable e) {
-                bitmap = mediaMetadataRetriever.getFrameAtTime();
+                    bitmap = mediaMetadataRetriever.getFrameAtTime(timeFrame);
+                } catch (Throwable e) {
+                    bitmap = mediaMetadataRetriever.getFrameAtTime();
+                }
+                mediaMetadataRetriever.release();
+                return bitmap;
             }
-            mediaMetadataRetriever.release();
-            return bitmap;
         } else if (mimeType.startsWith("application/pdf")) {
             return getPDFBitmap(context, Uri.fromFile(file));
         } else if (mimeType.startsWith("image")) {
-            return getThumbnail(context, Uri.fromFile(file));
-
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                return ThumbnailUtils.createImageThumbnail(file,
+                        new Size(THUMBNAIL_SIZE, THUMBNAIL_SIZE), null);
+            } else {
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(
+                        context.getContentResolver(), Uri.fromFile(file));
+                return ThumbnailUtils.extractThumbnail(
+                        bitmap, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
+            }
         }
 
         return null;

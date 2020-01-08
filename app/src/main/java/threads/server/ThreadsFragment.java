@@ -47,17 +47,15 @@ import threads.core.threads.THREADS;
 import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
+import threads.server.ipfs.FileDocumentsProvider;
 import threads.server.jobs.JobServiceDeleteThreads;
 import threads.server.jobs.JobServiceLoadNotifications;
 import threads.server.mdl.SelectionViewModel;
 import threads.server.mdl.ThreadViewModel;
-import threads.share.AudioDialogFragment;
-import threads.share.ImageDialogFragment;
 import threads.share.MimeType;
 import threads.share.Network;
 import threads.share.PDFView;
 import threads.share.ThreadActionDialogFragment;
-import threads.share.VideoDialogFragment;
 import threads.share.WebViewDialogFragment;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -568,7 +566,7 @@ public class ThreadsFragment extends Fragment implements
                     Status status = thread.getStatus();
                     if (status == Status.DONE) {
 
-                        CID cid = thread.getCid();
+                        CID cid = thread.getContent();
                         checkNotNull(cid);
 
                         String filename = thread.getName();
@@ -576,32 +574,46 @@ public class ThreadsFragment extends Fragment implements
                         long size = thread.getSize();
 
                         if (mimeType.startsWith("image")) {
-                            ImageDialogFragment.newInstance(cid.getCid()).show(
-                                    getChildFragmentManager(), ImageDialogFragment.TAG);
+                            Uri uri = FileDocumentsProvider.getUriForThread(thread);
 
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            intent.setDataAndType(uri, "image/*");
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            startActivity(intent);
+                            /*
+                            ImageDialogFragment.newInstance(cid.getContent()).show(
+                                    getChildFragmentManager(), ImageDialogFragment.TAG);
+*/
                         } else if (mimeType.startsWith("video")) {
 
-                            if (size >= 1e+8) { // 100 MB
-                                Intent intent = new Intent(mContext, VideoActivity.class);
-                                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                                intent.putExtra(VideoActivity.CID_ID, cid.getCid());
-                                startActivity(intent);
+                            Uri uri = FileDocumentsProvider.getUriForThread(thread);
 
-                            } else {
-                                VideoDialogFragment dialogFragment = VideoDialogFragment.newInstance(
-                                        cid.getCid());
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            intent.setDataAndType(uri, "video/*");
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            startActivity(intent);
+                            /*
+                            VideoDialogFragment dialogFragment =
+                                    VideoDialogFragment.newInstance(uri);
 
                                 getChildFragmentManager().beginTransaction().
                                         add(dialogFragment, VideoDialogFragment.TAG).
-                                        commitAllowingStateLoss();
-                            }
+                                        commitAllowingStateLoss();*/
+
 
                         } else if (mimeType.startsWith("audio")) {
 
-                            AudioDialogFragment.newInstance(cid.getCid(), filename,
+                            Uri uri = FileDocumentsProvider.getUriForThread(thread);
+
+                            Intent intent = new Intent(Intent.ACTION_VIEW);
+                            intent.setDataAndType(uri, "audio/*");
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            startActivity(intent);
+                            /*
+                            AudioDialogFragment.newInstance(cid.getContent(), filename,
                                     thread.getSenderAlias())
                                     .show(getChildFragmentManager(), AudioDialogFragment.TAG);
-
+*/
 
                         } else if (mimeType.startsWith(MimeType.PDF_MIME_TYPE)) {
 

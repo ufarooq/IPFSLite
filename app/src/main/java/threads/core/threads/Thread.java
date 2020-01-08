@@ -40,9 +40,9 @@ public class Thread {
     @PrimaryKey(autoGenerate = true)
     private long idx; // checked
     @Nullable
-    @ColumnInfo(name = "image")
+    @ColumnInfo(name = "thumbnail")
     @TypeConverters(Converter.class)
-    private CID image;  // checked
+    private CID thumbnail;  // checked
     @ColumnInfo(name = "marked")
     private boolean marked;  // todo
     @ColumnInfo(name = "number")
@@ -51,8 +51,8 @@ public class Thread {
     private int progress = 0;  // checked
     @Nullable
     @TypeConverters(Converter.class)
-    @ColumnInfo(name = "cid")
-    private CID cid;  // checked
+    @ColumnInfo(name = "content")
+    private CID content;  // checked
     @ColumnInfo(name = "expire")
     private long expire;  // checked
     @ColumnInfo(name = "size")
@@ -214,19 +214,19 @@ public class Thread {
                 progress == o.getProgress() &&
                 publishing == o.isPublishing() &&
                 leaching == o.isLeaching() &&
-                Objects.equals(cid, o.getCid()) &&
+                Objects.equals(content, o.getContent()) &&
                 Objects.equals(senderAlias, o.getSenderAlias()) &&
-                Objects.equals(image, o.getImage()) &&
+                Objects.equals(thumbnail, o.getThumbnail()) &&
                 Objects.equals(lastModified, o.getLastModified());
     }
 
     @Nullable
-    public CID getImage() {
-        return image;
+    public CID getThumbnail() {
+        return thumbnail;
     }
 
-    public void setImage(@Nullable CID image) {
-        this.image = image;
+    public void setThumbnail(@Nullable CID thumbnail) {
+        this.thumbnail = thumbnail;
     }
 
     public boolean areItemsTheSame(@NonNull Thread thread) {
@@ -249,12 +249,12 @@ public class Thread {
     }
 
     @Nullable
-    public CID getCid() {
-        return cid;
+    public CID getContent() {
+        return content;
     }
 
-    public void setCid(@Nullable CID cid) {
-        this.cid = cid;
+    public void setContent(@Nullable CID content) {
+        this.content = content;
     }
 
     @NonNull
@@ -289,7 +289,7 @@ public class Thread {
     }
 
     public boolean hasImage() {
-        return image != null;
+        return thumbnail != null;
     }
 
     public long getSize() {

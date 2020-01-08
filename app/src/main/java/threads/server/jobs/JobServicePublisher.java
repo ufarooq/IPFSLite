@@ -95,7 +95,7 @@ public class JobServicePublisher extends JobService {
                 List<Thread> list = threads.getPinnedThreads();
 
                 for (Thread thread : list) {
-                    CID cid = thread.getCid();
+                    CID cid = thread.getContent();
                     if (cid != null) {
                         contents.add(cid);
                     }
