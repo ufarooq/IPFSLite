@@ -22,9 +22,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-import threads.core.Preferences;
 import threads.core.peers.User;
 import threads.core.peers.UserType;
+import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
 import threads.server.mdl.UsersViewModel;
 import threads.share.UserActionDialogFragment;
@@ -120,7 +120,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         usersViewAdapter = new UsersViewAdapter(mContext, this);
         mRecyclerView.setAdapter(usersViewAdapter);
 
-        final PID host = Preferences.getPID(mContext);
+        final PID host = IPFS.getPID(mContext);
         UsersViewModel messagesViewModel = new ViewModelProvider(this).get(UsersViewModel.class);
         messagesViewModel.getUsers().observe(getViewLifecycleOwner(), (users) -> {
 

@@ -252,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if (codecDecider.getCodex() == CodecDecider.Codec.MULTIHASH ||
                     codecDecider.getCodex() == CodecDecider.Codec.URI) {
 
-                PID host = Preferences.getPID(getApplicationContext());
+                PID host = IPFS.getPID(getApplicationContext());
                 checkNotNull(host);
                 String multihash = codecDecider.getMultihash();
 
@@ -614,7 +614,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             case R.id.nav_inbox: {
                 try {
-                    PID pid = Preferences.getPID(this);
+                    PID pid = IPFS.getPID(this);
                     checkNotNull(pid);
                     String address = AddressType.getAddress(pid, AddressType.NOTIFICATION);
                     Uri uri = Uri.parse(Service.getAddressLink(address));
@@ -632,7 +632,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             case R.id.nav_outbox: {
                 try {
-                    PID pid = Preferences.getPID(this);
+                    PID pid = IPFS.getPID(this);
                     checkNotNull(pid);
                     String address = AddressType.getAddress(pid, AddressType.PEER);
                     Uri uri = Uri.parse(Service.getAddressLink(address));
@@ -1121,7 +1121,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             final PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
             final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
 
-            final PID host = Preferences.getPID(getApplicationContext());
+            final PID host = IPFS.getPID(getApplicationContext());
             checkNotNull(host);
             if (ipfs != null) {
                 ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -1214,7 +1214,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         // CHECKED
-        PID host = Preferences.getPID(getApplicationContext());
+        PID host = IPFS.getPID(getApplicationContext());
         PID user = PID.create(pid);
 
         if (user.equals(host)) {
@@ -1542,7 +1542,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         try {
             JobServiceIdentity.identity(getApplicationContext());
-            PID pid = Preferences.getPID(getApplicationContext());
+            PID pid = IPFS.getPID(getApplicationContext());
             checkNotNull(pid);
             clickUserInfo(pid.getPid());
         } catch (Throwable e) {

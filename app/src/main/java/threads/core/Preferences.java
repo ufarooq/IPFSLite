@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
@@ -20,10 +19,7 @@ import java.util.Hashtable;
 import threads.core.events.EVENTS;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
-import threads.ipfs.api.ConnMgrConfig;
 import threads.ipfs.api.PID;
-import threads.ipfs.api.PubsubConfig;
-import threads.ipfs.api.RoutingConfig;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -61,15 +57,14 @@ public class Preferences {
     private static final String VIDEO_CODEC_KEY = "videoCodecKey";
     private static final String AUDIO_PROCESSING_KEY = "audioProcessingEnabledKey";
     private static final String OPEN_SL_ES_KEY = "openSlEsKey";
-    private static final String PREFER_TLS_KEY = "preferTLSKey";
+
     private static final String AEC_KEY = "aecKey";
     private static final String AGC_KEY = "agcKey";
     private static final String HNS_KEY = "hnsKey";
 
-    private static final String RANDOM_SWARM_KEY = "randomSwarmKey";
+
     private static final String DEBUG_MODE_KEY = "debugModeKey";
     private static final String REPORT_MODE_KEY = "reportModeKey";
-    private static final String MDNS_KEY = "mdnsKey";
 
 
     @NonNull
@@ -93,34 +88,8 @@ public class Preferences {
         editor.apply();
     }
 
-    public static boolean isRandomSwarmPort(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(RANDOM_SWARM_KEY, false);
-    }
-
-    public static void setRandomSwarmPort(@NonNull Context context, boolean enable) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(RANDOM_SWARM_KEY, enable);
-        editor.apply();
-    }
 
 
-    public static boolean isPreferTLS(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(PREFER_TLS_KEY, false);
-    }
-
-    public static void setPreferTLS(@NonNull Context context, boolean enable) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(PREFER_TLS_KEY, enable);
-        editor.apply();
-    }
 
     @NonNull
     public static String getAudioCodec(@NonNull Context context) {
@@ -299,66 +268,8 @@ public class Preferences {
     }
 
 
-    public static boolean isMdnsEnabled(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(MDNS_KEY, true);
-
-    }
-
-    public static void setMdnsEnabled(@NonNull Context context, boolean enable) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(MDNS_KEY, enable);
-        editor.apply();
-    }
 
 
-    public static boolean isAutoRelayEnabled(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(ENABLE_AUTO_RELAY_KEY, false);
-
-    }
-
-    public static void setAutoRelayEnabled(@NonNull Context context, boolean enable) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(ENABLE_AUTO_RELAY_KEY, enable);
-        editor.apply();
-    }
-
-
-    public static boolean isQUICEnabled(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(QUIC_KEY, false);
-
-    }
-
-    public static void setQUICEnabled(@NonNull Context context, boolean enable) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(QUIC_KEY, enable);
-        editor.apply();
-    }
-
-    public static boolean isPubsubEnabled(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(PUBSUB_KEY, true);
-    }
-
-    public static void setPubsubEnabled(@NonNull Context context, boolean enable) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(PUBSUB_KEY, enable);
-        editor.apply();
-    }
 
 
     @NonNull
@@ -461,52 +372,13 @@ public class Preferences {
     @NonNull
     public static CID getPIDBitmap(@NonNull Context context) {
         checkNotNull(context);
-        PID pid = getPID(context);
+        PID pid = IPFS.getPID(context);
         checkNotNull(pid);
         String hash = pid.getPid();
         return getBitmap(context, hash);
     }
 
-    public static void setPID(@NonNull Context context, @NonNull PID pid) {
-        checkNotNull(context);
-        checkNotNull(pid);
-        checkArgument(!pid.getPid().isEmpty());
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(PID_KEY, pid.getPid());
-        editor.apply();
-    }
 
-
-    public static void setSwarmPort(@NonNull Context context, int port) {
-        checkNotNull(context);
-        checkArgument(port > 0);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putInt(SWARM_PORT_KEY, port);
-        editor.apply();
-    }
-
-    public static int getSwarmPort(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getInt(SWARM_PORT_KEY, 4001);
-    }
-
-    @Nullable
-    public static PID getPID(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        String pid = sharedPref.getString(PID_KEY, "");
-        if (pid.isEmpty()) {
-            return null;
-        }
-        return PID.create(pid);
-    }
 
 
     public static boolean getLoginFlag(@NonNull Context context) {
@@ -525,151 +397,5 @@ public class Preferences {
         editor.apply();
     }
 
-    public static boolean isAutoNATServiceEnabled(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(NAT_SERVICE_KEY, false);
-    }
-
-    public static void setAutoNATServiceEnabled(@NonNull Context context, boolean natService) {
-        checkNotNull(context);
-
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(NAT_SERVICE_KEY, natService);
-        editor.apply();
-    }
-
-
-    public static boolean isRelayHopEnabled(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(RELAY_HOP_KEY, false);
-    }
-
-    public static void setRelayHopEnabled(@NonNull Context context, boolean relayHop) {
-        checkNotNull(context);
-
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(RELAY_HOP_KEY, relayHop);
-        editor.apply();
-    }
-
-    public static PubsubConfig.RouterEnum getPubsubRouter(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        return PubsubConfig.RouterEnum.valueOf(
-                sharedPref.getString(ROUTER_ENUM_KEY, PubsubConfig.RouterEnum.floodsub.name()));
-    }
-
-    public static void setPubsubRouter(@NonNull Context context,
-                                       @NonNull PubsubConfig.RouterEnum routerEnum) {
-        checkNotNull(context);
-        checkNotNull(routerEnum);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(ROUTER_ENUM_KEY, routerEnum.name());
-        editor.apply();
-    }
-
-    @NonNull
-    public static RoutingConfig.TypeEnum getRoutingType(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        return RoutingConfig.TypeEnum.valueOf(
-                sharedPref.getString(ROUTING_TYPE_KEY, RoutingConfig.TypeEnum.dhtclient.name()));
-    }
-
-    public static void setRoutingType(@NonNull Context context,
-                                      @NonNull RoutingConfig.TypeEnum routingType) {
-        checkNotNull(context);
-        checkNotNull(routingType);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(ROUTING_TYPE_KEY, routingType.name());
-        editor.apply();
-    }
-
-    @NonNull
-    public static ConnMgrConfig.TypeEnum getConnMgrConfigType(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        return ConnMgrConfig.TypeEnum.valueOf(
-                sharedPref.getString(CONN_MGR_CONFIG_TYPE_KEY, ConnMgrConfig.TypeEnum.basic.name()));
-    }
-
-    public static void setConnMgrConfigType(@NonNull Context context, ConnMgrConfig.TypeEnum typeEnum) {
-        checkNotNull(context);
-        checkNotNull(typeEnum);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(CONN_MGR_CONFIG_TYPE_KEY, typeEnum.name());
-        editor.apply();
-    }
-
-    public static void setLowWater(@NonNull Context context, int lowWater) {
-        checkNotNull(context);
-        checkArgument(lowWater > 0);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putInt(LOW_WATER_KEY, lowWater);
-        editor.apply();
-    }
-
-    public static int getLowWater(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getInt(LOW_WATER_KEY, 20);
-    }
-
-
-    public static void setHighWater(@NonNull Context context, int highWater) {
-        checkNotNull(context);
-        checkArgument(highWater > 0);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putInt(HIGH_WATER_KEY, highWater);
-        editor.apply();
-    }
-
-    public static int getHighWater(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getInt(HIGH_WATER_KEY, 40);
-    }
-
-    @NonNull
-    public static String getGracePeriod(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getString(GRACE_PERIOD_KEY, "30s");
-    }
-
-    public static void setGracePeriod(@NonNull Context context, @NonNull String gracePeriod) {
-        checkNotNull(context);
-        checkNotNull(gracePeriod);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(GRACE_PERIOD_KEY, gracePeriod);
-        editor.apply();
-
-    }
 
 }

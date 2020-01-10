@@ -463,7 +463,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
 
         public static ParcelFileDescriptor pipeFrom(IPFS ipfs, CID cid)
                 throws Exception {
-            final ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createReliablePipe();
+            final ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
             final OutputStream output = new ParcelFileDescriptor.AutoCloseOutputStream(pipe[1]);
 
             new IPFSTransferThread(ipfs, cid, output).start();
@@ -474,7 +474,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         @SuppressWarnings("unused")
         public static ParcelFileDescriptor pipeTo(OutputStream outputStream)
                 throws IOException {
-            final ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createReliablePipe();
+            final ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
             final InputStream input = new ParcelFileDescriptor.AutoCloseInputStream(pipe[0]);
 
 

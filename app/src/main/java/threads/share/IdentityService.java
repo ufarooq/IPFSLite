@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.peers.Additional;
 import threads.core.peers.Additionals;
@@ -20,6 +19,7 @@ import threads.core.peers.PEERS;
 import threads.core.peers.Peer;
 import threads.core.peers.User;
 import threads.iota.EntityService;
+import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.PeerInfo;
 
@@ -59,7 +59,7 @@ public class IdentityService {
 
         try {
 
-            PID host = Preferences.getPID(context);
+            PID host = IPFS.getPID(context);
             if (host != null) {
 
                 threads.core.peers.PeerInfo peer = threads.getPeerInfoByPID(host);

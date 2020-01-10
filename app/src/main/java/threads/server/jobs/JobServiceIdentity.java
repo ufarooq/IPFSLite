@@ -15,10 +15,10 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.Preferences;
 import threads.core.Singleton;
 import threads.core.peers.Content;
 import threads.core.peers.PEERS;
+import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
 import threads.server.Service;
 import threads.share.IdentityService;
@@ -70,7 +70,7 @@ public class JobServiceIdentity extends JobService {
 
                 PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
 
-                PID host = Preferences.getPID(getApplicationContext());
+                PID host = IPFS.getPID(getApplicationContext());
 
 
                 Map<String, String> params = new HashMap<>();

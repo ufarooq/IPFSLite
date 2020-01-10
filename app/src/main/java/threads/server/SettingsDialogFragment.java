@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import threads.core.Preferences;
+import threads.ipfs.IPFS;
 import threads.ipfs.api.PubsubConfig;
 import threads.ipfs.api.RoutingConfig;
 import threads.server.jobs.JobServicePublisher;
@@ -63,12 +64,12 @@ public class SettingsDialogFragment extends DialogFragment {
         @SuppressLint("InflateParams") View view = inflater.inflate(R.layout.settings_view, null);
 
         Switch dht_support = view.findViewById(R.id.dht_support);
-        dht_support.setChecked(Preferences.getRoutingType(activity) == RoutingConfig.TypeEnum.dht);
+        dht_support.setChecked(IPFS.getRoutingType(activity) == RoutingConfig.TypeEnum.dht);
         dht_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
-                Preferences.setRoutingType(activity, RoutingConfig.TypeEnum.dht);
+                IPFS.setRoutingType(activity, RoutingConfig.TypeEnum.dht);
             } else {
-                Preferences.setRoutingType(activity, RoutingConfig.TypeEnum.dhtclient);
+                IPFS.setRoutingType(activity, RoutingConfig.TypeEnum.dhtclient);
             }
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,
@@ -78,9 +79,9 @@ public class SettingsDialogFragment extends DialogFragment {
         });
 
         Switch mdns_support = view.findViewById(R.id.mdns_support);
-        mdns_support.setChecked(Preferences.isMdnsEnabled(activity));
+        mdns_support.setChecked(IPFS.isMdnsEnabled(activity));
         mdns_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Preferences.setMdnsEnabled(activity, isChecked);
+            IPFS.setMdnsEnabled(activity, isChecked);
 
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,
@@ -91,9 +92,9 @@ public class SettingsDialogFragment extends DialogFragment {
 
 
         Switch quic_support = view.findViewById(R.id.quic_support);
-        quic_support.setChecked(Preferences.isQUICEnabled(activity));
+        quic_support.setChecked(IPFS.isQUICEnabled(activity));
         quic_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Preferences.setQUICEnabled(activity, isChecked);
+            IPFS.setQUICEnabled(activity, isChecked);
 
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,
@@ -104,9 +105,9 @@ public class SettingsDialogFragment extends DialogFragment {
 
 
         Switch tls_prefer = view.findViewById(R.id.tls_prefer);
-        tls_prefer.setChecked(Preferences.isPreferTLS(activity));
+        tls_prefer.setChecked(IPFS.isPreferTLS(activity));
         tls_prefer.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Preferences.setPreferTLS(activity, isChecked);
+            IPFS.setPreferTLS(activity, isChecked);
 
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,
@@ -117,9 +118,9 @@ public class SettingsDialogFragment extends DialogFragment {
 
 
         Switch pubsub_support = view.findViewById(R.id.pubsub_support);
-        pubsub_support.setChecked(Preferences.isPubsubEnabled(activity));
+        pubsub_support.setChecked(IPFS.isPubsubEnabled(activity));
         pubsub_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Preferences.setPubsubEnabled(activity, isChecked);
+            IPFS.setPubsubEnabled(activity, isChecked);
 
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,
@@ -129,13 +130,13 @@ public class SettingsDialogFragment extends DialogFragment {
         });
 
         Switch pubsub_router = view.findViewById(R.id.pubsub_router);
-        pubsub_router.setChecked(Preferences.getPubsubRouter(activity)
+        pubsub_router.setChecked(IPFS.getPubsubRouter(activity)
                 == PubsubConfig.RouterEnum.gossipsub);
         pubsub_router.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
-                Preferences.setPubsubRouter(activity, PubsubConfig.RouterEnum.gossipsub);
+                IPFS.setPubsubRouter(activity, PubsubConfig.RouterEnum.gossipsub);
             } else {
-                Preferences.setPubsubRouter(activity, PubsubConfig.RouterEnum.floodsub);
+                IPFS.setPubsubRouter(activity, PubsubConfig.RouterEnum.floodsub);
             }
 
             Toast.makeText(getContext(),
@@ -147,9 +148,9 @@ public class SettingsDialogFragment extends DialogFragment {
 
 
         Switch auto_relay_support = view.findViewById(R.id.auto_relay_support);
-        auto_relay_support.setChecked(Preferences.isAutoRelayEnabled(activity));
+        auto_relay_support.setChecked(IPFS.isAutoRelayEnabled(activity));
         auto_relay_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Preferences.setAutoRelayEnabled(activity, isChecked);
+            IPFS.setAutoRelayEnabled(activity, isChecked);
 
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,
@@ -159,9 +160,9 @@ public class SettingsDialogFragment extends DialogFragment {
         });
 
         Switch auto_nat_service_enabled = view.findViewById(R.id.auto_nat_service_enabled);
-        auto_nat_service_enabled.setChecked(Preferences.isAutoNATServiceEnabled(activity));
+        auto_nat_service_enabled.setChecked(IPFS.isAutoNATServiceEnabled(activity));
         auto_nat_service_enabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Preferences.setAutoNATServiceEnabled(activity, isChecked);
+            IPFS.setAutoNATServiceEnabled(activity, isChecked);
 
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,
@@ -171,9 +172,9 @@ public class SettingsDialogFragment extends DialogFragment {
         });
 
         Switch relay_hop_enabled = view.findViewById(R.id.relay_hop_enabled);
-        relay_hop_enabled.setChecked(Preferences.isRelayHopEnabled(activity));
+        relay_hop_enabled.setChecked(IPFS.isRelayHopEnabled(activity));
         relay_hop_enabled.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Preferences.setRelayHopEnabled(activity, isChecked);
+            IPFS.setRelayHopEnabled(activity, isChecked);
 
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,
@@ -245,9 +246,9 @@ public class SettingsDialogFragment extends DialogFragment {
 
 
         Switch enable_random_swarm_port = view.findViewById(R.id.enable_random_swarm_port);
-        enable_random_swarm_port.setChecked(Preferences.isRandomSwarmPort(activity));
+        enable_random_swarm_port.setChecked(IPFS.isRandomSwarmPort(activity));
         enable_random_swarm_port.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            Preferences.setRandomSwarmPort(activity, isChecked);
+            IPFS.setRandomSwarmPort(activity, isChecked);
 
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,

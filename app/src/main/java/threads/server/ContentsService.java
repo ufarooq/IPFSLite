@@ -67,7 +67,7 @@ public class ContentsService {
         final PEERS threads = Singleton.getInstance(context).getPeers();
 
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        final PID host = Preferences.getPID(context);
+        final PID host = IPFS.getPID(context);
 
         try {
             checkNotNull(ipfs, "IPFS not valid");

@@ -83,7 +83,7 @@ public class JobServiceConnect extends JobService {
 
                 if (!ipfs.isConnected(PID.create(pid))) {
 
-                    singleton.connectPubsubTopic(getApplicationContext(), pid);
+                    ipfs.connectPubsubTopic(getApplicationContext(), pid);
 
                     ipfs.swarmConnect(PID.create(pid), timeout);
                 }

@@ -245,7 +245,7 @@ public class Service {
 
     public static void notifications(@NonNull Context context) {
         checkNotNull(context);
-        final PID host = Preferences.getPID(context);
+        final PID host = IPFS.getPID(context);
         if (host != null) {
 
             final EntityService entityService = EntityService.getInstance(context);
@@ -303,7 +303,7 @@ public class Service {
 
                                 // THIS is a try, it tries to find the pubsub of the PID
                                 // (for sending a message when done)
-                                singleton.connectPubsubTopic(context, pid.getPid());
+                                ipfs.connectPubsubTopic(context, pid.getPid());
 
 
                                 threads.core.contents.Content content =
@@ -339,7 +339,7 @@ public class Service {
         boolean success = true;
 
         final PEERS peers = Singleton.getInstance(context).getPeers();
-        final PID host = Preferences.getPID(context);
+        final PID host = IPFS.getPID(context);
         final EVENTS events = Singleton.getInstance(context).getEvents();
         checkNotNull(host);
         final EntityService entityService = Singleton.getInstance(context).getEntityService();
@@ -517,8 +517,8 @@ public class Service {
 
             if (value) {
 
-                if (Preferences.isPubsubEnabled(context)) {
-                    PID host = Preferences.getPID(context);
+                if (IPFS.isPubsubEnabled(context)) {
+                    PID host = IPFS.getPID(context);
                     checkNotNull(host);
 
                     Content map = new Content();
@@ -563,8 +563,8 @@ public class Service {
         Gson gson = new Gson();
         IPFS ipfs = Singleton.getInstance(context).getIpfs();
         PEERS peers = Singleton.getInstance(context).getPeers();
-        if (Preferences.isPubsubEnabled(context)) {
-            PID host = Preferences.getPID(context);
+        if (IPFS.isPubsubEnabled(context)) {
+            PID host = IPFS.getPID(context);
             checkNotNull(host);
 
             Content map = new Content();
@@ -581,7 +581,7 @@ public class Service {
         checkNotNull(topic);
         Gson gson = new Gson();
         IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        if (Preferences.isPubsubEnabled(context)) {
+        if (IPFS.isPubsubEnabled(context)) {
             Content map = new Content();
             map.put(Content.EST, "SHARE");
 
@@ -603,33 +603,33 @@ public class Service {
 
 
                 // Experimental Features
-                Preferences.setQUICEnabled(context, true);
-                Preferences.setPreferTLS(context, true);
+                IPFS.setQUICEnabled(context, true);
+                IPFS.setPreferTLS(context, true);
 
 
-                Preferences.setSwarmPort(context, 4001);
-                Preferences.setRoutingType(context, RoutingConfig.TypeEnum.dhtclient);
+                IPFS.setSwarmPort(context, 4001);
+                IPFS.setRoutingType(context, RoutingConfig.TypeEnum.dhtclient);
 
 
-                Preferences.setAutoNATServiceEnabled(context, false);
-                Preferences.setRelayHopEnabled(context, false);
-                Preferences.setAutoRelayEnabled(context, true);
+                IPFS.setAutoNATServiceEnabled(context, false);
+                IPFS.setRelayHopEnabled(context, false);
+                IPFS.setAutoRelayEnabled(context, true);
 
-                Preferences.setPubsubEnabled(context, true);
-                Preferences.setPubsubRouter(context, PubsubConfig.RouterEnum.gossipsub);
+                IPFS.setPubsubEnabled(context, true);
+                IPFS.setPubsubRouter(context, PubsubConfig.RouterEnum.gossipsub);
 
-                Preferences.setConnMgrConfigType(context, ConnMgrConfig.TypeEnum.basic);
-                Preferences.setLowWater(context, 50);
-                Preferences.setHighWater(context, 200);
-                Preferences.setGracePeriod(context, "10s");
+                IPFS.setConnMgrConfigType(context, ConnMgrConfig.TypeEnum.basic);
+                IPFS.setLowWater(context, 50);
+                IPFS.setHighWater(context, 200);
+                IPFS.setGracePeriod(context, "10s");
 
 
                 Preferences.setConnectionTimeout(context, 45);
                 EntityService.setTangleTimeout(context, 45);
 
-                Preferences.setMdnsEnabled(context, true);
+                IPFS.setMdnsEnabled(context, true);
 
-                Preferences.setRandomSwarmPort(context, true);
+                IPFS.setRandomSwarmPort(context, true);
 
 
                 setDontShowAgain(context, Service.PIN_SERVICE_KEY, false);
@@ -749,8 +749,8 @@ public class Service {
                     Preferences.error(events, context.getString(R.string.user_connect_try, alias));
                 }
 
-                if (Preferences.isPubsubEnabled(context)) {
-                    PID host = Preferences.getPID(context);
+                if (IPFS.isPubsubEnabled(context)) {
+                    PID host = IPFS.getPID(context);
                     checkNotNull(host);
                     User hostUser = peers.getUserByPID(host);
                     checkNotNull(hostUser);
@@ -777,7 +777,7 @@ public class Service {
                                    @NonNull PID sender,
                                    @NonNull Thread thread) {
         try {
-            if (Preferences.isPubsubEnabled(context)) {
+            if (IPFS.isPubsubEnabled(context)) {
                 CID cid = thread.getContent();
                 checkNotNull(cid);
 
@@ -859,7 +859,7 @@ public class Service {
 
         if (ipfs != null) {
             try {
-                PID pid = Preferences.getPID(context);
+                PID pid = IPFS.getPID(context);
                 checkNotNull(pid);
 
                 User user = peers.getUserByPID(pid);
@@ -1392,7 +1392,7 @@ public class Service {
         checkNotNull(context);
 
         try {
-            final PID host = Preferences.getPID(context);
+            final PID host = IPFS.getPID(context);
             final THREADS threads = Singleton.getInstance(context).getThreads();
             final PEERS peers = Singleton.getInstance(context).getPeers();
             final EVENTS events = Singleton.getInstance(context).getEvents();
@@ -1444,7 +1444,7 @@ public class Service {
             UPLOAD_SERVICE.submit(() -> {
                 try {
 
-                    PID pid = Preferences.getPID(context);
+                    PID pid = IPFS.getPID(context);
                     checkNotNull(pid);
                     User host = peers.getUserByPID(pid);
                     checkNotNull(host);
@@ -1520,7 +1520,7 @@ public class Service {
                         context.getContentResolver().openInputStream(uri);
                 checkNotNull(inputStream);
 
-                PID pid = Preferences.getPID(context);
+                PID pid = IPFS.getPID(context);
                 checkNotNull(pid);
                 User host = peers.getUserByPID(pid);
                 checkNotNull(host);
@@ -1575,7 +1575,7 @@ public class Service {
 
         final THREADS threads = Singleton.getInstance(context).getThreads();
         final PEERS peers = Singleton.getInstance(context).getPeers();
-        final PID pid = Preferences.getPID(context);
+        final PID pid = IPFS.getPID(context);
         ArrayList<String> users = new ArrayList<>();
         checkNotNull(pid);
 
@@ -1600,7 +1600,7 @@ public class Service {
         if (ipfs != null) {
             try {
                 threads.setThreadLeaching(thread.getIdx(), false);
-                PID host = Preferences.getPID(context);
+                PID host = IPFS.getPID(context);
                 checkNotNull(host);
                 PID sender = thread.getSender();
 
@@ -1634,9 +1634,8 @@ public class Service {
         checkNotNull(cid);
 
         final Singleton singleton = Singleton.getInstance(context);
-        final THREADS threads = singleton.getThreads();
         final EVENTS events = Singleton.getInstance(context).getEvents();
-
+        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
 
         JobServiceConnect.connect(context, user.getPID());
 
@@ -1648,10 +1647,10 @@ public class Service {
                         context, user.getPID().getPid(), cid.getCid(), start);
             }
             // just backup
-            if (Preferences.isPubsubEnabled(context)) {
-                singleton.connectPubsubTopic(context, user.getPID().getPid());
+            if (IPFS.isPubsubEnabled(context)) {
+                ipfs.connectPubsubTopic(context, user.getPID().getPid());
                 if (!success) {
-                    final IPFS ipfs = singleton.getIpfs();
+
                     checkNotNull(ipfs, "IPFS not valid");
                     ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
                 } else {
@@ -1675,7 +1674,7 @@ public class Service {
         final THREADS threads = Singleton.getInstance(context).getThreads();
         final IPFS ipfs = Singleton.getInstance(context).getIpfs();
         final CDS contentService = CDS.getInstance(context);
-        final PID host = Preferences.getPID(context);
+        final PID host = IPFS.getPID(context);
         final EVENTS events = Singleton.getInstance(context).getEvents();
 
         if (ipfs != null) {
@@ -1766,10 +1765,10 @@ public class Service {
                     Singleton singleton = Singleton.getInstance(context);
                     Log.w(TAG, "Start Daemon");
 
-                    boolean pubSubEnabled = Preferences.isPubsubEnabled(context);
+                    boolean pubSubEnabled = IPFS.isPubsubEnabled(context);
                     ipfs.daemon(pubSubEnabled);
 
-                    singleton.setPubsubHandler((message) -> {
+                    IPFS.setPubsubHandler((message) -> {
                         try {
 
                             String sender = message.getSenderPid();

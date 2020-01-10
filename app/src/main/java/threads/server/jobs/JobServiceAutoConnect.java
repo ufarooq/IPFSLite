@@ -86,7 +86,7 @@ public class JobServiceAutoConnect extends JobService {
                 for (User user : users) {
                     if (!ipfs.isConnected(user.getPID())) {
 
-                        singleton.connectPubsubTopic(
+                        ipfs.connectPubsubTopic(
                                 getApplicationContext(), user.getPID().getPid());
 
 
