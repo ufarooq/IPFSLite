@@ -79,44 +79,44 @@ public class JobServiceDownload extends JobService {
         final IPFS ipfs = IPFS.getInstance(context);
 
 
-            try {
+        try {
 
-                User user = peers.getUserByPID(pid);
-                if (user == null) {
-                    Preferences.error(events, context.getString(R.string.unknown_peer_sends_data));
+            User user = peers.getUserByPID(pid);
+            if (user == null) {
+                Preferences.error(events, context.getString(R.string.unknown_peer_sends_data));
+                return;
+            }
+
+            List<Thread> entries = threads.getThreadsByCIDAndThread(cid, 0L);
+
+            if (!entries.isEmpty()) {
+                Thread entry = entries.get(0);
+
+                if (entry.getStatus() == Status.DELETING ||
+                        entry.getStatus() == Status.DONE) {
+                    Service.replySender(context, ipfs, pid, entry);
+                    return;
+                } else {
+                    Service.downloadMultihash(context, threads, ipfs, entry, pid);
                     return;
                 }
 
-                List<Thread> entries = threads.getThreadsByCIDAndThread(cid, 0L);
 
-                if (!entries.isEmpty()) {
-                    Thread entry = entries.get(0);
-
-                    if (entry.getStatus() == Status.DELETING ||
-                            entry.getStatus() == Status.DONE) {
-                        Service.replySender(context, ipfs, pid, entry);
-                        return;
-                    } else {
-                        Service.downloadMultihash(context, threads, ipfs, entry, pid);
-                        return;
-                    }
-
-
-                }
-                long idx = Service.createThread(context, ipfs, user, cid,
-                        Status.INIT, null, -1, null, null);
-
-
-                Thread thread = threads.getThreadByIdx(idx);
-                checkNotNull(thread);
-                Service.downloadMultihash(context, threads, ipfs, thread, pid);
-
-
-            } catch (Throwable e) {
-                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
             }
+            long idx = Service.createThread(context, ipfs, user, cid,
+                    Status.INIT, null, -1, null, null);
 
+
+            Thread thread = threads.getThreadByIdx(idx);
+            checkNotNull(thread);
+            Service.downloadMultihash(context, threads, ipfs, thread, pid);
+
+
+        } catch (Throwable e) {
+            Preferences.evaluateException(events, Preferences.EXCEPTION, e);
         }
+
+    }
 
 
     @Override

@@ -115,6 +115,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private FloatingActionButton mMainFab;
     private SelectionViewModel mSelectionViewModel;
     private int mTrafficColorId = android.R.color.holo_red_dark;
+    private Toolbar mToolbar;
 
     @Override
     public void onRequestPermissionsResult
@@ -271,14 +272,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onDestroy();
     }
 
-
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
         return super.onOptionsItemSelected(item);
     }
-
-    private Toolbar mToolbar;
 
     @Override
     public void clickConnectPeer() {
@@ -809,7 +807,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 new ViewModelProvider(this).get(EventViewModel.class);
 
 
-
         eventViewModel.getException().observe(this, (event) -> {
             try {
                 if (event != null) {
@@ -1213,7 +1210,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickThreadsSend(final long[] idxs) {
 
 
-
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
             Preferences.error(EVENTS.getInstance(getApplicationContext()), getString(R.string.offline_mode));
@@ -1436,25 +1432,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         final PEERS peers = PEERS.getInstance(getApplicationContext());
         final EVENTS events = EVENTS.getInstance(getApplicationContext());
 
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
 
-                    PID user = PID.create(pid);
+                PID user = PID.create(pid);
 
-                    CID image = ThumbnailService.getImage(getApplicationContext(),
-                            name, R.drawable.server_network);
-                    peers.setUserImage(user, image);
+                CID image = ThumbnailService.getImage(getApplicationContext(),
+                        name, R.drawable.server_network);
+                peers.setUserImage(user, image);
 
-                    peers.setUserAlias(user, name);
+                peers.setUserAlias(user, name);
 
 
-                    threads.setThreadSenderAlias(user, name);
+                threads.setThreadSenderAlias(user, name);
 
-                } catch (Throwable e) {
-                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
-                }
-            });
+            } catch (Throwable e) {
+                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+            }
+        });
 
 
     }

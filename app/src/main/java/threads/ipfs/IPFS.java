@@ -1274,7 +1274,7 @@ public class IPFS implements Listener {
 
             try {
                 progress.setProgress(0);
-                fileReader.readData(BLOCK_SIZE);
+                fileReader.load(BLOCK_SIZE);
 
                 long bytesRead = fileReader.getRead();
 
@@ -1288,7 +1288,7 @@ public class IPFS implements Listener {
                             progress.setProgress(percent);
                         }
                     }
-                    fileReader.readData(BLOCK_SIZE);
+                    fileReader.load(BLOCK_SIZE);
                     bytesRead = fileReader.getRead();
                 }
             } finally {

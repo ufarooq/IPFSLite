@@ -1,5 +1,6 @@
 package threads.server.provider;
 
+import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.database.MatrixCursor;
@@ -278,21 +279,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
 
     private void includeFile(MatrixCursor result, Thread file) {
         int flags = 0;
-        if (file.isDir()) {
-            // Request the folder to lay out as a grid rather than a list. This also allows a larger
-            // thumbnail to be displayed for each image.
-            //            flags |= Document.FLAG_DIR_PREFERS_GRID;
 
-            // Add FLAG_DIR_SUPPORTS_CREATE if the file is a writable directory.
-            if (file.isDir() && false) {
-                flags |= Document.FLAG_DIR_SUPPORTS_CREATE;
-            }
-        } else if (file.isMarked() && false) {
-            // If the file is writable set FLAG_SUPPORTS_WRITE and
-            // FLAG_SUPPORTS_DELETE
-            flags |= Document.FLAG_SUPPORTS_WRITE;
-            flags |= Document.FLAG_SUPPORTS_DELETE;
-        }
 
         final String displayName = file.getName();
 
@@ -377,7 +364,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
 
             try {
 
-                fileReader.readData(blockSize);
+                fileReader.load(blockSize);
 
                 long bytesRead = fileReader.getRead();
 
@@ -392,7 +379,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
 
                     outputStream.write(fileReader.getData(), 0, (int) bytesRead);
 
-                    fileReader.readData(blockSize);
+                    fileReader.load(blockSize);
                     bytesRead = fileReader.getRead();
                 }
             } finally {
@@ -407,11 +394,14 @@ public class FileDocumentsProvider extends DocumentsProvider {
 
     @Override
     public boolean onCreate() {
+        Context context = getContext();
+        checkNotNull(context);
 
-        // TODO remove this
-        Service.getInstance(getContext()); //todo
+        // TODO remove
+        Service.getInstance(context);
 
-        threads = THREADS.getInstance(getContext());
+
+        threads = THREADS.getInstance(context);
         ipfs = IPFS.getInstance(getContext());
         return true;
     }

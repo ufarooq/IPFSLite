@@ -226,8 +226,6 @@ public class Service {
 
             long time = System.currentTimeMillis();
 
-            Log.e(TAG, "Time Instance : " + (System.currentTimeMillis() - time));
-
             SINGLETON = new Service();
             SINGLETON.startDaemon(context);
             Log.e(TAG, "Time Daemon : " + (System.currentTimeMillis() - time));
@@ -727,42 +725,41 @@ public class Service {
         checkNotNull(pubKey);
 
         try {
-            final PEERS peers = PEERS.getInstance(context);
-            final IPFS ipfs = IPFS.getInstance(context);
-            final EVENTS events = EVENTS.getInstance(context);
-            if (ipfs != null) {
-                User sender = peers.getUserByPID(senderPid);
-                if (sender == null) {
+            PEERS peers = PEERS.getInstance(context);
+            IPFS ipfs = IPFS.getInstance(context);
+            EVENTS events = EVENTS.getInstance(context);
 
-                    // create a new user which is blocked (User has to unblock and verified the user)
-                    CID image = ThumbnailService.getImage(
-                            context, alias, R.drawable.server_network);
+            User sender = peers.getUserByPID(senderPid);
+            if (sender == null) {
 
-                    sender = peers.createUser(senderPid, pubKey, alias, UserType.VERIFIED, image);
-                    sender.setBlocked(true);
-                    peers.storeUser(sender);
+                // create a new user which is blocked (User has to unblock and verified the user)
+                CID image = ThumbnailService.getImage(
+                        context, alias, R.drawable.server_network);
 
-                    Preferences.error(events, context.getString(R.string.user_connect_try, alias));
-                }
+                sender = peers.createUser(senderPid, pubKey, alias, UserType.VERIFIED, image);
+                sender.setBlocked(true);
+                peers.storeUser(sender);
 
-                if (IPFS.isPubsubEnabled(context)) {
-                    PID host = IPFS.getPID(context);
-                    checkNotNull(host);
-                    User hostUser = peers.getUserByPID(host);
-                    checkNotNull(hostUser);
-                    Content map = new Content();
-                    map.put(Content.EST, "CONNECT_REPLY");
-                    map.put(Content.ALIAS, hostUser.getAlias());
-                    map.put(Content.PKEY, hostUser.getPublicKey());
-
-
-                    Log.w(TAG, "Send Pubsub Notification to PID :" + senderPid);
-
-                    ipfs.pubsubPub(senderPid.getPid(), gson.toJson(map), 50);
-                }
-
-
+                Preferences.error(events, context.getString(R.string.user_connect_try, alias));
             }
+
+            if (IPFS.isPubsubEnabled(context)) {
+                PID host = IPFS.getPID(context);
+                checkNotNull(host);
+                User hostUser = peers.getUserByPID(host);
+                checkNotNull(hostUser);
+                Content map = new Content();
+                map.put(Content.EST, "CONNECT_REPLY");
+                map.put(Content.ALIAS, hostUser.getAlias());
+                map.put(Content.PKEY, hostUser.getPublicKey());
+
+
+                Log.w(TAG, "Send Pubsub Notification to PID :" + senderPid);
+
+                ipfs.pubsubPub(senderPid.getPid(), gson.toJson(map), 50);
+            }
+
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -849,38 +846,38 @@ public class Service {
         checkNotNull(context);
 
 
-        final PEERS peers = PEERS.getInstance(context);
-        final IPFS ipfs = IPFS.getInstance(context);
-        final EVENTS events = EVENTS.getInstance(context);
-
-        if (ipfs != null) {
-            try {
-                PID pid = IPFS.getPID(context);
-                checkNotNull(pid);
-
-                User user = peers.getUserByPID(pid);
-                if (user == null) {
-                    String publicKey = ipfs.getPublicKey();
-
-                    CID image = ThumbnailService.getImage(
-                            context, pid.getPid(), R.drawable.server_network);
+        PEERS peers = PEERS.getInstance(context);
+        IPFS ipfs = IPFS.getInstance(context);
+        EVENTS events = EVENTS.getInstance(context);
 
 
-                    user = peers.createUser(pid, publicKey, getDeviceName(),
-                            UserType.VERIFIED, image);
-                    user.setBlocked(true);
-                    peers.storeUser(user);
+        try {
+            PID pid = IPFS.getPID(context);
+            checkNotNull(pid);
+
+            User user = peers.getUserByPID(pid);
+            if (user == null) {
+                String publicKey = ipfs.getPublicKey();
+
+                CID image = ThumbnailService.getImage(
+                        context, pid.getPid(), R.drawable.server_network);
 
 
-                    JobServiceIdentity.identity(context);
+                user = peers.createUser(pid, publicKey, getDeviceName(),
+                        UserType.VERIFIED, image);
+                user.setBlocked(true);
+                peers.storeUser(user);
 
-                } else {
-                    peers.blockUser(pid);
-                }
-            } catch (Throwable e) {
-                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+
+                JobServiceIdentity.identity(context);
+
+            } else {
+                peers.blockUser(pid);
             }
+        } catch (Throwable e) {
+            Preferences.evaluateException(events, Preferences.EXCEPTION, e);
         }
+
     }
 
 
@@ -994,79 +991,78 @@ public class Service {
             final EVENTS events = EVENTS.getInstance(context);
 
 
-            if (ipfs != null) {
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.submit(() -> {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    Thread threadObject = threadsAPI.getThreadByIdx(idx);
+                    checkNotNull(threadObject);
+
+                    CID cid = threadObject.getContent();
+                    checkNotNull(cid);
+
+                    int timeout = Preferences.getConnectionTimeout(context);
+
+                    String name = threadObject.getName();
+                    long size = -1;
                     try {
-                        Thread threadObject = threadsAPI.getThreadByIdx(idx);
-                        checkNotNull(threadObject);
+                        size = threadObject.getSize();
+                    } catch (Throwable e) {
+                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    }
 
-                        CID cid = threadObject.getContent();
-                        checkNotNull(cid);
+                    File dir = Environment.getExternalStoragePublicDirectory(
+                            Environment.DIRECTORY_DOWNLOADS);
+                    File file = new File(dir, name);
 
-                        int timeout = Preferences.getConnectionTimeout(context);
 
-                        String name = threadObject.getName();
-                        long size = -1;
-                        try {
-                            size = threadObject.getSize();
-                        } catch (Throwable e) {
-                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    NotificationCompat.Builder builder =
+                            ProgressChannel.createProgressNotification(
+                                    context, name);
+
+                    final NotificationManager notificationManager = (NotificationManager)
+                            context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+                    int notifyID = cid.hashCode();
+                    Notification notification = builder.build();
+                    if (notificationManager != null) {
+                        notificationManager.notify(notifyID, notification);
+                    }
+
+                    try {
+                        boolean finished = ipfs.storeToFile(file, cid,
+                                (percent) -> {
+
+                                    builder.setProgress(100, percent, false);
+                                    if (notificationManager != null) {
+                                        notificationManager.notify(notifyID, builder.build());
+                                    }
+
+
+                                }, false, timeout, size);
+
+                        if (finished) {
+                            String mimeType = threadObject.getMimeType();
+                            checkNotNull(mimeType);
+
+                            downloadManager.addCompletedDownload(file.getName(),
+                                    file.getName(), true,
+                                    mimeType,
+                                    file.getAbsolutePath(),
+                                    file.length(), true);
                         }
-
-                        File dir = Environment.getExternalStoragePublicDirectory(
-                                Environment.DIRECTORY_DOWNLOADS);
-                        File file = new File(dir, name);
-
-
-                        NotificationCompat.Builder builder =
-                                ProgressChannel.createProgressNotification(
-                                        context, name);
-
-                        final NotificationManager notificationManager = (NotificationManager)
-                                context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-                        int notifyID = cid.hashCode();
-                        Notification notification = builder.build();
-                        if (notificationManager != null) {
-                            notificationManager.notify(notifyID, notification);
-                        }
-
-                        try {
-                            boolean finished = ipfs.storeToFile(file, cid,
-                                    (percent) -> {
-
-                                        builder.setProgress(100, percent, false);
-                                        if (notificationManager != null) {
-                                            notificationManager.notify(notifyID, builder.build());
-                                        }
-
-
-                                    }, false, timeout, size);
-
-                            if (finished) {
-                                String mimeType = threadObject.getMimeType();
-                                checkNotNull(mimeType);
-
-                                downloadManager.addCompletedDownload(file.getName(),
-                                        file.getName(), true,
-                                        mimeType,
-                                        file.getAbsolutePath(),
-                                        file.length(), true);
-                            }
-                        } catch (Throwable e) {
-                            Preferences.evaluateException(events, Preferences.EXCEPTION, e);
-                        } finally {
-
-                            if (notificationManager != null) {
-                                notificationManager.cancel(notifyID);
-                            }
-                        }
-
                     } catch (Throwable e) {
                         Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                    } finally {
+
+                        if (notificationManager != null) {
+                            notificationManager.cancel(notifyID);
+                        }
                     }
-                });
-            }
+
+                } catch (Throwable e) {
+                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                }
+            });
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -1342,14 +1338,14 @@ public class Service {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                final IPFS ipfs = IPFS.getInstance(context);
-                if (ipfs != null) {
+                IPFS ipfs = IPFS.getInstance(context);
 
-                    while (ipfs.isDaemonRunning()) {
-                        java.lang.Thread.sleep(TimeUnit.SECONDS.toMillis(30));
-                        JobServiceLoadNotifications.notifications(context);
-                    }
+
+                while (ipfs.isDaemonRunning()) {
+                    java.lang.Thread.sleep(TimeUnit.SECONDS.toMillis(30));
+                    JobServiceLoadNotifications.notifications(context);
                 }
+
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
@@ -1370,17 +1366,17 @@ public class Service {
 
     private static void checkPeersOnlineStatus(@NonNull Context context) {
         checkNotNull(context);
-        final IPFS ipfs = IPFS.getInstance(context);
-        if (ipfs != null) {
-            try {
-                while (ipfs.isDaemonRunning()) {
-                    checkPeers(context);
-                    java.lang.Thread.sleep(1000);
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        IPFS ipfs = IPFS.getInstance(context);
+
+        try {
+            while (ipfs.isDaemonRunning()) {
+                checkPeers(context);
+                java.lang.Thread.sleep(1000);
             }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
+
     }
 
     private static void checkPeers(@NonNull Context context) {
@@ -1393,28 +1389,28 @@ public class Service {
             final IPFS ipfs = IPFS.getInstance(context);
 
 
-                List<PID> users = peers.getUsersPIDs();
+            List<PID> users = peers.getUsersPIDs();
 
-                users.remove(host);
+            users.remove(host);
 
-                for (PID user : users) {
-                    if (!peers.isUserBlocked(user) && !peers.getUserDialing(user)) {
+            for (PID user : users) {
+                if (!peers.isUserBlocked(user) && !peers.getUserDialing(user)) {
 
-                        try {
-                            boolean value = ipfs.isConnected(user);
+                    try {
+                        boolean value = ipfs.isConnected(user);
 
-                            boolean preValue = peers.isUserConnected(user);
+                        boolean preValue = peers.isUserConnected(user);
 
-                            if (preValue != value) {
-                                peers.setUserConnected(user, value);
-                            }
-
-                        } catch (Throwable e) {
-                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                            peers.setUserConnected(user, false);
+                        if (preValue != value) {
+                            peers.setUserConnected(user, value);
                         }
+
+                    } catch (Throwable e) {
+                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                        peers.setUserConnected(user, false);
                     }
                 }
+            }
 
 
         } catch (Throwable e) {
@@ -1432,62 +1428,62 @@ public class Service {
 
         final IPFS ipfs = IPFS.getInstance(context);
         final PEERS peers = PEERS.getInstance(context);
-        if (ipfs != null) {
 
-            UPLOAD_SERVICE.submit(() -> {
+
+        UPLOAD_SERVICE.submit(() -> {
+            try {
+
+                PID pid = IPFS.getPID(context);
+                checkNotNull(pid);
+                User host = peers.getUserByPID(pid);
+                checkNotNull(host);
+
+                String content;
+                String mimeType = MimeType.PLAIN_MIME_TYPE;
                 try {
 
-                    PID pid = IPFS.getPID(context);
-                    checkNotNull(pid);
-                    User host = peers.getUserByPID(pid);
-                    checkNotNull(host);
-
-                    String content;
-                    String mimeType = MimeType.PLAIN_MIME_TYPE;
-                    try {
-
-                        URL url = new URL(text);
-                        mimeType = MimeType.LINK_MIME_TYPE;
-                        content = url.toString();
-                    } catch (MalformedURLException e) {
-                        content = StringUtils.substring(text, 0, 80);
-                    }
-
-                    long size = text.length();
-
-                    Thread thread = threads.createThread(host, Status.INIT, Kind.IN, 0L);
-                    thread.setName(content);
-                    thread.setSize(size);
-                    thread.setMimeType(mimeType);
-
-                    long idx = threads.storeThread(thread);
-
-
-                    try {
-                        threads.setThreadLeaching(idx, true);
-
-                        CID cid = ipfs.storeText(text, "", true);
-                        checkNotNull(cid);
-
-
-                        // cleanup of entries with same CID and hierarchy
-                        List<Thread> sameEntries = threads.getThreadsByCIDAndThread(cid, 0L);
-                        threads.removeThreads(ipfs, sameEntries);
-
-
-                        threads.setThreadCID(idx, cid);
-                        threads.setThreadStatus(idx, Status.DONE);
-                    } catch (Throwable e) {
-                        threads.setThreadStatus(idx, Status.ERROR);
-                    } finally {
-                        threads.setThreadLeaching(idx, false);
-                    }
-
-                } catch (Throwable e) {
-                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                    URL url = new URL(text);
+                    mimeType = MimeType.LINK_MIME_TYPE;
+                    content = url.toString();
+                } catch (MalformedURLException e) {
+                    content = StringUtils.substring(text, 0, 80);
                 }
-            });
-        }
+
+                long size = text.length();
+
+                Thread thread = threads.createThread(host, Status.INIT, Kind.IN, 0L);
+                thread.setName(content);
+                thread.setSize(size);
+                thread.setMimeType(mimeType);
+
+                long idx = threads.storeThread(thread);
+
+
+                try {
+                    threads.setThreadLeaching(idx, true);
+
+                    CID cid = ipfs.storeText(text, "", true);
+                    checkNotNull(cid);
+
+
+                    // cleanup of entries with same CID and hierarchy
+                    List<Thread> sameEntries = threads.getThreadsByCIDAndThread(cid, 0L);
+                    threads.removeThreads(ipfs, sameEntries);
+
+
+                    threads.setThreadCID(idx, cid);
+                    threads.setThreadStatus(idx, Status.DONE);
+                } catch (Throwable e) {
+                    threads.setThreadStatus(idx, Status.ERROR);
+                } finally {
+                    threads.setThreadLeaching(idx, false);
+                }
+
+            } catch (Throwable e) {
+                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+            }
+        });
+
     }
 
     void storeData(@NonNull Context context, @NonNull Uri uri) {
@@ -1587,33 +1583,34 @@ public class Service {
         checkNotNull(context);
         checkNotNull(thread);
 
-        final THREADS threads = THREADS.getInstance(context);
-
-        final IPFS ipfs = IPFS.getInstance(context);
-        if (ipfs != null) {
-            try {
-                threads.setThreadLeaching(thread.getIdx(), false);
-                PID host = IPFS.getPID(context);
-                checkNotNull(host);
-                PID sender = thread.getSender();
+        THREADS threads = THREADS.getInstance(context);
+        try {
 
 
-                if (!host.equals(sender)) {
+            IPFS ipfs = IPFS.getInstance(context);
 
-                    SwarmService.ConnectInfo info = SwarmService.connect(context, sender);
+            threads.setThreadLeaching(thread.getIdx(), false);
+            PID host = IPFS.getPID(context);
+            checkNotNull(host);
+            PID sender = thread.getSender();
 
-                    Service.downloadMultihash(context, threads, ipfs, thread, sender);
 
-                    SwarmService.disconnect(context, info);
+            if (!host.equals(sender)) {
 
-                } else {
+                SwarmService.ConnectInfo info = SwarmService.connect(context, sender);
 
-                    Service.downloadMultihash(context, threads, ipfs, thread, null);
-                }
-            } finally {
-                threads.setThreadLeaching(thread.getIdx(), false);
+                Service.downloadMultihash(context, threads, ipfs, thread, sender);
+
+                SwarmService.disconnect(context, info);
+
+            } else {
+
+                Service.downloadMultihash(context, threads, ipfs, thread, null);
             }
+        } finally {
+            threads.setThreadLeaching(thread.getIdx(), false);
         }
+
 
     }
 
@@ -1670,61 +1667,60 @@ public class Service {
         final EVENTS events = EVENTS.getInstance(context);
 
 
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                // clean-up (unset the unread number)
+                threads.resetThreadsNumber(idxs);
 
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    // clean-up (unset the unread number)
-                    threads.resetThreadsNumber(idxs);
+                if (users.isEmpty()) {
+                    Preferences.error(events, context.getString(R.string.no_sharing_peers));
+                } else {
+                    checkNotNull(host);
 
-                    if (users.isEmpty()) {
-                        Preferences.error(events, context.getString(R.string.no_sharing_peers));
-                    } else {
-                        checkNotNull(host);
-
-                        threads.setThreadsPublishing(true, idxs);
-
-
-                        long start = System.currentTimeMillis();
-
-                        Contents contents = new Contents();
-
-                        List<Thread> threadList = threads.getThreadByIdxs(idxs);
-                        contents.add(threadList);
-
-                        String data = gson.toJson(contents);
-
-                        CID cid = ipfs.storeText(data, "", true);
-                        checkNotNull(cid);
-
-                        checkNotNull(host);
-                        contentService.insertContent(host, cid, true);
-
-                        JobServicePublish.publish(context, cid, false);
-
-                        JobServiceIdentity.identity(context);
+                    threads.setThreadsPublishing(true, idxs);
 
 
-                        ExecutorService executorService = Executors.newSingleThreadExecutor();
-                        List<Future> futures = new ArrayList<>();
+                    long start = System.currentTimeMillis();
 
-                        for (User user : users) {
-                            futures.add(executorService.submit(() ->
-                                    sharePeer(context, user, cid, start)));
-                        }
+                    Contents contents = new Contents();
+
+                    List<Thread> threadList = threads.getThreadByIdxs(idxs);
+                    contents.add(threadList);
+
+                    String data = gson.toJson(contents);
+
+                    CID cid = ipfs.storeText(data, "", true);
+                    checkNotNull(cid);
+
+                    checkNotNull(host);
+                    contentService.insertContent(host, cid, true);
+
+                    JobServicePublish.publish(context, cid, false);
+
+                    JobServiceIdentity.identity(context);
 
 
-                        for (Future future : futures) {
-                            future.get();
-                        }
+                    ExecutorService executorService = Executors.newSingleThreadExecutor();
+                    List<Future> futures = new ArrayList<>();
 
-                        threads.setThreadsPublishing(false, idxs);
+                    for (User user : users) {
+                        futures.add(executorService.submit(() ->
+                                sharePeer(context, user, cid, start)));
                     }
 
-                } catch (Throwable e) {
-                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+
+                    for (Future future : futures) {
+                        future.get();
+                    }
+
+                    threads.setThreadsPublishing(false, idxs);
                 }
-            });
+
+            } catch (Throwable e) {
+                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+            }
+        });
 
     }
 
@@ -1751,106 +1747,104 @@ public class Service {
             final EVENTS events = EVENTS.getInstance(context);
 
 
+            try {
 
-                try {
-                    Log.w(TAG, "Start Daemon");
+                boolean pubSubEnabled = IPFS.isPubsubEnabled(context);
+                ipfs.daemon(pubSubEnabled);
 
-                    boolean pubSubEnabled = IPFS.isPubsubEnabled(context);
-                    ipfs.daemon(pubSubEnabled);
+                IPFS.setPubsubHandler((message) -> {
+                    try {
 
-                    IPFS.setPubsubHandler((message) -> {
-                        try {
+                        String sender = message.getSenderPid();
 
-                            String sender = message.getSenderPid();
-
-                            PID senderPid = PID.create(sender);
+                        PID senderPid = PID.create(sender);
 
 
-                            if (!peers.isUserBlocked(senderPid)) {
+                        if (!peers.isUserBlocked(senderPid)) {
 
-                                String code = message.getMessage().trim();
+                            String code = message.getMessage().trim();
 
-                                CodecDecider result = CodecDecider.evaluate(code);
+                            CodecDecider result = CodecDecider.evaluate(code);
 
-                                if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
-                                    JobServiceContents.contents(context,
-                                            senderPid, CID.create(result.getMultihash()));
-                                } else if (result.getCodex() == CodecDecider.Codec.URI) {
-                                    JobServiceDownload.download(context,
-                                            senderPid, CID.create(result.getMultihash()));
+                            if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
+                                JobServiceContents.contents(context,
+                                        senderPid, CID.create(result.getMultihash()));
+                            } else if (result.getCodex() == CodecDecider.Codec.URI) {
+                                JobServiceDownload.download(context,
+                                        senderPid, CID.create(result.getMultihash()));
 
-                                } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {
-                                    Content content = result.getContent();
-                                    checkNotNull(content);
-                                    if (content.containsKey(Content.EST)) {
-                                        String est = content.get(Content.EST);
-                                        if ("CONNECT".equals(est)) {
-                                            if (content.containsKey(Content.ALIAS)) {
-                                                String alias = content.get(Content.ALIAS);
-                                                checkNotNull(alias);
-                                                String pubKey = content.get(Content.PKEY);
-                                                if (pubKey == null) {
-                                                    pubKey = "";
-                                                }
-                                                createUser(context, senderPid, alias, pubKey);
+                            } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {
+                                Content content = result.getContent();
+                                checkNotNull(content);
+                                if (content.containsKey(Content.EST)) {
+                                    String est = content.get(Content.EST);
+                                    if ("CONNECT".equals(est)) {
+                                        if (content.containsKey(Content.ALIAS)) {
+                                            String alias = content.get(Content.ALIAS);
+                                            checkNotNull(alias);
+                                            String pubKey = content.get(Content.PKEY);
+                                            if (pubKey == null) {
+                                                pubKey = "";
                                             }
-                                        } else if ("CONNECT_REPLY".equals(est)) {
-                                            if (content.containsKey(Content.ALIAS)) {
-                                                String alias = content.get(Content.ALIAS);
-                                                checkNotNull(alias);
-                                                String pubKey = content.get(Content.PKEY);
-                                                if (pubKey == null) {
-                                                    pubKey = "";
-                                                }
-                                                adaptUser(context, senderPid, alias, pubKey);
-                                            }
-                                        } else if ("REPLY".equals(est)) {
-
-                                            if (content.containsKey(Content.CID)) {
-                                                String cid = content.get(Content.CID);
-                                                checkNotNull(cid);
-                                                Service.receiveReply(context, senderPid, cid);
-                                            }
-                                        } else if ("RECEIVED".equals(est)) {
-                                            if (content.containsKey(Content.ALIAS)) {
-                                                String alias = content.get(Content.ALIAS);
-                                                checkNotNull(alias);
-
-                                                Preferences.error(events, context.getString(
-                                                        R.string.notification_received, alias));
-                                            }
-                                        } else if ("SHARE".equals(est)) {
-                                            ScheduledExecutorService executorService =
-                                                    Executors.newSingleThreadScheduledExecutor();
-                                            executorService.schedule(() ->
-                                                            Service.notifications(context),
-                                                    3, TimeUnit.SECONDS);
+                                            createUser(context, senderPid, alias, pubKey);
                                         }
-                                    } else {
-                                        Preferences.error(events, context.getString(
-                                                R.string.unsupported_pubsub_message,
-                                                senderPid.getPid()));
-                                    }
-                                } else if (result.getCodex() == CodecDecider.Codec.UNKNOWN) {
+                                    } else if ("CONNECT_REPLY".equals(est)) {
+                                        if (content.containsKey(Content.ALIAS)) {
+                                            String alias = content.get(Content.ALIAS);
+                                            checkNotNull(alias);
+                                            String pubKey = content.get(Content.PKEY);
+                                            if (pubKey == null) {
+                                                pubKey = "";
+                                            }
+                                            adaptUser(context, senderPid, alias, pubKey);
+                                        }
+                                    } else if ("REPLY".equals(est)) {
 
+                                        if (content.containsKey(Content.CID)) {
+                                            String cid = content.get(Content.CID);
+                                            checkNotNull(cid);
+                                            Service.receiveReply(context, senderPid, cid);
+                                        }
+                                    } else if ("RECEIVED".equals(est)) {
+                                        if (content.containsKey(Content.ALIAS)) {
+                                            String alias = content.get(Content.ALIAS);
+                                            checkNotNull(alias);
+
+                                            Preferences.error(events, context.getString(
+                                                    R.string.notification_received, alias));
+                                        }
+                                    } else if ("SHARE".equals(est)) {
+                                        ScheduledExecutorService executorService =
+                                                Executors.newSingleThreadScheduledExecutor();
+                                        executorService.schedule(() ->
+                                                        Service.notifications(context),
+                                                3, TimeUnit.SECONDS);
+                                    }
+                                } else {
                                     Preferences.error(events, context.getString(
                                             R.string.unsupported_pubsub_message,
                                             senderPid.getPid()));
                                 }
+                            } else if (result.getCodex() == CodecDecider.Codec.UNKNOWN) {
 
+                                Preferences.error(events, context.getString(
+                                        R.string.unsupported_pubsub_message,
+                                        senderPid.getPid()));
                             }
-                        } catch (Throwable e) {
-                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                        } finally {
-                            Log.e(TAG, "Receive : " + message.getMessage());
+
                         }
+                    } catch (Throwable e) {
+                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    } finally {
+                        Log.e(TAG, "Receive : " + message.getMessage());
+                    }
 
 
-                    });
+                });
 
-                } catch (Throwable e) {
-                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
-                }
+            } catch (Throwable e) {
+                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+            }
 
 
         } catch (Throwable e) {
