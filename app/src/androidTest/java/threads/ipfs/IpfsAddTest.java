@@ -7,12 +7,15 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.List;
 
 import threads.ipfs.api.CID;
@@ -53,7 +56,7 @@ public class IpfsAddTest {
 
         Log.e(TAG, "Bytes : " + inputFile.length() / 1000 + "[kb]");
 
-        CID hash58Base = ipfs.addFile(inputFile, true);
+        CID hash58Base = ipfs.streamFile(inputFile, true);
         assertNotNull(hash58Base);
 
         List<LinkInfo> links = ipfs.ls(hash58Base, 10, true);
@@ -63,6 +66,8 @@ public class IpfsAddTest {
         byte[] bytes = ipfs.getData(hash58Base, 10, true);
         assertNotNull(bytes);
         assertEquals(bytes.length, size);
+
+        IOUtils.contentEquals(new ByteArrayInputStream(bytes), new FileInputStream(inputFile));
 
 
     }
@@ -83,7 +88,7 @@ public class IpfsAddTest {
 
         Log.e(TAG, "Bytes : " + inputFile.length() / 1000 + "[kb]");
 
-        CID hash58Base = ipfs.addFile(inputFile, true);
+        CID hash58Base = ipfs.streamFile(inputFile, true);
         assertNotNull(hash58Base);
 
         List<LinkInfo> links = ipfs.ls(hash58Base, 10, true);
@@ -95,6 +100,7 @@ public class IpfsAddTest {
         assertNotNull(bytes);
         assertEquals(bytes.length, size);
 
+        IOUtils.contentEquals(new ByteArrayInputStream(bytes), new FileInputStream(inputFile));
 
     }
 
@@ -116,7 +122,7 @@ public class IpfsAddTest {
 
         Log.e(TAG, "Bytes : " + inputFile.length() / 1000 + "[kb]");
 
-        CID hash58Base = ipfs.addFile(inputFile, true);
+        CID hash58Base = ipfs.streamFile(inputFile, true);
         assertNotNull(hash58Base);
 
         List<LinkInfo> links = ipfs.ls(hash58Base, 10, true);
@@ -126,6 +132,9 @@ public class IpfsAddTest {
         byte[] bytes = ipfs.getData(hash58Base, 10, true);
         assertNotNull(bytes);
         assertEquals(bytes.length, size);
+
+
+        IOUtils.contentEquals(new ByteArrayInputStream(bytes), new FileInputStream(inputFile));
 
 
     }
@@ -146,7 +155,7 @@ public class IpfsAddTest {
 
         Log.e(TAG, "Bytes : " + inputFile.length() / 1000 + "[kb]");
 
-        CID hash58Base = ipfs.addFile(inputFile, true);
+        CID hash58Base = ipfs.streamFile(inputFile, true);
         assertNotNull(hash58Base);
 
         List<LinkInfo> links = ipfs.ls(hash58Base, 10, true);
@@ -156,6 +165,8 @@ public class IpfsAddTest {
         byte[] bytes = ipfs.getData(hash58Base, 10, true);
         assertNotNull(bytes);
         assertEquals(bytes.length, size);
+
+        IOUtils.contentEquals(new ByteArrayInputStream(bytes), new FileInputStream(inputFile));
 
 
     }

@@ -38,7 +38,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.contents.CDS;
 import threads.core.contents.ContentDatabase;
 import threads.core.contents.Contents;
@@ -226,7 +225,7 @@ public class Service {
             ProgressChannel.createProgressChannel(context);
 
             long time = System.currentTimeMillis();
-            Singleton.getInstance(context);
+
             Log.e(TAG, "Time Instance : " + (System.currentTimeMillis() - time));
 
             SINGLETON = new Service();
@@ -265,8 +264,7 @@ public class Service {
                     }
                     if (data != null) {
 
-                        final Singleton singleton = Singleton.getInstance(context);
-                        final IPFS ipfs = singleton.getIpfs();
+                        final IPFS ipfs = IPFS.getInstance(context);
                         checkNotNull(ipfs, "IPFS not valid");
                         if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
                             try {
@@ -338,18 +336,18 @@ public class Service {
 
         boolean success = true;
 
-        final PEERS peers = Singleton.getInstance(context).getPeers();
+        final PEERS peers = PEERS.getInstance(context);
         final PID host = IPFS.getPID(context);
-        final EVENTS events = Singleton.getInstance(context).getEvents();
+        final EVENTS events = EVENTS.getInstance(context);
         checkNotNull(host);
-        final EntityService entityService = Singleton.getInstance(context).getEntityService();
+        final EntityService entityService = EntityService.getInstance(context);
         try {
             String address = AddressType.getAddress(
                     PID.create(pid), AddressType.NOTIFICATION);
 
             String publicKey = peers.getUserPublicKey(pid);
             if (publicKey.isEmpty()) {
-                IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                IPFS ipfs = IPFS.getInstance(context);
                 checkNotNull(ipfs, "IPFS not valid");
                 int timeout = Preferences.getConnectionTimeout(context);
                 PeerInfo info = ipfs.id(PID.create(pid), timeout);
@@ -406,7 +404,7 @@ public class Service {
         try {
             final CDS contentService = CDS.getInstance(context);
             final EntityService entityService = EntityService.getInstance(context);
-            final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+            final IPFS ipfs = IPFS.getInstance(context);
 
             // remove all old hashes from hash database
             HashDatabase hashDatabase = entityService.getHashDatabase();
@@ -444,9 +442,8 @@ public class Service {
         checkNotNull(context);
         checkNotNull(pid);
 
-        IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        THREADS threads = Singleton.getInstance(context).getThreads();
-        PEERS peers = Singleton.getInstance(context).getPeers();
+        IPFS ipfs = IPFS.getInstance(context);
+        PEERS peers = PEERS.getInstance(context);
         checkNotNull(ipfs, "IPFS not defined");
 
 
@@ -483,10 +480,10 @@ public class Service {
         checkNotNull(context);
         checkNotNull(user);
 
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        final PEERS peers = Singleton.getInstance(context).getPeers();
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-        final EVENTS events = Singleton.getInstance(context).getEvents();
+        final IPFS ipfs = IPFS.getInstance(context);
+        final PEERS peers = PEERS.getInstance(context);
+
+        final EVENTS events = EVENTS.getInstance(context);
 
         if (!peers.existsUser(user)) {
 
@@ -561,8 +558,8 @@ public class Service {
         checkNotNull(context);
         checkNotNull(topic);
         Gson gson = new Gson();
-        IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        PEERS peers = Singleton.getInstance(context).getPeers();
+        IPFS ipfs = IPFS.getInstance(context);
+        PEERS peers = PEERS.getInstance(context);
         if (IPFS.isPubsubEnabled(context)) {
             PID host = IPFS.getPID(context);
             checkNotNull(host);
@@ -580,7 +577,7 @@ public class Service {
         checkNotNull(context);
         checkNotNull(topic);
         Gson gson = new Gson();
-        IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        IPFS ipfs = IPFS.getInstance(context);
         if (IPFS.isPubsubEnabled(context)) {
             Content map = new Content();
             map.put(Content.EST, "SHARE");
@@ -668,7 +665,7 @@ public class Service {
         checkNotNull(pubKey);
 
         try {
-            final PEERS peers = Singleton.getInstance(context).getPeers();
+            final PEERS peers = PEERS.getInstance(context);
             User sender = peers.getUserByPID(senderPid);
             checkNotNull(sender);
 
@@ -697,7 +694,7 @@ public class Service {
         checkNotNull(multihash);
 
 
-        final THREADS threads = Singleton.getInstance(context).getThreads();
+        final THREADS threads = THREADS.getInstance(context);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -730,10 +727,9 @@ public class Service {
         checkNotNull(pubKey);
 
         try {
-            final THREADS threads = Singleton.getInstance(context).getThreads();
-            final PEERS peers = Singleton.getInstance(context).getPeers();
-            final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-            final EVENTS events = Singleton.getInstance(context).getEvents();
+            final PEERS peers = PEERS.getInstance(context);
+            final IPFS ipfs = IPFS.getInstance(context);
+            final EVENTS events = EVENTS.getInstance(context);
             if (ipfs != null) {
                 User sender = peers.getUserByPID(senderPid);
                 if (sender == null) {
@@ -833,8 +829,8 @@ public class Service {
     private static void cleanStates(@NonNull Context context) {
         checkNotNull(context);
 
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-        final PEERS peers = Singleton.getInstance(context).getPeers();
+        final THREADS threads = THREADS.getInstance(context);
+        final PEERS peers = PEERS.getInstance(context);
         try {
             threads.resetThreadsNumber();
             threads.resetThreadsPublishing();
@@ -853,9 +849,9 @@ public class Service {
         checkNotNull(context);
 
 
-        final PEERS peers = Singleton.getInstance(context).getPeers();
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        final EVENTS events = Singleton.getInstance(context).getEvents();
+        final PEERS peers = PEERS.getInstance(context);
+        final IPFS ipfs = IPFS.getInstance(context);
+        final EVENTS events = EVENTS.getInstance(context);
 
         if (ipfs != null) {
             try {
@@ -890,8 +886,7 @@ public class Service {
 
     @NonNull
     private static String evaluateMimeType(@NonNull Context context, @NonNull String filename) {
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-        final EVENTS events = Singleton.getInstance(context).getEvents();
+        final EVENTS events = EVENTS.getInstance(context);
 
         try {
             Optional<String> extension = ThumbnailService.getExtension(filename);
@@ -921,8 +916,8 @@ public class Service {
         checkNotNull(link);
 
 
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-        final PEERS peers = Singleton.getInstance(context).getPeers();
+        final THREADS threads = THREADS.getInstance(context);
+        final PEERS peers = PEERS.getInstance(context);
         User user = peers.getUserByPID(creator);
         checkNotNull(user);
 
@@ -960,7 +955,7 @@ public class Service {
         checkNotNull(threadStatus);
 
 
-        final THREADS threads = Singleton.getInstance(context).getThreads();
+        final THREADS threads = THREADS.getInstance(context);
 
 
         Thread thread = threads.createThread(creator, threadStatus, Kind.OUT, 0L);
@@ -990,13 +985,13 @@ public class Service {
     static void localDownloadThread(@NonNull Context context, long idx) {
         checkNotNull(context);
         try {
-            final THREADS threadsAPI = Singleton.getInstance(context).getThreads();
+            final THREADS threadsAPI = THREADS.getInstance(context);
             final DownloadManager downloadManager = (DownloadManager)
                     context.getSystemService(Context.DOWNLOAD_SERVICE);
             checkNotNull(downloadManager);
 
-            final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-            final EVENTS events = Singleton.getInstance(context).getEvents();
+            final IPFS ipfs = IPFS.getInstance(context);
+            final EVENTS events = EVENTS.getInstance(context);
 
 
             if (ipfs != null) {
@@ -1284,7 +1279,7 @@ public class Service {
         checkNotNull(ipfs);
         checkNotNull(thread);
 
-        final EVENTS events = Singleton.getInstance(context).getEvents();
+        final EVENTS events = EVENTS.getInstance(context);
 
         try {
             threads.setThreadLeaching(thread.getIdx(), true);
@@ -1347,7 +1342,7 @@ public class Service {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                final IPFS ipfs = IPFS.getInstance(context);
                 if (ipfs != null) {
 
                     while (ipfs.isDaemonRunning()) {
@@ -1375,7 +1370,7 @@ public class Service {
 
     private static void checkPeersOnlineStatus(@NonNull Context context) {
         checkNotNull(context);
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final IPFS ipfs = IPFS.getInstance(context);
         if (ipfs != null) {
             try {
                 while (ipfs.isDaemonRunning()) {
@@ -1393,12 +1388,10 @@ public class Service {
 
         try {
             final PID host = IPFS.getPID(context);
-            final THREADS threads = Singleton.getInstance(context).getThreads();
-            final PEERS peers = Singleton.getInstance(context).getPeers();
-            final EVENTS events = Singleton.getInstance(context).getEvents();
+            final PEERS peers = PEERS.getInstance(context);
 
-            final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-            if (ipfs != null) {
+            final IPFS ipfs = IPFS.getInstance(context);
+
 
                 List<PID> users = peers.getUsersPIDs();
 
@@ -1422,7 +1415,7 @@ public class Service {
                         }
                     }
                 }
-            }
+
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -1433,12 +1426,12 @@ public class Service {
         checkNotNull(context);
         checkNotNull(text);
 
-        final THREADS threads = Singleton.getInstance(context).getThreads();
+        final THREADS threads = THREADS.getInstance(context);
 
-        final EVENTS events = Singleton.getInstance(context).getEvents();
+        final EVENTS events = EVENTS.getInstance(context);
 
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        final PEERS peers = Singleton.getInstance(context).getPeers();
+        final IPFS ipfs = IPFS.getInstance(context);
+        final PEERS peers = PEERS.getInstance(context);
         if (ipfs != null) {
 
             UPLOAD_SERVICE.submit(() -> {
@@ -1500,17 +1493,17 @@ public class Service {
     void storeData(@NonNull Context context, @NonNull Uri uri) {
         checkNotNull(context);
         checkNotNull(uri);
-        final EVENTS events = Singleton.getInstance(context).getEvents();
+        final EVENTS events = EVENTS.getInstance(context);
 
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-        final PEERS peers = Singleton.getInstance(context).getPeers();
+        final THREADS threads = THREADS.getInstance(context);
+        final PEERS peers = PEERS.getInstance(context);
         ThumbnailService.FileDetails fileDetails = ThumbnailService.getFileDetails(context, uri);
         if (fileDetails == null) {
             Preferences.error(events, context.getString(R.string.file_not_supported));
             return;
         }
 
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final IPFS ipfs = IPFS.getInstance(context);
 
 
         UPLOAD_SERVICE.submit(() -> {
@@ -1573,8 +1566,8 @@ public class Service {
     ArrayList<String> getEnhancedUserPIDs(@NonNull Context context) {
         checkNotNull(context);
 
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-        final PEERS peers = Singleton.getInstance(context).getPeers();
+
+        final PEERS peers = PEERS.getInstance(context);
         final PID pid = IPFS.getPID(context);
         ArrayList<String> users = new ArrayList<>();
         checkNotNull(pid);
@@ -1594,9 +1587,9 @@ public class Service {
         checkNotNull(context);
         checkNotNull(thread);
 
-        final THREADS threads = Singleton.getInstance(context).getThreads();
+        final THREADS threads = THREADS.getInstance(context);
 
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final IPFS ipfs = IPFS.getInstance(context);
         if (ipfs != null) {
             try {
                 threads.setThreadLeaching(thread.getIdx(), false);
@@ -1633,9 +1626,8 @@ public class Service {
         checkNotNull(user);
         checkNotNull(cid);
 
-        final Singleton singleton = Singleton.getInstance(context);
-        final EVENTS events = Singleton.getInstance(context).getEvents();
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final EVENTS events = EVENTS.getInstance(context);
+        final IPFS ipfs = IPFS.getInstance(context);
 
         JobServiceConnect.connect(context, user.getPID());
 
@@ -1671,13 +1663,13 @@ public class Service {
         checkNotNull(idxs);
 
 
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final THREADS threads = THREADS.getInstance(context);
+        final IPFS ipfs = IPFS.getInstance(context);
         final CDS contentService = CDS.getInstance(context);
         final PID host = IPFS.getPID(context);
-        final EVENTS events = Singleton.getInstance(context).getEvents();
+        final EVENTS events = EVENTS.getInstance(context);
 
-        if (ipfs != null) {
+
 
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
@@ -1733,7 +1725,7 @@ public class Service {
                     Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                 }
             });
-        }
+
     }
 
     private void init(@NonNull Context context) {
@@ -1754,15 +1746,13 @@ public class Service {
     private void startDaemon(@NonNull Context context) {
         checkNotNull(context);
         try {
-            final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-            final THREADS threads = Singleton.getInstance(context).getThreads();
-            final PEERS peers = Singleton.getInstance(context).getPeers();
-            final EVENTS events = Singleton.getInstance(context).getEvents();
+            final IPFS ipfs = IPFS.getInstance(context);
+            final PEERS peers = PEERS.getInstance(context);
+            final EVENTS events = EVENTS.getInstance(context);
 
-            if (ipfs != null) {
+
 
                 try {
-                    Singleton singleton = Singleton.getInstance(context);
                     Log.w(TAG, "Start Daemon");
 
                     boolean pubSubEnabled = IPFS.isPubsubEnabled(context);
@@ -1772,7 +1762,7 @@ public class Service {
                         try {
 
                             String sender = message.getSenderPid();
-                            String topic = message.getTopic();
+
                             PID senderPid = PID.create(sender);
 
 
@@ -1859,10 +1849,10 @@ public class Service {
                     });
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(events, Preferences.IPFS_START_FAILURE, e);
+                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                 }
 
-            }
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }

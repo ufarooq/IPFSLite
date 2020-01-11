@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import threads.core.Singleton;
 import threads.core.peers.Additional;
 import threads.core.peers.Additionals;
 import threads.core.peers.PEERS;
@@ -54,7 +53,7 @@ public class IdentityService {
                 GatewayService.connectStoredRelays(context, tag, numRelays, timeout);
 
 
-        final PEERS threads = Singleton.getInstance(context).getPeers();
+        final PEERS threads = PEERS.getInstance(context);
 
 
         try {
@@ -99,7 +98,7 @@ public class IdentityService {
                                              int timeout,
                                              int numPeers) {
 
-        final PEERS threads = Singleton.getInstance(context).getPeers();
+        final PEERS threads = PEERS.getInstance(context);
 
 
         threads.core.peers.PeerInfo peerInfo = threads.createPeerInfo(user);
@@ -116,10 +115,9 @@ public class IdentityService {
     private static boolean insertPeer(@NonNull Context context,
                                       @NonNull threads.core.peers.PeerInfo peer) {
 
-        PEERS threads = Singleton.getInstance(context).getPeers();
+        PEERS threads = PEERS.getInstance(context);
 
-        EntityService entityService = Singleton.getInstance(context).getEntityService();
-
+        EntityService entityService = EntityService.getInstance(context);
         threads.setHash(peer, null);
 
         long start = System.currentTimeMillis();
@@ -144,13 +142,13 @@ public class IdentityService {
         checkNotNull(context);
         checkNotNull(pid);
 
-        final PEERS threads = Singleton.getInstance(context).getPeers();
+        final PEERS peers = PEERS.getInstance(context);
 
-        final EntityService entityService = Singleton.getInstance(context).getEntityService();
-        threads.core.peers.PeerInfo peerInfo = threads.getPeer(context, entityService, pid);
+        final EntityService entityService = EntityService.getInstance(context);
+        threads.core.peers.PeerInfo peerInfo = peers.getPeer(context, entityService, pid);
         if (peerInfo != null && updateUser) {
             boolean update = false;
-            User user = threads.getUserByPID(pid);
+            User user = peers.getUserByPID(pid);
             if (user != null) {
                 Additionals additionals = peerInfo.getAdditionals();
                 for (String key : additionals.keySet()) {
@@ -162,7 +160,7 @@ public class IdentityService {
                 }
             }
             if (update) {
-                threads.updateUser(user);
+                peers.updateUser(user);
             }
         }
         return peerInfo;
@@ -223,10 +221,10 @@ public class IdentityService {
 
         updatesPeerInfo(context, peerInfo, storedRelays, params, tag, timeout, numPeers);
 
-        PEERS threads = Singleton.getInstance(context).getPeers();
+        PEERS peers = PEERS.getInstance(context);
 
 
-        threads.updatePeerInfo(peerInfo);
+        peers.updatePeerInfo(peerInfo);
         return new ResultInfo(peerInfo, tag, insertPeer(context, peerInfo));
     }
 

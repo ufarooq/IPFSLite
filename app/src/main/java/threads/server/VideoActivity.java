@@ -21,7 +21,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.events.EVENTS;
 import threads.core.threads.THREADS;
 import threads.share.IPFSMediaDataSource;
@@ -157,8 +156,8 @@ public class VideoActivity extends AppCompatActivity implements MediaController.
         checkNotNull(cid);
 
         mediaPlayer = new MediaPlayer();
-        final EVENTS events = Singleton.getInstance(this).getEvents();
-        threads = Singleton.getInstance(this).getThreads();
+        final EVENTS events = EVENTS.getInstance(getApplicationContext());
+        threads = THREADS.getInstance(getApplicationContext());
         try {
             dataSource = new IPFSMediaDataSource(this, cid);
         } catch (Throwable e) {
@@ -293,7 +292,7 @@ public class VideoActivity extends AppCompatActivity implements MediaController.
                     mediaPlayer.start();
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    final EVENTS events = Singleton.getInstance(this).getEvents();
+                    EVENTS events = EVENTS.getInstance(this);
                     Preferences.error(events, getString(R.string.video_failure,
                             e.getLocalizedMessage()));
                     finish();
@@ -304,7 +303,7 @@ public class VideoActivity extends AppCompatActivity implements MediaController.
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            final EVENTS events = Singleton.getInstance(this).getEvents();
+            final EVENTS events = EVENTS.getInstance(this);
             Preferences.error(events, getString(R.string.video_failure,
                     e.getLocalizedMessage()));
             finish();

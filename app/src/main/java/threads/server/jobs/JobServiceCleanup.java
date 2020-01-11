@@ -14,7 +14,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import threads.core.Singleton;
 import threads.server.Service;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -52,7 +51,6 @@ public class JobServiceCleanup extends JobService {
             long start = System.currentTimeMillis();
 
             try {
-                Singleton.getInstance(getApplicationContext());
 
                 Service.cleanup(getApplicationContext());
 

@@ -1,4 +1,4 @@
-package threads.server.ipfs;
+package threads.server.provider;
 
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
@@ -17,9 +17,7 @@ import androidx.annotation.Nullable;
 
 import org.apache.commons.io.IOUtils;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,7 +28,6 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 import mobile.Reader;
-import threads.core.Singleton;
 import threads.core.threads.THREADS;
 import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
@@ -39,8 +36,6 @@ import threads.server.BuildConfig;
 import threads.server.R;
 import threads.server.Service;
 
-import static android.os.ParcelFileDescriptor.MODE_READ_ONLY;
-import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class FileDocumentsProvider extends DocumentsProvider {
@@ -215,18 +210,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
             throw new FileNotFoundException();
         }
         try {
-            File impl = new File(ipfs.getCacheDir(), "" + idx);
-
-            storeToFile(impl, cid, signal);
-
-            if (signal != null) {
-                if (signal.isCanceled()) {
-                    return null;
-                }
-            }
-
-            final ParcelFileDescriptor pfd = ParcelFileDescriptor.open(impl,
-                    MODE_READ_ONLY);
+            final ParcelFileDescriptor pfd = ParcelFileDescriptorUtil.pipeFrom(ipfs, cid);
             return new AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH);
 
         } catch (Throwable e) {
@@ -360,7 +344,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
             throw new FileNotFoundException("");
         }
         try {
-
+/*
             File impl = new File(ipfs.getCacheDir(), "" + idx);
 
 
@@ -372,8 +356,8 @@ public class FileDocumentsProvider extends DocumentsProvider {
                     return null;
                 }
             }
-            return ParcelFileDescriptor.open(impl, accessMode);
-            //return ParcelFileDescriptorUtil.pipeFrom(ipfs, cid);
+            return ParcelFileDescriptor.open(impl, accessMode);*/
+            return ParcelFileDescriptorUtil.pipeFrom(ipfs, cid);
         } catch (Throwable e) {
             Log.e(TAG, e.getLocalizedMessage(), e);
         }
@@ -382,32 +366,6 @@ public class FileDocumentsProvider extends DocumentsProvider {
         return null;
     }
 
-    public void storeToFile(@NonNull File file, @NonNull CID cid, @Nullable CancellationSignal signal) {
-        checkNotNull(file);
-        checkNotNull(cid);
-
-        // make sure file path exists
-        try {
-            if (file.exists()) {
-                return;
-            } else {
-                File parent = file.getParentFile();
-                checkNotNull(parent);
-                if (!parent.exists()) {
-                    checkArgument(parent.mkdirs());
-                }
-                checkArgument(file.createNewFile());
-            }
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-
-        try (FileOutputStream outputStream = new FileOutputStream(file)) {
-            stream(outputStream, cid, signal);
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     private void stream(@NonNull OutputStream outputStream, @NonNull CID cid, @Nullable CancellationSignal signal) {
         checkNotNull(outputStream);
@@ -454,8 +412,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         Service.getInstance(getContext()); //todo
 
         threads = THREADS.getInstance(getContext());
-
-        ipfs = Singleton.getInstance(getContext()).getIpfs(); //todo
+        ipfs = IPFS.getInstance(getContext());
         return true;
     }
 
@@ -519,15 +476,15 @@ public class FileDocumentsProvider extends DocumentsProvider {
         @Override
         public void run() {
             try {
-                int size = 4096;
-                int position = 0;
-                reader.readAt(position, size);
+                int size = 262158;
+
+                reader.load(size);
                 long read = reader.getRead();
                 while (read > 0) {
                     byte[] data = reader.getData();
                     mOut.write(data, 0, data.length);
-                    position += read;
-                    reader.readAt(position, size);
+
+                    reader.load(size);
                     read = reader.getRead();
                 }
                 Log.e(TAG, "success upload");

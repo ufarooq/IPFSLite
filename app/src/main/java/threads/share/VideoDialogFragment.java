@@ -31,7 +31,6 @@ import androidx.fragment.app.FragmentActivity;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.events.EVENTS;
 import threads.core.threads.THREADS;
 import threads.server.R;
@@ -128,7 +127,7 @@ public class VideoDialogFragment extends DialogFragment implements MediaControll
         @SuppressWarnings("all")
         View view = inflater.inflate(R.layout.video_dialog, null);
 
-        threads = Singleton.getInstance(mContext).getThreads();
+        threads = THREADS.getInstance(mContext);
 
         mediaController = new MediaController(mContext);
         RelativeLayout layoutView = view.findViewById(R.id.video_preview_layout);
@@ -377,7 +376,7 @@ public class VideoDialogFragment extends DialogFragment implements MediaControll
                     mediaPlayer.start();
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    final EVENTS events = Singleton.getInstance(mContext).getEvents();
+                    final EVENTS events = EVENTS.getInstance(mContext);
                     Preferences.error(events, mContext.getString(R.string.video_failure,
                             e.getLocalizedMessage()));
                     dismiss();
@@ -388,7 +387,7 @@ public class VideoDialogFragment extends DialogFragment implements MediaControll
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            final EVENTS events = Singleton.getInstance(mContext).getEvents();
+            final EVENTS events = EVENTS.getInstance(mContext);
             Preferences.error(events, mContext.getString(R.string.video_failure,
                     e.getLocalizedMessage()));
             dismiss();

@@ -164,7 +164,7 @@
 
         <provider
             android:name="androidx.core.content.FileProvider"
-            android:authorities="threads.server.provider"
+            android:authorities="threads.server.file.provider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -173,7 +173,7 @@
         </provider>
 
         <provider
-            android:name="threads.server.ipfs.FileDocumentsProvider"
+            android:name="threads.server.provider.FileDocumentsProvider"
             android:authorities="${documentsAuthority}"
             android:exported="true"
             android:grantUriPermissions="true"

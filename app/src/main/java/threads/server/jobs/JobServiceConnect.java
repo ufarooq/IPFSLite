@@ -15,7 +15,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.peers.Content;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
@@ -76,9 +75,8 @@ public class JobServiceConnect extends JobService {
 
                 Service.getInstance(getApplicationContext());
 
-                Singleton singleton = Singleton.getInstance(getApplicationContext());
 
-                IPFS ipfs = singleton.getIpfs();
+                IPFS ipfs = IPFS.getInstance(getApplicationContext());
                 checkNotNull(ipfs, "IPFS not defined");
 
                 if (!ipfs.isConnected(PID.create(pid))) {

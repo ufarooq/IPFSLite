@@ -16,7 +16,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.events.EVENTS;
 import threads.core.peers.Content;
 import threads.core.peers.PEERS;
@@ -72,13 +71,13 @@ public class JobServiceDownload extends JobService {
         checkNotNull(pid);
         checkNotNull(cid);
 
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-        final PEERS peers = Singleton.getInstance(context).getPeers();
-        final EVENTS events = Singleton.getInstance(context).getEvents();
+        final THREADS threads = THREADS.getInstance(context);
+        final PEERS peers = PEERS.getInstance(context);
+        final EVENTS events = EVENTS.getInstance(context);
 
 
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        if (ipfs != null) {
+        final IPFS ipfs = IPFS.getInstance(context);
+
 
             try {
 
@@ -118,7 +117,7 @@ public class JobServiceDownload extends JobService {
             }
 
         }
-    }
+
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {

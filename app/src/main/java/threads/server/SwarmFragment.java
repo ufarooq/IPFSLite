@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.Singleton;
 import threads.core.events.EVENTS;
 import threads.core.peers.IPeer;
 import threads.core.peers.Peer;
@@ -140,9 +139,9 @@ public class SwarmFragment extends Fragment implements
 
     private void loadPeers(@NonNull Context context) {
         checkNotNull(context);
-        THREADS threads = Singleton.getInstance(context).getThreads();
-        IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        EVENTS events = Singleton.getInstance(context).getEvents();
+        THREADS threads = THREADS.getInstance(context);
+        IPFS ipfs = IPFS.getInstance(context);
+        EVENTS events = EVENTS.getInstance(context);
         try {
             checkNotNull(ipfs, "IPFS not valid");
             GatewayService.PeerSummary info = GatewayService.evaluateAllPeers(context);

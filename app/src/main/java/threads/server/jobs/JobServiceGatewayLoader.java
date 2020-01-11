@@ -20,7 +20,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.threads.THREADS;
 import threads.core.threads.Thread;
 import threads.ipfs.api.CID;
@@ -99,8 +98,7 @@ public class JobServiceGatewayLoader extends JobService {
                 String gateway = Service.getGateway(getApplicationContext());
 
 
-                THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-
+                THREADS threads = THREADS.getInstance(getApplicationContext());
                 List<CID> contents = new ArrayList<>();
                 Thread thread = threads.getThreadByIdx(idx);
                 checkNotNull(thread);

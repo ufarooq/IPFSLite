@@ -23,11 +23,9 @@ import androidx.fragment.app.DialogFragment;
 import java.io.File;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.events.EVENTS;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
-import threads.server.BuildConfig;
 import threads.server.R;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -73,7 +71,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
             CID bitmap = Preferences.getBitmap(context, code);
             checkNotNull(bitmap);
 
-            IPFS ipfs = Singleton.getInstance(context).getIpfs();
+            IPFS ipfs = IPFS.getInstance(context);
 
             if (ipfs != null) {
 
@@ -85,7 +83,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
 
 
                 Uri uri = FileProvider.getUriForFile(context,
-                        BuildConfig.DOCUMENTS_AUTHORITY, file);
+                        context.getPackageName() + ".file.provider", file);
 
                 Intent shareIntent = new Intent();
                 shareIntent.setAction(Intent.ACTION_SEND);
@@ -156,10 +154,10 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
 
         CID bitmap = Preferences.getBitmap(mContext, code);
 
-        IPFS ipfs = Singleton.getInstance(mContext).getIpfs();
+        IPFS ipfs = IPFS.getInstance(mContext);
         int timeout = Preferences.getConnectionTimeout(mContext);
 
-        final EVENTS events = Singleton.getInstance(mContext).getEvents();
+        final EVENTS events = EVENTS.getInstance(mContext);
         if (ipfs != null) {
             try {
                 Bitmap imageBitmap = ThumbnailService.getImage(

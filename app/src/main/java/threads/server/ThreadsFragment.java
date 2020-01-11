@@ -40,18 +40,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.events.EVENTS;
 import threads.core.threads.Status;
 import threads.core.threads.THREADS;
 import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
-import threads.server.ipfs.FileDocumentsProvider;
 import threads.server.jobs.JobServiceDeleteThreads;
 import threads.server.jobs.JobServiceLoadNotifications;
 import threads.server.mdl.SelectionViewModel;
 import threads.server.mdl.ThreadViewModel;
+import threads.server.provider.FileDocumentsProvider;
 import threads.share.MimeType;
 import threads.share.Network;
 import threads.share.ThreadActionDialogFragment;
@@ -321,7 +320,7 @@ public class ThreadsFragment extends Fragment implements
 
 
     private void sendAction() {
-        final EVENTS events = Singleton.getInstance(mContext).getEvents();
+        final EVENTS events = EVENTS.getInstance(mContext);
 
         Selection<Long> selection = mSelectionTracker.getSelection();
         if (selection.size() == 0) {
@@ -345,8 +344,8 @@ public class ThreadsFragment extends Fragment implements
 
 
     private void clearUnreadNotes() {
-        final THREADS threadsAPI = Singleton.getInstance(mContext).getThreads();
-        final EVENTS events = Singleton.getInstance(mContext).getEvents();
+        final THREADS threadsAPI = THREADS.getInstance(mContext);
+        final EVENTS events = EVENTS.getInstance(mContext);
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
@@ -373,7 +372,7 @@ public class ThreadsFragment extends Fragment implements
 
     private void deleteAction() {
 
-        final EVENTS events = Singleton.getInstance(mContext).getEvents();
+        final EVENTS events = EVENTS.getInstance(mContext);
         if (!topLevel.get()) {
             Preferences.warning(events,
                     mContext.getString(R.string.deleting_files_within_directory_not_supported));
@@ -381,7 +380,7 @@ public class ThreadsFragment extends Fragment implements
         }
 
         if (!mSelectionTracker.hasSelection()) {
-            THREADS threads = Singleton.getInstance(mContext).getThreads();
+            THREADS threads = THREADS.getInstance(mContext);
             Preferences.warning(events,
                     mContext.getString(R.string.no_marked_file_delete));
             return;
@@ -527,8 +526,8 @@ public class ThreadsFragment extends Fragment implements
             if (!mSelectionTracker.hasSelection()) {
                 long threadIdx = thread.getIdx();
 
-                final EVENTS events = Singleton.getInstance(mContext).getEvents();
-                final THREADS threads = Singleton.getInstance(mContext).getThreads();
+                final EVENTS events = EVENTS.getInstance(mContext);
+                final THREADS threads = THREADS.getInstance(mContext);
 
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() -> {
@@ -552,9 +551,9 @@ public class ThreadsFragment extends Fragment implements
 
 
     private void clickThreadPlay(long idx) {
-        final EVENTS events = Singleton.getInstance(mContext).getEvents();
-        final THREADS threads = Singleton.getInstance(mContext).getThreads();
-        final IPFS ipfs = Singleton.getInstance(mContext).getIpfs();
+        final EVENTS events = EVENTS.getInstance(mContext);
+        final THREADS threads = THREADS.getInstance(mContext);
+        final IPFS ipfs = IPFS.getInstance(mContext);
         final int timeout = Preferences.getConnectionTimeout(mContext);
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -670,10 +669,9 @@ public class ThreadsFragment extends Fragment implements
     public void invokeActionError(@NonNull Thread thread) {
         checkNotNull(thread);
         try {
-            // CHECKED
-            Singleton singleton = Singleton.getInstance(mContext);
+
             if (!Network.isConnected(mContext)) {
-                Preferences.error(singleton.getEvents(), getString(R.string.offline_mode));
+                Preferences.error(EVENTS.getInstance(mContext), getString(R.string.offline_mode));
                 return;
             }
 

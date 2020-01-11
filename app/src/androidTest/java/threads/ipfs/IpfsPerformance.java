@@ -61,7 +61,7 @@ public class IpfsPerformance {
 
         Log.e(TAG, "Bytes : " + inputFile.length() / 1000 + "[kb]");
         long now = System.currentTimeMillis();
-        CID cid = ipfs.addFile(inputFile, true);
+        CID cid = ipfs.streamFile(inputFile, true);
         assertNotNull(cid);
         Log.e(TAG, "Add : " + cid.getCid() +
                 " Time : " + ((System.currentTimeMillis() - now) / 1000) + "[s]");
@@ -118,7 +118,7 @@ public class IpfsPerformance {
 
         Log.e(TAG, "Bytes : " + inputFile.length() / 1000 + "[kb]");
 
-        CID cid = ipfs.addFile(inputFile, true);
+        CID cid = ipfs.streamFile(inputFile, true);
         assertNotNull(cid);
         File file = ipfs.getTempCacheFile();
         ipfs.storeToFile(file, cid, true, 10, -1);
@@ -159,14 +159,14 @@ public class IpfsPerformance {
 
 
         long now = System.currentTimeMillis();
-        CID cid = ipfs.addFile(inputFile, true);
+        CID cid = ipfs.streamFile(inputFile, true);
         assertNotNull(cid);
         Log.e(TAG, "Add : " + cid.getCid() +
                 " Time : " + ((System.currentTimeMillis() - now) / 1000) + "[s]");
 
 
         now = System.currentTimeMillis();
-        CID hash58Base_2 = ipfs.addFile(inputFile, true);
+        CID hash58Base_2 = ipfs.streamFile(inputFile, true);
         assertNotNull(hash58Base_2);
         Log.e(TAG, "Add : " + hash58Base_2.getCid() +
                 " Time : " + ((System.currentTimeMillis() - now) / 1000) + "[s]");

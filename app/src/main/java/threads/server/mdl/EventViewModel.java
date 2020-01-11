@@ -24,15 +24,6 @@ public class EventViewModel extends AndroidViewModel {
     }
 
 
-    public LiveData<Event> getIPFSInstallFailure() {
-        return eventsDatabase.eventDao().getEvent(Preferences.IPFS_INSTALL_FAILURE);
-    }
-
-    public LiveData<Event> getIPFSStartFailure() {
-        return eventsDatabase.eventDao().getEvent(Preferences.IPFS_START_FAILURE);
-    }
-
-
     public LiveData<Event> getException() {
         return eventsDatabase.eventDao().getEvent(Preferences.EXCEPTION);
     }

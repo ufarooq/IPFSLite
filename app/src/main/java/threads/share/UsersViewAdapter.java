@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.peers.User;
 import threads.ipfs.IPFS;
 import threads.server.R;
@@ -115,7 +114,7 @@ public class UsersViewAdapter extends RecyclerView.Adapter<UsersViewAdapter.View
 
                 if (user.getImage() != null) {
                     userViewHolder.user_image.setVisibility(View.VISIBLE);
-                    IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                    IPFS ipfs = IPFS.getInstance(context);
                     IPFSData data = IPFSData.create(ipfs, user.getImage(), timeout);
                     Glide.with(context).load(data).into(userViewHolder.user_image);
                 } else {

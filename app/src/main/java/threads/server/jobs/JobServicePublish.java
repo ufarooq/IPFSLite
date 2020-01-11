@@ -15,7 +15,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.peers.Content;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
@@ -75,8 +74,7 @@ public class JobServicePublish extends JobService {
                 Service.getInstance(getApplicationContext());
 
 
-                final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-
+                final IPFS ipfs = IPFS.getInstance(getApplicationContext());
                 checkNotNull(ipfs, "IPFS not valid");
 
                 // first notifications stored relays

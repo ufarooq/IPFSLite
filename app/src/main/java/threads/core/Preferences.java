@@ -28,8 +28,6 @@ public class Preferences {
 
 
     public static final String EXCEPTION = "EXCEPTION";
-    public static final String IPFS_START_FAILURE = "IPFS_START_FAILURE";
-    public static final String IPFS_INSTALL_FAILURE = "IPFS_INSTALL_FAILURE";
     public static final String WARNING = "WARNING";
     public static final String INFO = "INFO";
     private static final String PREF_KEY = "prefKey";
@@ -243,7 +241,7 @@ public class Preferences {
             return stored;
         }
 
-        IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        IPFS ipfs = IPFS.getInstance(context);
         checkNotNull(ipfs, "IPFS is not valid.");
 
         MultiFormatWriter multiFormatWriter = new MultiFormatWriter();

@@ -14,7 +14,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
@@ -46,7 +45,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import de.psdev.licensesdialog.LicensesDialogFragment;
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.events.EVENTS;
 import threads.core.peers.AddressType;
 import threads.core.peers.PEERS;
@@ -240,9 +238,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(codec);
 
         // CHECKED
-        Singleton singleton = Singleton.getInstance(getApplicationContext());
+
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(singleton.getEvents(), getString(R.string.offline_mode));
+            Preferences.error(EVENTS.getInstance(getApplicationContext()), getString(R.string.offline_mode));
             return;
         }
 
@@ -260,7 +258,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         host, CID.create(multihash));
             } else {
 
-                Preferences.error(singleton.getEvents(),
+                Preferences.error(EVENTS.getInstance(getApplicationContext()),
                         getString(R.string.codec_not_supported));
             }
         } catch (Throwable e) {
@@ -395,8 +393,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
-
+                PEERS peers = PEERS.getInstance(getApplicationContext());
                 if (!value) {
                     peers.unblockUser(PID.create(pid));
                 } else {
@@ -428,10 +425,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickUserDelete(@NonNull String pid) {
         checkNotNull(pid);
         try {
-            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-            final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-            final PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
-            final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
+            final IPFS ipfs = IPFS.getInstance(getApplicationContext());
+            final PEERS peers = PEERS.getInstance(getApplicationContext());
+            final EVENTS events = EVENTS.getInstance(getApplicationContext());
 
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
@@ -455,21 +451,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickUserConnect(@NonNull String pid) {
         checkNotNull(pid);
 
-        // CHECKED
-        Singleton singleton = Singleton.getInstance(getApplicationContext());
-
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(singleton.getEvents(), getString(R.string.offline_mode));
+            Preferences.error(EVENTS.getInstance(getApplicationContext()), getString(R.string.offline_mode));
             return;
         }
 
 
         try {
 
-            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-            final PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
-            final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
-
+            final PEERS peers = PEERS.getInstance(getApplicationContext());
+            final EVENTS events = EVENTS.getInstance(getApplicationContext());
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
@@ -547,6 +538,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             case R.id.nav_issues: {
                 try {
+
                     Intent intent = new Intent(Intent.ACTION_VIEW);
                     intent.setData(Uri.parse("https://gitlab.com/remmer.wilts/threads-server/issues"));
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -600,7 +592,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
             case R.id.nav_config: {
                 try {
-                    IPFS ipfs = Singleton.getInstance(this).getIpfs();
+                    IPFS ipfs = IPFS.getInstance(getApplicationContext());
                     if (ipfs != null) {
                         String data = "<html><h2>Config</h2><pre>" + ipfs.config_show() + "</pre></html>";
                         WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.HTML, data)
@@ -817,62 +809,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 new ViewModelProvider(this).get(EventViewModel.class);
 
 
-        eventViewModel.getIPFSInstallFailure().observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    Snackbar snackbar = Snackbar.make(mDrawerLayout,
-                            R.string.ipfs_daemon_install_failure,
-                            Snackbar.LENGTH_INDEFINITE);
-                    snackbar.setAction(R.string.info, (view) -> {
 
-                        AlertDialog alertDialog = new AlertDialog.Builder(
-                                MainActivity.this).create();
-                        alertDialog.setMessage(event.getContent().concat("\n\n") +
-                                getString(R.string.ipfs_no_data));
-                        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL,
-                                getString(android.R.string.ok),
-                                (dialog, which) -> dialog.dismiss());
-                        alertDialog.show();
-                        eventViewModel.removeEvent(event);
-                        snackbar.dismiss();
-
-                    });
-                    snackbar.setAnchorView(mNavigation);
-                    snackbar.show();
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-
-        });
-        eventViewModel.getIPFSStartFailure().observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    Snackbar snackbar = Snackbar.make(mDrawerLayout,
-                            R.string.ipfs_daemon_start_failure,
-                            Snackbar.LENGTH_INDEFINITE);
-                    snackbar.setAction(R.string.info, (view) -> {
-
-                        AlertDialog alertDialog = new AlertDialog.Builder(
-                                MainActivity.this).create();
-                        alertDialog.setMessage(event.getContent().concat("\n\n") +
-                                getString(R.string.ipfs_no_data));
-                        alertDialog.setButton(AlertDialog.BUTTON_NEUTRAL,
-                                getString(android.R.string.ok),
-                                (dialog, which) -> dialog.dismiss());
-                        alertDialog.show();
-                        eventViewModel.removeEvent(event);
-                        snackbar.dismiss();
-
-                    });
-                    snackbar.setAnchorView(mNavigation);
-                    snackbar.show();
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-
-        });
         eventViewModel.getException().observe(this, (event) -> {
             try {
                 if (event != null) {
@@ -1040,9 +977,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         } else {
 
-            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-            final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
-
+            final THREADS threads = THREADS.getInstance(getApplicationContext());
+            final EVENTS events = EVENTS.getInstance(getApplicationContext());
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
@@ -1106,21 +1042,18 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickUserDetails(@NonNull String pid) {
 
-        Singleton singleton = Singleton.getInstance(getApplicationContext());
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(singleton.getEvents(), getString(R.string.offline_mode));
+            Preferences.error(EVENTS.getInstance(getApplicationContext()), getString(R.string.offline_mode));
             return;
         }
 
 
         try {
             final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
-            final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-            final PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
-            final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
-
+            final IPFS ipfs = IPFS.getInstance(getApplicationContext());
+            final PEERS peers = PEERS.getInstance(getApplicationContext());
+            final EVENTS events = EVENTS.getInstance(getApplicationContext());
             final PID host = IPFS.getPID(getApplicationContext());
             checkNotNull(host);
             if (ipfs != null) {
@@ -1188,8 +1121,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
-
+                PEERS peers = PEERS.getInstance(getApplicationContext());
                 peers.setUserAutoConnect(PID.create(pid), autoConnect);
 
             } catch (Throwable e) {
@@ -1205,11 +1137,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(pid);
 
         // CHECKED if pid is valid
-        Singleton singleton = Singleton.getInstance(getApplicationContext());
         try {
             Multihash.fromBase58(pid);
         } catch (Throwable e) {
-            Preferences.error(singleton.getEvents(), getString(R.string.multihash_not_valid));
+            Preferences.error(EVENTS.getInstance(getApplicationContext()), getString(R.string.multihash_not_valid));
             return;
         }
 
@@ -1218,13 +1149,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         PID user = PID.create(pid);
 
         if (user.equals(host)) {
-            Preferences.error(singleton.getEvents(), getString(R.string.same_pid_like_host));
+            Preferences.error(EVENTS.getInstance(getApplicationContext()), getString(R.string.same_pid_like_host));
             return;
         }
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(singleton.getEvents(), getString(R.string.offline_mode));
+            Preferences.error(EVENTS.getInstance(getApplicationContext()), getString(R.string.offline_mode));
             return;
         }
 
@@ -1249,10 +1180,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadInfo(long idx) {
         try {
-            final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
-
-            final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-            final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+            final EVENTS events = EVENTS.getInstance(getApplicationContext());
+            final THREADS threads = THREADS.getInstance(getApplicationContext());
+            final IPFS ipfs = IPFS.getInstance(getApplicationContext());
             if (ipfs != null) {
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.submit(() -> {
@@ -1283,19 +1213,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickThreadsSend(final long[] idxs) {
 
 
-        Singleton singleton = Singleton.getInstance(getApplicationContext());
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(singleton.getEvents(), getString(R.string.offline_mode));
+            Preferences.error(EVENTS.getInstance(getApplicationContext()), getString(R.string.offline_mode));
             return;
         }
 
 
-        final THREADS threads = Singleton.getInstance(this).getThreads();
-        final PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
-        final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
-
+        final PEERS peers = PEERS.getInstance(getApplicationContext());
+        final EVENTS events = EVENTS.getInstance(getApplicationContext());
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
@@ -1359,9 +1286,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickThreadView(long idx) {
 
-        final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-        final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
-
+        final THREADS threads = THREADS.getInstance(getApplicationContext());
+        final EVENTS events = EVENTS.getInstance(getApplicationContext());
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
@@ -1388,10 +1314,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickThreadShare(long idx) {
-        final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
-
-        final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-        final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+        final EVENTS events = EVENTS.getInstance(getApplicationContext());
+        final THREADS threads = THREADS.getInstance(getApplicationContext());
+        final IPFS ipfs = IPFS.getInstance(getApplicationContext());
         final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
         if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -1411,7 +1336,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
 
                     Uri uri = FileProvider.getUriForFile(getApplicationContext(),
-                            getApplicationContext().getPackageName() + ".provider", file);
+                            getApplicationContext().getPackageName() + ".file.provider", file);
 
 
                     Intent shareIntent = new Intent();
@@ -1488,9 +1413,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 }
             }
         }
-        final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-        final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
-
+        final THREADS threads = THREADS.getInstance(getApplicationContext());
+        final EVENTS events = EVENTS.getInstance(getApplicationContext());
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
@@ -1507,12 +1431,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(pid);
         checkNotNull(name);
 
-        final THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-        final IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
-        final PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
-        final EVENTS events = Singleton.getInstance(getApplicationContext()).getEvents();
+        final THREADS threads = THREADS.getInstance(getApplicationContext());
+        final IPFS ipfs = IPFS.getInstance(getApplicationContext());
+        final PEERS peers = PEERS.getInstance(getApplicationContext());
+        final EVENTS events = EVENTS.getInstance(getApplicationContext());
 
-        if (ipfs != null) {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
@@ -1532,7 +1455,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Preferences.evaluateException(events, Preferences.EXCEPTION, e);
                 }
             });
-        }
 
 
     }

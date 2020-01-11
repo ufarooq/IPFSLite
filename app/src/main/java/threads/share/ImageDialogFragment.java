@@ -24,7 +24,6 @@ import androidx.fragment.app.FragmentActivity;
 import com.bumptech.glide.Glide;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.ipfs.IPFS;
 import threads.server.R;
 
@@ -87,7 +86,7 @@ public class ImageDialogFragment extends DialogFragment implements View.OnTouchL
         view.setOnTouchListener(this);
         mImageView = view.findViewById(R.id.image_view);
         mScaleGestureDetector = new ScaleGestureDetector(mContext, new ScaleListener());
-        IPFS ipfs = Singleton.getInstance(mContext).getIpfs();
+        IPFS ipfs = IPFS.getInstance(mContext);
         int timeout = Preferences.getConnectionTimeout(mContext);
         IPFSData data = IPFSData.create(ipfs, cid, timeout);
         Glide.with(mContext).load(data).into(mImageView);

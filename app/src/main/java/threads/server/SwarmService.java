@@ -8,7 +8,6 @@ import androidx.annotation.Nullable;
 import org.apache.commons.lang3.RandomStringUtils;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.peers.PeerInfo;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
@@ -25,7 +24,7 @@ public class SwarmService {
         checkNotNull(pid);
         final String tag = RandomStringUtils.randomAlphabetic(10);
         final int timeout = Preferences.getConnectionTimeout(context);
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final IPFS ipfs = IPFS.getInstance(context);
         final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
 
         ConnectInfo info = new ConnectInfo(pid, tag);
@@ -69,7 +68,7 @@ public class SwarmService {
     public static void disconnect(@NonNull Context context, @NonNull ConnectInfo info) {
         checkNotNull(context);
         checkNotNull(info);
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final IPFS ipfs = IPFS.getInstance(context);
         if (ipfs != null) {
             if (info.isConnected()) {
                 ipfs.unProtectPeer(info.pid, info.tag);

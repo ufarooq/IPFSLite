@@ -14,12 +14,12 @@ import com.j256.simplemagic.ContentInfoUtil;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -50,6 +50,7 @@ import mobile.Listener;
 import mobile.Node;
 import mobile.Reader;
 import mobile.Stream;
+import mobile.Writer;
 import threads.ipfs.api.AddressesConfig;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Config;
@@ -436,7 +437,8 @@ public class IPFS implements Listener {
         return sharedPref.getInt(HIGH_WATER_KEY, 40);
     }
 
-    public static IPFS getInstance(@NonNull Context context) throws Exception {
+    @NonNull
+    public static IPFS getInstance(@NonNull Context context) {
         if (INSTANCE == null) {
             synchronized (IPFS.class) {
                 if (INSTANCE == null) {
@@ -491,15 +493,21 @@ public class IPFS implements Listener {
                     routingConfig.setType(getRoutingType(context));
 
 
-                    INSTANCE = new Builder().
-                            context(context).
-                            pubsubReader(pubsubReader).
-                            addresses(addresses).
-                            experimental(experimental).
-                            pubsub(pubsubConfig).
-                            discovery(discoveryConfig).
-                            swarm(swarmConfig).
-                            routing(routingConfig).build();
+                    try {
+                        INSTANCE = new Builder().
+                                context(context).
+                                pubsubReader(pubsubReader).
+                                addresses(addresses).
+                                experimental(experimental).
+                                pubsub(pubsubConfig).
+                                discovery(discoveryConfig).
+                                swarm(swarmConfig).
+                                routing(routingConfig).build();
+
+                        IPFS.setPID(context, INSTANCE.getPeerID());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
         }
@@ -1104,7 +1112,7 @@ public class IPFS implements Listener {
         checkNotNull(content);
         checkArgument(!content.isEmpty());
         try (InputStream inputStream = new ByteArrayInputStream(content.getBytes())) {
-            return addFile(inputStream, key, offline);
+            return storeInputStream(inputStream, key, offline);
         }
     }
 
@@ -1139,14 +1147,14 @@ public class IPFS implements Listener {
     }
 
     @Nullable
-    public CID addFile(@NonNull File target, boolean offline) {
-        checkNotNull(target);
+    private CID stream(@NonNull InputStream inputStream, boolean offline) {
+        checkNotNull(inputStream);
+
 
         String res = "";
         try {
-            if (checkDaemonRunning()) {
-                res = node.add(target.getAbsolutePath(), offline);
-            }
+            Writer writer = getWriter(offline);
+            res = writer.stream(new WriterStream(writer, inputStream));
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -1157,9 +1165,27 @@ public class IPFS implements Listener {
         return null;
     }
 
+    @Nullable
+    public CID streamFile(@NonNull File target, boolean offline) {
+        checkNotNull(target);
+
+
+        try {
+            return stream(new FileInputStream(target), offline);
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+        return null;
+    }
+
     @NonNull
     public Reader getReader(@NonNull CID cid, boolean offline) throws Exception {
         return node.getReader(cid.getCid(), offline);
+    }
+
+    @NonNull
+    public Writer getWriter(boolean offline) throws Exception {
+        return node.getWriter(offline);
     }
 
     private boolean stream(@NonNull OutputStream outputStream,
@@ -1331,13 +1357,9 @@ public class IPFS implements Listener {
                         return close.get();
                     }
 
-                    @Override
-                    public void size(long l) {
-                        Log.d(TAG, "CID " + cid + " size : " + l);
-                    }
 
                     @Override
-                    public void write(byte[] bytes) {
+                    public long read(byte[] bytes) {
                         try {
                             pos.write(bytes);
                         } catch (Throwable e) {
@@ -1345,6 +1367,7 @@ public class IPFS implements Listener {
                             // Ignore exception might be on pipe is closed
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
                         }
+                        return -1;
                     }
 
                 }, offline);
@@ -1456,47 +1479,31 @@ public class IPFS implements Listener {
             return null;
         }
 
-        // todo WriterStream writerStream = new WriterStream(inputStream);
-
-        File target = getTempCacheFile();
-        try (OutputStream outputStream = new FileOutputStream(target)) {
-
-            IOUtils.copy(inputStream, outputStream);
-
-            return addFile(target, offline);
-        } finally {
-            if (target.exists()) {
-                checkArgument(target.delete());
-            }
-        }
+        return stream(inputStream, offline);
     }
 
     @Nullable
-    private CID addFile(@NonNull InputStream inputStream, @NonNull String key,
-                        boolean offline) throws Exception {
+    private CID storeInputStream(@NonNull InputStream inputStream,
+                                 @NonNull String key,
+                                 boolean offline) throws Exception {
         checkNotNull(inputStream);
         checkNotNull(key);
 
         if (!checkDaemonRunning()) {
             return null;
         }
-        File target = getTempCacheFile();
-        try (OutputStream outputStream = new FileOutputStream(target)) {
-            if (!key.isEmpty()) {
-                Key aesKey = Encryption.getKey(key);
-                Cipher cipher = Cipher.getInstance("AES");
-                cipher.init(Cipher.ENCRYPT_MODE, aesKey);
-                CipherInputStream cipherStream = new CipherInputStream(inputStream, cipher);
-                IOUtils.copy(cipherStream, outputStream);
-            } else {
-                IOUtils.copy(inputStream, outputStream);
-            }
-            return addFile(target, offline);
-        } finally {
-            if (target.exists()) {
-                checkArgument(target.delete());
-            }
+
+
+        if (!key.isEmpty()) {
+            Key aesKey = Encryption.getKey(key);
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.ENCRYPT_MODE, aesKey);
+            CipherInputStream cipherStream = new CipherInputStream(inputStream, cipher);
+            return stream(cipherStream, offline);
+        } else {
+            return stream(inputStream, offline);
         }
+
     }
 
     @Nullable
@@ -1718,30 +1725,29 @@ public class IPFS implements Listener {
 
     }
 
-    private class WriterStream implements mobile.Stream {
+    private class WriterStream implements mobile.WriterStream {
         public final InputStream mInputStream;
+        private final Writer mWriter;
 
-        public WriterStream(InputStream inputStream) {
+        public WriterStream(Writer writer, InputStream inputStream) {
+            this.mWriter = writer;
             this.mInputStream = inputStream;
         }
 
-        @Override
-        public boolean close() {
-            return false;
-        }
 
         @Override
-        public void size(long size) {
-
-        }
-
-        @Override
-        public void write(byte[] Data) {
+        public void load(long size) {
             try {
-                mInputStream.read(Data);
+                byte[] data = new byte[(int) size];
+
+                int read = mInputStream.read(data);
+                mWriter.setWritten(read);
+                mWriter.setData(data);
             } catch (Throwable e) {
+                // TODO maybe close
                 Log.e(TAG, "" + e.getLocalizedMessage());
             }
+
         }
     }
 }

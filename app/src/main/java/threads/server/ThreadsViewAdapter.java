@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
 import threads.share.IPFSData;
@@ -122,7 +121,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
             }
 
             if (thread.getThumbnail() != null) {
-                IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                IPFS ipfs = IPFS.getInstance(context);
                 IPFSData data = IPFSData.create(ipfs, thread.getThumbnail(), timeout);
                 Glide.with(context).
                         load(data).

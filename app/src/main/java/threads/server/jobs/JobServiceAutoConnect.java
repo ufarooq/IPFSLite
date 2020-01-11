@@ -17,7 +17,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.peers.PEERS;
 import threads.core.peers.User;
 import threads.ipfs.IPFS;
@@ -71,13 +70,11 @@ public class JobServiceAutoConnect extends JobService {
 
                 Service.getInstance(getApplicationContext());
 
-                Singleton singleton = Singleton.getInstance(getApplicationContext());
 
-                IPFS ipfs = singleton.getIpfs();
+                IPFS ipfs = IPFS.getInstance(getApplicationContext());
                 checkNotNull(ipfs, "IPFS not defined");
 
-                PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
-
+                PEERS peers = PEERS.getInstance(getApplicationContext());
                 List<User> users = peers.getAutoConnectUsers();
 
                 ExecutorService executorService = Executors.newFixedThreadPool(5);

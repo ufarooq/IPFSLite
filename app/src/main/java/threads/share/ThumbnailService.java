@@ -31,7 +31,6 @@ import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.Optional;
 
-import threads.core.Singleton;
 import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
@@ -143,7 +142,7 @@ public class ThumbnailService {
         checkNotNull(context);
         checkNotNull(name);
         byte[] data = getImageData(context, name, id);
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final IPFS ipfs = IPFS.getInstance(context);
         checkNotNull(ipfs);
         CID cid = ipfs.storeData(data);
         checkNotNull(cid);
@@ -363,7 +362,7 @@ public class ThumbnailService {
         }
 
         if (bytes != null) {
-            final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+            final IPFS ipfs = IPFS.getInstance(context);
             if (ipfs != null) {
                 try {
                     cid = ipfs.storeData(bytes);
@@ -410,7 +409,7 @@ public class ThumbnailService {
         }
 
         if (bitmap == null) {
-            IPFS ipfs = Singleton.getInstance(context).getIpfs();
+            IPFS ipfs = IPFS.getInstance(context);
             if (ipfs != null) {
                 ContentInfo contentInfo = ipfs.getContentInfo(file);
                 if (contentInfo != null) {
@@ -431,7 +430,7 @@ public class ThumbnailService {
         }
 
         if (bytes != null) {
-            final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+            final IPFS ipfs = IPFS.getInstance(context);
             if (ipfs != null) {
                 try {
                     cid = ipfs.storeData(bytes);

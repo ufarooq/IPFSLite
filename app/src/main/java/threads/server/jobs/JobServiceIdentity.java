@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.Singleton;
 import threads.core.peers.Content;
 import threads.core.peers.PEERS;
 import threads.ipfs.IPFS;
@@ -66,10 +65,7 @@ public class JobServiceIdentity extends JobService {
 
             try {
 
-                Singleton.getInstance(getApplicationContext());
-
-                PEERS peers = Singleton.getInstance(getApplicationContext()).getPeers();
-
+                PEERS peers = PEERS.getInstance(getApplicationContext());
                 PID host = IPFS.getPID(getApplicationContext());
 
 

@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.peers.User;
+import threads.ipfs.IPFS;
 import threads.share.IPFSData;
 
 
@@ -92,8 +92,8 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
 
 
             if (account.getImage() != null) {
-                Singleton singleton = Singleton.getInstance(context);
-                IPFSData data = IPFSData.create(singleton.getIpfs(),
+                IPFS ipfs = IPFS.getInstance(context);
+                IPFSData data = IPFSData.create(ipfs,
                         account.getImage(), timeout);
                 Glide.with(context).load(data).into(holder.account_icon);
             } else {
@@ -108,8 +108,8 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
                     v.setBackgroundColor(android.R.drawable.list_selector_background);
 
                     if (account.getImage() != null) {
-                        Singleton singleton = Singleton.getInstance(context);
-                        IPFSData data = IPFSData.create(singleton.getIpfs(),
+                        IPFS ipfs = IPFS.getInstance(context);
+                        IPFSData data = IPFSData.create(ipfs,
                                 account.getImage(), timeout);
                         Glide.with(context).load(data).into(holder.account_icon);
                     } else {

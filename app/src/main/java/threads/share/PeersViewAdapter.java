@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.peers.IPeer;
 import threads.core.peers.Peer;
 import threads.ipfs.IPFS;
@@ -98,7 +97,7 @@ public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.View
 
                 if (peer.getImage() != null) {
                     peerViewHolder.user_image.setVisibility(View.VISIBLE);
-                    IPFS ipfs = Singleton.getInstance(context).getIpfs();
+                    IPFS ipfs = IPFS.getInstance(context);
                     IPFSData data = IPFSData.create(ipfs, peer.getImage(), timeout);
                     Glide.with(context).load(data).into(peerViewHolder.user_image);
                 } else {

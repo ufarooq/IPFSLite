@@ -9,7 +9,6 @@ import androidx.annotation.NonNull;
 import java.io.IOException;
 
 import mobile.Reader;
-import threads.core.Singleton;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 
@@ -21,7 +20,7 @@ public class IPFSMediaDataSource extends MediaDataSource {
     private Reader fileReader;
 
     public IPFSMediaDataSource(@NonNull Context context, @NonNull String cid) throws Exception {
-        IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        IPFS ipfs = IPFS.getInstance(context);
         checkNotNull(ipfs);
         fileReader = ipfs.getReader(CID.create(cid), true);
     }

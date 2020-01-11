@@ -17,7 +17,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.threads.THREADS;
 import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
@@ -79,7 +78,7 @@ public class JobServicePublisher extends JobService {
                 Service.getInstance(getApplicationContext());
 
 
-                IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+                IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
                 checkNotNull(ipfs, "IPFS not valid");
 
@@ -89,8 +88,7 @@ public class JobServicePublisher extends JobService {
                         getApplicationContext(), "", 20, 3);
 
 
-                THREADS threads = Singleton.getInstance(getApplicationContext()).getThreads();
-
+                THREADS threads = THREADS.getInstance(getApplicationContext());
                 List<CID> contents = new ArrayList<>();
                 List<Thread> list = threads.getPinnedThreads();
 

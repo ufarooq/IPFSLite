@@ -6,7 +6,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.peers.Addresses;
 import threads.core.peers.PeerInfo;
 import threads.ipfs.IPFS;
@@ -45,7 +44,7 @@ public class ConnectService {
             }
 
         }
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final IPFS ipfs = IPFS.getInstance(context);
         if (ipfs != null) {
             ipfs.swarmConnect(pid, timeout);
 
@@ -62,7 +61,7 @@ public class ConnectService {
         checkNotNull(context);
         checkNotNull(peer);
         checkNotNull(tag);
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final IPFS ipfs = IPFS.getInstance(context);
         if (ipfs != null) {
             Addresses addresses = peer.getAddresses();
             for (String relay : addresses.keySet()) {
@@ -82,7 +81,7 @@ public class ConnectService {
 
         final int timeout = Preferences.getSwarmTimeout(context);
 
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final IPFS ipfs = IPFS.getInstance(context);
         if (ipfs != null) {
             Addresses addresses = peer.getAddresses();
             for (String relay : addresses.keySet()) {

@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import threads.core.Singleton;
 import threads.core.peers.PEERS;
 import threads.core.peers.Peer;
 import threads.ipfs.IPFS;
@@ -25,13 +24,13 @@ public class GatewayService {
 
 
     public static PeerSummary evaluateAllPeers(@NonNull Context context) {
-        IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        PEERS threads = Singleton.getInstance(context).getPeers();
+        IPFS ipfs = IPFS.getInstance(context);
+        PEERS peersInstance = PEERS.getInstance(context);
 
         checkNotNull(ipfs);
 
         // important reset all connection status
-        threads.resetPeersConnected();
+        peersInstance.resetPeersConnected();
         List<threads.ipfs.api.Peer> peers = ipfs.swarmPeers();
 
         List<Long> latencies = new ArrayList<>();
@@ -49,13 +48,13 @@ public class GatewayService {
         }
 
         if (Network.isConnected(context)) {
-            List<Peer> stored = threads.getPeers();
+            List<Peer> stored = peersInstance.getPeers();
             for (Peer peer : stored) {
                 if (!peer.isConnected() &&
                         !peer.isRelay() &&
                         !peer.isAutonat() &&
                         !peer.isPubsub()) {
-                    threads.removePeer(ipfs, peer);
+                    peersInstance.removePeer(ipfs, peer);
                 }
             }
         }
@@ -67,7 +66,7 @@ public class GatewayService {
     }
 
     public static int evaluatePeers(@NonNull Context context, boolean pubsubs) {
-        IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        IPFS ipfs = IPFS.getInstance(context);
         checkNotNull(ipfs);
         List<threads.ipfs.api.Peer> peers = ipfs.swarmPeers();
         int size = peers.size();
@@ -102,7 +101,7 @@ public class GatewayService {
             return result;
         }
 
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final IPFS ipfs = IPFS.getInstance(context);
 
 
         if (ipfs != null) {
@@ -158,7 +157,7 @@ public class GatewayService {
             return connected;
         }
 
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final IPFS ipfs = IPFS.getInstance(context);
 
 
         if (ipfs != null) {
@@ -207,7 +206,7 @@ public class GatewayService {
         boolean isConnected = false;
         try {
             int timeout = 5;
-            IPFS ipfs = Singleton.getInstance(context).getIpfs();
+            IPFS ipfs = IPFS.getInstance(context);
             if (ipfs != null) {
                 PeerInfo info = ipfs.id(peer, timeout);
                 if (info != null) {
@@ -253,23 +252,23 @@ public class GatewayService {
                                   boolean isConnected,
                                   int rating) {
 
-        final PEERS threads = Singleton.getInstance(context).getPeers();
+        final PEERS peers = PEERS.getInstance(context);
 
 
-        Peer peer = threads.getPeerByPID(pid);
+        Peer peer = peers.getPeerByPID(pid);
         if (peer != null) {
             peer.setMultiAddress(multiAddress);
             peer.setRating(rating);
             peer.setConnected(isConnected);
-            threads.updatePeer(peer);
+            peers.updatePeer(peer);
         } else {
-            peer = threads.createPeer(pid, multiAddress);
+            peer = peers.createPeer(pid, multiAddress);
             peer.setRelay(isRelay);
             peer.setAutonat(isAutonat);
             peer.setPubsub(isPubsub);
             peer.setRating(rating);
             peer.setConnected(isConnected);
-            threads.storePeer(peer);
+            peers.storePeer(peer);
         }
         return peer;
     }
@@ -285,14 +284,13 @@ public class GatewayService {
             return connected;
         }
 
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        final PEERS threads = Singleton.getInstance(context).getPeers();
+        final IPFS ipfs = IPFS.getInstance(context);
+        final PEERS peersInstance = PEERS.getInstance(context);
 
         final AtomicInteger counter = new AtomicInteger(0);
 
-        if (ipfs != null) {
 
-            List<Peer> peers = threads.getAutonatPeers();
+        List<Peer> peers = peersInstance.getAutonatPeers();
 
             peers.sort(Peer::compareTo);
 
@@ -304,7 +302,7 @@ public class GatewayService {
 
                 if (ipfs.isConnected(autonat.getPID())) {
                     counter.incrementAndGet();
-                    threads.setTimestamp(autonat, System.currentTimeMillis());
+                    peersInstance.setTimestamp(autonat, System.currentTimeMillis());
                     connected.add(autonat);
                 } else {
 
@@ -313,18 +311,18 @@ public class GatewayService {
 
                     if (ipfs.swarmConnect(ma, timeout)) {
                         counter.incrementAndGet();
-                        threads.setTimestamp(autonat, System.currentTimeMillis());
+                        peersInstance.setTimestamp(autonat, System.currentTimeMillis());
                         connected.add(autonat);
                     } else {
                         if (Network.isConnected(context)) {
                             if (lifeTimeExpired(autonat)) {
-                                threads.removePeer(ipfs, autonat);
+                                peersInstance.removePeer(ipfs, autonat);
                             }
                         }
                     }
                 }
             }
-        }
+
         return connected;
     }
 
@@ -345,14 +343,13 @@ public class GatewayService {
             return connected;
         }
 
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        final PEERS threads = Singleton.getInstance(context).getPeers();
+        final IPFS ipfs = IPFS.getInstance(context);
+        final PEERS peers1 = PEERS.getInstance(context);
 
         final AtomicInteger counter = new AtomicInteger(0);
 
-        if (ipfs != null) {
 
-            List<Peer> peers = threads.getPubsubPeers();
+        List<Peer> peers = peers1.getPubsubPeers();
 
             peers.sort(Peer::compareTo);
 
@@ -364,7 +361,7 @@ public class GatewayService {
 
                 if (ipfs.isConnected(pubsub.getPID())) {
                     counter.incrementAndGet();
-                    threads.setTimestamp(pubsub, System.currentTimeMillis());
+                    peers1.setTimestamp(pubsub, System.currentTimeMillis());
                     connected.add(pubsub);
 
                 } else {
@@ -374,19 +371,19 @@ public class GatewayService {
 
                     if (ipfs.swarmConnect(ma, timeout)) {
                         counter.incrementAndGet();
-                        threads.setTimestamp(pubsub, System.currentTimeMillis());
+                        peers1.setTimestamp(pubsub, System.currentTimeMillis());
                         connected.add(pubsub);
                     } else {
                         if (Network.isConnected(context)) {
 
                             if (lifeTimeExpired(pubsub)) {
-                                threads.removePeer(ipfs, pubsub);
+                                peers1.removePeer(ipfs, pubsub);
                             }
                         }
                     }
                 }
             }
-        }
+
         return connected;
     }
 
@@ -404,14 +401,13 @@ public class GatewayService {
         }
 
 
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        final PEERS threads = Singleton.getInstance(context).getPeers();
+        final IPFS ipfs = IPFS.getInstance(context);
+        final PEERS peers1 = PEERS.getInstance(context);
 
         final AtomicInteger counter = new AtomicInteger(0);
 
-        if (ipfs != null) {
 
-            List<Peer> peers = threads.getRelayPeers();
+        List<Peer> peers = peers1.getRelayPeers();
 
             peers.sort(Peer::compareTo);
 
@@ -423,7 +419,7 @@ public class GatewayService {
 
                 if (ipfs.isConnected(relay.getPID())) {
                     counter.incrementAndGet();
-                    threads.setTimestamp(relay, System.currentTimeMillis());
+                    peers1.setTimestamp(relay, System.currentTimeMillis());
                     if (!tag.isEmpty()) {
                         ipfs.protectPeer(relay.getPID(), tag);
                     }
@@ -435,7 +431,7 @@ public class GatewayService {
 
                     if (ipfs.swarmConnect(ma, timeout)) {
                         counter.incrementAndGet();
-                        threads.setTimestamp(relay, System.currentTimeMillis());
+                        peers1.setTimestamp(relay, System.currentTimeMillis());
                         if (!tag.isEmpty()) {
                             ipfs.protectPeer(relay.getPID(), tag);
                         }
@@ -444,13 +440,13 @@ public class GatewayService {
 
                         if (Network.isConnected(context)) {
                             if (lifeTimeExpired(relay)) {
-                                threads.removePeer(ipfs, relay);
+                                peers1.removePeer(ipfs, relay);
                             }
                         }
                     }
                 }
             }
-        }
+
         return connected;
     }
 
@@ -465,13 +461,11 @@ public class GatewayService {
             return connected;
         }
 
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
-        final PEERS threads = Singleton.getInstance(context).getPeers();
+        final IPFS ipfs = IPFS.getInstance(context);
+        final PEERS peers1 = PEERS.getInstance(context);
 
 
-        if (ipfs != null) {
-
-            List<Peer> peers = threads.getPeers();
+        List<Peer> peers = peers1.getPeers();
 
             peers.sort(Peer::compareTo);
 
@@ -484,7 +478,7 @@ public class GatewayService {
 
                     if (!ipfs.swarmConnect(ma, timeout)) {
                         if (Network.isConnected(context)) {
-                            threads.removePeer(ipfs, peer);
+                            peers1.removePeer(ipfs, peer);
                         }
                     } else {
                         connected.add(peer);
@@ -493,7 +487,7 @@ public class GatewayService {
                     connected.add(peer);
                 }
             }
-        }
+
         return connected;
     }
 

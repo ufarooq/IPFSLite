@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.Singleton;
 import threads.core.peers.PEERS;
 import threads.core.peers.User;
 
@@ -74,7 +73,7 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
         contactsViewAdapter = new ContactsViewAdapter(getActivity(), this);
         recycler_view_contact_list.setAdapter(contactsViewAdapter);
 
-        final PEERS peers = Singleton.getInstance(mContext).getPeers();
+        final PEERS peers = PEERS.getInstance(mContext);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {

@@ -15,7 +15,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import threads.core.Preferences;
-import threads.core.Singleton;
 import threads.core.contents.CDS;
 import threads.core.contents.Content;
 import threads.core.contents.ContentEntry;
@@ -64,9 +63,9 @@ public class ContentsService {
         checkNotNull(context);
 
         final CDS contentService = CDS.getInstance(context);
-        final PEERS threads = Singleton.getInstance(context).getPeers();
+        final PEERS threads = PEERS.getInstance(context);
 
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final IPFS ipfs = IPFS.getInstance(context);
         final PID host = IPFS.getPID(context);
 
         try {
@@ -148,9 +147,8 @@ public class ContentsService {
         checkNotNull(cid);
 
 
-        final PEERS peers = Singleton.getInstance(context).getPeers();
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-        final EVENTS events = Singleton.getInstance(context).getEvents();
+        final PEERS peers = PEERS.getInstance(context);
+        final EVENTS events = EVENTS.getInstance(context);
         try {
 
             User user = peers.getUserByPID(sender);
@@ -184,8 +182,8 @@ public class ContentsService {
             @Nullable String mimeType,
             @Nullable CID thumbnail) {
 
-        final THREADS threads = Singleton.getInstance(context).getThreads();
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final THREADS threads = THREADS.getInstance(context);
+        final IPFS ipfs = IPFS.getInstance(context);
         checkNotNull(ipfs, "IPFS not valid");
         List<Thread> entries = threads.getThreadsByCIDAndThread(cid, 0L);
 
@@ -202,7 +200,7 @@ public class ContentsService {
     private static CID downloadImage(@NonNull Context context,
                                      @NonNull String image) {
 
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final IPFS ipfs = IPFS.getInstance(context);
         final int timeout = Preferences.getConnectionTimeout(context);
 
         if (ipfs != null) {
@@ -230,7 +228,7 @@ public class ContentsService {
     private static Contents downloadContents(@NonNull Context context,
                                              @NonNull CID cid) {
         final Gson gson = new Gson();
-        final IPFS ipfs = Singleton.getInstance(context).getIpfs();
+        final IPFS ipfs = IPFS.getInstance(context);
         final int timeout = Preferences.getConnectionTimeout(context);
 
         if (ipfs != null) {
@@ -256,15 +254,15 @@ public class ContentsService {
         checkNotNull(cid);
 
         final CDS contentService = CDS.getInstance(context);
-        final PEERS threads = Singleton.getInstance(context).getPeers();
+        final PEERS peers = PEERS.getInstance(context);
 
 
         boolean success = false;
         try {
 
-            if (threads.existsUser(pid)) {
+            if (peers.existsUser(pid)) {
 
-                if (!threads.isUserBlocked(pid)) {
+                if (!peers.isUserBlocked(pid)) {
 
                     SwarmService.ConnectInfo info = SwarmService.connect(context, pid);
                     success = info.isConnected();

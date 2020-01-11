@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.Singleton;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.PID;
 import threads.ipfs.api.Peer;
@@ -71,7 +70,7 @@ public class JobServiceFindPeers extends JobService {
 
                 Service.getInstance(getApplicationContext());
 
-                IPFS ipfs = Singleton.getInstance(getApplicationContext()).getIpfs();
+                IPFS ipfs = IPFS.getInstance(getApplicationContext());
                 checkNotNull(ipfs, "IPFS not defined");
 
 
