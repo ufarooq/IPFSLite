@@ -364,11 +364,11 @@ public class ThumbnailService {
         if (bytes != null) {
             final IPFS ipfs = IPFS.getInstance(context);
 
-                try {
-                    cid = ipfs.storeData(bytes);
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
+            try {
+                cid = ipfs.storeData(bytes);
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
 
         }
         if (cid == null) {

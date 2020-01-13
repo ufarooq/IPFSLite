@@ -25,7 +25,7 @@ class ProgressChannel {
                 CharSequence name = context.getString(R.string.channel_name);
                 String description = context.getString(R.string.channel_description);
                 NotificationChannel mChannel = new NotificationChannel(CHANNEL_ID, name,
-                        NotificationManager.IMPORTANCE_LOW);
+                        NotificationManager.IMPORTANCE_HIGH);
                 mChannel.setDescription(description);
 
                 NotificationManager notificationManager = (NotificationManager) context.getSystemService(
@@ -41,8 +41,8 @@ class ProgressChannel {
     }
 
 
-    static NotificationCompat.Builder createProgressNotification(@NonNull Context context,
-                                                                 @NonNull String content) {
+    static NotificationCompat.Builder createProgressNotification(
+            @NonNull Context context, @NonNull String content) {
         checkNotNull(context);
         checkNotNull(content);
 
@@ -57,7 +57,7 @@ class ProgressChannel {
         builder.setProgress(0, 0, true);
         builder.setAutoCancel(true);
         builder.setContentText(content);
-        builder.setPriority(NotificationManager.IMPORTANCE_DEFAULT);
+        builder.setPriority(NotificationManager.IMPORTANCE_HIGH);
         builder.setSmallIcon(R.drawable.server_network);
         return builder;
     }

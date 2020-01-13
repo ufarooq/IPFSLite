@@ -10,29 +10,24 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class MimeTypeService {
 
-    public static String getCompactString(@NonNull String title) {
-        checkNotNull(title);
-        return title.replace("\n", " ");
-    }
-
 
     public static int getMediaResource(@NonNull String mimeType) {
         checkNotNull(mimeType);
         if (!mimeType.isEmpty()) {
-
+            if (mimeType.equals(MimeType.OCTET_MIME_TYPE)) {
+                return R.drawable.file_star;
+            }
             if (mimeType.equals(MimeType.PLAIN_MIME_TYPE)) {
+                return R.drawable.text_file;
+            }
+            if (mimeType.startsWith("text")) {
                 return R.drawable.text_file;
             }
             if (mimeType.equals(MimeType.PDF_MIME_TYPE)) {
                 return R.drawable.text_pdf;
             }
-
             if (mimeType.equals(DocumentsContract.Document.MIME_TYPE_DIR)) {
                 return R.drawable.text_folder;
-            }
-            // todo
-            if (mimeType.equals("qr_code")) {
-                return R.drawable.text_qrcode;
             }
             if (mimeType.startsWith("video")) {
                 return R.drawable.text_video;
@@ -46,9 +41,10 @@ public class MimeTypeService {
             if (mimeType.equals(MimeType.TORRENT_MIME_TYPE)) {
                 return R.drawable.text_torrent;
             }
+            return R.drawable.file_star;
         }
 
-        return R.drawable.text_file;
+        return R.drawable.settings;
 
     }
 }

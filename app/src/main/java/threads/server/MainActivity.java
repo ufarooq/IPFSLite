@@ -198,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             OutputStream os = getContentResolver().openOutputStream(uri);
                             if (os != null) {
                                 try {
-                                    ipfs.storeToOutputStream(threadContent, os);
+                                    ipfs.storeToOutputStream(os, threadContent);
                                 } catch (Throwable e) {
                                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                                 } finally {
@@ -228,26 +228,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
 
-                IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
-                if (result != null) {
-                    if (result.getContents() != null) {
-                        String multihash = result.getContents();
+            IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+            if (result != null) {
+                if (result.getContents() != null) {
+                    String multihash = result.getContents();
 
-                        if (SystemClock.elapsedRealtime() - mLastClickTime < 2000) {
-                            return;
-                        }
-                        mLastClickTime = SystemClock.elapsedRealtime();
-
-
-                        if (!idScan.get()) {
-                            downloadMultihash(multihash);
-                        } else {
-                            clickConnectPeer(multihash);
-                        }
+                    if (SystemClock.elapsedRealtime() - mLastClickTime < 2000) {
+                        return;
                     }
-                } else {
-                    super.onActivityResult(requestCode, resultCode, data);
+                    mLastClickTime = SystemClock.elapsedRealtime();
+
+
+                    if (!idScan.get()) {
+                        downloadMultihash(multihash);
+                    } else {
+                        clickConnectPeer(multihash);
+                    }
                 }
+            } else {
+                super.onActivityResult(requestCode, resultCode, data);
+            }
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);

@@ -143,7 +143,7 @@ public class IPFS implements Listener {
         pid = config.getIdentity().getPID();
     }
 
-    public static void setPID(@NonNull Context context, @NonNull PID pid) {
+    private static void setPID(@NonNull Context context, @NonNull PID pid) {
         checkNotNull(context);
         checkNotNull(pid);
         checkArgument(!pid.getPid().isEmpty());
@@ -1341,11 +1341,11 @@ public class IPFS implements Listener {
         return true;
     }
 
-    public boolean storeToFile(@NonNull File file,
-                               @NonNull CID cid,
-                               @NonNull Progress progress,
-                               boolean offline, int timeout,
-                               long size) {
+    public boolean loadToFile(@NonNull File file,
+                              @NonNull CID cid,
+                              @NonNull Progress progress,
+                              int timeout,
+                              long size) {
         checkNotNull(file);
         checkNotNull(cid);
         checkNotNull(progress);
@@ -1367,7 +1367,7 @@ public class IPFS implements Listener {
         }
 
         try (FileOutputStream outputStream = new FileOutputStream(file)) {
-            return stream(outputStream, progress, cid, "", offline, timeout, size);
+            return stream(outputStream, progress, cid, "", false, timeout, size);
         } catch (Throwable e) {
             evaluateException(e);
             return false;
@@ -1375,7 +1375,7 @@ public class IPFS implements Listener {
     }
 
 
-    public void storeToOutputStream(@NonNull CID cid, @NonNull OutputStream os) throws Exception {
+    public void storeToOutputStream(@NonNull OutputStream os, @NonNull CID cid) throws Exception {
         checkNotNull(cid);
         checkNotNull(os);
         Reader reader = getReader(cid, true);
@@ -1474,7 +1474,7 @@ public class IPFS implements Listener {
         }
 
         try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
-            stream(fileOutputStream, cid);
+            storeToOutputStream(fileOutputStream, cid);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }

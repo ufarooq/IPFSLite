@@ -207,6 +207,9 @@ public class UploaderActivity extends Activity {
                     }
                 } catch (Throwable e) {
                     threads.setThreadStatus(idx, Status.ERROR);
+                    if (notificationManager != null) {
+                        notificationManager.cancel(notifyID);
+                    }
                     throw e;
                 } finally {
                     threads.setThreadLeaching(idx, false);
@@ -281,6 +284,10 @@ public class UploaderActivity extends Activity {
 
                 } catch (Throwable e) {
                     threads.setThreadStatus(idx, Status.ERROR);
+                    if (notificationManager != null) {
+                        notificationManager.cancel(notifyID);
+                    }
+
                 } finally {
                     threads.setThreadLeaching(idx, false);
                 }

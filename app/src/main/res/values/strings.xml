@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">IPFS Lite</string>
-    <string name="channel_name">Download Notifications</string>
-    <string name="channel_description">For normal notifications like download</string>
+    <string name="channel_name">Storage Notifications</string>
+    <string name="channel_description">For upload and download notifications</string>
     <string name="daemon_channel_name">Daemon Notifications</string>
     <string name="daemon_channel_description">Notification that the daemon has started</string>
     <string name="daemon_title">IPFS Lite daemon is running forever &#8230;</string>

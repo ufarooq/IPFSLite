@@ -74,24 +74,6 @@ public class Preferences {
 
 
     @NonNull
-    public static String getAudioCodec(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getString(AUDIO_CODEC_KEY, "opus");
-    }
-
-    public static void setAudioCodec(@NonNull Context context, @NonNull String codec) {
-        checkNotNull(context);
-        checkNotNull(codec);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                PREF_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(AUDIO_CODEC_KEY, codec);
-        editor.apply();
-    }
-
-    @NonNull
     public static String getVideoCodec(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(
@@ -233,12 +215,6 @@ public class Preferences {
         } else {
             return android.text.format.DateFormat.format("HH:mm", date).toString();
         }
-    }
-
-    @NonNull
-    public static String getCompactString(@NonNull String title) {
-        checkNotNull(title);
-        return title.replace("\n", " ");
     }
 
 

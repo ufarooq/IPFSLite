@@ -34,6 +34,8 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import threads.core.threads.THREADS;
 import threads.core.threads.Thread;
@@ -43,6 +45,7 @@ import threads.ipfs.api.Multihash;
 import threads.server.BuildConfig;
 import threads.server.R;
 
+import static android.os.ParcelFileDescriptor.MODE_READ_ONLY;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class FileDocumentsProvider extends DocumentsProvider {
@@ -108,10 +111,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
             BitMatrix bitMatrix = multiFormatWriter.encode(hash,
                     BarcodeFormat.QR_CODE, QR_CODE_SIZE, QR_CODE_SIZE);
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
-            Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
-
-
-            return bitmap;
+            return barcodeEncoder.createBitmap(bitMatrix);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }
@@ -242,8 +242,21 @@ public class FileDocumentsProvider extends DocumentsProvider {
             throw new FileNotFoundException();
         }
         try {
-            final ParcelFileDescriptor pfd = ParcelFileDescriptorUtil.pipeFrom(ipfs, cid);
-            return new AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH);
+            File impl = new File(ipfs.getCacheDir(), cid.getCid());
+
+            if (!impl.exists()) {
+                ipfs.storeToFile(impl, cid);
+            }
+
+            if (signal != null) {
+                if (signal.isCanceled()) {
+                    return null;
+                }
+            }
+            ParcelFileDescriptor pfd = ParcelFileDescriptor.open(impl, MODE_READ_ONLY);
+            return new AssetFileDescriptor(pfd, 0, impl.length());
+            //final ParcelFileDescriptor pfd = ParcelFileDescriptorUtil.pipeFrom(ipfs, cid);
+            //return new AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH);
 
         } catch (Throwable e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
@@ -395,7 +408,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
             }
             try {
 
-                File impl = new File(ipfs.getCacheDir(), "" + idx);
+                File impl = new File(ipfs.getCacheDir(), cid.getCid());
 
                 if (!impl.exists()) {
                     ipfs.storeToFile(impl, cid);
@@ -456,15 +469,19 @@ public class FileDocumentsProvider extends DocumentsProvider {
 
     private static class ParcelFileDescriptorUtil {
 
-        public static ParcelFileDescriptor pipeFrom(IPFS ipfs, CID cid)
+        static ParcelFileDescriptor pipeFrom(IPFS ipfs, CID cid)
                 throws Exception {
             final ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
-            try (OutputStream output =
-                         new ParcelFileDescriptor.AutoCloseOutputStream(pipe[1])) {
-                ipfs.storeToOutputStream(cid, output);
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try (OutputStream output =
+                             new ParcelFileDescriptor.AutoCloseOutputStream(pipe[1])) {
+                    ipfs.storeToOutputStream(output, cid);
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            });
             return pipe[0];
         }
     }

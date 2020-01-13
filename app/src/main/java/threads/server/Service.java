@@ -782,8 +782,6 @@ public class Service {
     }
 
 
-
-
     private static void cleanStates(@NonNull Context context) {
         checkNotNull(context);
 
@@ -799,44 +797,6 @@ public class Service {
             threads.setThreadStatus(Status.INIT, Status.ERROR);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
-    }
-
-    private static void createHost(@NonNull Context context) {
-        checkNotNull(context);
-
-
-        PEERS peers = PEERS.getInstance(context);
-        IPFS ipfs = IPFS.getInstance(context);
-        EVENTS events = EVENTS.getInstance(context);
-
-
-        try {
-            PID pid = IPFS.getPID(context);
-            checkNotNull(pid);
-
-            User user = peers.getUserByPID(pid);
-            if (user == null) {
-                String publicKey = ipfs.getPublicKey();
-
-                CID image = ThumbnailService.getImage(
-                        context, pid.getPid(), R.drawable.server_network);
-
-
-                user = peers.createUser(pid, publicKey, IPFS.getDeviceName(),
-                        UserType.VERIFIED, image);
-                user.setBlocked(true);
-                peers.storeUser(user);
-
-
-                JobServiceIdentity.identity(context);
-
-            } else {
-                peers.blockUser(pid);
-            }
-        } catch (Throwable e) {
-            Preferences.evaluateException(events, Preferences.EXCEPTION, e);
         }
 
     }
@@ -994,7 +954,7 @@ public class Service {
             threads.setThreadLeaching(thread.getIdx(), true);
             int timeout = Preferences.getConnectionTimeout(context);
             File file = ipfs.getTempCacheFile();
-            success = ipfs.storeToFile(file, cid,
+            success = ipfs.loadToFile(file, cid,
                     (percent) -> {
 
                         builder.setProgress(100, percent, false);
@@ -1003,7 +963,7 @@ public class Service {
                         }
 
 
-                    }, false, timeout, size);
+                    }, timeout, size);
 
             if (success) {
                 // Now check if MIME TYPE of thread can be re-evaluated
@@ -1257,15 +1217,13 @@ public class Service {
         checkNotNull(context);
 
         try {
-            final PID host = IPFS.getPID(context);
+
             final PEERS peers = PEERS.getInstance(context);
 
             final IPFS ipfs = IPFS.getInstance(context);
 
-
             List<PID> users = peers.getUsersPIDs();
 
-            users.remove(host);
 
             for (PID user : users) {
                 if (!peers.isUserBlocked(user) && !peers.getUserDialing(user)) {
@@ -1536,7 +1494,6 @@ public class Service {
         new java.lang.Thread(() -> {
             try {
                 Service.cleanStates(context);
-                Service.createHost(context);
                 Service.checkNotifications(context);
                 Service.peersOnlineStatus(context);
             } catch (Throwable e) {
@@ -1553,8 +1510,9 @@ public class Service {
             final PEERS peers = PEERS.getInstance(context);
             final EVENTS events = EVENTS.getInstance(context);
 
-
             try {
+
+                final PID host = IPFS.getPID(context);
                 IPFS.setPubsubHandler((message) -> {
                     try {
 
@@ -1563,7 +1521,7 @@ public class Service {
                         PID senderPid = PID.create(sender);
 
 
-                        if (!peers.isUserBlocked(senderPid)) {
+                        if (!senderPid.equals(host) && !peers.isUserBlocked(senderPid)) {
 
                             String code = message.getMessage().trim();
 
