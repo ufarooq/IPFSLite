@@ -10,7 +10,6 @@ import com.google.common.collect.Iterables;
 import java.util.Date;
 import java.util.List;
 
-import threads.core.peers.User;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
 import threads.ipfs.api.Multihash;
@@ -109,20 +108,22 @@ public class ThreadsAPI {
 
 
     @NonNull
-    public Thread createThread(@NonNull User user,
+    public Thread createThread(@NonNull PID creatorPid,
+                               @NonNull String alias,
                                @NonNull Status status,
                                @NonNull Kind kind,
                                long thread) {
 
-        checkNotNull(user);
+        checkNotNull(creatorPid);
+        checkNotNull(alias);
         checkNotNull(status);
         checkNotNull(kind);
         checkArgument(thread >= 0);
         return createThread(
                 status,
                 kind,
-                user.getPID(),
-                user.getAlias(),
+                creatorPid,
+                alias,
                 thread);
 
     }
@@ -257,16 +258,14 @@ public class ThreadsAPI {
         return getThreadsDatabase().threadDao().isPinned(idx);
     }
 
-    public void setCID(@NonNull Thread thread, @NonNull CID cid) {
-        checkNotNull(thread);
-        checkNotNull(cid);
-        Multihash.fromBase58(cid.getCid()); // check if cid  is valid (otherwise exception)
-        getThreadsDatabase().threadDao().setContent(thread.getIdx(), cid);
-
+    public void setThreadName(long idx, @NonNull String name) {
+        checkNotNull(name);
+        getThreadsDatabase().threadDao().setName(idx, name);
     }
 
-    public void setThreadCID(long idx, @NonNull CID cid) {
+    public void setThreadContent(long idx, @NonNull CID cid) {
         checkNotNull(cid);
+        Multihash.fromBase58(cid.getCid());
         getThreadsDatabase().threadDao().setContent(idx, cid);
     }
 

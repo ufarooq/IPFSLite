@@ -162,9 +162,9 @@
 
         <Spinner
             android:id="@+id/publisher_gateways"
-            android:layout_margin="16dp"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp" />
 
         <TextView
             android:id="@+id/publisher_service_time_text"
@@ -234,6 +234,7 @@
             android:layout_marginRight="16dp"
             android:padding="8dp"
             android:text="@string/receive_notifications_enabled" />
+
         <TextView
             android:id="@+id/connection_timeout_text"
             android:layout_width="match_parent"
@@ -257,6 +258,7 @@
             android:layout_marginRight="16dp"
             android:padding="8dp"
             android:text="@string/support_automatic_download" />
+
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"

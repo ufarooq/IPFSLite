@@ -18,8 +18,8 @@
             android:layout_margin="16dp"
             android:layout_weight="1"
             android:drawableTop="@drawable/action_scan_code"
-            android:drawableTint="?android:textColorSecondary"
             android:drawablePadding="8dp"
+            android:drawableTint="?android:textColorSecondary"
             android:singleLine="true"
             android:text="@string/action_scan_peer"
             android:textAlignment="center" />
@@ -31,8 +31,8 @@
             android:layout_margin="16dp"
             android:layout_weight="1"
             android:drawableTop="@drawable/action_edit_code"
-            android:drawableTint="?android:textColorSecondary"
             android:drawablePadding="8dp"
+            android:drawableTint="?android:textColorSecondary"
             android:singleLine="true"
             android:text="@string/action_edit_peer"
             android:textAlignment="center" />
@@ -44,8 +44,8 @@
             android:layout_margin="16dp"
             android:layout_weight="1"
             android:drawableTop="@drawable/action_peer_info"
-            android:drawableTint="?android:textColorSecondary"
             android:drawablePadding="8dp"
+            android:drawableTint="?android:textColorSecondary"
             android:singleLine="true"
             android:text="@string/action_your_peer"
             android:textAlignment="center" />

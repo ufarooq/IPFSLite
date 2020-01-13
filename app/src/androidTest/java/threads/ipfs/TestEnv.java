@@ -29,15 +29,13 @@ public class TestEnv {
 
             }
         });
+
+        long time = System.currentTimeMillis();
+        IPFS.setPubsubEnabled(context, true);
         IPFS ipfs = IPFS.getInstance(context);
 
-
-        if (!ipfs.isDaemonRunning()) {
-
-            long time = System.currentTimeMillis();
-            ipfs.daemon(true);
-            Log.e(TAG, "Time Daemon : " + (System.currentTimeMillis() - time));
-        } else {
+        Log.e(TAG, "Time Daemon : " + (System.currentTimeMillis() - time));
+        if (ipfs.isDaemonRunning()) {
             ipfs.gc();
             ipfs.cleanCacheDir();
             ipfs.logBaseDir();

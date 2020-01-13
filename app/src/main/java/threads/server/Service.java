@@ -1,15 +1,11 @@
 package threads.server;
 
-import android.app.DownloadManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.Build;
-import android.os.Environment;
 import android.provider.DocumentsContract;
-import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
@@ -20,13 +16,9 @@ import androidx.core.app.NotificationCompat;
 import com.google.gson.Gson;
 import com.j256.simplemagic.ContentInfo;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -588,7 +580,8 @@ public class Service {
 
     private static void runUpdatesIfNecessary(@NonNull Context context) {
         try {
-            int versionCode = context.getPackageManager().getPackageInfo(context.getPackageName(), 0).versionCode;
+            int versionCode = context.getPackageManager().getPackageInfo(
+                    context.getPackageName(), 0).versionCode;
             SharedPreferences prefs = context.getSharedPreferences(
                     APP_KEY, Context.MODE_PRIVATE);
             if (prefs.getInt(UPDATE, 0) != versionCode) {
@@ -789,39 +782,7 @@ public class Service {
     }
 
 
-    private static String getDeviceName() {
-        try {
-            String manufacturer = Build.MANUFACTURER;
-            String model = Build.MODEL;
-            if (model.startsWith(manufacturer)) {
-                return capitalize(model);
-            }
-            return capitalize(manufacturer) + " " + model;
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-        return "";
-    }
 
-    private static String capitalize(String str) {
-        if (TextUtils.isEmpty(str)) {
-            return str;
-        }
-        char[] arr = str.toCharArray();
-        boolean capitalizeNext = true;
-        String phrase = "";
-        for (char c : arr) {
-            if (capitalizeNext && Character.isLetter(c)) {
-                phrase = phrase.concat("" + Character.toUpperCase(c));
-                capitalizeNext = false;
-                continue;
-            } else if (Character.isWhitespace(c)) {
-                capitalizeNext = true;
-            }
-            phrase = phrase.concat("" + c);
-        }
-        return phrase;
-    }
 
     private static void cleanStates(@NonNull Context context) {
         checkNotNull(context);
@@ -863,7 +824,7 @@ public class Service {
                         context, pid.getPid(), R.drawable.server_network);
 
 
-                user = peers.createUser(pid, publicKey, getDeviceName(),
+                user = peers.createUser(pid, publicKey, IPFS.getDeviceName(),
                         UserType.VERIFIED, image);
                 user.setBlocked(true);
                 peers.storeUser(user);
@@ -918,7 +879,8 @@ public class Service {
         User user = peers.getUserByPID(creator);
         checkNotNull(user);
 
-        Thread thread = threads.createThread(user, Status.INIT, Kind.OUT, parent);
+        Thread thread = threads.createThread(user.getPID(), user.getAlias(),
+                Status.INIT, Kind.OUT, parent);
         thread.setContent(cid);
         String filename = link.getName();
         thread.setName(filename);
@@ -955,7 +917,8 @@ public class Service {
         final THREADS threads = THREADS.getInstance(context);
 
 
-        Thread thread = threads.createThread(creator, threadStatus, Kind.OUT, 0L);
+        Thread thread = threads.createThread(creator.getPID(),
+                creator.getAlias(), threadStatus, Kind.OUT, 0L);
         thread.setContent(cid);
 
 
@@ -977,95 +940,6 @@ public class Service {
         thread.setSize(filesize);
         thread.setThumbnail(image);
         return threads.storeThread(thread);
-    }
-
-    static void localDownloadThread(@NonNull Context context, long idx) {
-        checkNotNull(context);
-        try {
-            final THREADS threadsAPI = THREADS.getInstance(context);
-            final DownloadManager downloadManager = (DownloadManager)
-                    context.getSystemService(Context.DOWNLOAD_SERVICE);
-            checkNotNull(downloadManager);
-
-            final IPFS ipfs = IPFS.getInstance(context);
-            final EVENTS events = EVENTS.getInstance(context);
-
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    Thread threadObject = threadsAPI.getThreadByIdx(idx);
-                    checkNotNull(threadObject);
-
-                    CID cid = threadObject.getContent();
-                    checkNotNull(cid);
-
-                    int timeout = Preferences.getConnectionTimeout(context);
-
-                    String name = threadObject.getName();
-                    long size = -1;
-                    try {
-                        size = threadObject.getSize();
-                    } catch (Throwable e) {
-                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    }
-
-                    File dir = Environment.getExternalStoragePublicDirectory(
-                            Environment.DIRECTORY_DOWNLOADS);
-                    File file = new File(dir, name);
-
-
-                    NotificationCompat.Builder builder =
-                            ProgressChannel.createProgressNotification(
-                                    context, name);
-
-                    final NotificationManager notificationManager = (NotificationManager)
-                            context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-                    int notifyID = cid.hashCode();
-                    Notification notification = builder.build();
-                    if (notificationManager != null) {
-                        notificationManager.notify(notifyID, notification);
-                    }
-
-                    try {
-                        boolean finished = ipfs.storeToFile(file, cid,
-                                (percent) -> {
-
-                                    builder.setProgress(100, percent, false);
-                                    if (notificationManager != null) {
-                                        notificationManager.notify(notifyID, builder.build());
-                                    }
-
-
-                                }, false, timeout, size);
-
-                        if (finished) {
-                            String mimeType = threadObject.getMimeType();
-                            checkNotNull(mimeType);
-
-                            downloadManager.addCompletedDownload(file.getName(),
-                                    file.getName(), true,
-                                    mimeType,
-                                    file.getAbsolutePath(),
-                                    file.length(), true);
-                        }
-                    } catch (Throwable e) {
-                        Preferences.evaluateException(events, Preferences.EXCEPTION, e);
-                    } finally {
-
-                        if (notificationManager != null) {
-                            notificationManager.cancel(notifyID);
-                        }
-                    }
-
-                } catch (Throwable e) {
-                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
-                }
-            });
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
     }
 
     private static boolean downloadThread(@NonNull Context context,
@@ -1418,73 +1292,6 @@ public class Service {
         }
     }
 
-    void storeData(@NonNull Context context, @NonNull String text) {
-        checkNotNull(context);
-        checkNotNull(text);
-
-        final THREADS threads = THREADS.getInstance(context);
-
-        final EVENTS events = EVENTS.getInstance(context);
-
-        final IPFS ipfs = IPFS.getInstance(context);
-        final PEERS peers = PEERS.getInstance(context);
-
-
-        UPLOAD_SERVICE.submit(() -> {
-            try {
-
-                PID pid = IPFS.getPID(context);
-                checkNotNull(pid);
-                User host = peers.getUserByPID(pid);
-                checkNotNull(host);
-
-                String content;
-                String mimeType = MimeType.PLAIN_MIME_TYPE;
-                try {
-
-                    URL url = new URL(text);
-                    mimeType = MimeType.LINK_MIME_TYPE;
-                    content = url.toString();
-                } catch (MalformedURLException e) {
-                    content = StringUtils.substring(text, 0, 80);
-                }
-
-                long size = text.length();
-
-                Thread thread = threads.createThread(host, Status.INIT, Kind.IN, 0L);
-                thread.setName(content);
-                thread.setSize(size);
-                thread.setMimeType(mimeType);
-
-                long idx = threads.storeThread(thread);
-
-
-                try {
-                    threads.setThreadLeaching(idx, true);
-
-                    CID cid = ipfs.storeText(text, "", true);
-                    checkNotNull(cid);
-
-
-                    // cleanup of entries with same CID and hierarchy
-                    List<Thread> sameEntries = threads.getThreadsByCIDAndThread(cid, 0L);
-                    threads.removeThreads(ipfs, sameEntries);
-
-
-                    threads.setThreadCID(idx, cid);
-                    threads.setThreadStatus(idx, Status.DONE);
-                } catch (Throwable e) {
-                    threads.setThreadStatus(idx, Status.ERROR);
-                } finally {
-                    threads.setThreadLeaching(idx, false);
-                }
-
-            } catch (Throwable e) {
-                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
-            }
-        });
-
-    }
 
     void storeData(@NonNull Context context, @NonNull Uri uri) {
         checkNotNull(context);
@@ -1511,14 +1318,14 @@ public class Service {
 
                 PID pid = IPFS.getPID(context);
                 checkNotNull(pid);
-                User host = peers.getUserByPID(pid);
-                checkNotNull(host);
+                String alias = IPFS.getDeviceName();
+                checkNotNull(alias);
 
 
                 String name = fileDetails.getFileName();
                 long size = fileDetails.getFileSize();
 
-                Thread thread = threads.createThread(host, Status.INIT, Kind.IN, 0L);
+                Thread thread = threads.createThread(pid, alias, Status.INIT, Kind.IN, 0L);
 
                 ThumbnailService.Result res =
                         ThumbnailService.getThumbnail(context, uri);
@@ -1541,7 +1348,7 @@ public class Service {
                     threads.removeThreads(ipfs, sameEntries);
 
 
-                    threads.setThreadCID(idx, cid);
+                    threads.setThreadContent(idx, cid);
                     threads.setThreadStatus(idx, Status.DONE);
                 } catch (Throwable e) {
                     threads.setThreadStatus(idx, Status.ERROR);
@@ -1742,16 +1549,12 @@ public class Service {
     private void startDaemon(@NonNull Context context) {
         checkNotNull(context);
         try {
-            final IPFS ipfs = IPFS.getInstance(context);
+
             final PEERS peers = PEERS.getInstance(context);
             final EVENTS events = EVENTS.getInstance(context);
 
 
             try {
-
-                boolean pubSubEnabled = IPFS.isPubsubEnabled(context);
-                ipfs.daemon(pubSubEnabled);
-
                 IPFS.setPubsubHandler((message) -> {
                     try {
 

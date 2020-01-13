@@ -1,6 +1,7 @@
 package threads.share;
 
 import android.app.Dialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -8,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,16 +19,14 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.content.FileProvider;
+import androidx.core.app.ShareCompat;
 import androidx.fragment.app.DialogFragment;
-
-import java.io.File;
 
 import threads.core.Preferences;
 import threads.core.events.EVENTS;
-import threads.ipfs.IPFS;
-import threads.ipfs.api.CID;
 import threads.server.R;
+import threads.server.UploaderActivity;
+import threads.server.provider.FileDocumentsProvider;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -60,42 +60,39 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
 
     }
 
-    private static void shareQRCode(@NonNull Context context,
-                                    @NonNull String code,
-                                    @NonNull String message) {
+    private void shareQRCode(@NonNull Context context,
+                             @NonNull String code,
+                             @NonNull String message) {
         checkNotNull(context);
         checkNotNull(code);
         checkNotNull(message);
         try {
-            final int timeout = Preferences.getConnectionTimeout(context);
-            CID bitmap = Preferences.getBitmap(context, code);
-            checkNotNull(bitmap);
 
-            IPFS ipfs = IPFS.getInstance(context);
+            Uri uri = FileDocumentsProvider.getUriForString(code);
+            ComponentName[] names = {new ComponentName(context, UploaderActivity.class)};
 
-            if (ipfs != null) {
+            String mimeType = "image/png";
+            Intent intent = ShareCompat.IntentBuilder.from(getActivity())
+                    .setStream(uri)
+                    .setType(mimeType)
+                    .getIntent();
+            intent.setAction(Intent.ACTION_SEND);
+            intent.putExtra(Intent.EXTRA_SUBJECT, code);
+            intent.putExtra(Intent.EXTRA_TEXT, message);
+            intent.putExtra(Intent.EXTRA_STREAM, uri);
+            intent.setType(mimeType);
+            intent.putExtra(DocumentsContract.EXTRA_EXCLUDE_SELF, true);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
-                File file = new File(ipfs.getCacheDir(), bitmap + ".png");
-
-                if (!file.exists()) {
-                    ipfs.storeToFile(file, bitmap, true, timeout, -1);
-                }
-
-
-                Uri uri = FileProvider.getUriForFile(context,
-                        context.getPackageName() + ".file.provider", file);
-
-                Intent shareIntent = new Intent();
-                shareIntent.setAction(Intent.ACTION_SEND);
-                shareIntent.putExtra(Intent.EXTRA_SUBJECT, code);
-                shareIntent.putExtra(Intent.EXTRA_TEXT, message);
-                shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
-                shareIntent.setType("image/png");
-                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                context.startActivity(Intent.createChooser(shareIntent,
-                        context.getResources().getText(R.string.share)));
-
+            if (intent.resolveActivity(mContext.getPackageManager()) != null) {
+                Intent chooser = Intent.createChooser(intent, getText(R.string.share));
+                chooser.putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, names);
+                startActivity(chooser);
+            } else {
+                Preferences.error(EVENTS.getInstance(context),
+                        getString(R.string.no_activity_found_to_handle_uri));
             }
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -151,22 +148,14 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
             }
         });
 
-
-        CID bitmap = Preferences.getBitmap(mContext, code);
-
-        IPFS ipfs = IPFS.getInstance(mContext);
-        int timeout = Preferences.getConnectionTimeout(mContext);
-
-        final EVENTS events = EVENTS.getInstance(mContext);
-        if (ipfs != null) {
-            try {
-                Bitmap imageBitmap = ThumbnailService.getImage(
-                        ipfs, bitmap, timeout, true);
-                imageView.setImageBitmap(imageBitmap);
-            } catch (Throwable e) {
-                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
-            }
+        try {
+            Bitmap imageBitmap = FileDocumentsProvider.getBitmap(code);
+            imageView.setImageBitmap(imageBitmap);
+        } catch (Throwable e) {
+            Preferences.evaluateException(EVENTS.getInstance(mContext),
+                    Preferences.EXCEPTION, e);
         }
+
 
         return new AlertDialog.Builder(mContext)
                 .setTitle(title)

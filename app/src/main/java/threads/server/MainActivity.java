@@ -2,11 +2,13 @@ package threads.server;
 
 import android.Manifest;
 import android.content.ClipData;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,8 +19,8 @@ import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.ShareCompat;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -35,7 +37,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
-import java.io.File;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -64,6 +66,7 @@ import threads.server.jobs.JobServicePublish;
 import threads.server.mdl.ApplicationViewModel;
 import threads.server.mdl.EventViewModel;
 import threads.server.mdl.SelectionViewModel;
+import threads.server.provider.FileDocumentsProvider;
 import threads.share.ConnectService;
 import threads.share.DetailsDialogFragment;
 import threads.share.DontShowAgainDialog;
@@ -97,15 +100,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private static final int REQUEST_VIDEO_CAPTURE = 1;
     private static final int REQUEST_SELECT_FILES = 4;
-    private static final int REQUEST_EXTERNAL_STORAGE = 5;
-
+    private static final int FILE_EXPORT_REQUEST_CODE = 6;
     private static final int CONTENT_REQUEST_VIDEO_CAPTURE = 9;
     private static final int PEER_REQUEST_VIDEO_CAPTURE = 10;
 
-    private final AtomicReference<Long> storedThread = new AtomicReference<>(null);
     private final AtomicReference<String> storedUser = new AtomicReference<>(null);
     private final AtomicBoolean idScan = new AtomicBoolean(false);
-
+    private CID threadContent = null;
     private DrawerLayout mDrawerLayout;
     private AppBarLayout mAppBarLayout;
 
@@ -121,16 +122,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onRequestPermissionsResult
             (int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
-            case REQUEST_EXTERNAL_STORAGE: {
-                for (int i = 0, len = permissions.length; i < len; i++) {
-
-                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                        Service.localDownloadThread(getApplicationContext(), storedThread.get());
-                    }
-                }
-
-                break;
-            }
             case REQUEST_VIDEO_CAPTURE: {
                 for (int i = 0, len = permissions.length; i < len; i++) {
                     if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
@@ -190,25 +181,53 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (resultCode != RESULT_OK)
+            return;
+
+
         try {
-            if (requestCode == REQUEST_SELECT_FILES && resultCode == RESULT_OK && data != null) {
 
+            switch (requestCode) {
+                case FILE_EXPORT_REQUEST_CODE: {
+                    if (data != null) {
+                        Uri uri = data.getData();
+                        if (uri != null) {
+                            IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
-                if (data.getClipData() != null) {
-                    ClipData mClipData = data.getClipData();
-                    for (int i = 0; i < mClipData.getItemCount(); i++) {
-                        ClipData.Item item = mClipData.getItemAt(i);
-                        Uri uri = item.getUri();
+                            OutputStream os = getContentResolver().openOutputStream(uri);
+                            if (os != null) {
+                                try {
+                                    ipfs.storeToOutputStream(threadContent, os);
+                                } catch (Throwable e) {
+                                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                                } finally {
+                                    os.close();
+                                }
+                            }
+                        }
+                    }
+                    return;
+                }
+                case REQUEST_SELECT_FILES: {
+                    if (data.getClipData() != null) {
+                        ClipData mClipData = data.getClipData();
+                        for (int i = 0; i < mClipData.getItemCount(); i++) {
+                            ClipData.Item item = mClipData.getItemAt(i);
+                            Uri uri = item.getUri();
+                            Service.getInstance(
+                                    getApplicationContext()).storeData(getApplicationContext(), uri);
+                        }
+                    } else if (data.getData() != null) {
+                        Uri uri = data.getData();
                         Service.getInstance(
                                 getApplicationContext()).storeData(getApplicationContext(), uri);
                     }
-                } else if (data.getData() != null) {
-                    Uri uri = data.getData();
-                    Service.getInstance(
-                            getApplicationContext()).storeData(getApplicationContext(), uri);
+                    return;
                 }
+            }
 
-            } else {
+
                 IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
                 if (result != null) {
                     if (result.getContents() != null) {
@@ -229,7 +248,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 } else {
                     super.onActivityResult(requestCode, resultCode, data);
                 }
-            }
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -358,16 +377,26 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickUpload() {
 
         try {
-            Intent intent = new Intent();
+            Intent intent = ShareCompat.IntentBuilder.from(this).getIntent();
+            intent.setAction(Intent.ACTION_CREATE_DOCUMENT);
             intent.setType("*/*");
 
             String[] mimeTypes = {"*/*"};
             intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+            intent.putExtra(DocumentsContract.EXTRA_EXCLUDE_SELF, true);
             intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
-            startActivityForResult(Intent.createChooser(intent,
-                    getString(R.string.select_files)), REQUEST_SELECT_FILES);
+
+
+            if (intent.resolveActivity(getPackageManager()) != null) {
+                startActivityForResult(Intent.createChooser(intent,
+                        getString(R.string.select_files)), REQUEST_SELECT_FILES);
+            } else {
+                Preferences.error(EVENTS.getInstance(getApplicationContext()),
+                        getString(R.string.no_activity_found_to_handle_uri));
+            }
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -640,17 +669,32 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             case R.id.nav_share: {
                 try {
-                    Intent i = new Intent(Intent.ACTION_SEND);
-                    i.setType("text/plain");
-                    i.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name));
+                    ComponentName[] names = {new ComponentName(
+                            getApplicationContext(), MainActivity.class)};
+                    String mimeType = "text/plain";
+                    Intent intent = ShareCompat.IntentBuilder.from(this)
+                            .setType(mimeType)
+                            .getIntent();
+                    intent.setAction(Intent.ACTION_SEND);
+                    intent.setType(mimeType);
+                    intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name));
                     String sAux = "\n" + getString(R.string.store_mail) + "\n\n";
                     if (BuildConfig.FDroid) {
                         sAux = sAux + getString(R.string.fdroid_url) + "\n\n";
                     } else {
                         sAux = sAux + getString(R.string.play_store_url) + "\n\n";
                     }
-                    i.putExtra(Intent.EXTRA_TEXT, sAux);
-                    startActivity(Intent.createChooser(i, getString(R.string.choose_one)));
+                    intent.putExtra(Intent.EXTRA_TEXT, sAux);
+
+                    if (intent.resolveActivity(getPackageManager()) != null) {
+                        Intent chooser = Intent.createChooser(intent, getText(R.string.share));
+                        chooser.putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, names);
+                        startActivity(chooser);
+                    } else {
+                        Preferences.error(EVENTS.getInstance(getApplicationContext()),
+                                getString(R.string.no_activity_found_to_handle_uri));
+                    }
+
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
@@ -880,88 +924,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         });
 
-        handleIntents();
-
 
     }
 
-    private void handleIntents() {
-
-        Intent intent = getIntent();
-        final String action = intent.getAction();
-
-
-        try {
-
-            if (Intent.ACTION_SEND.equals(action)) {
-                String type = intent.getType();
-                if ("text/plain".equals(type)) {
-                    handleSendText(intent);
-                } else {
-                    handleSend(intent, false);
-                }
-            } else if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
-                if (intent.hasExtra(Intent.EXTRA_STREAM)) {
-                    handleSend(intent, true);
-                } else {
-                    String type = intent.getType();
-                    if ("text/plain".equals(type)) {
-                        handleSendText(intent);
-                    } else {
-                        handleSend(intent, true);
-                    }
-                }
-            }
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage());
-        }
-
-
-    }
-
-    private void handleSendText(Intent intent) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-
-            try {
-                String text = intent.getStringExtra(Intent.EXTRA_TEXT);
-                if (text != null) {
-                    Service.getInstance(this).storeData(getApplicationContext(), text);
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        });
-    }
-
-    private void handleSend(Intent intent, boolean multi) {
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-                if (multi) {
-                    ClipData mClipData = intent.getClipData();
-                    if (mClipData != null) {
-                        for (int i = 0; i < mClipData.getItemCount(); i++) {
-                            ClipData.Item item = mClipData.getItemAt(i);
-                            Service.getInstance(this).storeData(getApplicationContext(), item.getUri());
-                        }
-                    } else if (uri != null) {
-                        Service.getInstance(this).storeData(getApplicationContext(), uri);
-                    }
-
-                } else if (uri != null) {
-                    Service.getInstance(this).storeData(getApplicationContext(), uri);
-                }
-
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        });
-    }
 
     private void threadsFabAction() {
         Long idx = mSelectionViewModel.getParentThread().getValue();
@@ -1173,32 +1138,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
-
     @Override
     public void clickThreadInfo(long idx) {
         try {
             final EVENTS events = EVENTS.getInstance(getApplicationContext());
             final THREADS threads = THREADS.getInstance(getApplicationContext());
-            final IPFS ipfs = IPFS.getInstance(getApplicationContext());
-            if (ipfs != null) {
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.submit(() -> {
-                    try {
-                        CID cid = threads.getThreadContent(idx);
-                        checkNotNull(cid);
-                        String multihash = cid.getCid();
 
-                        InfoDialogFragment.newInstance(multihash,
-                                getString(R.string.content_id),
-                                getString(R.string.multihash_access, multihash))
-                                .show(getSupportFragmentManager(), InfoDialogFragment.TAG);
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    CID cid = threads.getThreadContent(idx);
+                    checkNotNull(cid);
+                    String multihash = cid.getCid();
+
+                    InfoDialogFragment.newInstance(multihash,
+                            getString(R.string.content_id),
+                            getString(R.string.multihash_access, multihash))
+                            .show(getSupportFragmentManager(), InfoDialogFragment.TAG);
 
 
-                    } catch (Throwable e) {
-                        Preferences.evaluateException(events, Preferences.EXCEPTION, e);
-                    }
-                });
-            }
+                } catch (Throwable e) {
+                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                }
+            });
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -1312,46 +1275,40 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickThreadShare(long idx) {
         final EVENTS events = EVENTS.getInstance(getApplicationContext());
         final THREADS threads = THREADS.getInstance(getApplicationContext());
-        final IPFS ipfs = IPFS.getInstance(getApplicationContext());
-        final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
-        if (ipfs != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    CID cid = threads.getThreadContent(idx);
-                    checkNotNull(cid);
-                    String multihash = cid.getCid();
 
-                    CID bitmap = Preferences.getBitmap(getApplicationContext(), multihash);
-                    checkNotNull(bitmap);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                Thread thread = threads.getThreadByIdx(idx);
+                checkNotNull(thread);
+                ComponentName[] names = {new ComponentName(
+                        getApplicationContext(), UploaderActivity.class)};
 
-                    File file = new File(ipfs.getCacheDir(), multihash + ".png");
-
-                    if (!file.exists()) {
-                        ipfs.storeToFile(file, bitmap, true, timeout, -1);
-                    }
-
-                    Uri uri = FileProvider.getUriForFile(getApplicationContext(),
-                            getApplicationContext().getPackageName() + ".file.provider", file);
+                Uri uri = FileDocumentsProvider.getUriForThread(thread);
+                Intent intent = ShareCompat.IntentBuilder.from(this)
+                        .setStream(uri)
+                        .setType(thread.getMimeType())
+                        .getIntent();
+                intent.setAction(Intent.ACTION_SEND);
+                intent.setData(uri);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.putExtra(Intent.EXTRA_TITLE, thread.getName());
 
 
-                    Intent shareIntent = new Intent();
-                    shareIntent.setAction(Intent.ACTION_SEND);
-                    shareIntent.putExtra(Intent.EXTRA_SUBJECT, multihash);
-                    shareIntent.putExtra(Intent.EXTRA_TEXT,
-                            getString(R.string.multihash_access, multihash));
-                    shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
-                    shareIntent.setType("image/png");
-                    shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    startActivity(Intent.createChooser(shareIntent,
-                            getResources().getText(R.string.share)));
-
-
-                } catch (Throwable e) {
-                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    Intent chooser = Intent.createChooser(intent, getText(R.string.share));
+                    chooser.putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, names);
+                    startActivity(chooser);
+                } else {
+                    Preferences.error(events,
+                            getString(R.string.no_activity_found_to_handle_uri));
                 }
-            });
-        }
+
+            } catch (Throwable e) {
+                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+            }
+        });
+
 
     }
 
@@ -1362,10 +1319,45 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickThreadDownload(long idx) {
+    public void clickThreadCopy(long idx) {
 
-        storedThread.set(idx);
+
         try {
+            final THREADS threadsAPI = THREADS.getInstance(getApplicationContext());
+            final EVENTS events = EVENTS.getInstance(getApplicationContext());
+
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+
+                Thread thread = threadsAPI.getThreadByIdx(idx);
+                checkNotNull(thread);
+
+                threadContent = thread.getContent();
+                Uri uri = FileDocumentsProvider.getUriForThread(thread);
+                Intent intent = ShareCompat.IntentBuilder.from(this)
+                        //.setStream(uri)
+                        .setType(thread.getMimeType())
+                        .getIntent();
+                intent.setAction(Intent.ACTION_CREATE_DOCUMENT);
+                //intent.setData(uri);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.putExtra(Intent.EXTRA_TITLE, thread.getName());
+                intent.putExtra(DocumentsContract.EXTRA_EXCLUDE_SELF, true);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    startActivityForResult(intent, FILE_EXPORT_REQUEST_CODE);
+                } else {
+                    Preferences.error(events,
+                            getString(R.string.no_activity_found_to_handle_uri));
+                }
+            });
+
+
+
+    /*
             if (ContextCompat.checkSelfPermission(getApplicationContext(),
                     Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -1375,7 +1367,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             } else {
                 Service.localDownloadThread(getApplicationContext(), idx);
-            }
+            }*/
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }

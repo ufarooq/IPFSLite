@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
 import android.database.MatrixCursor;
+import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.CancellationSignal;
@@ -16,11 +17,17 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import org.apache.commons.io.IOUtils;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.common.BitMatrix;
+import com.journeyapps.barcodescanner.BarcodeEncoder;
 
+import org.apache.commons.io.FileUtils;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Comparator;
 import java.util.Date;
@@ -28,14 +35,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 
-import mobile.Reader;
 import threads.core.threads.THREADS;
 import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
 import threads.ipfs.api.CID;
+import threads.ipfs.api.Multihash;
 import threads.server.BuildConfig;
 import threads.server.R;
-import threads.server.Service;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -61,6 +67,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
     };
     private static final int MAX_SEARCH_RESULTS = 20;
     private static final int MAX_LAST_MODIFIED = 5;
+    private static final int QR_CODE_SIZE = 250;
     private THREADS threads;
     private IPFS ipfs;
 
@@ -84,6 +91,30 @@ public class FileDocumentsProvider extends DocumentsProvider {
                 .appendPath("document")
                 .appendPath("" + thread.getIdx());
         return builder.build();
+    }
+
+    public static Uri getUriForString(String hash) {
+        Uri.Builder builder = new Uri.Builder();
+        builder.scheme("content")
+                .authority(BuildConfig.DOCUMENTS_AUTHORITY)
+                .appendPath("document")
+                .appendPath(hash);
+        return builder.build();
+    }
+
+    public static Bitmap getBitmap(@NonNull String hash) {
+        MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
+        try {
+            BitMatrix bitMatrix = multiFormatWriter.encode(hash,
+                    BarcodeFormat.QR_CODE, QR_CODE_SIZE, QR_CODE_SIZE);
+            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
+            Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
+
+
+            return bitmap;
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -222,26 +253,47 @@ public class FileDocumentsProvider extends DocumentsProvider {
     @Override
     public Cursor queryDocument(String docId, String[] projection) throws FileNotFoundException {
 
-        long idx = Long.parseLong(docId);
-
         final MatrixCursor result = new MatrixCursor(resolveDocumentProjection(projection));
-        int flags = 0;
-        if (idx == 0) {
-            final MatrixCursor.RowBuilder row = result.newRow();
-            row.add(Document.COLUMN_DOCUMENT_ID, docId);
-            row.add(Document.COLUMN_DISPLAY_NAME, "ipfs");
-            row.add(Document.COLUMN_SIZE, null); // todo
-            row.add(Document.COLUMN_MIME_TYPE, DocumentsContract.Document.MIME_TYPE_DIR);
-            row.add(Document.COLUMN_LAST_MODIFIED, new Date());
-            row.add(Document.COLUMN_FLAGS, flags);
+
+        try {
+            long idx = Long.parseLong(docId);
+
+            int flags = 0;
+            if (idx == 0) {
+                final MatrixCursor.RowBuilder row = result.newRow();
+                row.add(Document.COLUMN_DOCUMENT_ID, docId);
+                row.add(Document.COLUMN_DISPLAY_NAME, "ipfs");
+                row.add(Document.COLUMN_SIZE, null); // todo
+                row.add(Document.COLUMN_MIME_TYPE, DocumentsContract.Document.MIME_TYPE_DIR);
+                row.add(Document.COLUMN_LAST_MODIFIED, new Date());
+                row.add(Document.COLUMN_FLAGS, flags);
 
 
-        } else {
-            Thread file = threads.getThreadByIdx(idx);
-            if (file == null) {
-                throw new FileNotFoundException();
+            } else {
+                Thread file = threads.getThreadByIdx(idx);
+                if (file == null) {
+                    throw new FileNotFoundException();
+                }
+                includeFile(result, file);
             }
-            includeFile(result, file);
+        } catch (NumberFormatException e) {
+
+            try {
+
+                Multihash.fromBase58(docId);
+
+
+                final MatrixCursor.RowBuilder row = result.newRow();
+                row.add(Document.COLUMN_DOCUMENT_ID, docId);
+                row.add(Document.COLUMN_DISPLAY_NAME, docId);
+                row.add(Document.COLUMN_SIZE, null); // todo
+                row.add(Document.COLUMN_MIME_TYPE, "image/png");
+                row.add(Document.COLUMN_LAST_MODIFIED, new Date());
+                row.add(Document.COLUMN_FLAGS, 0);
+
+            } catch (Throwable throwable) {
+                throw new FileNotFoundException("" + throwable.getLocalizedMessage());
+            }
         }
 
 
@@ -252,15 +304,24 @@ public class FileDocumentsProvider extends DocumentsProvider {
     @Override
     public String getDocumentType(String documentId) throws FileNotFoundException {
 
-        long idx = Long.parseLong(documentId);
-        if (idx == 0) {
-            return Document.MIME_TYPE_DIR;
-        } else {
-            Thread file = threads.getThreadByIdx(idx);
-            if (file == null) {
-                throw new FileNotFoundException();
+        try {
+            long idx = Long.parseLong(documentId);
+            if (idx == 0) {
+                return Document.MIME_TYPE_DIR;
+            } else {
+                Thread file = threads.getThreadByIdx(idx);
+                if (file == null) {
+                    throw new FileNotFoundException();
+                }
+                return file.getMimeType();
             }
-            return file.getMimeType();
+        } catch (NumberFormatException e) {
+            try {
+                Multihash.fromBase58(documentId);
+                return "image/png";
+            } catch (Throwable throwable) {
+                throw new FileNotFoundException("" + throwable.getLocalizedMessage());
+            }
         }
     }
 
@@ -318,78 +379,68 @@ public class FileDocumentsProvider extends DocumentsProvider {
     @Override
     public ParcelFileDescriptor openDocument(String documentId, String mode, @Nullable CancellationSignal signal) throws FileNotFoundException {
 
-        long idx = Long.parseLong(documentId);
-        Thread file = threads.getThreadByIdx(idx);
-
-        if (file == null) {
-            throw new FileNotFoundException("");
-        }
         final int accessMode = ParcelFileDescriptor.parseMode(mode);
 
-        CID cid = file.getContent();
-        if (cid == null) {
-            throw new FileNotFoundException("");
-        }
         try {
-/*
-            File impl = new File(ipfs.getCacheDir(), "" + idx);
+            long idx = Long.parseLong(documentId);
+            Thread file = threads.getThreadByIdx(idx);
 
-
-            storeToFile(impl, cid, signal);
-
-
-            if (signal != null) {
-                if (signal.isCanceled()) {
-                    return null;
-                }
+            if (file == null) {
+                throw new FileNotFoundException("");
             }
-            return ParcelFileDescriptor.open(impl, accessMode);*/
-            return ParcelFileDescriptorUtil.pipeFrom(ipfs, cid);
-        } catch (Throwable e) {
-            Log.e(TAG, e.getLocalizedMessage(), e);
-        }
 
+            CID cid = file.getContent();
+            if (cid == null) {
+                throw new FileNotFoundException("");
+            }
+            try {
+
+                File impl = new File(ipfs.getCacheDir(), "" + idx);
+
+                if (!impl.exists()) {
+                    ipfs.storeToFile(impl, cid);
+                }
+
+                if (signal != null) {
+                    if (signal.isCanceled()) {
+                        return null;
+                    }
+                }
+                return ParcelFileDescriptor.open(impl, accessMode);
+                //return ParcelFileDescriptorUtil.pipeFrom(ipfs, cid);
+            } catch (Throwable e) {
+                Log.e(TAG, e.getLocalizedMessage(), e);
+            }
+        } catch (NumberFormatException e) {
+            try {
+                Multihash.fromBase58(documentId);
+
+                File impl = getBitmapFile(documentId);
+                if (signal != null) {
+                    if (signal.isCanceled()) {
+                        return null;
+                    }
+                }
+                return ParcelFileDescriptor.open(impl, accessMode);
+            } catch (Throwable throwable) {
+                throw new FileNotFoundException("" + throwable.getLocalizedMessage());
+            }
+        }
 
         return null;
     }
 
-
-    private void stream(@NonNull OutputStream outputStream, @NonNull CID cid, @Nullable CancellationSignal signal) {
-        checkNotNull(outputStream);
-        checkNotNull(cid);
-
-        int blockSize = 4096;
-        try {
-            Reader fileReader = ipfs.getReader(cid, true);
-
-            try {
-
-                fileReader.load(blockSize);
-
-                long bytesRead = fileReader.getRead();
-
-
-                while (bytesRead > 0) {
-
-                    if (signal != null) {
-                        if (signal.isCanceled()) {
-                            return;
-                        }
-                    }
-
-                    outputStream.write(fileReader.getData(), 0, (int) bytesRead);
-
-                    fileReader.load(blockSize);
-                    bytesRead = fileReader.getRead();
-                }
-            } finally {
-                fileReader.close();
-            }
-
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
+    private File getBitmapFile(@NonNull String hash) throws IOException {
+        Bitmap bitmap = getBitmap(hash);
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        byte[] bytes = stream.toByteArray();
+        bitmap.recycle();
+        File file = new File(ipfs.getCacheDir(), hash);
+        if (!file.exists()) {
+            FileUtils.writeByteArrayToFile(file, bytes);
         }
-
+        return file;
     }
 
     @Override
@@ -397,105 +448,26 @@ public class FileDocumentsProvider extends DocumentsProvider {
         Context context = getContext();
         checkNotNull(context);
 
-        // TODO remove
-        Service.getInstance(context);
-
-
         threads = THREADS.getInstance(context);
         ipfs = IPFS.getInstance(getContext());
         return true;
     }
+
 
     private static class ParcelFileDescriptorUtil {
 
         public static ParcelFileDescriptor pipeFrom(IPFS ipfs, CID cid)
                 throws Exception {
             final ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
-            final OutputStream output = new ParcelFileDescriptor.AutoCloseOutputStream(pipe[1]);
-
-            new IPFSTransferThread(ipfs, cid, output).start();
-
+            try (OutputStream output =
+                         new ParcelFileDescriptor.AutoCloseOutputStream(pipe[1])) {
+                ipfs.storeToOutputStream(cid, output);
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
             return pipe[0];
         }
-
-        @SuppressWarnings("unused")
-        public static ParcelFileDescriptor pipeTo(OutputStream outputStream)
-                throws IOException {
-            final ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
-            final InputStream input = new ParcelFileDescriptor.AutoCloseInputStream(pipe[0]);
-
-
-            new TransferThread(input, outputStream).start();
-
-            return pipe[1];
-        }
     }
 
-    static class TransferThread extends java.lang.Thread {
-        final InputStream mIn;
-        final OutputStream mOut;
 
-        TransferThread(InputStream in, OutputStream out) {
-            super("ParcelFileDescriptor Transfer Thread");
-            mIn = in;
-            mOut = out;
-        }
-
-        @Override
-        public void run() {
-            try {
-                IOUtils.copy(mIn, mOut);
-            } catch (IOException e) {
-                Log.e(TAG, e.getLocalizedMessage(), e);
-            }
-        }
-    }
-
-    static class IPFSTransferThread extends java.lang.Thread {
-
-        final OutputStream mOut;
-        private final Reader reader;
-
-        IPFSTransferThread(IPFS ipfs, CID cid, OutputStream out) throws Exception {
-            super("ParcelFileDescriptor Transfer Thread");
-            reader = ipfs.getReader(cid, true);
-
-            mOut = out;
-        }
-
-        @Override
-        public void run() {
-            try {
-                int size = 262158;
-
-                reader.load(size);
-                long read = reader.getRead();
-                while (read > 0) {
-                    byte[] data = reader.getData();
-                    mOut.write(data, 0, data.length);
-
-                    reader.load(size);
-                    read = reader.getRead();
-                }
-                Log.e(TAG, "success upload");
-            } catch (Exception e) {
-                Log.e(TAG, e.getLocalizedMessage(), e);
-            } finally {
-                // todo make sure that reader and writer is closed
-                try {
-                    reader.close();
-                } catch (Exception e) {
-                    Log.e(TAG, e.getLocalizedMessage(), e);
-                }
-                try {
-                    mOut.close();
-                } catch (Exception e) {
-                    Log.e(TAG, e.getLocalizedMessage(), e);
-                }
-            }
-            // todo just get input stream from ipfs and close it afterwards
-            // IOUtils.copy(mIn, mOut);
-
-        }
-    }
 }

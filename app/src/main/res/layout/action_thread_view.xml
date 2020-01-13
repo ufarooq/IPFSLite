@@ -90,16 +90,16 @@
 
 
             <TextView
-                android:id="@+id/menu_download"
+                android:id="@+id/menu_copy_to"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
                 android:layout_weight="1"
-                android:drawableTop="@drawable/action_download"
+                android:drawableTop="@drawable/action_copy_to"
                 android:drawablePadding="8dp"
                 android:drawableTint="?android:textColorSecondary"
                 android:singleLine="true"
-                android:text="@string/action_download"
+                android:text="@string/action_copy_to"
                 android:textAlignment="center" />
 
         </TableRow>

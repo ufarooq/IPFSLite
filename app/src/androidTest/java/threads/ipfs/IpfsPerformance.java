@@ -78,7 +78,7 @@ public class IpfsPerformance {
         assertEquals(data.length, size);
 
         File file = ipfs.getTempCacheFile();
-        ipfs.storeToFile(file, cid, true, 10, -1);
+        ipfs.storeToFile(file, cid);
 
         assertEquals(file.length(), size);
 
@@ -121,7 +121,7 @@ public class IpfsPerformance {
         CID cid = ipfs.streamFile(inputFile, true);
         assertNotNull(cid);
         File file = ipfs.getTempCacheFile();
-        ipfs.storeToFile(file, cid, true, 10, -1);
+        ipfs.storeToFile(file, cid);
 
         assertEquals(file.length(), size);
 
@@ -174,14 +174,14 @@ public class IpfsPerformance {
 
         now = System.currentTimeMillis();
         File outputFile1 = ipfs.getTempCacheFile();
-        ipfs.storeToFile(outputFile1, cid, true, 10, -1);
+        ipfs.storeToFile(outputFile1, cid);
         Log.e(TAG, "Cat : " + cid.getCid() +
                 " Time : " + ((System.currentTimeMillis() - now) / 1000) + "[s]");
 
 
         now = System.currentTimeMillis();
         File outputFile2 = ipfs.getTempCacheFile();
-        ipfs.storeToFile(outputFile2, cid, true, 10, -1);
+        ipfs.storeToFile(outputFile2, cid);
         Log.e(TAG, "Cat : " + cid.getCid() +
                 " Time : " + ((System.currentTimeMillis() - now) / 1000) + "[s]");
 

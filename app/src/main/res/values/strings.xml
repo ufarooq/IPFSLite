@@ -44,7 +44,6 @@
     <string name="peer_name">New Peer Name</string>
     <string name="peer_is_blocked">Peer is blocked. Unblock first.</string>
     <string name="user_connect_try">Peer \"%1$s\" connection request.</string>
-    <string name="action_download">Download</string>
     <string name="no_sharing_peers">Currently no peers are available to share data with.</string>
     <string name="select_files">File Chooser</string>
     <string name="action_select_all">Select All</string>
@@ -54,7 +53,7 @@
     <string name="application_settings">Application Settings</string>
     <string name="general_settings">General Settings</string>
     <string name="file_not_supported">File not supported.</string>
-    <string name="no_activity_found_to_handle_uri">No activity found which support the file.</string>
+    <string name="no_activity_found_to_handle_uri">No activity found which support this kind of file.</string>
     <string name="action_scan_cid">Scan CID</string>
     <string name="action_edit_cid">Edit CID</string>
     <string name="action_file_cid">Upload</string>
@@ -135,7 +134,7 @@
     <string name="login_name">Name</string>
     <string name="login_name_error">Please define a name</string>
     <string name="action_copy">Copy</string>
-
+    <string name="action_copy_to">Copy to</string>
     <string name="accept">Accept</string>
     <string name="reject">Reject</string>
     <string name="join_thread">Do you want to join the session?</string>

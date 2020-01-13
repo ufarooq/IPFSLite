@@ -26,13 +26,11 @@ public class MimeTypeService {
             if (mimeType.equals(MimeType.PDF_MIME_TYPE)) {
                 return R.drawable.text_pdf;
             }
-            if (mimeType.equals(MimeType.GEO_MIME_TYPE)) {
-                return R.drawable.text_map_marker;
-            }
 
             if (mimeType.equals(DocumentsContract.Document.MIME_TYPE_DIR)) {
                 return R.drawable.text_folder;
             }
+            // todo
             if (mimeType.equals("qr_code")) {
                 return R.drawable.text_qrcode;
             }
@@ -44,9 +42,6 @@ public class MimeTypeService {
             }
             if (mimeType.startsWith("audio")) {
                 return R.drawable.text_audio;
-            }
-            if (mimeType.equals(MimeType.LINK_MIME_TYPE)) {
-                return R.drawable.text_link_variant;
             }
             if (mimeType.equals(MimeType.TORRENT_MIME_TYPE)) {
                 return R.drawable.text_torrent;

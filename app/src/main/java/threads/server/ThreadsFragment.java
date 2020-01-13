@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -20,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
+import androidx.core.app.ShareCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.Observer;
@@ -51,10 +51,8 @@ import threads.server.jobs.JobServiceLoadNotifications;
 import threads.server.mdl.SelectionViewModel;
 import threads.server.mdl.ThreadViewModel;
 import threads.server.provider.FileDocumentsProvider;
-import threads.share.MimeType;
 import threads.share.Network;
 import threads.share.ThreadActionDialogFragment;
-import threads.share.WebViewDialogFragment;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -567,94 +565,27 @@ public class ThreadsFragment extends Fragment implements
                         CID cid = thread.getContent();
                         checkNotNull(cid);
 
-                        String filename = thread.getName();
+
                         String mimeType = thread.getMimeType();
-                        long size = thread.getSize();
 
-                        if (mimeType.startsWith("image")) {
-                            Uri uri = FileDocumentsProvider.getUriForThread(thread);
 
-                            Intent intent = new Intent(Intent.ACTION_VIEW);
-                            intent.setDataAndType(uri, "image/*");
-                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        Uri uri = FileDocumentsProvider.getUriForThread(thread);
+                        Intent intent = ShareCompat.IntentBuilder.from(getActivity())
+                                .setStream(uri)
+                                .setType(mimeType)
+                                .getIntent();
+                        intent.setAction(Intent.ACTION_VIEW);
+                        intent.putExtra(Intent.EXTRA_TITLE, thread.getName());
+                        intent.setData(uri);
+                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+
+                        if (intent.resolveActivity(
+                                mContext.getPackageManager()) != null) {
                             startActivity(intent);
-                            /*
-                            ImageDialogFragment.newInstance(cid.getContent()).show(
-                                    getChildFragmentManager(), ImageDialogFragment.TAG);
-*/
-                        } else if (mimeType.startsWith("video")) {
-
-                            Uri uri = FileDocumentsProvider.getUriForThread(thread);
-
-                            Intent intent = new Intent(Intent.ACTION_VIEW);
-                            intent.setDataAndType(uri, "video/*");
-                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            startActivity(intent);
-                            /*
-                            VideoDialogFragment dialogFragment =
-                                    VideoDialogFragment.newInstance(uri);
-
-                                getChildFragmentManager().beginTransaction().
-                                        add(dialogFragment, VideoDialogFragment.TAG).
-                                        commitAllowingStateLoss();*/
-
-
-                        } else if (mimeType.startsWith("audio")) {
-
-                            Uri uri = FileDocumentsProvider.getUriForThread(thread);
-
-                            Intent intent = new Intent(Intent.ACTION_VIEW);
-                            intent.setDataAndType(uri, "audio/*");
-                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            startActivity(intent);
-                            /*
-                            AudioDialogFragment.newInstance(cid.getContent(), filename,
-                                    thread.getSenderAlias())
-                                    .show(getChildFragmentManager(), AudioDialogFragment.TAG);
-*/
-
-                        } else if (mimeType.startsWith(MimeType.PDF_MIME_TYPE)) {
-
-                            Uri uri = FileDocumentsProvider.getUriForThread(thread);
-
-                            Intent intent = new Intent(Intent.ACTION_VIEW);
-                            intent.setDataAndType(uri, MimeType.PDF_MIME_TYPE);
-                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                            startActivity(intent);
-                            /*
-                            PDFView.with(getActivity())
-                                    .cid(cid.getCid())
-                                    .swipeHorizontal(true)
-                                    .start();*/
-
-                        } else if (mimeType.equals(MimeType.LINK_MIME_TYPE)) {
-                            byte[] data = ipfs.getData(cid, timeout, true);
-                            checkNotNull(data);
-                            Uri uri = Uri.parse(new String(data));
-
-                            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
-
-                        } else if (mimeType.startsWith("text")) {
-
-                            byte[] data = ipfs.getData(cid, timeout, true);
-                            checkNotNull(data);
-
-                            String content = Base64.encodeToString(data, Base64.NO_PADDING);
-                            WebViewDialogFragment.newInstance(mimeType, content, "base64").
-                                    show(getChildFragmentManager(), WebViewDialogFragment.TAG);
-
-                        } else if (mimeType.equals(MimeType.OCTET_MIME_TYPE)) {
-                            byte[] data = ipfs.getData(cid, timeout, true);
-                            checkNotNull(data);
-                            int length = data.length;
-                            if (length > 0 && length < 64000) {
-                                String content = new String(data);
-                                WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.TEXT, content).
-                                        show(getChildFragmentManager(), WebViewDialogFragment.TAG);
-                            }
+                        } else {
+                            Preferences.error(events,
+                                    getString(R.string.no_activity_found_to_handle_uri));
                         }
                     }
                 } catch (Throwable ex) {

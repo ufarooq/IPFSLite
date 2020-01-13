@@ -363,13 +363,13 @@ public class ThumbnailService {
 
         if (bytes != null) {
             final IPFS ipfs = IPFS.getInstance(context);
-            if (ipfs != null) {
+
                 try {
                     cid = ipfs.storeData(bytes);
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
-            }
+
         }
         if (cid == null) {
             thumbnail = false;
@@ -505,7 +505,7 @@ public class ThumbnailService {
         private FileDetails(@NonNull String fileName, @NonNull String mimeType, long fileSize) {
             checkNotNull(fileName);
             checkNotNull(mimeType);
-            checkArgument(fileSize > 0);
+            checkArgument(fileSize > -1);
             this.fileName = fileName;
             this.mimeType = mimeType;
             this.fileSize = fileSize;

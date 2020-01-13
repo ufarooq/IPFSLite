@@ -10,8 +10,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="0"
-        android:padding="8dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="8dp">
 
         <ImageView
             android:id="@+id/main_image"
@@ -23,12 +23,12 @@
         <ProgressBar
             android:id="@+id/progress_bar"
             style="?android:attr/progressBarStyleHorizontal"
-            android:layout_marginTop="-12dp"
-            android:maxHeight="26dip"
-            android:minHeight="26dip"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:indeterminate="true" />
+            android:layout_marginTop="-12dp"
+            android:indeterminate="true"
+            android:maxHeight="26dip"
+            android:minHeight="26dip" />
     </LinearLayout>
 
     <LinearLayout

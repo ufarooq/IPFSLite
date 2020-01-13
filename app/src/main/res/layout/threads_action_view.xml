@@ -18,8 +18,8 @@
             android:layout_margin="16dp"
             android:layout_weight="1"
             android:drawableTop="@drawable/action_upload"
-            android:drawableTint="?android:textColorSecondary"
             android:drawablePadding="8dp"
+            android:drawableTint="?android:textColorSecondary"
             android:singleLine="true"
             android:text="@string/action_file_cid"
             android:textAlignment="center" />
@@ -31,10 +31,10 @@
             android:layout_margin="16dp"
             android:layout_weight="1"
             android:drawableTop="@drawable/action_scan_code"
+            android:drawablePadding="8dp"
             android:drawableTint="?android:textColorSecondary"
             android:singleLine="true"
             android:text="@string/action_scan_cid"
-            android:drawablePadding="8dp"
             android:textAlignment="center" />
 
         <TextView
@@ -44,10 +44,10 @@
             android:layout_margin="16dp"
             android:layout_weight="1"
             android:drawableTop="@drawable/action_edit_code"
+            android:drawablePadding="8dp"
             android:drawableTint="?android:textColorSecondary"
             android:singleLine="true"
             android:text="@string/action_edit_cid"
-            android:drawablePadding="8dp"
             android:textAlignment="center" />
 
     </TableRow>

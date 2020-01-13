@@ -2,24 +2,13 @@ package threads.core;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
 
 import androidx.annotation.NonNull;
 
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.MultiFormatWriter;
-import com.google.zxing.common.BitMatrix;
-import com.journeyapps.barcodescanner.BarcodeEncoder;
-
-import java.io.ByteArrayOutputStream;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Hashtable;
 
 import threads.core.events.EVENTS;
-import threads.ipfs.IPFS;
-import threads.ipfs.api.CID;
-import threads.ipfs.api.PID;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -66,9 +55,6 @@ public class Preferences {
 
 
     @NonNull
-    private final static Hashtable<String, CID> BITMAP_HASH_TABLE = new Hashtable<>();
-
-    @NonNull
     public static String getToken(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(
@@ -85,8 +71,6 @@ public class Preferences {
         editor.putString(TOKEN_KEY, token);
         editor.apply();
     }
-
-
 
 
     @NonNull
@@ -229,48 +213,6 @@ public class Preferences {
 
 
     @NonNull
-    public static CID getBitmap(@NonNull Context context, @NonNull String hash) {
-        checkNotNull(context);
-        checkNotNull(hash);
-        checkArgument(!hash.isEmpty(), "Hash is empty.");
-
-
-        if (BITMAP_HASH_TABLE.containsKey(hash)) {
-            CID stored = BITMAP_HASH_TABLE.get(hash);
-            checkNotNull(stored);
-            return stored;
-        }
-
-        IPFS ipfs = IPFS.getInstance(context);
-        checkNotNull(ipfs, "IPFS is not valid.");
-
-        MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
-        try {
-            BitMatrix bitMatrix = multiFormatWriter.encode(hash,
-                    BarcodeFormat.QR_CODE, QR_CODE_SIZE, QR_CODE_SIZE);
-            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
-            Bitmap bitmap = barcodeEncoder.createBitmap(bitMatrix);
-
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-            byte[] bytes = stream.toByteArray();
-            bitmap.recycle();
-
-            CID cid = ipfs.storeData(bytes, true);
-            checkNotNull(cid);
-            BITMAP_HASH_TABLE.put(hash, cid);
-            return cid;
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-
-
-
-
-
-    @NonNull
     public static String getDate(@NonNull Date date) {
         Calendar c = Calendar.getInstance();
         c.set(Calendar.HOUR_OF_DAY, 0);
@@ -306,7 +248,7 @@ public class Preferences {
         checkNotNull(events);
         checkNotNull(identifier);
         checkNotNull(content);
-
+        // todo context
         new Thread(() -> {
             events.invokeEvent(identifier, content);
         }).start();
@@ -325,13 +267,6 @@ public class Preferences {
         checkNotNull(events);
         checkNotNull(message);
         event(events, WARNING, message);
-    }
-
-    public static void info(@NonNull EVENTS events,
-                            @NonNull String message) {
-        checkNotNull(events);
-        checkNotNull(message);
-        event(events, INFO, message);
     }
 
     public static void evaluateException(@NonNull EVENTS events,
@@ -365,18 +300,6 @@ public class Preferences {
         editor.apply();
 
     }
-
-
-    @NonNull
-    public static CID getPIDBitmap(@NonNull Context context) {
-        checkNotNull(context);
-        PID pid = IPFS.getPID(context);
-        checkNotNull(pid);
-        String hash = pid.getPid();
-        return getBitmap(context, hash);
-    }
-
-
 
 
     public static boolean getLoginFlag(@NonNull Context context) {

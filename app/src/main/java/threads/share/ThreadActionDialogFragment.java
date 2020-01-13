@@ -25,14 +25,14 @@ import threads.server.R;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class ThreadActionDialogFragment extends DialogFragment {
-    public static final String TAG = NoteActionDialogFragment.class.getSimpleName();
+    public static final String TAG = ThreadActionDialogFragment.class.getSimpleName();
     private static final String IDX = "IDX";
     private static final String INFO_ACTIVE = "INFO_ACTIVE";
     private static final String DELETE_ACTIVE = "DELETE_ACTIVE";
     private static final String VIEW_ACTIVE = "VIEW_ACTIVE";
     private static final String SHARE_ACTIVE = "SHARE_ACTIVE";
     private static final String SEND_ACTIVE = "SEND_ACTIVE";
-    private static final String DOWNLOAD_ACTIVE = "DOWNLOAD_ACTIVE";
+    private static final String COPY_ACTIVE = "COPY_ACTIVE";
     private static final String PUBLISH_ACTIVE = "PUBLISH_ACTIVE";
     private static final String PUBLISH_VALUE = "PUBLISH_VALUE";
 
@@ -47,7 +47,7 @@ public class ThreadActionDialogFragment extends DialogFragment {
                                                          boolean deleteActive,
                                                          boolean shareActive,
                                                          boolean sendActive,
-                                                         boolean downloadActive,
+                                                         boolean copyActive,
                                                          boolean publishActive,
                                                          boolean publishValue) {
 
@@ -58,7 +58,7 @@ public class ThreadActionDialogFragment extends DialogFragment {
         bundle.putBoolean(VIEW_ACTIVE, viewActive);
         bundle.putBoolean(SHARE_ACTIVE, shareActive);
         bundle.putBoolean(SEND_ACTIVE, sendActive);
-        bundle.putBoolean(DOWNLOAD_ACTIVE, downloadActive);
+        bundle.putBoolean(COPY_ACTIVE, copyActive);
         bundle.putBoolean(PUBLISH_ACTIVE, publishActive);
         bundle.putBoolean(PUBLISH_VALUE, publishValue);
         ThreadActionDialogFragment fragment = new ThreadActionDialogFragment();
@@ -108,7 +108,7 @@ public class ThreadActionDialogFragment extends DialogFragment {
         boolean viewActive = args.getBoolean(VIEW_ACTIVE);
         boolean shareActive = args.getBoolean(SHARE_ACTIVE);
         boolean sendActive = args.getBoolean(SEND_ACTIVE);
-        boolean downloadActive = args.getBoolean(DOWNLOAD_ACTIVE);
+        boolean copyActive = args.getBoolean(COPY_ACTIVE);
         boolean publishActive = args.getBoolean(PUBLISH_ACTIVE);
         boolean publishValue = args.getBoolean(PUBLISH_VALUE);
 
@@ -229,18 +229,18 @@ public class ThreadActionDialogFragment extends DialogFragment {
             });
         }
 
-        TextView menu_download = view.findViewById(R.id.menu_download);
-        if (!downloadActive) {
-            menu_download.setVisibility(View.GONE);
+        TextView menu_copy = view.findViewById(R.id.menu_copy_to);
+        if (!copyActive) {
+            menu_copy.setVisibility(View.GONE);
         } else {
-            menu_download.setOnClickListener((v) -> {
+            menu_copy.setOnClickListener((v) -> {
 
                 try {
                     if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
                         return;
                     }
                     mLastClickTime = SystemClock.elapsedRealtime();
-                    mListener.clickThreadDownload(idx);
+                    mListener.clickThreadCopy(idx);
                 } finally {
                     dismiss();
                 }
@@ -274,7 +274,7 @@ public class ThreadActionDialogFragment extends DialogFragment {
 
         void clickThreadSend(long idx);
 
-        void clickThreadDownload(long idx);
+        void clickThreadCopy(long idx);
 
         void clickThreadPublish(long idx, boolean value);
     }

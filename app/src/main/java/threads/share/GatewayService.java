@@ -292,36 +292,36 @@ public class GatewayService {
 
         List<Peer> peers = peersInstance.getAutonatPeers();
 
-            peers.sort(Peer::compareTo);
+        peers.sort(Peer::compareTo);
 
-            for (Peer autonat : peers) {
+        for (Peer autonat : peers) {
 
-                if (counter.get() == numConnections) {
-                    break;
-                }
+            if (counter.get() == numConnections) {
+                break;
+            }
 
-                if (ipfs.isConnected(autonat.getPID())) {
+            if (ipfs.isConnected(autonat.getPID())) {
+                counter.incrementAndGet();
+                peersInstance.setTimestamp(autonat, System.currentTimeMillis());
+                connected.add(autonat);
+            } else {
+
+                String ma = autonat.getMultiAddress() + "/" +
+                        IPFS.Style.p2p.name() + "/" + autonat.getPid();
+
+                if (ipfs.swarmConnect(ma, timeout)) {
                     counter.incrementAndGet();
                     peersInstance.setTimestamp(autonat, System.currentTimeMillis());
                     connected.add(autonat);
                 } else {
-
-                    String ma = autonat.getMultiAddress() + "/" +
-                            IPFS.Style.p2p.name() + "/" + autonat.getPid();
-
-                    if (ipfs.swarmConnect(ma, timeout)) {
-                        counter.incrementAndGet();
-                        peersInstance.setTimestamp(autonat, System.currentTimeMillis());
-                        connected.add(autonat);
-                    } else {
-                        if (Network.isConnected(context)) {
-                            if (lifeTimeExpired(autonat)) {
-                                peersInstance.removePeer(ipfs, autonat);
-                            }
+                    if (Network.isConnected(context)) {
+                        if (lifeTimeExpired(autonat)) {
+                            peersInstance.removePeer(ipfs, autonat);
                         }
                     }
                 }
             }
+        }
 
         return connected;
     }
@@ -351,38 +351,38 @@ public class GatewayService {
 
         List<Peer> peers = peers1.getPubsubPeers();
 
-            peers.sort(Peer::compareTo);
+        peers.sort(Peer::compareTo);
 
-            for (Peer pubsub : peers) {
+        for (Peer pubsub : peers) {
 
-                if (counter.get() == numConnections) {
-                    break;
-                }
+            if (counter.get() == numConnections) {
+                break;
+            }
 
-                if (ipfs.isConnected(pubsub.getPID())) {
+            if (ipfs.isConnected(pubsub.getPID())) {
+                counter.incrementAndGet();
+                peers1.setTimestamp(pubsub, System.currentTimeMillis());
+                connected.add(pubsub);
+
+            } else {
+
+                String ma = pubsub.getMultiAddress() + "/" +
+                        IPFS.Style.p2p.name() + "/" + pubsub.getPid();
+
+                if (ipfs.swarmConnect(ma, timeout)) {
                     counter.incrementAndGet();
                     peers1.setTimestamp(pubsub, System.currentTimeMillis());
                     connected.add(pubsub);
-
                 } else {
+                    if (Network.isConnected(context)) {
 
-                    String ma = pubsub.getMultiAddress() + "/" +
-                            IPFS.Style.p2p.name() + "/" + pubsub.getPid();
-
-                    if (ipfs.swarmConnect(ma, timeout)) {
-                        counter.incrementAndGet();
-                        peers1.setTimestamp(pubsub, System.currentTimeMillis());
-                        connected.add(pubsub);
-                    } else {
-                        if (Network.isConnected(context)) {
-
-                            if (lifeTimeExpired(pubsub)) {
-                                peers1.removePeer(ipfs, pubsub);
-                            }
+                        if (lifeTimeExpired(pubsub)) {
+                            peers1.removePeer(ipfs, pubsub);
                         }
                     }
                 }
             }
+        }
 
         return connected;
     }
@@ -409,15 +409,27 @@ public class GatewayService {
 
         List<Peer> peers = peers1.getRelayPeers();
 
-            peers.sort(Peer::compareTo);
+        peers.sort(Peer::compareTo);
 
-            for (Peer relay : peers) {
+        for (Peer relay : peers) {
 
-                if (counter.get() == numConnections) {
-                    break;
+            if (counter.get() == numConnections) {
+                break;
+            }
+
+            if (ipfs.isConnected(relay.getPID())) {
+                counter.incrementAndGet();
+                peers1.setTimestamp(relay, System.currentTimeMillis());
+                if (!tag.isEmpty()) {
+                    ipfs.protectPeer(relay.getPID(), tag);
                 }
+                connected.add(relay);
+            } else {
 
-                if (ipfs.isConnected(relay.getPID())) {
+                String ma = relay.getMultiAddress() + "/" +
+                        IPFS.Style.p2p.name() + "/" + relay.getPid();
+
+                if (ipfs.swarmConnect(ma, timeout)) {
                     counter.incrementAndGet();
                     peers1.setTimestamp(relay, System.currentTimeMillis());
                     if (!tag.isEmpty()) {
@@ -426,26 +438,14 @@ public class GatewayService {
                     connected.add(relay);
                 } else {
 
-                    String ma = relay.getMultiAddress() + "/" +
-                            IPFS.Style.p2p.name() + "/" + relay.getPid();
-
-                    if (ipfs.swarmConnect(ma, timeout)) {
-                        counter.incrementAndGet();
-                        peers1.setTimestamp(relay, System.currentTimeMillis());
-                        if (!tag.isEmpty()) {
-                            ipfs.protectPeer(relay.getPID(), tag);
-                        }
-                        connected.add(relay);
-                    } else {
-
-                        if (Network.isConnected(context)) {
-                            if (lifeTimeExpired(relay)) {
-                                peers1.removePeer(ipfs, relay);
-                            }
+                    if (Network.isConnected(context)) {
+                        if (lifeTimeExpired(relay)) {
+                            peers1.removePeer(ipfs, relay);
                         }
                     }
                 }
             }
+        }
 
         return connected;
     }
@@ -467,26 +467,26 @@ public class GatewayService {
 
         List<Peer> peers = peers1.getPeers();
 
-            peers.sort(Peer::compareTo);
+        peers.sort(Peer::compareTo);
 
-            for (Peer peer : peers) {
+        for (Peer peer : peers) {
 
-                if (!ipfs.isConnected(peer.getPID())) {
+            if (!ipfs.isConnected(peer.getPID())) {
 
-                    String ma = peer.getMultiAddress() + "/" +
-                            IPFS.Style.p2p.name() + "/" + peer.getPid();
+                String ma = peer.getMultiAddress() + "/" +
+                        IPFS.Style.p2p.name() + "/" + peer.getPid();
 
-                    if (!ipfs.swarmConnect(ma, timeout)) {
-                        if (Network.isConnected(context)) {
-                            peers1.removePeer(ipfs, peer);
-                        }
-                    } else {
-                        connected.add(peer);
+                if (!ipfs.swarmConnect(ma, timeout)) {
+                    if (Network.isConnected(context)) {
+                        peers1.removePeer(ipfs, peer);
                     }
                 } else {
                     connected.add(peer);
                 }
+            } else {
+                connected.add(peer);
             }
+        }
 
         return connected;
     }

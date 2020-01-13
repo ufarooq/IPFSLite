@@ -181,4 +181,6 @@ public interface ThreadDao {
     @Query("UPDATE Thread SET marked = :marked WHERE idx = :idx")
     void setMarkedFlag(long idx, boolean marked);
 
+    @Query("UPDATE Thread SET name = :name WHERE idx = :idx")
+    void setName(long idx, String name);
 }

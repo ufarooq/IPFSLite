@@ -2,6 +2,8 @@ package threads.ipfs;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
+import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -505,6 +507,9 @@ public class IPFS implements Listener {
                                 routing(routingConfig).build();
 
                         IPFS.setPID(context, INSTANCE.getPeerID());
+
+                        boolean pubSubEnabled = IPFS.isPubsubEnabled(context);
+                        INSTANCE.daemon(pubSubEnabled);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -512,6 +517,40 @@ public class IPFS implements Listener {
             }
         }
         return INSTANCE;
+    }
+
+    public static String getDeviceName() {
+        try {
+            String manufacturer = Build.MANUFACTURER;
+            String model = Build.MODEL;
+            if (model.startsWith(manufacturer)) {
+                return capitalize(model);
+            }
+            return capitalize(manufacturer) + " " + model;
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+        return "";
+    }
+
+    private static String capitalize(String str) {
+        if (TextUtils.isEmpty(str)) {
+            return str;
+        }
+        char[] arr = str.toCharArray();
+        boolean capitalizeNext = true;
+        String phrase = "";
+        for (char c : arr) {
+            if (capitalizeNext && Character.isLetter(c)) {
+                phrase = phrase.concat("" + Character.toUpperCase(c));
+                capitalizeNext = false;
+                continue;
+            } else if (Character.isWhitespace(c)) {
+                capitalizeNext = true;
+            }
+            phrase = phrase.concat("" + c);
+        }
+        return phrase;
     }
 
     public boolean connectPubsubTopic(@NonNull Context context, @NonNull String topic) {
@@ -1051,7 +1090,7 @@ public class IPFS implements Listener {
         }
     }
 
-    public void daemon(boolean pubsub) throws Exception {
+    private void daemon(boolean pubsub) throws Exception {
 
         AtomicBoolean failure = new AtomicBoolean(false);
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -1335,6 +1374,28 @@ public class IPFS implements Listener {
         }
     }
 
+
+    public void storeToOutputStream(@NonNull CID cid, @NonNull OutputStream os) throws Exception {
+        checkNotNull(cid);
+        checkNotNull(os);
+        Reader reader = getReader(cid, true);
+        try {
+            int size = 262158;
+            reader.load(size);
+            long read = reader.getRead();
+            while (read > 0) {
+                byte[] bytes = reader.getData();
+                os.write(bytes, 0, bytes.length);
+
+                reader.load(size);
+                read = reader.getRead();
+            }
+        } finally {
+            reader.close();
+        }
+
+    }
+
     @NonNull
     private InputStream stream(@NonNull CID cid, int timeout, boolean offline) throws Exception {
         checkArgument(timeout > 0);
@@ -1390,15 +1451,12 @@ public class IPFS implements Listener {
 
     }
 
-    public boolean storeToFile(@NonNull File file,
-                               @NonNull CID cid,
-                               boolean offline, int timeout,
-                               long size) {
+    public void storeToFile(@NonNull File file, @NonNull CID cid) {
         checkNotNull(file);
         checkNotNull(cid);
-        checkArgument(timeout > 0);
+
         if (!checkDaemonRunning()) {
-            return false;
+            return;
         }
 
         // make sure file path exists
@@ -1412,16 +1470,45 @@ public class IPFS implements Listener {
                 checkArgument(file.createNewFile());
             }
         } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            return false;
+            throw new RuntimeException(e);
         }
 
         try (FileOutputStream fileOutputStream = new FileOutputStream(file)) {
-            return stream(fileOutputStream, (percent) -> {
-            }, cid, "", offline, timeout, size);
+            stream(fileOutputStream, cid);
         } catch (Throwable e) {
-            evaluateException(e);
-            return false;
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    private void stream(@NonNull OutputStream outputStream, @NonNull CID cid) {
+        checkNotNull(outputStream);
+        checkNotNull(cid);
+
+        int blockSize = 4096;
+        try {
+            Reader fileReader = getReader(cid, true);
+
+            try {
+
+                fileReader.load(blockSize);
+
+                long bytesRead = fileReader.getRead();
+
+
+                while (bytesRead > 0) {
+
+                    outputStream.write(fileReader.getData(), 0, (int) bytesRead);
+
+                    fileReader.load(blockSize);
+                    bytesRead = fileReader.getRead();
+                }
+            } finally {
+                fileReader.close();
+            }
+
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
         }
 
     }

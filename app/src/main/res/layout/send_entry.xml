@@ -3,9 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:orientation="horizontal"
     android:paddingTop="@dimen/users_paddingTop"
-    android:paddingBottom="@dimen/users_paddingBottom"
-    android:orientation="horizontal">
+    android:paddingBottom="@dimen/users_paddingBottom">
 
     <ImageView
         android:id="@+id/account_icon"

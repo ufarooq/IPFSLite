@@ -18,7 +18,7 @@ public class ApplicationViewModel extends AndroidViewModel {
     public ApplicationViewModel(@NonNull Application application) {
         super(application);
 
-
+        // TODO maybe put it in Service.getInstance for UI
         JobServiceLoadNotifications.notifications(application.getApplicationContext());
         JobServiceDownloader.downloader(application.getApplicationContext());
         JobServicePublisher.publish(application.getApplicationContext());

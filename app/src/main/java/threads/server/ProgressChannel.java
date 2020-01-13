@@ -47,9 +47,6 @@ class ProgressChannel {
         checkNotNull(content);
 
         Intent main = new Intent(context, MainActivity.class);
-        main.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-        main.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        main.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
         int requestID = (int) System.currentTimeMillis();
         PendingIntent pendingIntent = PendingIntent.getActivity(context, requestID,
