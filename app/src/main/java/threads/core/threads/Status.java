@@ -8,7 +8,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public enum Status {
     INIT(0),       // note just created
-    DONE(2),       // note is fully defined
+    SEEDING(2),       // note is fully defined
     DELETING(3),   // note will be deleted
     ERROR(4);      // note is in error state
     @NonNull
@@ -22,8 +22,8 @@ public enum Status {
     @TypeConverter
     public static Status toStatus(Integer status) {
         checkNotNull(status);
-        if (status.equals(Status.DONE.getCode())) {
-            return Status.DONE;
+        if (status.equals(Status.SEEDING.getCode())) {
+            return Status.SEEDING;
         } else if (status.equals(Status.INIT.getCode())) {
             return Status.INIT;
         } else if (status.equals(Status.DELETING.getCode())) {

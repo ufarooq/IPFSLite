@@ -20,8 +20,8 @@ import static androidx.core.util.Preconditions.checkNotNull;
 @androidx.room.Entity
 public class Thread {
 
-    @ColumnInfo(name = "thread")
-    private final long thread; // checked
+    @ColumnInfo(name = "parent")
+    private final long parent; // checked
     @NonNull
     @TypeConverters(Kind.class)
     @ColumnInfo(name = "kind")
@@ -80,8 +80,8 @@ public class Thread {
            @NonNull PID sender,
            @NonNull String senderAlias,
            @NonNull Kind kind,
-           long thread) {
-        this.thread = thread;
+           long parent) {
+        this.parent = parent;
         this.sender = sender;
         this.senderAlias = senderAlias;
         this.kind = kind;
@@ -276,8 +276,8 @@ public class Thread {
         this.number = number;
     }
 
-    public long getThread() {
-        return thread;
+    public long getParent() {
+        return parent;
     }
 
     public void increaseUnreadMessagesNumber() {

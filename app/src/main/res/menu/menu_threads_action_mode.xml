@@ -26,6 +26,6 @@
         android:orderInCategory="55"
         android:title="@string/action_select_all"
         android:visible="true"
-        app:iconTint="?android:textColorSecondary"
+        app:iconTint="@color/colorAccent"
         app:showAsAction="ifRoom" />
 </menu>

@@ -136,7 +136,7 @@ public class ThreadsAPI {
         return counter > 0;
     }
 
-    public void removeThread(@NonNull IPFS ipfs, @NonNull Thread thread) {
+    private void removeThread(@NonNull IPFS ipfs, @NonNull Thread thread) {
         checkNotNull(ipfs);
         checkNotNull(thread);
 
@@ -148,7 +148,7 @@ public class ThreadsAPI {
         unpin(ipfs, thread.getThumbnail());
 
         // delete all children
-        List<Thread> entries = getThreadsByThread(thread.getIdx());
+        List<Thread> entries = getChildren(thread.getIdx());
         for (Thread entry : entries) {
             removeThread(ipfs, entry);
         }
@@ -177,7 +177,6 @@ public class ThreadsAPI {
         List<Thread> threads = getThreadByIdxs(idxs);
         for (Thread thread : threads) {
             removeThread(ipfs, thread);
-
         }
     }
 
@@ -328,8 +327,14 @@ public class ThreadsAPI {
     }
 
     @NonNull
-    public List<Thread> getThreadsByThread(long thread) {
-        return getThreadsDatabase().threadDao().getThreadsByThread(thread);
+    public List<Thread> getChildren(long thread) {
+        return getThreadsDatabase().threadDao().getChildren(thread);
+    }
+
+    @NonNull
+    public List<Thread> getChildrenByStatus(long thread, @NonNull Status status) {
+        checkNotNull(status);
+        return getThreadsDatabase().threadDao().getChildrenByStatus(thread, status);
     }
 
     public int getThreadReferences(long thread) {
@@ -358,7 +363,7 @@ public class ThreadsAPI {
     }
 
     @NonNull
-    public List<Thread> getThreadsByThreadStatus(@NonNull Status status) {
+    public List<Thread> getThreadsByStatus(@NonNull Status status) {
         checkNotNull(status);
         return getThreadsDatabase().threadDao().getThreadsByStatus(status);
     }

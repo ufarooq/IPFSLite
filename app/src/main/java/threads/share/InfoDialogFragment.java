@@ -24,8 +24,8 @@ import androidx.fragment.app.DialogFragment;
 
 import threads.core.Preferences;
 import threads.core.events.EVENTS;
+import threads.server.MainActivity;
 import threads.server.R;
-import threads.server.UploaderActivity;
 import threads.server.provider.FileDocumentsProvider;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -69,7 +69,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
         try {
 
             Uri uri = FileDocumentsProvider.getUriForString(code);
-            ComponentName[] names = {new ComponentName(context, UploaderActivity.class)};
+            ComponentName[] names = {new ComponentName(context, MainActivity.class)};
 
             String mimeType = "image/png";
             Intent intent = ShareCompat.IntentBuilder.from(getActivity())

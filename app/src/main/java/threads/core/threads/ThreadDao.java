@@ -105,7 +105,7 @@ public interface ThreadDao {
     @TypeConverters({Converter.class})
     List<Thread> getThreadsByCid(CID cid);
 
-    @Query("SELECT * FROM Thread WHERE content = :cid AND thread = :thread")
+    @Query("SELECT * FROM Thread WHERE content = :cid AND parent = :thread")
     @TypeConverters({Converter.class})
     List<Thread> getThreadsByCidAndThread(CID cid, long thread);
 
@@ -127,7 +127,7 @@ public interface ThreadDao {
     @Query("UPDATE Thread SET leaching = 0")
     void resetThreadsLeaching();
 
-    @Query("UPDATE Thread SET number = 0 WHERE thread IN (:threads)")
+    @Query("UPDATE Thread SET number = 0 WHERE parent IN (:threads)")
     void resetThreadNumber(long... threads);
 
     @Query("Select SUM(number) FROM THREAD")
@@ -137,10 +137,10 @@ public interface ThreadDao {
     @TypeConverters({Converter.class})
     int references(CID cid);
 
-    @Query("SELECT * FROM Thread WHERE thread =:thread")
-    List<Thread> getThreadsByThread(long thread);
+    @Query("SELECT * FROM Thread WHERE parent =:thread")
+    List<Thread> getChildren(long thread);
 
-    @Query("SELECT COUNT(idx) FROM Thread WHERE thread =:thread")
+    @Query("SELECT COUNT(idx) FROM Thread WHERE parent =:thread")
     int getThreadReferences(long thread);
 
     @Query("SELECT * FROM Thread WHERE idx =:idx")
@@ -153,7 +153,7 @@ public interface ThreadDao {
     @TypeConverters({Converter.class})
     List<Thread> getThreadsBySenderPid(PID senderPid);
 
-    @Query("SELECT * FROM Thread WHERE thread =:thread")
+    @Query("SELECT * FROM Thread WHERE parent =:thread")
     LiveData<List<Thread>> getLiveDataThreadsByThread(long thread);
 
     @Query("UPDATE Thread SET number = number + 1  WHERE idx IN(:idxs)")
@@ -183,4 +183,8 @@ public interface ThreadDao {
 
     @Query("UPDATE Thread SET name = :name WHERE idx = :idx")
     void setName(long idx, String name);
+
+    @Query("SELECT * FROM Thread WHERE parent =:thread AND status = :status")
+    @TypeConverters({Status.class})
+    List<Thread> getChildrenByStatus(long thread, Status status);
 }

@@ -53,7 +53,7 @@
     <string name="application_settings">Application Settings</string>
     <string name="general_settings">General Settings</string>
     <string name="file_not_supported">File not supported.</string>
-    <string name="no_activity_found_to_handle_uri">No activity found which support this kind of file.</string>
+    <string name="no_activity_found_to_handle_uri">No application found which support this kind of file.</string>
     <string name="action_scan_cid">Scan CID</string>
     <string name="action_edit_cid">Edit CID</string>
     <string name="action_file_cid">Upload</string>
@@ -186,4 +186,8 @@
     <string name="action_auto_connect">Automatic connection during startup</string>
     <string name="action_peer_add">Add Peer</string>
     <string name="action_block_user">Block messages from the user</string>
+    <string name="upload_to_ipfs">Upload to IPFS</string>
+    <string name="upload_channel_name">Upload Channel</string>
+    <string name="upload_channel_description">Upload notifications during upload of files to IPFS</string>
+    <string name="upload_failed">Upload failed for \"%1$s\"</string>
 </resources>

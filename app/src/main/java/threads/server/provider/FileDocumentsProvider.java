@@ -37,6 +37,7 @@ import java.util.PriorityQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import threads.core.threads.Status;
 import threads.core.threads.THREADS;
 import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
@@ -150,7 +151,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         final MatrixCursor result = new MatrixCursor(resolveDocumentProjection(projection));
 
 
-        List<Thread> entries = threads.getThreads();
+        List<Thread> entries = threads.getThreadsByStatus(Status.SEEDING);
 
 
         // Create a queue to store the most recent documents, which orders by last modified.
@@ -195,7 +196,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
 
         // Create a cursor with the requested projection, or the default projection.
         final MatrixCursor result = new MatrixCursor(resolveDocumentProjection(projection));
-        List<Thread> entries = threads.getThreads();
+        List<Thread> entries = threads.getThreadsByStatus(Status.SEEDING);
 
         // This example implementation searches file names for the query and doesn't rank search
         // results, so we can stop as soon as we find a sufficient number of matches.  Other
@@ -338,19 +339,6 @@ public class FileDocumentsProvider extends DocumentsProvider {
         }
     }
 
-    @Override
-    public void deleteDocument(String documentId) throws FileNotFoundException {
-
-        long idx = Long.parseLong(documentId);
-        if (idx != 0) {
-            Thread file = threads.getThreadByIdx(idx);
-            if (file == null) {
-                throw new FileNotFoundException();// todo message
-            }
-            threads.removeThread(ipfs, file);
-        }
-    }
-
     private void includeFile(MatrixCursor result, Thread file) {
         int flags = 0;
 
@@ -379,7 +367,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
 
         long idx = Long.parseLong(parentDocumentId);
 
-        List<Thread> entries = threads.getThreadsByThread(idx); // todo only valid threads
+        List<Thread> entries = threads.getChildrenByStatus(idx, Status.SEEDING);
 
         final MatrixCursor result = new MatrixCursor(resolveDocumentProjection(projection));
 

@@ -93,7 +93,7 @@ public class JobServiceDownload extends JobService {
                 Thread entry = entries.get(0);
 
                 if (entry.getStatus() == Status.DELETING ||
-                        entry.getStatus() == Status.DONE) {
+                        entry.getStatus() == Status.SEEDING) {
                     Service.replySender(context, ipfs, pid, entry);
                     return;
                 } else {

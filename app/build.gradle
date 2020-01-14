@@ -38,7 +38,7 @@ android {
         versionName "1.0.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        def documentsAuthorityValue = applicationId + ".ipfs"
+        def documentsAuthorityValue = applicationId + ".provider"
 
         // Now we can use ${documentsAuthority} in our Manifest
         manifestPlaceholders =
@@ -78,6 +78,9 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
     // Android (LICENSE done)
+    implementation "androidx.work:work-runtime:2.2.0"
+
+    // Android (LICENSE done)
     implementation 'com.google.android.material:material:1.2.0-alpha03'
 
     // Android (LICENSE done)
@@ -114,7 +117,7 @@ dependencies {
     //implementation 'threads.core:ipfs:0.4.5'
 
     // API (LICENSE done)
-    implementation 'threads.mobile:ipfs:0.4.0'
+    //implementation 'threads.mobile:ipfs:0.4.0'
 
     // API (LICENSE done)
     implementation 'com.google.code.gson:gson:2.8.6'
@@ -131,11 +134,13 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:4.10.0'
 
 
-
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     androidTestImplementation 'org.apache.commons:commons-text:1.8'
+    api project(path: ':ipfs')
+
+
 }
 
 // Place it at the end of the file

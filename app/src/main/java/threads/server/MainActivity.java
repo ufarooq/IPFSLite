@@ -51,6 +51,8 @@ import threads.core.events.EVENTS;
 import threads.core.peers.AddressType;
 import threads.core.peers.PEERS;
 import threads.core.peers.User;
+import threads.core.threads.Kind;
+import threads.core.threads.Status;
 import threads.core.threads.THREADS;
 import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
@@ -72,6 +74,7 @@ import threads.share.DetailsDialogFragment;
 import threads.share.DontShowAgainDialog;
 import threads.share.GatewayService;
 import threads.share.InfoDialogFragment;
+import threads.share.MimeType;
 import threads.share.NameDialogFragment;
 import threads.share.Network;
 import threads.share.PeerActionDialogFragment;
@@ -215,13 +218,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         for (int i = 0; i < mClipData.getItemCount(); i++) {
                             ClipData.Item item = mClipData.getItemAt(i);
                             Uri uri = item.getUri();
-                            Service.getInstance(
-                                    getApplicationContext()).storeData(getApplicationContext(), uri);
+                            UploadService.invoke(getApplicationContext(), uri);
                         }
                     } else if (data.getData() != null) {
                         Uri uri = data.getData();
-                        Service.getInstance(
-                                getApplicationContext()).storeData(getApplicationContext(), uri);
+                        UploadService.invoke(getApplicationContext(), uri);
                     }
                     return;
                 }
@@ -620,11 +621,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_config: {
                 try {
                     IPFS ipfs = IPFS.getInstance(getApplicationContext());
-                    if (ipfs != null) {
-                        String data = "<html><h2>Config</h2><pre>" + ipfs.config_show() + "</pre></html>";
-                        WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.HTML, data)
-                                .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
-                    }
+
+                    String data = "<html><h2>Config</h2><pre>" + ipfs.config_show() + "</pre></html>";
+                    WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.HTML, data)
+                            .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
+
 
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -778,38 +779,36 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         mNavigation = findViewById(R.id.navigation);
         mNavigation.refreshDrawableState();
-        mNavigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                mAppBarLayout.setExpanded(true, false);
-                switch (item.getItemId()) {
-                    case R.id.navigation_files:
-                        mCustomViewPager.setCurrentItem(0);
-                        mToolbar.setSubtitle(R.string.files);
-                        mMainFab.setImageResource(R.drawable.plus_thick);
-                        mMainFab.setBackgroundTintList(
-                                ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
+        mNavigation.setOnNavigationItemSelectedListener((item) -> {
+            mAppBarLayout.setExpanded(true, false);
+            switch (item.getItemId()) {
+                case R.id.navigation_files:
+                    mCustomViewPager.setCurrentItem(0);
+                    mToolbar.setSubtitle(R.string.files);
+                    mMainFab.setImageResource(R.drawable.plus_thick);
+                    mMainFab.setBackgroundTintList(
+                            ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
 
-                        return true;
-                    case R.id.navigation_peers:
-                        mCustomViewPager.setCurrentItem(1);
-                        mToolbar.setSubtitle(R.string.peers);
-                        mMainFab.setImageResource(R.drawable.account_plus);
-                        mMainFab.setBackgroundTintList(
-                                ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
+                    return true;
+                case R.id.navigation_peers:
+                    mCustomViewPager.setCurrentItem(1);
+                    mToolbar.setSubtitle(R.string.peers);
+                    mMainFab.setImageResource(R.drawable.account_plus);
+                    mMainFab.setBackgroundTintList(
+                            ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
 
-                        return true;
-                    case R.id.navigation_swarm:
-                        mCustomViewPager.setCurrentItem(2);
-                        mToolbar.setSubtitle(R.string.swarm);
-                        mMainFab.setImageResource(R.drawable.traffic_light);
-                        mMainFab.setBackgroundTintList(
-                                ContextCompat.getColorStateList(getApplicationContext(), mTrafficColorId));
+                    return true;
+                case R.id.navigation_swarm:
+                    mCustomViewPager.setCurrentItem(2);
+                    mToolbar.setSubtitle(R.string.swarm);
+                    mMainFab.setImageResource(R.drawable.traffic_light);
+                    mMainFab.setBackgroundTintList(
+                            ContextCompat.getColorStateList(getApplicationContext(), mTrafficColorId));
 
-                        return true;
-                }
-                return false;
+                    return true;
             }
+            return false;
+
         });
 
         mDrawerLayout = findViewById(R.id.drawer_layout);
@@ -923,7 +922,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
         });
-
+        handleIntents();
 
     }
 
@@ -947,7 +946,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     Thread thread = threads.getThreadByIdx(idx);
                     if (thread != null) {
-                        long parent = thread.getThread();
+                        long parent = thread.getParent();
                         mSelectionViewModel.setParentThread(parent, true);
                     }
 
@@ -1018,58 +1017,58 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             final EVENTS events = EVENTS.getInstance(getApplicationContext());
             final PID host = IPFS.getPID(getApplicationContext());
             checkNotNull(host);
-            if (ipfs != null) {
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.submit(() -> {
-                    PID peer = PID.create(pid);
-                    try {
 
-                        peers.setUserDialing(peer, true);
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                PID peer = PID.create(pid);
+                try {
 
-                        String protocolVersion = "n.a.";
-                        String agentVersion = "n.a.";
-                        List<String> addresses = new ArrayList<>();
+                    peers.setUserDialing(peer, true);
 
-
-                        PeerInfo info = ipfs.id(peer, timeout);
-
-                        if (info != null) {
-                            agentVersion = info.getAgentVersion();
-                            protocolVersion = info.getProtocolVersion();
-                            addresses = info.getMultiAddresses();
-                        }
-
-                        String html = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
+                    String protocolVersion = "n.a.";
+                    String agentVersion = "n.a.";
+                    List<String> addresses = new ArrayList<>();
 
 
-                        html = html.concat("<div style=\"width: 80%;" +
-                                "  word-wrap:break-word;\">").concat(pid).concat("</div><br/>");
+                    PeerInfo info = ipfs.id(peer, timeout);
 
-                        html = html.concat("<div style=\"width: 80%;" +
-                                "  word-wrap:break-word;\">").concat("Protocol Version : ").concat(protocolVersion).concat("</div><br/>");
-
-                        html = html.concat("<ul>");
-
-                        for (String address : addresses) {
-                            html = html.concat("<li><div style=\"width: 80%;" +
-                                    "  word-wrap:break-word;\">").concat(address).concat("</div></li>");
-                        }
-
-
-                        html = html.concat("</ul><br/></body><footer>Agent : <strong style=\"color:teal;\">" + agentVersion + "</strong></footer></html>");
-
-
-                        DetailsDialogFragment.newInstance(
-                                DetailsDialogFragment.Type.HTML, html).show(
-                                getSupportFragmentManager(),
-                                DetailsDialogFragment.TAG);
-                    } catch (Throwable e) {
-                        Preferences.evaluateException(events, Preferences.EXCEPTION, e);
-                    } finally {
-                        peers.setUserDialing(peer, false);
+                    if (info != null) {
+                        agentVersion = info.getAgentVersion();
+                        protocolVersion = info.getProtocolVersion();
+                        addresses = info.getMultiAddresses();
                     }
-                });
-            }
+
+                    String html = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
+
+
+                    html = html.concat("<div style=\"width: 80%;" +
+                            "  word-wrap:break-word;\">").concat(pid).concat("</div><br/>");
+
+                    html = html.concat("<div style=\"width: 80%;" +
+                            "  word-wrap:break-word;\">").concat("Protocol Version : ").concat(protocolVersion).concat("</div><br/>");
+
+                    html = html.concat("<ul>");
+
+                    for (String address : addresses) {
+                        html = html.concat("<li><div style=\"width: 80%;" +
+                                "  word-wrap:break-word;\">").concat(address).concat("</div></li>");
+                    }
+
+
+                    html = html.concat("</ul><br/></body><footer>Agent : <strong style=\"color:teal;\">" + agentVersion + "</strong></footer></html>");
+
+
+                    DetailsDialogFragment.newInstance(
+                            DetailsDialogFragment.Type.HTML, html).show(
+                            getSupportFragmentManager(),
+                            DetailsDialogFragment.TAG);
+                } catch (Throwable e) {
+                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                } finally {
+                    peers.setUserDialing(peer, false);
+                }
+            });
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -1271,6 +1270,138 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    public void storeText(@NonNull String text) {
+        checkNotNull(text);
+
+        final THREADS threads = THREADS.getInstance(getApplicationContext());
+        final IPFS ipfs = IPFS.getInstance(getApplicationContext());
+
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+
+                PID pid = IPFS.getPID(getApplicationContext());
+                checkNotNull(pid);
+                String alias = IPFS.getDeviceName();
+                checkNotNull(alias);
+
+                String mimeType = MimeType.PLAIN_MIME_TYPE;
+
+                long size = text.length();
+
+                Thread thread = threads.createThread(pid, alias,
+                        Status.INIT, Kind.IN, 0L);
+                thread.setSize(size);
+                thread.setMimeType(mimeType);
+
+                long idx = threads.storeThread(thread);
+
+
+                try {
+                    threads.setThreadLeaching(idx, true);
+
+                    CID cid = ipfs.storeText(text, "", true);
+                    checkNotNull(cid);
+
+
+                    // cleanup of entries with same CID and hierarchy
+                    List<Thread> sameEntries = threads.getThreadsByCIDAndThread(cid, 0L);
+                    threads.removeThreads(ipfs, sameEntries);
+
+                    threads.setThreadName(idx, cid.getCid());
+                    threads.setThreadContent(idx, cid);
+                    threads.setThreadStatus(idx, Status.SEEDING);
+
+
+                } catch (Throwable e) {
+                    threads.setThreadStatus(idx, Status.ERROR);
+                } finally {
+                    threads.setThreadLeaching(idx, false);
+                }
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        });
+    }
+
+    private void handleIntents() {
+
+        Intent intent = getIntent();
+        final String action = intent.getAction();
+
+
+        try {
+
+            if (Intent.ACTION_SEND.equals(action)) {
+                String type = intent.getType();
+                if ("text/plain".equals(type)) {
+                    handleSendText(intent);
+                } else {
+                    handleSend(intent, false);
+                }
+            } else if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
+                if (intent.hasExtra(Intent.EXTRA_STREAM)) {
+                    handleSend(intent, true);
+                } else {
+                    String type = intent.getType();
+                    if ("text/plain".equals(type)) {
+                        handleSendText(intent);
+                    } else {
+                        handleSend(intent, true);
+                    }
+                }
+            }
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage());
+        }
+
+
+    }
+
+
+    private void handleSendText(Intent intent) {
+
+
+        try {
+            String text = intent.getStringExtra(Intent.EXTRA_TEXT);
+            if (text != null) {
+                storeText(text);
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+
+    }
+
+    private void handleSend(Intent intent, boolean multi) {
+
+        try {
+            Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+            if (multi) {
+                ClipData mClipData = intent.getClipData();
+                if (mClipData != null) {
+                    for (int i = 0; i < mClipData.getItemCount(); i++) {
+                        ClipData.Item item = mClipData.getItemAt(i);
+                        UploadService.invoke(getApplicationContext(), item.getUri());
+                    }
+                } else if (uri != null) {
+                    UploadService.invoke(getApplicationContext(), uri);
+                }
+
+            } else if (uri != null) {
+                UploadService.invoke(getApplicationContext(), uri);
+            }
+
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+
+    }
+
     @Override
     public void clickThreadShare(long idx) {
         final EVENTS events = EVENTS.getInstance(getApplicationContext());
@@ -1282,7 +1413,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Thread thread = threads.getThreadByIdx(idx);
                 checkNotNull(thread);
                 ComponentName[] names = {new ComponentName(
-                        getApplicationContext(), UploaderActivity.class)};
+                        getApplicationContext(), MainActivity.class)};
 
                 Uri uri = FileDocumentsProvider.getUriForThread(thread);
                 Intent intent = ShareCompat.IntentBuilder.from(this)
@@ -1334,13 +1465,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 checkNotNull(thread);
 
                 threadContent = thread.getContent();
-                Uri uri = FileDocumentsProvider.getUriForThread(thread);
+
                 Intent intent = ShareCompat.IntentBuilder.from(this)
-                        //.setStream(uri)
                         .setType(thread.getMimeType())
                         .getIntent();
                 intent.setAction(Intent.ACTION_CREATE_DOCUMENT);
-                //intent.setData(uri);
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 intent.putExtra(Intent.EXTRA_TITLE, thread.getName());
                 intent.putExtra(DocumentsContract.EXTRA_EXCLUDE_SELF, true);
@@ -1420,7 +1549,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(name);
 
         final THREADS threads = THREADS.getInstance(getApplicationContext());
-        final IPFS ipfs = IPFS.getInstance(getApplicationContext());
         final PEERS peers = PEERS.getInstance(getApplicationContext());
         final EVENTS events = EVENTS.getInstance(getApplicationContext());
 

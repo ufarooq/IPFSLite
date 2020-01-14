@@ -4,7 +4,6 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.provider.DocumentsContract;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
@@ -17,8 +16,6 @@ import com.google.gson.Gson;
 import com.j256.simplemagic.ContentInfo;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -78,7 +75,6 @@ public class Service {
     static final String PIN_SERVICE_KEY = "pinServiceKey";
     private static final String TAG = Service.class.getSimpleName();
     private static final Gson gson = new Gson();
-    private static final ExecutorService UPLOAD_SERVICE = Executors.newFixedThreadPool(10);
     private static final String APP_KEY = "AppKey";
     private static final String PIN_SERVICE_TIME_KEY = "pinServiceTimeKey";
     private static final String GATEWAY_KEY = "gatewayKey";
@@ -1028,7 +1024,7 @@ public class Service {
         List<Thread> entries = threads.getThreadsByCID(cid);
         if (!entries.isEmpty()) {
             for (Thread entry : entries) {
-                if (entry.getThread() == thread.getIdx()) {
+                if (entry.getParent() == thread.getIdx()) {
                     return entry;
                 }
             }
@@ -1048,7 +1044,7 @@ public class Service {
             CID cid = link.getCid();
             Thread entry = getDirectoryThread(threads, thread, cid);
             if (entry != null) {
-                if (entry.getStatus() != Status.DONE) {
+                if (entry.getStatus() != Status.SEEDING) {
 
                     boolean success = downloadLink(context, threads, ipfs, entry, link);
                     if (success) {
@@ -1068,7 +1064,7 @@ public class Service {
 
                 if (success) {
                     successCounter.incrementAndGet();
-                    threads.setStatus(entry, Status.DONE);
+                    threads.setStatus(entry, Status.SEEDING);
                 } else {
                     threads.setStatus(entry, Status.ERROR);
                 }
@@ -1124,7 +1120,7 @@ public class Service {
 
                     boolean result = downloadThread(context, threads, ipfs, thread);
                     if (result) {
-                        threads.setStatus(thread, Status.DONE);
+                        threads.setStatus(thread, Status.SEEDING);
                         if (sender != null) {
                             replySender(context, ipfs, sender, thread);
                         }
@@ -1152,7 +1148,7 @@ public class Service {
 
                     boolean result = downloadLinks(context, threads, ipfs, thread, links);
                     if (result) {
-                        threads.setStatus(thread, Status.DONE);
+                        threads.setStatus(thread, Status.SEEDING);
                         if (sender != null) {
                             replySender(context, ipfs, sender, thread);
                         }
@@ -1248,79 +1244,6 @@ public class Service {
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-    }
-
-
-    void storeData(@NonNull Context context, @NonNull Uri uri) {
-        checkNotNull(context);
-        checkNotNull(uri);
-        final EVENTS events = EVENTS.getInstance(context);
-
-        final THREADS threads = THREADS.getInstance(context);
-        final PEERS peers = PEERS.getInstance(context);
-        ThumbnailService.FileDetails fileDetails = ThumbnailService.getFileDetails(context, uri);
-        if (fileDetails == null) {
-            Preferences.error(events, context.getString(R.string.file_not_supported));
-            return;
-        }
-
-        final IPFS ipfs = IPFS.getInstance(context);
-
-
-        UPLOAD_SERVICE.submit(() -> {
-            try {
-                checkNotNull(ipfs, "IPFS is not valid");
-                InputStream inputStream =
-                        context.getContentResolver().openInputStream(uri);
-                checkNotNull(inputStream);
-
-                PID pid = IPFS.getPID(context);
-                checkNotNull(pid);
-                String alias = IPFS.getDeviceName();
-                checkNotNull(alias);
-
-
-                String name = fileDetails.getFileName();
-                long size = fileDetails.getFileSize();
-
-                Thread thread = threads.createThread(pid, alias, Status.INIT, Kind.IN, 0L);
-
-                ThumbnailService.Result res =
-                        ThumbnailService.getThumbnail(context, uri);
-
-                thread.setName(name);
-                thread.setSize(size);
-                thread.setThumbnail(res.getCid());
-                thread.setMimeType(fileDetails.getMimeType());
-                long idx = threads.storeThread(thread);
-
-
-                try {
-                    threads.setThreadLeaching(idx, true);
-
-                    CID cid = ipfs.storeStream(inputStream, true);
-                    checkNotNull(cid);
-
-                    // cleanup of entries with same CID and hierarchy
-                    List<Thread> sameEntries = threads.getThreadsByCIDAndThread(cid, 0L);
-                    threads.removeThreads(ipfs, sameEntries);
-
-
-                    threads.setThreadContent(idx, cid);
-                    threads.setThreadStatus(idx, Status.DONE);
-                } catch (Throwable e) {
-                    threads.setThreadStatus(idx, Status.ERROR);
-                    throw e;
-                } finally {
-                    threads.setThreadLeaching(idx, false);
-                }
-
-            } catch (FileNotFoundException e) {
-                Preferences.error(events, context.getString(R.string.file_not_found));
-            } catch (Throwable e) {
-                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
-            }
-        });
     }
 
 

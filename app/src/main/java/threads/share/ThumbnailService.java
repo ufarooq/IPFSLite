@@ -174,6 +174,48 @@ public class ThumbnailService {
     }
 
     @Nullable
+    private static Bitmap getPreview(@NonNull Context context, @NonNull Uri uri, @NonNull String mimeType) throws Exception {
+        checkNotNull(context);
+        checkNotNull(uri);
+        checkNotNull(mimeType);
+
+        if (mimeType.startsWith("video")) {
+
+
+            MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+            mediaMetadataRetriever.setDataSource(context, uri);
+
+            Bitmap bitmap = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+
+                try {
+                    bitmap = mediaMetadataRetriever.getPrimaryImage();
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage());
+                }
+            }
+            try {
+                if (bitmap == null) {
+                    final WeakReference<Bitmap> weakBmp = new WeakReference<>(mediaMetadataRetriever.getFrameAtTime());
+                    bitmap = weakBmp.get();
+                }
+            } catch (Throwable e) {
+                bitmap = mediaMetadataRetriever.getFrameAtTime();
+            }
+            mediaMetadataRetriever.release();
+            return bitmap;
+
+        } else if (mimeType.startsWith("application/pdf")) {
+            return getPDFBitmap(context, uri);
+        } else if (mimeType.startsWith("image")) {
+
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), uri);
+            return ThumbnailUtils.extractThumbnail(bitmap, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
+        }
+        return null;
+    }
+
+    @Nullable
     private static Bitmap getPreview(@NonNull Context context, @NonNull Uri uri) throws Exception {
         checkNotNull(context);
         checkNotNull(uri);
@@ -250,10 +292,14 @@ public class ThumbnailService {
 
 
     @Nullable
-    private static byte[] getPreviewImage(@NonNull Context context, @NonNull Uri uri) throws Exception {
+    private static byte[] getPreviewImage(@NonNull Context context,
+                                          @NonNull Uri uri,
+                                          @NonNull String mimeType) throws Exception {
         checkNotNull(context);
         checkNotNull(uri);
-        Bitmap bitmap = getPreview(context, uri);
+        checkNotNull(mimeType);
+
+        Bitmap bitmap = getPreview(context, uri, mimeType);
         if (bitmap != null) {
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             bitmap.compress(Bitmap.CompressFormat.WEBP, 100, stream);
@@ -294,24 +340,25 @@ public class ThumbnailService {
         checkNotNull(uri);
 
         Log.e(TAG, uri.toString());
+
         ContentResolver contentResolver = context.getContentResolver();
+        String mimeType = contentResolver.getType(uri);
+        if (mimeType == null) {
+            mimeType = MimeType.OCTET_MIME_TYPE;
+        }
+        Log.e(TAG, "" + mimeType);
         try (Cursor cursor = contentResolver.query(uri, new String[]{
-                DocumentsContract.Document.COLUMN_MIME_TYPE,
                 DocumentsContract.Document.COLUMN_DISPLAY_NAME,
                 DocumentsContract.Document.COLUMN_SIZE}, null, null, null)) {
 
             checkNotNull(cursor);
             cursor.moveToFirst();
 
-            String mimeType = cursor.getString(0);
-            if (mimeType == null) {
-                mimeType = MimeType.OCTET_MIME_TYPE;
-            }
-            String fileName = cursor.getString(1);
+            String fileName = cursor.getString(0);
             if (fileName == null) {
                 fileName = "";
             }
-            long fileSize = cursor.getLong(2);
+            long fileSize = cursor.getLong(1);
             return FileDetails.create(fileName, mimeType, fileSize);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -342,39 +389,33 @@ public class ThumbnailService {
         return bitmap;
     }
 
-    @NonNull
-    public static Result getThumbnail(@NonNull Context context, @NonNull Uri uri) {
+    @Nullable
+    public static CID getThumbnail(@NonNull Context context,
+                                   @NonNull Uri uri,
+                                   @NonNull String mimeType) {
         checkNotNull(context);
         checkNotNull(uri);
+        checkNotNull(mimeType);
 
         CID cid = null;
-        boolean thumbnail = false;
         byte[] bytes = null;
 
 
         try {
-            bytes = getPreviewImage(context, uri);
-            if (bytes != null) {
-                thumbnail = true;
-            }
+            bytes = getPreviewImage(context, uri, mimeType);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage());
         }
 
         if (bytes != null) {
-            final IPFS ipfs = IPFS.getInstance(context);
-
             try {
-                cid = ipfs.storeData(bytes);
+                cid = IPFS.getInstance(context).storeData(bytes);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
+        }
 
-        }
-        if (cid == null) {
-            thumbnail = false;
-        }
-        return new Result(cid, thumbnail);
+        return cid;
     }
 
 

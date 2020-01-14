@@ -405,7 +405,7 @@ public class ThreadsFragment extends Fragment implements
         if (thread.isPublishing()) {
             return false;
         }
-        return thread.getStatus() == Status.DONE;
+        return thread.getStatus() == Status.SEEDING;
     }
 
     @Override
@@ -560,7 +560,7 @@ public class ThreadsFragment extends Fragment implements
                     Thread thread = threads.getThreadByIdx(idx);
                     checkNotNull(thread);
                     Status status = thread.getStatus();
-                    if (status == Status.DONE) {
+                    if (status == Status.SEEDING) {
 
                         CID cid = thread.getContent();
                         checkNotNull(cid);
