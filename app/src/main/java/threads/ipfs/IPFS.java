@@ -1218,7 +1218,8 @@ public class IPFS implements Listener {
     }
 
     @NonNull
-    public Reader getReader(@NonNull CID cid, boolean offline) throws Exception {
+    public Reader getReader(@NonNull CID cid) throws Exception {
+        checkNotNull(cid);
         return node.getReader(cid.getCid());
     }
 
@@ -1307,7 +1308,7 @@ public class IPFS implements Listener {
 
         int totalRead = 0;
         try {
-            Reader fileReader = getReader(cid, true);
+            Reader fileReader = getReader(cid);
             long size = fileReader.getSize();
             final AtomicInteger atomicProgress = new AtomicInteger(0);
 
@@ -1378,7 +1379,7 @@ public class IPFS implements Listener {
     public void storeToOutputStream(@NonNull OutputStream os, @NonNull CID cid) throws Exception {
         checkNotNull(cid);
         checkNotNull(os);
-        Reader reader = getReader(cid, true);
+        Reader reader = getReader(cid);
         try {
             int size = 262158;
             reader.load(size);
@@ -1487,7 +1488,7 @@ public class IPFS implements Listener {
 
         int blockSize = 4096;
         try {
-            Reader fileReader = getReader(cid, true);
+            Reader fileReader = getReader(cid);
 
             try {
 

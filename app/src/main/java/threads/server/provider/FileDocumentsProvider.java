@@ -397,7 +397,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
             checkNotNull(ipfs);
             checkNotNull(cid);
             checkNotNull(os);
-            Reader reader = ipfs.getReader(cid, true);
+            Reader reader = ipfs.getReader(cid);
             try {
                 int size = 262158;
                 reader.load(size);
