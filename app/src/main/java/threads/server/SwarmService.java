@@ -10,7 +10,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import threads.core.Preferences;
 import threads.core.peers.PeerInfo;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.PID;
+import threads.ipfs.PID;
 import threads.share.ConnectService;
 import threads.share.IdentityService;
 

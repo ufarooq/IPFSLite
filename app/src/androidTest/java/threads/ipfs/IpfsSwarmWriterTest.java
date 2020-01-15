@@ -14,10 +14,6 @@ import org.junit.runner.RunWith;
 
 import java.io.File;
 
-import threads.ipfs.api.CID;
-import threads.ipfs.api.PID;
-import threads.ipfs.api.PeerInfo;
-
 import static junit.framework.TestCase.assertNotNull;
 
 @RunWith(AndroidJUnit4.class)

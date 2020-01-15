@@ -14,13 +14,6 @@ import org.junit.runner.RunWith;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import threads.ipfs.api.ConnMgrConfig;
-import threads.ipfs.api.ExperimentalConfig;
-import threads.ipfs.api.PID;
-import threads.ipfs.api.Peer;
-import threads.ipfs.api.PeerInfo;
-import threads.ipfs.api.SwarmConfig;
-
 import static junit.framework.TestCase.assertNotNull;
 
 @RunWith(AndroidJUnit4.class)

@@ -12,8 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import threads.core.peers.PEERS;
 import threads.core.peers.Peer;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.PID;
-import threads.ipfs.api.PeerInfo;
+import threads.ipfs.PID;
+import threads.ipfs.PeerInfo;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -31,11 +31,11 @@ public class GatewayService {
 
         // important reset all connection status
         peersInstance.resetPeersConnected();
-        List<threads.ipfs.api.Peer> peers = ipfs.swarmPeers();
+        List<threads.ipfs.Peer> peers = ipfs.swarmPeers();
 
         List<Long> latencies = new ArrayList<>();
         int size = peers.size();
-        for (threads.ipfs.api.Peer peer : peers) {
+        for (threads.ipfs.Peer peer : peers) {
 
             long lat = peer.getLatency(); // TODO remove cast
             if (lat < Long.MAX_VALUE) {
@@ -68,9 +68,9 @@ public class GatewayService {
     public static int evaluatePeers(@NonNull Context context, boolean pubsubs) {
         IPFS ipfs = IPFS.getInstance(context);
         checkNotNull(ipfs);
-        List<threads.ipfs.api.Peer> peers = ipfs.swarmPeers();
+        List<threads.ipfs.Peer> peers = ipfs.swarmPeers();
         int size = peers.size();
-        for (threads.ipfs.api.Peer peer : peers) {
+        for (threads.ipfs.Peer peer : peers) {
             // do not store circuit addresses
             if (!peer.getMultiAddress().endsWith("/p2p-circuit")) {
                 if (pubsubs) {
@@ -106,11 +106,11 @@ public class GatewayService {
 
         if (ipfs != null) {
 
-            List<threads.ipfs.api.Peer> peers = ipfs.swarmPeers();
+            List<threads.ipfs.Peer> peers = ipfs.swarmPeers();
 
-            peers.sort(threads.ipfs.api.Peer::compareTo);
+            peers.sort(threads.ipfs.Peer::compareTo);
 
-            for (threads.ipfs.api.Peer peer : peers) {
+            for (threads.ipfs.Peer peer : peers) {
 
                 if (result.size() == numRelays) {
                     break;
@@ -162,11 +162,11 @@ public class GatewayService {
 
         if (ipfs != null) {
 
-            List<threads.ipfs.api.Peer> peers = ipfs.swarmPeers();
+            List<threads.ipfs.Peer> peers = ipfs.swarmPeers();
 
-            peers.sort(threads.ipfs.api.Peer::compareTo);
+            peers.sort(threads.ipfs.Peer::compareTo);
 
-            for (threads.ipfs.api.Peer peer : peers) {
+            for (threads.ipfs.Peer peer : peers) {
 
                 if (connected.size() == numPeers) {
                     break;
@@ -186,7 +186,7 @@ public class GatewayService {
     }
 
     private static Peer storePeer(@NonNull Context context,
-                                  @NonNull threads.ipfs.api.Peer peer) {
+                                  @NonNull threads.ipfs.Peer peer) {
         checkNotNull(context);
         checkNotNull(peer);
 

@@ -8,8 +8,6 @@ import androidx.annotation.NonNull;
 import java.util.Hashtable;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import threads.ipfs.api.PubsubInfo;
-
 public class TestEnv {
     private static final String TAG = TestEnv.class.getSimpleName();
     public static Hashtable<String, AtomicInteger> COUNTER = new Hashtable<>();

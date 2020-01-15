@@ -43,16 +43,16 @@ import threads.core.threads.Thread;
 import threads.iota.Entity;
 import threads.iota.EntityService;
 import threads.iota.HashDatabase;
+import threads.ipfs.CID;
+import threads.ipfs.ConnMgrConfig;
+import threads.ipfs.Encryption;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.CID;
-import threads.ipfs.api.ConnMgrConfig;
-import threads.ipfs.api.Encryption;
-import threads.ipfs.api.LinkInfo;
-import threads.ipfs.api.Multihash;
-import threads.ipfs.api.PID;
-import threads.ipfs.api.PeerInfo;
-import threads.ipfs.api.PubsubConfig;
-import threads.ipfs.api.RoutingConfig;
+import threads.ipfs.LinkInfo;
+import threads.ipfs.Multihash;
+import threads.ipfs.PID;
+import threads.ipfs.PeerInfo;
+import threads.ipfs.PubsubConfig;
+import threads.ipfs.RoutingConfig;
 import threads.server.jobs.JobServiceConnect;
 import threads.server.jobs.JobServiceContents;
 import threads.server.jobs.JobServiceDownload;
@@ -434,7 +434,7 @@ public class Service {
 
 
         if (peers.getUserByPID(pid) == null) {
-            threads.ipfs.api.PeerInfo info = ipfs.id(pid, 3);
+            PeerInfo info = ipfs.id(pid, 3);
             if (info != null) {
                 if (info.isLiteAgent()) {
                     String pubKey = info.getPublicKey();

@@ -19,8 +19,8 @@ import threads.core.peers.Peer;
 import threads.core.peers.User;
 import threads.iota.EntityService;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.PID;
-import threads.ipfs.api.PeerInfo;
+import threads.ipfs.PID;
+import threads.ipfs.PeerInfo;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;

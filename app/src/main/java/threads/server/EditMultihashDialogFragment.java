@@ -27,7 +27,7 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import threads.ipfs.api.Multihash;
+import threads.ipfs.Multihash;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

@@ -32,8 +32,8 @@ import java.lang.ref.WeakReference;
 import java.util.Optional;
 
 import threads.core.threads.Thread;
+import threads.ipfs.CID;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.CID;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;

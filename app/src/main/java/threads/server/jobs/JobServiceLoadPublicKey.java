@@ -17,7 +17,8 @@ import java.util.concurrent.Executors;
 import threads.core.Preferences;
 import threads.core.peers.PEERS;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.PID;
+import threads.ipfs.PID;
+import threads.ipfs.PeerInfo;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -68,7 +69,7 @@ public class JobServiceLoadPublicKey extends JobService {
                 PEERS peers = PEERS.getInstance(getApplicationContext());
                 PID pid = PID.create(peerID);
 
-                threads.ipfs.api.PeerInfo pInfo = ipfs.id(pid, timeout);
+                PeerInfo pInfo = ipfs.id(pid, timeout);
                 if (pInfo != null) {
                     String pKey = pInfo.getPublicKey();
                     if (pKey != null) {

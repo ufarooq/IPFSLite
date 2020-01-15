@@ -9,8 +9,8 @@ import androidx.room.TypeConverters;
 import java.util.Objects;
 
 import threads.core.Converter;
-import threads.ipfs.api.CID;
-import threads.ipfs.api.PID;
+import threads.ipfs.CID;
+import threads.ipfs.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

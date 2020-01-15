@@ -13,7 +13,7 @@ import androidx.room.Update;
 import java.util.List;
 
 import threads.core.Converter;
-import threads.ipfs.api.CID;
+import threads.ipfs.CID;
 
 @Dao
 public interface PeerDao {

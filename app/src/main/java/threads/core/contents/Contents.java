@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import threads.core.threads.Thread;
-import threads.ipfs.api.CID;
+import threads.ipfs.CID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

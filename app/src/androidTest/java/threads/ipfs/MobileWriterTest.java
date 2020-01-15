@@ -7,12 +7,6 @@ import androidx.test.core.app.ApplicationProvider;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import threads.ipfs.api.AddressesConfig;
-import threads.ipfs.api.Config;
-import threads.ipfs.api.DiscoveryConfig;
-import threads.ipfs.api.MDNSConfig;
-import threads.ipfs.api.RoutingConfig;
-
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 

@@ -28,9 +28,9 @@ import threads.core.threads.Kind;
 import threads.core.threads.Status;
 import threads.core.threads.THREADS;
 import threads.core.threads.Thread;
+import threads.ipfs.CID;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.CID;
-import threads.ipfs.api.PID;
+import threads.ipfs.PID;
 import threads.share.ThumbnailService;
 
 import static androidx.core.util.Preconditions.checkNotNull;

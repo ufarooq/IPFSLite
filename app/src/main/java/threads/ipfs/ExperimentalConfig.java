@@ -1,4 +1,4 @@
-package threads.ipfs.api;
+package threads.ipfs;
 
 public class ExperimentalConfig {
     private boolean QUIC = false;

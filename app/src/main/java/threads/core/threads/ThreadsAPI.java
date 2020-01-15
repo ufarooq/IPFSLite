@@ -10,10 +10,10 @@ import com.google.common.collect.Iterables;
 import java.util.Date;
 import java.util.List;
 
+import threads.ipfs.CID;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.CID;
-import threads.ipfs.api.Multihash;
-import threads.ipfs.api.PID;
+import threads.ipfs.Multihash;
+import threads.ipfs.PID;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;

@@ -25,7 +25,7 @@ import java.util.List;
 import threads.core.peers.User;
 import threads.core.peers.UserType;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.PID;
+import threads.ipfs.PID;
 import threads.server.mdl.UsersViewModel;
 import threads.share.UserActionDialogFragment;
 import threads.share.UsersViewAdapter;

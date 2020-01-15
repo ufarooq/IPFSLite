@@ -1,4 +1,4 @@
-package threads.ipfs.api;
+package threads.ipfs;
 
 import java.util.Map;
 import java.util.TreeMap;

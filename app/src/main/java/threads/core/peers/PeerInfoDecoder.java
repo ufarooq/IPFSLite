@@ -10,7 +10,7 @@ import com.google.gson.Gson;
 import java.util.HashMap;
 
 import threads.iota.Entity;
-import threads.ipfs.api.PID;
+import threads.ipfs.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

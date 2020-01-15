@@ -12,12 +12,6 @@ import org.junit.runner.RunWith;
 
 import java.util.List;
 
-import threads.ipfs.api.CID;
-import threads.ipfs.api.LinkInfo;
-import threads.ipfs.api.PID;
-import threads.ipfs.api.Peer;
-import threads.ipfs.api.PeerInfo;
-
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;

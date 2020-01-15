@@ -18,8 +18,8 @@ import java.util.concurrent.TimeUnit;
 
 import threads.core.contents.CDS;
 import threads.core.peers.Content;
-import threads.ipfs.api.CID;
-import threads.ipfs.api.PID;
+import threads.ipfs.CID;
+import threads.ipfs.PID;
 import threads.server.ContentsService;
 import threads.server.Service;
 import threads.share.Network;

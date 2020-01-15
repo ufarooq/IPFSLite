@@ -3,8 +3,8 @@ package threads.core.peers;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import threads.ipfs.api.CID;
-import threads.ipfs.api.PID;
+import threads.ipfs.CID;
+import threads.ipfs.PID;
 
 public interface IPeer {
 

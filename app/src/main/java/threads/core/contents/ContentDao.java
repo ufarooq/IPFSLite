@@ -10,7 +10,7 @@ import androidx.room.TypeConverters;
 import java.util.List;
 
 import threads.core.Converter;
-import threads.ipfs.api.PID;
+import threads.ipfs.PID;
 
 @Dao
 public interface ContentDao {

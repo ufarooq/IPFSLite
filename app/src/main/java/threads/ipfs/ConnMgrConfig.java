@@ -1,4 +1,4 @@
-package threads.ipfs.api;
+package threads.ipfs;
 
 import androidx.annotation.NonNull;
 

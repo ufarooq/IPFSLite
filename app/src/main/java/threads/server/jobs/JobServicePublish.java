@@ -16,8 +16,8 @@ import java.util.concurrent.Executors;
 
 import threads.core.Preferences;
 import threads.core.peers.Content;
+import threads.ipfs.CID;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.CID;
 import threads.server.Service;
 import threads.share.GatewayService;
 import threads.share.Network;

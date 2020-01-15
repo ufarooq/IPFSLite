@@ -18,9 +18,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.List;
 
-import threads.ipfs.api.CID;
-import threads.ipfs.api.LinkInfo;
-
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertNotEquals;

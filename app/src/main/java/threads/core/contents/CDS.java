@@ -6,8 +6,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.Room;
 
-import threads.ipfs.api.CID;
-import threads.ipfs.api.PID;
+import threads.ipfs.CID;
+import threads.ipfs.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

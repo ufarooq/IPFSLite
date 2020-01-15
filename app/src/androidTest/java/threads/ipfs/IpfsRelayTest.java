@@ -13,10 +13,6 @@ import org.junit.runner.RunWith;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import threads.ipfs.api.PID;
-import threads.ipfs.api.Peer;
-import threads.ipfs.api.PubsubConfig;
-
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertFalse;

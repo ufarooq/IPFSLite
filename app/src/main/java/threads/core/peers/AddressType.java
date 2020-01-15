@@ -6,7 +6,7 @@ import org.iota.jota.utils.Constants;
 import org.iota.jota.utils.TrytesConverter;
 
 import threads.iota.IOTA;
-import threads.ipfs.api.PID;
+import threads.ipfs.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

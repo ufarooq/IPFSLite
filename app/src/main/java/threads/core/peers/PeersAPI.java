@@ -14,9 +14,9 @@ import threads.iota.Entity;
 import threads.iota.EntityService;
 import threads.iota.Hash;
 import threads.iota.IOTA;
+import threads.ipfs.CID;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.CID;
-import threads.ipfs.api.PID;
+import threads.ipfs.PID;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;

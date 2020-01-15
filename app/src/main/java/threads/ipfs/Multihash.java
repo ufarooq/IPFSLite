@@ -1,4 +1,4 @@
-package threads.ipfs.api;
+package threads.ipfs;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;

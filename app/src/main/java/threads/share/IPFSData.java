@@ -5,8 +5,8 @@ import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
+import threads.ipfs.CID;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.CID;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;

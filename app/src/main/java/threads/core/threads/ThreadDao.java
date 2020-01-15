@@ -12,8 +12,8 @@ import androidx.room.Update;
 import java.util.List;
 
 import threads.core.Converter;
-import threads.ipfs.api.CID;
-import threads.ipfs.api.PID;
+import threads.ipfs.CID;
+import threads.ipfs.PID;
 
 @Dao
 public interface ThreadDao {

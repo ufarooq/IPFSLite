@@ -38,9 +38,9 @@ import mobile.Reader;
 import threads.core.threads.Status;
 import threads.core.threads.THREADS;
 import threads.core.threads.Thread;
+import threads.ipfs.CID;
 import threads.ipfs.IPFS;
-import threads.ipfs.api.CID;
-import threads.ipfs.api.Multihash;
+import threads.ipfs.Multihash;
 import threads.server.BuildConfig;
 import threads.server.R;
 

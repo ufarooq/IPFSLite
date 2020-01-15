@@ -10,7 +10,7 @@ import com.google.gson.Gson;
 import java.net.URI;
 
 import threads.core.peers.Content;
-import threads.ipfs.api.Multihash;
+import threads.ipfs.Multihash;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

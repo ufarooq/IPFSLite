@@ -2,8 +2,8 @@ package threads.core;
 
 import androidx.room.TypeConverter;
 
-import threads.ipfs.api.CID;
-import threads.ipfs.api.PID;
+import threads.ipfs.CID;
+import threads.ipfs.PID;
 
 
 public class Converter {

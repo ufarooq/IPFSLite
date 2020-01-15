@@ -14,8 +14,6 @@ import org.junit.runner.RunWith;
 
 import java.io.File;
 
-import threads.ipfs.api.CID;
-
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;

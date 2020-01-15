@@ -1,4 +1,4 @@
-package threads.ipfs.api;
+package threads.ipfs;
 
 /**
  * Copyright 2011 Google Inc.

@@ -10,15 +10,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import threads.ipfs.api.AddressesConfig;
-import threads.ipfs.api.Config;
-import threads.ipfs.api.ConnMgrConfig;
-import threads.ipfs.api.DiscoveryConfig;
-import threads.ipfs.api.ExperimentalConfig;
-import threads.ipfs.api.PubsubConfig;
-import threads.ipfs.api.RoutingConfig;
-import threads.ipfs.api.SwarmConfig;
-
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertFalse;

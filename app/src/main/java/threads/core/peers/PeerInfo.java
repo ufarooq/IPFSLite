@@ -7,7 +7,7 @@ import androidx.room.TypeConverters;
 
 import java.util.Objects;
 
-import threads.ipfs.api.PID;
+import threads.ipfs.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
