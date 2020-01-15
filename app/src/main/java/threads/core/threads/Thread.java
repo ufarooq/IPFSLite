@@ -17,6 +17,7 @@ import threads.share.MimeType;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
+
 @androidx.room.Entity
 public class Thread {
 

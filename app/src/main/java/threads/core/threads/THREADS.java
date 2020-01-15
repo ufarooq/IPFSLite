@@ -5,9 +5,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.room.Room;
 
-import threads.ipfs.IPFS;
-import threads.ipfs.api.CID;
-
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class THREADS extends ThreadsAPI {
@@ -33,7 +30,6 @@ public class THREADS extends ThreadsAPI {
         if (INSTANCE == null) {
             synchronized (THREADS.class) {
                 if (INSTANCE == null) {
-                    // TODO bug allow on main thread
                     ThreadsDatabase threadsDatabase = Room.databaseBuilder(context,
                             ThreadsDatabase.class,
                             ThreadsDatabase.class.getSimpleName()).allowMainThreadQueries().fallbackToDestructiveMigration().build();
@@ -42,19 +38,6 @@ public class THREADS extends ThreadsAPI {
             }
         }
         return INSTANCE;
-    }
-
-
-    public void setImage(@NonNull IPFS ipfs,
-                         @NonNull Thread thread,
-                         @NonNull byte[] data) throws Exception {
-        checkNotNull(ipfs);
-        checkNotNull(thread);
-        checkNotNull(data);
-        CID image = ipfs.storeData(data);
-        if (image != null) {
-            setImage(thread, image);
-        }
     }
 
 

@@ -87,7 +87,7 @@ public class JobServiceDownload extends JobService {
                 return;
             }
 
-            List<Thread> entries = threads.getThreadsByCIDAndThread(cid, 0L);
+            List<Thread> entries = threads.getThreadsByCIDAndParent(cid, 0L);
 
             if (!entries.isEmpty()) {
                 Thread entry = entries.get(0);

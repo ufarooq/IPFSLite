@@ -33,15 +33,15 @@ public interface ThreadDao {
     @Query("DELETE FROM Thread")
     void clear();
 
-    @Query("SELECT * FROM Thread WHERE lastModified =:date")
-    List<Thread> getThreadsByDate(long date);
+    @Query("SELECT * FROM Thread WHERE lastModified =:lastModified")
+    List<Thread> getThreadsByLastModified(long lastModified);
 
-    @Query("SELECT * FROM Thread WHERE expire < :date")
-    List<Thread> getExpiredThreads(long date);
+    @Query("SELECT * FROM Thread WHERE expire < :lastModified")
+    List<Thread> getExpiredThreads(long lastModified);
 
     @Query("SELECT * FROM Thread WHERE kind LIKE :kind AND status = :status")
     @TypeConverters({Kind.class, Status.class})
-    List<Thread> getThreadsByKindAndThreadStatus(Kind kind, Status status);
+    List<Thread> getThreadsByKindAndStatus(Kind kind, Status status);
 
     @Query("SELECT * FROM Thread WHERE pinned = :pinned")
     List<Thread> getThreadsByPinned(boolean pinned);
@@ -67,8 +67,8 @@ public interface ThreadDao {
     @Query("UPDATE Thread SET leaching = :leaching  WHERE idx = :idx")
     void setLeaching(long idx, boolean leaching);
 
-    @Query("UPDATE Thread SET lastModified = :date  WHERE idx = :idx")
-    void setThreadDate(long idx, long date);
+    @Query("UPDATE Thread SET lastModified = :lastModified  WHERE idx = :idx")
+    void setThreadLastModified(long idx, long lastModified);
 
     @Query("UPDATE Thread SET status = :status  WHERE idx IN (:idxs)")
     @TypeConverters({Status.class})
@@ -105,9 +105,9 @@ public interface ThreadDao {
     @TypeConverters({Converter.class})
     List<Thread> getThreadsByCid(CID cid);
 
-    @Query("SELECT * FROM Thread WHERE content = :cid AND parent = :thread")
+    @Query("SELECT * FROM Thread WHERE content = :cid AND parent = :parent")
     @TypeConverters({Converter.class})
-    List<Thread> getThreadsByCidAndThread(CID cid, long thread);
+    List<Thread> getThreadsByCidAndParent(CID cid, long parent);
 
     @Delete
     void removeThreads(Thread... threads);
@@ -147,7 +147,7 @@ public interface ThreadDao {
     Thread getThreadByIdx(long idx);
 
     @Query("SELECT * FROM Thread WHERE idx IN(:idxs)")
-    List<Thread> getThreadByIdxs(long... idxs);
+    List<Thread> getThreadsByIdx(long... idxs);
 
     @Query("SELECT * FROM Thread WHERE sender =:senderPid")
     @TypeConverters({Converter.class})
@@ -184,7 +184,16 @@ public interface ThreadDao {
     @Query("UPDATE Thread SET name = :name WHERE idx = :idx")
     void setName(long idx, String name);
 
-    @Query("SELECT * FROM Thread WHERE parent =:thread AND status = :status")
+    @Query("SELECT * FROM Thread WHERE parent =:parent AND status = :status")
     @TypeConverters({Status.class})
-    List<Thread> getChildrenByStatus(long thread, Status status);
+    List<Thread> getChildrenByStatus(long parent, Status status);
+
+    @Query("SELECT * FROM Thread WHERE status = :status ORDER BY lastModified DESC LIMIT :limit")
+    @TypeConverters({Status.class})
+    List<Thread> getNewestThreadsByStatus(Status status, int limit);
+
+
+    @Query("SELECT * FROM Thread WHERE status = :status AND name LIKE :query")
+    @TypeConverters({Status.class})
+    List<Thread> getThreadsByQuery(Status status, String query);
 }

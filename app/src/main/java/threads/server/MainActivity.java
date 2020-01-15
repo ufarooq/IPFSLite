@@ -1306,7 +1306,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                     // cleanup of entries with same CID and hierarchy
-                    List<Thread> sameEntries = threads.getThreadsByCIDAndThread(cid, 0L);
+                    List<Thread> sameEntries = threads.getThreadsByCIDAndParent(cid, 0L);
                     threads.removeThreads(ipfs, sameEntries);
 
                     threads.setThreadName(idx, cid.getCid());

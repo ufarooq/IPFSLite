@@ -29,14 +29,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.PriorityQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import mobile.Reader;
 import threads.core.threads.Status;
 import threads.core.threads.THREADS;
 import threads.core.threads.Thread;
@@ -46,7 +44,6 @@ import threads.ipfs.api.Multihash;
 import threads.server.BuildConfig;
 import threads.server.R;
 
-import static android.os.ParcelFileDescriptor.MODE_READ_ONLY;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class FileDocumentsProvider extends DocumentsProvider {
@@ -140,90 +137,29 @@ public class FileDocumentsProvider extends DocumentsProvider {
     @Override
     public Cursor queryRecentDocuments(String rootId, String[] projection)
             throws FileNotFoundException {
-        Log.v(TAG, "queryRecentDocuments");
-        // TODO optimize on native search in database
 
-        // This example implementation walks a local file structure to find the most recently
-        // modified files.  Other implementations might include making a network call to query a
-        // server.
-
-        // Create a cursor with the requested projection, or the default projection.
         final MatrixCursor result = new MatrixCursor(resolveDocumentProjection(projection));
 
 
-        List<Thread> entries = threads.getThreadsByStatus(Status.SEEDING);
-
-
-        // Create a queue to store the most recent documents, which orders by last modified.
-        PriorityQueue<Thread> lastModifiedFiles = new PriorityQueue<Thread>(5, new Comparator<Thread>() {
-            public int compare(Thread i, Thread j) {
-                return Long.compare(i.getLastModified(), j.getLastModified());
-            }
-        });
-
-        // Iterate through all files and directories in the file structure under the root.  If
-        // the file is more recent than the least recently modified, add it to the queue,
-        // limiting the number of results.
-        final LinkedList<Thread> pending = new LinkedList<Thread>();
-
-        // Start by adding the parent to the list of files to be processed
-        pending.addAll(entries);
-
-        // Do while we still have unexamined files
-        while (!pending.isEmpty()) {
-            // Take a file from the list of unprocessed files
-            final Thread file = pending.removeFirst();
-            if (!file.isDir()) {
-                lastModifiedFiles.add(file);
-            }
+        List<Thread> entries = threads.getNewestThreadsByStatus(Status.SEEDING, 5);
+        for (Thread thread : entries) {
+            includeFile(result, thread);
         }
 
-        // Add the most recent files to the cursor, not exceeding the max number of results.
-        int includedCount = 0;
-        while (includedCount < MAX_LAST_MODIFIED + 1 && !lastModifiedFiles.isEmpty()) {
-            final Thread file = lastModifiedFiles.remove();
-            includeFile(result, file);
-            includedCount++;
-        }
         return result;
     }
 
     @Override
     public Cursor querySearchDocuments(String rootId, String query, String[] projection)
             throws FileNotFoundException {
-        Log.v(TAG, "querySearchDocuments");
-        // TODO optimize on native search in database
-
-        // Create a cursor with the requested projection, or the default projection.
         final MatrixCursor result = new MatrixCursor(resolveDocumentProjection(projection));
-        List<Thread> entries = threads.getThreadsByStatus(Status.SEEDING);
 
-        // This example implementation searches file names for the query and doesn't rank search
-        // results, so we can stop as soon as we find a sufficient number of matches.  Other
-        // implementations might use other data about files, rather than the file name, to
-        // produce a match; it might also require a network call to query a remote server.
 
-        // Iterate through all files in the file structure under the root until we reach the
-        // desired number of matches.
-        final LinkedList<Thread> pending = new LinkedList<Thread>();
-
-        // Start by adding the parent to the list of files to be processed
-        pending.addAll(entries);
-
-        // Do while we still have unexamined files, and fewer than the max search results
-        while (!pending.isEmpty() && result.getCount() < MAX_SEARCH_RESULTS) {
-            // Take a file from the list of unprocessed files
-            final Thread file = pending.removeFirst();
-            if (!file.isDir()) {
-
-                final String displayName = file.getName();
-
-                // If it's a file and it matches, add it to the result cursor.
-                if (displayName.toLowerCase().contains(query)) {
-                    includeFile(result, file);
-                }
-            }
+        List<Thread> entries = threads.getThreadsByQuery(Status.SEEDING, query);
+        for (Thread thread : entries) {
+            includeFile(result, thread);
         }
+
         return result;
     }
 
@@ -243,21 +179,13 @@ public class FileDocumentsProvider extends DocumentsProvider {
             throw new FileNotFoundException();
         }
         try {
-            File impl = new File(ipfs.getCacheDir(), cid.getCid());
-
-            if (!impl.exists()) {
-                ipfs.storeToFile(impl, cid);
-            }
-
             if (signal != null) {
                 if (signal.isCanceled()) {
                     return null;
                 }
             }
-            ParcelFileDescriptor pfd = ParcelFileDescriptor.open(impl, MODE_READ_ONLY);
-            return new AssetFileDescriptor(pfd, 0, impl.length());
-            //final ParcelFileDescriptor pfd = ParcelFileDescriptorUtil.pipeFrom(ipfs, cid);
-            //return new AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH);
+            final ParcelFileDescriptor pfd = ParcelFileDescriptorUtil.pipeFrom(ipfs, cid, signal);
+            return new AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH);
 
         } catch (Throwable e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
@@ -395,20 +323,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
                 throw new FileNotFoundException("");
             }
             try {
-
-                File impl = new File(ipfs.getCacheDir(), cid.getCid());
-
-                if (!impl.exists()) {
-                    ipfs.storeToFile(impl, cid);
-                }
-
-                if (signal != null) {
-                    if (signal.isCanceled()) {
-                        return null;
-                    }
-                }
-                return ParcelFileDescriptor.open(impl, accessMode);
-                //return ParcelFileDescriptorUtil.pipeFrom(ipfs, cid);
+                return ParcelFileDescriptorUtil.pipeFrom(ipfs, cid, signal);
             } catch (Throwable e) {
                 Log.e(TAG, e.getLocalizedMessage(), e);
             }
@@ -457,7 +372,9 @@ public class FileDocumentsProvider extends DocumentsProvider {
 
     private static class ParcelFileDescriptorUtil {
 
-        static ParcelFileDescriptor pipeFrom(IPFS ipfs, CID cid)
+        static ParcelFileDescriptor pipeFrom(@NonNull IPFS ipfs,
+                                             @NonNull CID cid,
+                                             @Nullable CancellationSignal signal)
                 throws Exception {
             final ParcelFileDescriptor[] pipe = ParcelFileDescriptor.createPipe();
 
@@ -465,12 +382,41 @@ public class FileDocumentsProvider extends DocumentsProvider {
             executor.submit(() -> {
                 try (OutputStream output =
                              new ParcelFileDescriptor.AutoCloseOutputStream(pipe[1])) {
-                    ipfs.storeToOutputStream(output, cid);
+                    storeToOutputStream(ipfs, output, cid, signal);
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
             });
             return pipe[0];
+        }
+
+        private static void storeToOutputStream(@NonNull IPFS ipfs,
+                                                @NonNull OutputStream os,
+                                                @NonNull CID cid,
+                                                @Nullable CancellationSignal signal) throws Exception {
+            checkNotNull(ipfs);
+            checkNotNull(cid);
+            checkNotNull(os);
+            Reader reader = ipfs.getReader(cid, true);
+            try {
+                int size = 262158;
+                reader.load(size);
+                long read = reader.getRead();
+                while (read > 0) {
+                    byte[] bytes = reader.getData();
+                    if (signal != null) {
+                        if (signal.isCanceled()) {
+                            return;
+                        }
+                    }
+                    os.write(bytes, 0, bytes.length);
+                    reader.load(size);
+                    read = reader.getRead();
+                }
+            } finally {
+                reader.close();
+            }
+
         }
     }
 

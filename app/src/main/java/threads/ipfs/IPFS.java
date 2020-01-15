@@ -1219,7 +1219,7 @@ public class IPFS implements Listener {
 
     @NonNull
     public Reader getReader(@NonNull CID cid, boolean offline) throws Exception {
-        return node.getReader(cid.getCid(), offline);
+        return node.getReader(cid.getCid());
     }
 
     @NonNull

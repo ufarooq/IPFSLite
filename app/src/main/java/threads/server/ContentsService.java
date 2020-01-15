@@ -185,7 +185,7 @@ public class ContentsService {
         final THREADS threads = THREADS.getInstance(context);
         final IPFS ipfs = IPFS.getInstance(context);
         checkNotNull(ipfs, "IPFS not valid");
-        List<Thread> entries = threads.getThreadsByCIDAndThread(cid, 0L);
+        List<Thread> entries = threads.getThreadsByCIDAndParent(cid, 0L);
 
         if (entries.isEmpty()) {
 

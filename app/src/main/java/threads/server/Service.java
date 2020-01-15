@@ -1373,7 +1373,7 @@ public class Service {
 
                     Contents contents = new Contents();
 
-                    List<Thread> threadList = threads.getThreadByIdxs(idxs);
+                    List<Thread> threadList = threads.getThreadsByIdx(idxs);
                     contents.add(threadList);
 
                     String data = gson.toJson(contents);

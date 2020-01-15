@@ -129,11 +129,9 @@ public class ThreadsAPI {
     }
 
 
-    public boolean isReferenced(@NonNull CID cid) {
+    private boolean isReferenced(@NonNull CID cid) {
         checkNotNull(cid);
-        int counter = getThreadsDatabase().threadDao().references(cid);
-        // todo isReferenced check where it is used
-        return counter > 0;
+        return getThreadsDatabase().threadDao().references(cid) > 0;
     }
 
     private void removeThread(@NonNull IPFS ipfs, @NonNull Thread thread) {
@@ -154,7 +152,7 @@ public class ThreadsAPI {
         }
     }
 
-    public void unpin(@NonNull IPFS ipfs, @Nullable CID cid) {
+    private void unpin(@NonNull IPFS ipfs, @Nullable CID cid) {
         try {
             if (cid != null) {
                 if (!isReferenced(cid)) {
@@ -167,6 +165,9 @@ public class ThreadsAPI {
     }
 
 
+    public List<Thread> getNewestThreadsByStatus(@NonNull Status status, int limit) {
+        return getThreadsDatabase().threadDao().getNewestThreadsByStatus(status, limit);
+    }
     public List<Thread> getExpiredThreads() {
         return getThreadsDatabase().threadDao().getExpiredThreads(System.currentTimeMillis());
     }
@@ -174,13 +175,13 @@ public class ThreadsAPI {
 
     public void removeThreads(@NonNull IPFS ipfs, long... idxs) {
         checkNotNull(ipfs);
-        List<Thread> threads = getThreadByIdxs(idxs);
+        List<Thread> threads = getThreadsByIdx(idxs);
         for (Thread thread : threads) {
             removeThread(ipfs, thread);
         }
     }
 
-    public void rm(@NonNull IPFS ipfs, @NonNull CID cid) {
+    private void rm(@NonNull IPFS ipfs, @NonNull CID cid) {
         checkNotNull(ipfs);
         checkNotNull(cid);
         checkNotNull(cid);
@@ -228,7 +229,7 @@ public class ThreadsAPI {
     public void setDate(@NonNull Thread thread, @NonNull Date date) {
         checkNotNull(thread);
         checkNotNull(date);
-        getThreadsDatabase().threadDao().setThreadDate(thread.getIdx(), date.getTime());
+        getThreadsDatabase().threadDao().setThreadLastModified(thread.getIdx(), date.getTime());
     }
 
     public void resetThreadNumber(@NonNull Thread thread) {
@@ -305,7 +306,7 @@ public class ThreadsAPI {
 
     @NonNull
     public List<Thread> getThreadsByDate(long date) {
-        return getThreadsDatabase().threadDao().getThreadsByDate(date);
+        return getThreadsDatabase().threadDao().getThreadsByLastModified(date);
     }
 
 
@@ -327,7 +328,7 @@ public class ThreadsAPI {
     }
 
     @NonNull
-    public List<Thread> getChildren(long thread) {
+    private List<Thread> getChildren(long thread) {
         return getThreadsDatabase().threadDao().getChildren(thread);
     }
 
@@ -347,8 +348,8 @@ public class ThreadsAPI {
     }
 
 
-    public List<Thread> getThreadByIdxs(long... idx) {
-        return getThreadsDatabase().threadDao().getThreadByIdxs(idx);
+    public List<Thread> getThreadsByIdx(long... idx) {
+        return getThreadsDatabase().threadDao().getThreadsByIdx(idx);
     }
 
 
@@ -370,10 +371,10 @@ public class ThreadsAPI {
 
 
     @NonNull
-    public List<Thread> getThreadsByKindAndThreadStatus(@NonNull Kind kind, @NonNull Status status) {
+    public List<Thread> getThreadsByKindAndStatus(@NonNull Kind kind, @NonNull Status status) {
         checkNotNull(kind);
         checkNotNull(status);
-        return getThreadsDatabase().threadDao().getThreadsByKindAndThreadStatus(kind, status);
+        return getThreadsDatabase().threadDao().getThreadsByKindAndStatus(kind, status);
     }
 
     @NonNull
@@ -387,9 +388,9 @@ public class ThreadsAPI {
 
 
     @NonNull
-    public List<Thread> getThreadsByCIDAndThread(@NonNull CID cid, long thread) {
+    public List<Thread> getThreadsByCIDAndParent(@NonNull CID cid, long thread) {
         checkNotNull(cid);
-        return getThreadsDatabase().threadDao().getThreadsByCidAndThread(cid, thread);
+        return getThreadsDatabase().threadDao().getThreadsByCidAndParent(cid, thread);
     }
 
     @NonNull
@@ -398,4 +399,16 @@ public class ThreadsAPI {
         return getThreadsDatabase().threadDao().getThreadsByCid(cid);
     }
 
+    public List<Thread> getThreadsByQuery(Status status, String query) {
+        checkNotNull(status);
+        checkNotNull(query);
+        String searchQuery = query.trim();
+        if (!searchQuery.startsWith("%")) {
+            searchQuery = "%" + searchQuery;
+        }
+        if (!searchQuery.endsWith("%")) {
+            searchQuery = searchQuery + "%";
+        }
+        return getThreadsDatabase().threadDao().getThreadsByQuery(status, searchQuery);
+    }
 }
