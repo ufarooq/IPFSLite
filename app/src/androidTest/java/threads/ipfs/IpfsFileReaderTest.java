@@ -37,7 +37,7 @@ public class IpfsFileReaderTest {
         int txtSize = text.length();
 
 
-        Reader fileReader = ipfs.getReader(hash, true);
+        Reader fileReader = ipfs.getReader(hash);
         assertNotNull(fileReader);
 
         assertEquals(txtSize, fileReader.getSize());
