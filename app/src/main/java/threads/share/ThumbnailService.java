@@ -4,7 +4,6 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
@@ -31,7 +30,6 @@ import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.Optional;
 
-import threads.core.threads.Thread;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 
@@ -53,47 +51,6 @@ public class ThumbnailService {
         return ipfs.storeData(data);
     }
 
-    @Nullable
-    public static CID createNameImage(@NonNull IPFS ipfs,
-                                      @NonNull String name) throws Exception {
-        checkNotNull(name);
-        checkNotNull(ipfs);
-        byte[] data = getImage(name);
-        return ipfs.storeData(data);
-    }
-
-    @Nullable
-    public static Bitmap getImage(@NonNull IPFS ipfs, @NonNull Thread thread,
-                                  int timeout, boolean offline) {
-        checkNotNull(ipfs);
-        checkNotNull(thread);
-        CID image = thread.getThumbnail();
-
-        if (image != null) {
-            return getImage(ipfs, image, timeout, offline);
-        }
-        return null;
-    }
-
-    @Nullable
-    public static Bitmap getImage(@NonNull IPFS ipfs,
-                                  @NonNull CID image,
-                                  int timeout,
-                                  boolean offline) {
-        checkNotNull(ipfs);
-        checkNotNull(image);
-
-        try {
-            byte[] bytes = ipfs.getData(image, timeout, offline);
-            if (bytes != null) {
-                return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-            }
-            return null;
-        } catch (Throwable e) {
-            return null;
-        }
-
-    }
 
     @NonNull
     public static byte[] getImage(@NonNull Context context, @DrawableRes int id) {
@@ -119,21 +76,6 @@ public class ThumbnailService {
         return stream.toByteArray();
     }
 
-    @NonNull
-    public static Bitmap getNameImage(@NonNull String name) {
-        checkNotNull(name);
-        Canvas canvas = new Canvas();
-        String letter = name.substring(0, 1);
-        int color = ColorGenerator.MATERIAL.getColor(name);
-        TextDrawable drawable = TextDrawable.builder()
-                .buildRound(letter, color);
-        Bitmap bitmap = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888);
-        canvas.setBitmap(bitmap);
-        drawable.setBounds(0, 0, 64, 64);
-
-        drawable.draw(canvas);
-        return bitmap;
-    }
 
     @NonNull
     public static CID getImage(@NonNull Context context,
@@ -310,28 +252,6 @@ public class ThumbnailService {
         return null;
     }
 
-    public static Bitmap getBitmapThumbnail(@NonNull Context context, @NonNull Uri uri) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            try {
-
-                return context.getContentResolver().loadThumbnail(
-                        uri, new Size(THUMBNAIL_SIZE, THUMBNAIL_SIZE), null);
-
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        } else {
-            try {
-
-                return getThumbnailBitmap(context, uri);
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        }
-        return null;
-    }
 
     @Nullable
     public static FileDetails getFileDetails(@NonNull Context context,
@@ -368,26 +288,6 @@ public class ThumbnailService {
         return null;
     }
 
-    public static Bitmap getThumbnailBitmap(Context context, Uri uri) {
-        String[] proj = {MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA};
-
-
-        Cursor cursor = MediaStore.Images.Thumbnails.queryMiniThumbnails(
-                context.getContentResolver(), uri, MediaStore.Images.Thumbnails.MINI_KIND, proj);
-
-        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID);
-        cursor.moveToFirst();
-        long imageId = cursor.getLong(column_index);
-
-        cursor.close();
-
-        Bitmap bitmap = MediaStore.Images.Thumbnails.getThumbnail(
-                context.getContentResolver(), imageId,
-                MediaStore.Images.Thumbnails.MINI_KIND,
-                null);
-
-        return bitmap;
-    }
 
     @Nullable
     public static CID getThumbnail(@NonNull Context context,
@@ -451,15 +351,15 @@ public class ThumbnailService {
 
         if (bitmap == null) {
             IPFS ipfs = IPFS.getInstance(context);
-            if (ipfs != null) {
-                ContentInfo contentInfo = ipfs.getContentInfo(file);
-                if (contentInfo != null) {
-                    mimeType = contentInfo.getMimeType();
-                    if (mimeType != null) {
-                        bitmap = getPreview(context, file, mimeType);
-                    }
-                }
+
+            ContentInfo contentInfo = ipfs.getContentInfo(file);
+            if (contentInfo != null) {
+                mimeType = contentInfo.getMimeType();
+
+                bitmap = getPreview(context, file, mimeType);
+
             }
+
         }
 
 
@@ -472,13 +372,13 @@ public class ThumbnailService {
 
         if (bytes != null) {
             final IPFS ipfs = IPFS.getInstance(context);
-            if (ipfs != null) {
-                try {
-                    cid = ipfs.storeData(bytes);
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
+
+            try {
+                cid = ipfs.storeData(bytes);
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
+
         }
         if (cid == null) {
             thumbnail = false;

@@ -48,7 +48,7 @@ public class IpfsSwarmReaderTest {
         long now = System.currentTimeMillis();
 
 
-        byte[] data = ipfs.getData(CID.create(cid), 10, false);
+        byte[] data = ipfs.loadData(CID.create(cid), 10);
 
         Log.e(TAG, "Bytes : " + data.length / 1000 + "[kb]" +
                 " Time : " + ((System.currentTimeMillis() - now) / 1000) + "[s]");

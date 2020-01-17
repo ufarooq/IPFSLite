@@ -26,9 +26,9 @@ public class IPFSDataFetcher implements DataFetcher<InputStream> {
         try {
             IPFS ipfs = model.getIpfs();
             if (ipfs != null) {
-                InputStream stream = ipfs.getStream(
-                        model.getCid(), model.getTimeout(), true);
-                callback.onDataReady(stream);
+                try (InputStream stream = ipfs.getStream(model.getCid())) {
+                    callback.onDataReady(stream);
+                }
             } else {
                 callback.onDataReady(null);
             }

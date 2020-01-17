@@ -203,25 +203,24 @@ public class ContentsService {
         final IPFS ipfs = IPFS.getInstance(context);
         final int timeout = Preferences.getConnectionTimeout(context);
 
-        if (ipfs != null) {
+        try {
             try {
-                try {
-                    Multihash.fromBase58(image);
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    return null;
-                }
-
-                CID cid = CID.create(image);
-                byte[] data = ipfs.getData(cid, timeout, false);
-                if (data != null) {
-                    return cid;
-                }
-
+                Multihash.fromBase58(image);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                return null;
             }
+
+            CID cid = CID.create(image);
+            byte[] data = ipfs.loadData(cid, timeout);
+            if (data != null) {
+                return cid;
+            }
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
+
         return null;
     }
 
@@ -231,20 +230,19 @@ public class ContentsService {
         final IPFS ipfs = IPFS.getInstance(context);
         final int timeout = Preferences.getConnectionTimeout(context);
 
-        if (ipfs != null) {
-            try {
+        try {
 
-                String content = ipfs.getText(cid, "", timeout, false);
+            String content = ipfs.loadText(cid, timeout);
 
-                if (content != null) {
+            if (content != null) {
 
-                    return gson.fromJson(content, Contents.class);
-                }
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                return gson.fromJson(content, Contents.class);
             }
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
+
         return null;
     }
 

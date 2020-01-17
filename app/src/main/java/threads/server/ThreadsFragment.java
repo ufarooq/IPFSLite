@@ -192,7 +192,6 @@ public class ThreadsFragment extends Fragment implements
         threadViewModel = new ViewModelProvider(this).get(ThreadViewModel.class);
 
         mRecyclerView = view.findViewById(R.id.recycler_view_message_list);
-        mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
         mSwipeRefreshLayout = view.findViewById(R.id.swipe_container);
         mSwipeRefreshLayout.setOnRefreshListener(this);
@@ -299,15 +298,11 @@ public class ThreadsFragment extends Fragment implements
                     mThreadsViewAdapter.updateData(data);
 
                     if (scrollToTop) {
-                        mRecyclerView.postDelayed(() -> {
-
-                            try {
-                                mRecyclerView.scrollToPosition(0);
-                            } catch (Throwable e) {
-                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                            }
-
-                        }, 10);
+                        try {
+                            mRecyclerView.scrollToPosition(0);
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                        }
                     }
                 }
             });

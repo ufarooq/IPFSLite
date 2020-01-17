@@ -35,10 +35,10 @@ public class IpfsDaemonTest {
         IPFS ipfs = TestEnv.getTestInstance(context);
 
         String content = getRandomString(100);
-        CID hash58Base = ipfs.storeText(content, "", true);
+        CID hash58Base = ipfs.storeText(content);
         Log.e(TAG, hash58Base.getCid());
 
-        byte[] contentLocal = ipfs.getData(hash58Base, 10, true);
+        byte[] contentLocal = ipfs.getData(hash58Base);
         assertEquals(content, new String(contentLocal));
 
 

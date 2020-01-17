@@ -6,6 +6,7 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -90,15 +91,15 @@ public class IpfsTest {
         IPFS ipfs = TestEnv.getTestInstance(context);
 
         String test = "Moin";
-        CID cid = ipfs.storeText(test, "", true);
+        CID cid = ipfs.storeText(test);
         assertNotNull(cid);
-        byte[] bytes = ipfs.getData(cid, 20, true);
+        byte[] bytes = ipfs.getData(cid);
         assertNotNull(bytes);
         assertEquals(test, new String(bytes));
 
         CID fault = CID.create(ipfs.getPeerID().getPid());
 
-        bytes = ipfs.getData(fault, 20, false);
+        bytes = ipfs.loadData(fault, 20);
         assertNull(bytes);
 
 
@@ -110,25 +111,31 @@ public class IpfsTest {
         String notValid = "QmaFuc7VmzwT5MAx3EANZiVXRtuWtTwALjgaPcSsZ2Jdip";
         IPFS ipfs = TestEnv.getTestInstance(context);
 
-        byte[] bytes = ipfs.getData(CID.create(notValid), 10, false);
+        byte[] bytes = ipfs.loadData(CID.create(notValid), 10);
 
         assertNull(bytes);
 
     }
 
 
+    private byte[] getRandomBytes(int number) {
+        return RandomStringUtils.randomAlphabetic(number).getBytes();
+    }
+
     @Test
     public void test_add_cat() throws Exception {
         IPFS ipfs = TestEnv.getTestInstance(context);
 
-        String content = "Moin";
-        CID hash58Base = ipfs.storeData(content.getBytes(), false);
+        byte[] content = getRandomBytes(400000);
+
+        CID hash58Base = ipfs.storeData(content);
         assertNotNull(hash58Base);
         Log.e(TAG, hash58Base.getCid());
 
-        byte[] fileContents = ipfs.getData(hash58Base, 10, true);
+        byte[] fileContents = ipfs.getData(hash58Base);
         assertNotNull(fileContents);
-        assertEquals(content, new String(fileContents));
+        assertEquals(content.length, fileContents.length);
+        assertEquals(new String(content), new String(fileContents));
 
         ipfs.rm(hash58Base);
 
@@ -156,7 +163,7 @@ public class IpfsTest {
         IPFS ipfs = TestEnv.getTestInstance(context);
 
 
-        CID cid = ipfs.storeText("hallo", "", true);
+        CID cid = ipfs.storeText("hallo");
         assertNotNull(cid);
         List<LinkInfo> links = ipfs.ls(cid, 20, true);
         assertNotNull(links);

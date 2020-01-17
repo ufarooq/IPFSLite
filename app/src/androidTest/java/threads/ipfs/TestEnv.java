@@ -15,6 +15,35 @@ public class TestEnv {
     public static IPFS getTestInstance(@NonNull Context context) throws Exception {
 
 
+        IPFS.deleteConfigFile(context); // TODO remove later
+
+
+        // Experimental Features
+        IPFS.setQUICEnabled(context, true);
+        IPFS.setPreferTLS(context, true);
+
+
+        IPFS.setSwarmPort(context, 4001);
+        IPFS.setRoutingType(context, RoutingConfig.TypeEnum.dhtclient);
+
+
+        IPFS.setAutoNATServiceEnabled(context, false);
+        IPFS.setRelayHopEnabled(context, false);
+        IPFS.setAutoRelayEnabled(context, true);
+
+        IPFS.setPubsubEnabled(context, true);
+        IPFS.setPubsubRouter(context, PubsubConfig.RouterEnum.gossipsub);
+
+        IPFS.setConnMgrConfigType(context, ConnMgrConfig.TypeEnum.basic);
+        IPFS.setLowWater(context, 50);
+        IPFS.setHighWater(context, 200);
+        IPFS.setGracePeriod(context, "10s");
+
+        IPFS.setMdnsEnabled(context, true);
+
+        IPFS.setRandomSwarmPort(context, true);
+
+
         IPFS.setPubsubHandler(new IPFS.PubsubHandler() {
             @Override
             public void receive(@NonNull PubsubInfo message) {

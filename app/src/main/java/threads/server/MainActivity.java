@@ -65,7 +65,6 @@ import threads.server.jobs.JobServiceDownload;
 import threads.server.jobs.JobServiceIdentity;
 import threads.server.jobs.JobServiceLoadPublicKey;
 import threads.server.jobs.JobServicePublish;
-import threads.server.mdl.ApplicationViewModel;
 import threads.server.mdl.EventViewModel;
 import threads.server.mdl.SelectionViewModel;
 import threads.server.provider.FileDocumentsProvider;
@@ -845,7 +844,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
 
-        new ViewModelProvider(this).get(ApplicationViewModel.class);
         EventViewModel eventViewModel =
                 new ViewModelProvider(this).get(EventViewModel.class);
 
@@ -1301,7 +1299,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 try {
                     threads.setThreadLeaching(idx, true);
 
-                    CID cid = ipfs.storeText(text, "", true);
+                    CID cid = ipfs.storeText(text);
                     checkNotNull(cid);
 
 

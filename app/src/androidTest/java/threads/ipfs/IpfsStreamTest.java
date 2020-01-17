@@ -30,17 +30,17 @@ public class IpfsStreamTest {
         IPFS ipfs = TestEnv.getTestInstance(context);
 
         String text = "Hello Moin und Zehn Elf";
-        CID hash = ipfs.storeText(text, "", true);
+        CID hash = ipfs.storeText(text);
         assertNotNull(hash);
         List<LinkInfo> links = ipfs.ls(hash, 10, true);
         assertEquals(links.size(), 0);
 
 
-        byte[] result = ipfs.getData(hash, 10, true);
+        byte[] result = ipfs.getData(hash);
         assertEquals(text, new String(result));
 
 
-        CID hash2 = ipfs.storeText("TEST test", "", true);
+        CID hash2 = ipfs.storeText("TEST test");
         assertNotNull(hash2);
         links = ipfs.ls(hash2, 10, true);
         assertEquals(links.size(), 0); // TODO result is odd (should be 1)

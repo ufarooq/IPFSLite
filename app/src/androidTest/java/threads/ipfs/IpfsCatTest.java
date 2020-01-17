@@ -51,7 +51,7 @@ public class IpfsCatTest {
         assertTrue(res.isEmpty());
 
         time = System.currentTimeMillis();
-        byte[] content = ipfs.getData(cid, 10, false);
+        byte[] content = ipfs.loadData(cid, 10);
 
         Log.e(TAG, "Time : " + (System.currentTimeMillis() - time) + " [ms]");
 
@@ -73,7 +73,7 @@ public class IpfsCatTest {
         CID cid = CID.create("QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nt");
 
 
-        byte[] content = ipfs.getData(cid, 10, false);
+        byte[] content = ipfs.loadData(cid, 10);
 
         assertNull(content);
 
@@ -87,11 +87,11 @@ public class IpfsCatTest {
         IPFS ipfs = TestEnv.getTestInstance(context);
         CID cid = CID.create("Qme6rRsAb8YCfmQpvDsobZAiWNRefcJw8eFw3WV4pME82V");
 
-        CID local = ipfs.storeText("Moin Moin Moin", "");
+        CID local = ipfs.storeText("Moin Moin Moin");
         assertNotNull(local);
 
 
-        byte[] content = ipfs.getData(cid, 10, false);
+        byte[] content = ipfs.getData(cid);
 
         assertNotNull(content);
 
@@ -108,7 +108,7 @@ public class IpfsCatTest {
         assertNotNull(res);
 
         assertTrue(res.isEmpty());
-        byte[] content = ipfs.getData(cid, 10, false);
+        byte[] content = ipfs.loadData(cid, 10);
 
         assertNotNull(content);
         assertEquals(content.length, 0);
@@ -123,9 +123,9 @@ public class IpfsCatTest {
 
         IPFS ipfs = TestEnv.getTestInstance(context);
 
-        CID cid = ipfs.storeText("<html>moin</html", "", true);
+        CID cid = ipfs.storeText("<html>moin</html");
         assertNotNull(cid);
-        ContentInfo info = ipfs.getContentInfo(cid, "", 10, true);
+        ContentInfo info = ipfs.getContentInfo(cid);
         assertNotNull(info);
         assertEquals(info.getMimeType(), "text/html");
         assertEquals(info.getName(), "html");

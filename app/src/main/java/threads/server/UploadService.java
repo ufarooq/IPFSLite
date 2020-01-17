@@ -6,15 +6,18 @@ import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.IBinder;
 import android.util.Log;
+import android.util.Size;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.List;
@@ -107,8 +110,6 @@ public class UploadService extends Service {
         counter.incrementAndGet();
         UPLOAD_SERVICE.submit(() -> {
             try {
-
-
                 IPFS ipfs = IPFS.getInstance(getApplicationContext());
                 checkNotNull(ipfs, "IPFS is not valid");
                 InputStream inputStream =
@@ -136,8 +137,12 @@ public class UploadService extends Service {
                 thread.setName(name);
                 thread.setSize(size);
                 thread.setMimeType(mimeType);
-                CID thumbnail = ThumbnailService.getThumbnail(
-                        getApplicationContext(), uri, mimeType);
+                CID thumbnail;
+                thumbnail = getThumbnail(uri);
+                if (thumbnail == null) {
+                    thumbnail = ThumbnailService.getThumbnail(
+                            getApplicationContext(), uri, mimeType);
+                }
                 if (thumbnail != null) {
                     thread.setThumbnail(thumbnail);
                 }
@@ -147,7 +152,7 @@ public class UploadService extends Service {
                 try {
                     threads.setThreadLeaching(idx, true);
 
-                    CID cid = ipfs.storeStream(inputStream, true);
+                    CID cid = ipfs.storeStream(inputStream);
                     checkNotNull(cid);
 
                     // cleanup of entries with same CID and hierarchy
@@ -178,6 +183,62 @@ public class UploadService extends Service {
                 }
             }
         });
+    }
+
+    @Nullable
+    public CID getThumbnail(@NonNull Uri uri) {
+
+        checkNotNull(uri);
+
+        CID cid = null;
+        byte[] bytes = null;
+
+
+        try {
+            bytes = getPreviewImage(uri);
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage());
+        }
+
+        if (bytes != null) {
+            try {
+                cid = IPFS.getInstance(getApplicationContext()).storeData(bytes);
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        }
+
+        return cid;
+    }
+
+    @Nullable
+    private byte[] getPreviewImage(@NonNull Uri uri) {
+        checkNotNull(uri);
+
+        Bitmap bitmap = getBitmapThumbnail(uri);
+        if (bitmap != null) {
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.WEBP, 100, stream);
+            byte[] image = stream.toByteArray();
+            bitmap.recycle();
+            return image;
+        }
+        return null;
+    }
+
+    public Bitmap getBitmapThumbnail(@NonNull Uri uri) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            try {
+                // todo check if this requires a READ PERMISSION
+                return getContentResolver().loadThumbnail(
+                        uri, new Size(144, 144), null);
+
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        }
+        return null;
     }
 
     @Override

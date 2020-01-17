@@ -168,6 +168,7 @@ public class ThreadsAPI {
     public List<Thread> getNewestThreadsByStatus(@NonNull Status status, int limit) {
         return getThreadsDatabase().threadDao().getNewestThreadsByStatus(status, limit);
     }
+
     public List<Thread> getExpiredThreads() {
         return getThreadsDatabase().threadDao().getExpiredThreads(System.currentTimeMillis());
     }

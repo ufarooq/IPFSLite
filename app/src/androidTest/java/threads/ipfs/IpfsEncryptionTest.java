@@ -29,10 +29,10 @@ public class IpfsEncryptionTest {
 
         String aesKey = Encryption.generateAESKey();
         String content = "Moin";
-        CID cid = ipfs.storeText(content, aesKey, true);
+        CID cid = ipfs.storeText(content, aesKey);
         assertNotNull(cid);
 
-        String bytes = ipfs.getText(cid, aesKey, 10, true);
+        String bytes = ipfs.getText(cid, aesKey);
 
         assertEquals(bytes, content);
 

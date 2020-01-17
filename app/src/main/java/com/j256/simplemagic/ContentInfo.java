@@ -61,6 +61,7 @@ public class ContentInfo implements Serializable {
     /**
      * Returns the mime-type or null if none.
      */
+
     public String getMimeType() {
         return mimeType;
     }

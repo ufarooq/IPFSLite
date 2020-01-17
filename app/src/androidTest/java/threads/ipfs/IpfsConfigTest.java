@@ -41,9 +41,9 @@ public class IpfsConfigTest {
 
         SwarmConfig swarm = config.getSwarm();
         assertEquals(swarm.getConnMgr().getType(), ConnMgrConfig.TypeEnum.basic);
-        assertEquals(swarm.getConnMgr().getLowWater(), 50);
-        assertEquals(swarm.getConnMgr().getHighWater(), 200);
-        assertEquals(swarm.getConnMgr().getGracePeriod(), "10s");
+        assertEquals(swarm.getConnMgr().getLowWater(), 20);
+        assertEquals(swarm.getConnMgr().getHighWater(), 40);
+        assertEquals(swarm.getConnMgr().getGracePeriod(), "30s");
         assertTrue(swarm.isDisableBandwidthMetrics());
         assertFalse(swarm.isDisableNatPortMap());
         assertFalse(swarm.isDisableRelay());

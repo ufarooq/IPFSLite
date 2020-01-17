@@ -53,13 +53,19 @@ import threads.ipfs.PID;
 import threads.ipfs.PeerInfo;
 import threads.ipfs.PubsubConfig;
 import threads.ipfs.RoutingConfig;
+import threads.server.jobs.JobServiceAutoConnect;
+import threads.server.jobs.JobServiceCleanup;
 import threads.server.jobs.JobServiceConnect;
 import threads.server.jobs.JobServiceContents;
 import threads.server.jobs.JobServiceDownload;
+import threads.server.jobs.JobServiceDownloader;
+import threads.server.jobs.JobServiceFindPeers;
 import threads.server.jobs.JobServiceIdentity;
 import threads.server.jobs.JobServiceLoadNotifications;
 import threads.server.jobs.JobServiceLoadPublicKey;
+import threads.server.jobs.JobServicePeers;
 import threads.server.jobs.JobServicePublish;
+import threads.server.jobs.JobServicePublisher;
 import threads.share.ConnectService;
 import threads.share.IdentityService;
 import threads.share.MimeType;
@@ -83,7 +89,7 @@ public class Service {
     private static final String SEND_NOTIFICATIONS_ENABLED_KEY = "sendNotificationKey";
     private static final String RECEIVE_NOTIFICATIONS_ENABLED_KEY = "receiveNotificationKey";
     private static final String SUPPORT_PEER_DISCOVERY_KEY = "supportPeerDiscoveryKey";
-    private static Service SINGLETON = null;
+    private static Service INSTANCE = null;
 
     private Service() {
     }
@@ -204,23 +210,28 @@ public class Service {
     }
 
     @NonNull
-    public static synchronized Service getInstance(@NonNull Context context) {
+    public static Service getInstance(@NonNull Context context) {
         checkNotNull(context);
-        if (SINGLETON == null) {
+        if (INSTANCE == null) {
 
-            runUpdatesIfNecessary(context);
+            synchronized (Service.class) {
 
-            ProgressChannel.createProgressChannel(context);
+                if (INSTANCE == null) {
+                    runUpdatesIfNecessary(context);
 
-            long time = System.currentTimeMillis();
+                    ProgressChannel.createProgressChannel(context);
 
-            SINGLETON = new Service();
-            SINGLETON.startDaemon(context);
-            Log.e(TAG, "Time Daemon : " + (System.currentTimeMillis() - time));
-            SINGLETON.init(context);
+                    long time = System.currentTimeMillis();
+
+                    INSTANCE = new Service();
+                    INSTANCE.startDaemon(context);
+                    Log.e(TAG, "Time Daemon : " + (System.currentTimeMillis() - time));
+                    INSTANCE.init(context);
+                }
+            }
 
         }
-        return SINGLETON;
+        return INSTANCE;
     }
 
 
@@ -1378,7 +1389,7 @@ public class Service {
 
                     String data = gson.toJson(contents);
 
-                    CID cid = ipfs.storeText(data, "", true);
+                    CID cid = ipfs.storeText(data);
                     checkNotNull(cid);
 
                     checkNotNull(host);
@@ -1414,6 +1425,16 @@ public class Service {
 
     private void init(@NonNull Context context) {
         checkNotNull(context);
+
+        JobServiceLoadNotifications.notifications(context);
+        JobServiceDownloader.downloader(context);
+        JobServicePublisher.publish(context);
+        JobServicePeers.peers(context);
+        JobServiceFindPeers.findPeers(context);
+        JobServiceAutoConnect.autoConnect(context);
+        JobServiceCleanup.cleanup(context);
+        ContentsService.contents(context);
+
         new java.lang.Thread(() -> {
             try {
                 Service.cleanStates(context);

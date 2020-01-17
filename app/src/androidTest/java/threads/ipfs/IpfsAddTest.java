@@ -53,14 +53,14 @@ public class IpfsAddTest {
 
         Log.e(TAG, "Bytes : " + inputFile.length() / 1000 + "[kb]");
 
-        CID hash58Base = ipfs.streamFile(inputFile, true);
+        CID hash58Base = ipfs.storeFile(inputFile);
         assertNotNull(hash58Base);
 
         List<LinkInfo> links = ipfs.ls(hash58Base, 10, true);
         assertNotNull(links);
         assertEquals(links.size(), 4);
 
-        byte[] bytes = ipfs.getData(hash58Base, 10, true);
+        byte[] bytes = ipfs.getData(hash58Base);
         assertNotNull(bytes);
         assertEquals(bytes.length, size);
 
@@ -85,7 +85,7 @@ public class IpfsAddTest {
 
         Log.e(TAG, "Bytes : " + inputFile.length() / 1000 + "[kb]");
 
-        CID hash58Base = ipfs.streamFile(inputFile, true);
+        CID hash58Base = ipfs.storeFile(inputFile);
         assertNotNull(hash58Base);
 
         List<LinkInfo> links = ipfs.ls(hash58Base, 10, true);
@@ -93,7 +93,7 @@ public class IpfsAddTest {
         assertEquals(links.size(), 4);
         assertNotEquals(links.get(0).getCid(), hash58Base);
 
-        byte[] bytes = ipfs.getData(hash58Base, 30, true);
+        byte[] bytes = ipfs.getData(hash58Base);
         assertNotNull(bytes);
         assertEquals(bytes.length, size);
 
@@ -119,14 +119,14 @@ public class IpfsAddTest {
 
         Log.e(TAG, "Bytes : " + inputFile.length() / 1000 + "[kb]");
 
-        CID hash58Base = ipfs.streamFile(inputFile, true);
+        CID hash58Base = ipfs.storeFile(inputFile);
         assertNotNull(hash58Base);
 
         List<LinkInfo> links = ipfs.ls(hash58Base, 10, true);
         assertNotNull(links);
         assertEquals(links.size(), 0);
 
-        byte[] bytes = ipfs.getData(hash58Base, 10, true);
+        byte[] bytes = ipfs.getData(hash58Base);
         assertNotNull(bytes);
         assertEquals(bytes.length, size);
 
@@ -152,14 +152,14 @@ public class IpfsAddTest {
 
         Log.e(TAG, "Bytes : " + inputFile.length() / 1000 + "[kb]");
 
-        CID hash58Base = ipfs.streamFile(inputFile, true);
+        CID hash58Base = ipfs.storeFile(inputFile);
         assertNotNull(hash58Base);
 
         List<LinkInfo> links = ipfs.ls(hash58Base, 10, true);
         assertNotNull(links);
         assertEquals(links.size(), 0);
 
-        byte[] bytes = ipfs.getData(hash58Base, 10, true);
+        byte[] bytes = ipfs.getData(hash58Base);
         assertNotNull(bytes);
         assertEquals(bytes.length, size);
 

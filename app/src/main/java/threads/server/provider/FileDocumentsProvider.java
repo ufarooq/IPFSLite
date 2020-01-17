@@ -179,11 +179,15 @@ public class FileDocumentsProvider extends DocumentsProvider {
             throw new FileNotFoundException();
         }
         try {
+
+            //File impl = getContentFile(cid);
             if (signal != null) {
                 if (signal.isCanceled()) {
                     return null;
                 }
             }
+            //final ParcelFileDescriptor pfd = ParcelFileDescriptor.open(impl, MODE_READ_ONLY);
+
             final ParcelFileDescriptor pfd = ParcelFileDescriptorUtil.pipeFrom(ipfs, cid, signal);
             return new AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH);
 
@@ -323,6 +327,13 @@ public class FileDocumentsProvider extends DocumentsProvider {
                 throw new FileNotFoundException("");
             }
             try {
+                //File impl = getContentFile(cid);
+                if (signal != null) {
+                    if (signal.isCanceled()) {
+                        return null;
+                    }
+                }
+                //return ParcelFileDescriptor.open(impl, accessMode);
                 return ParcelFileDescriptorUtil.pipeFrom(ipfs, cid, signal);
             } catch (Throwable e) {
                 Log.e(TAG, e.getLocalizedMessage(), e);
@@ -344,6 +355,15 @@ public class FileDocumentsProvider extends DocumentsProvider {
         }
 
         return null;
+    }
+
+    private File getContentFile(@NonNull CID cid) throws IOException {
+
+        File file = new File(ipfs.getCacheDir(), cid.getCid());
+        if (!file.exists()) {
+            ipfs.storeToFile(file, cid);
+        }
+        return file;
     }
 
     private File getBitmapFile(@NonNull String hash) throws IOException {

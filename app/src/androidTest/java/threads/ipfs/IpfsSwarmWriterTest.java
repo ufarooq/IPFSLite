@@ -55,7 +55,7 @@ public class IpfsSwarmWriterTest {
 
         File file = createRandomFile();
 
-        CID hash58Base = ipfs.streamFile(file, false);
+        CID hash58Base = ipfs.storeFile(file);
         Log.e(TAG, "CID : " + hash58Base.getCid());
 
 

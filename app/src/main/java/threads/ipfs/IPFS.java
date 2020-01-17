@@ -16,6 +16,7 @@ import com.j256.simplemagic.ContentInfoUtil;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -49,9 +50,9 @@ import javax.crypto.Cipher;
 import javax.crypto.CipherInputStream;
 
 import mobile.Listener;
+import mobile.LoaderStream;
 import mobile.Node;
 import mobile.Reader;
-import mobile.Stream;
 import mobile.Writer;
 import threads.share.Network;
 
@@ -76,10 +77,9 @@ public class IPFS implements Listener {
     private static final String LOW_WATER_KEY = "lowWaterKey";
     private static final String GRACE_PERIOD_KEY = "gracePeriodKey";
     private static final String PREFER_TLS_KEY = "preferTLSKey";
-    private static final int BLOCK_SIZE = 64000; // 64kb
+    private static final int BLOCK_SIZE = 262158;
     private static final String P2P_CIRCUIT = "p2p-circuit";
     private static final String CONFIG_FILE_NAME = "config";
-    private static final String CACHE = "cache";
     private static final long TIMEOUT = 30000L;
     private static final String TAG = IPFS.class.getSimpleName();
     private static IPFS INSTANCE = null;
@@ -1099,43 +1099,32 @@ public class IPFS implements Listener {
         }
     }
 
+
     @Nullable
     public CID storeData(@NonNull byte[] data) throws Exception {
-
-        checkNotNull(data);
-        return storeData(data, true);
-    }
-
-    @Nullable
-    public CID storeText(@NonNull String text, @NonNull String key) throws Exception {
-        checkNotNull(text);
-        checkNotNull(key);
-        return storeText(text, key, true);
-    }
-
-    @Nullable
-    private CID storeStream(@NonNull InputStream inputStream) throws Exception {
-        checkNotNull(inputStream);
-
-        return storeStream(inputStream, true);
-    }
-
-    @Nullable
-    public CID storeData(@NonNull byte[] data, boolean offline) throws Exception {
         checkNotNull(data);
         checkArgument(data.length > 0);
         try (InputStream inputStream = new ByteArrayInputStream(data)) {
-            return storeStream(inputStream, offline);
+            return storeStream(inputStream);
         }
     }
 
     @Nullable
-    public CID storeText(@NonNull String content, @NonNull String key, boolean offline) throws Exception {
+    public CID storeText(@NonNull String content) throws Exception {
+        checkNotNull(content);
+        checkArgument(!content.isEmpty());
+        try (InputStream inputStream = new ByteArrayInputStream(content.getBytes())) {
+            return storeInputStream(inputStream, "");
+        }
+    }
+
+    @Nullable
+    public CID storeText(@NonNull String content, @NonNull String key) throws Exception {
         checkNotNull(key);
         checkNotNull(content);
         checkArgument(!content.isEmpty());
         try (InputStream inputStream = new ByteArrayInputStream(content.getBytes())) {
-            return storeInputStream(inputStream, key, offline);
+            return storeInputStream(inputStream, key);
         }
     }
 
@@ -1169,32 +1158,13 @@ public class IPFS implements Listener {
         return infos;
     }
 
-    @Nullable
-    private CID stream(@NonNull InputStream inputStream, boolean offline) {
-        checkNotNull(inputStream);
-
-
-        String res = "";
-        try {
-            Writer writer = getWriter(offline);
-            res = writer.stream(new WriterStream(writer, inputStream));
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
-        if (!res.isEmpty()) {
-            return CID.create(res);
-        }
-        return null;
-    }
 
     @Nullable
-    public CID streamFile(@NonNull File target, boolean offline) {
+    public CID storeFile(@NonNull File target) {
         checkNotNull(target);
 
-
-        try {
-            return stream(new FileInputStream(target), offline);
+        try (InputStream io = new FileInputStream(target)) {
+            return storeStream(io);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -1208,37 +1178,14 @@ public class IPFS implements Listener {
     }
 
     @NonNull
-    public Writer getWriter(boolean offline) throws Exception {
-        return node.getWriter(offline);
+    public Writer getWriter() throws Exception {
+        return node.getWriter();
     }
 
-    private boolean stream(@NonNull OutputStream outputStream,
-                           @NonNull Progress progress,
-                           @NonNull CID cid,
-                           @NonNull String key,
-                           boolean offline,
-                           int timeout,
-                           long size) {
-        checkNotNull(outputStream);
-        checkNotNull(progress);
-        checkNotNull(cid);
-        checkNotNull(key);
-        checkArgument(timeout > 0);
 
-        if (offline && key.isEmpty()) {
-            return streamFast(outputStream, progress, cid);
-        } else {
-            return streamSlow(outputStream, progress, cid, key, offline, timeout, size);
-        }
-    }
-
-    private boolean streamSlow(@NonNull OutputStream outputStream,
-                               @NonNull Progress progress,
-                               @NonNull CID cid,
-                               @NonNull String key,
-                               boolean offline,
-                               int timeout,
-                               long size) {
+    private boolean loadToOutputStream(@NonNull OutputStream outputStream,
+                                       @NonNull Progress progress, @NonNull CID cid,
+                                       @NonNull String key, int timeout, long size) {
         checkNotNull(outputStream);
         checkNotNull(progress);
         checkNotNull(cid);
@@ -1246,7 +1193,7 @@ public class IPFS implements Listener {
         checkArgument(timeout > 0);
         final AtomicInteger atomicProgress = new AtomicInteger(0);
         int totalRead = 0;
-        try (InputStream inputStream = stream(cid, key, timeout, offline)) {
+        try (InputStream inputStream = loadStream(cid, key, timeout)) {
 
             byte[] data = new byte[BLOCK_SIZE];
             progress.setProgress(0);
@@ -1283,47 +1230,22 @@ public class IPFS implements Listener {
 
     }
 
-    private boolean streamFast(@NonNull OutputStream outputStream,
-                               @NonNull Progress progress,
-                               @NonNull CID cid) {
+    private boolean getToOutputStream(@NonNull OutputStream outputStream,
+                                      @NonNull CID cid,
+                                      @NonNull String key) {
         checkNotNull(outputStream);
-        checkNotNull(progress);
         checkNotNull(cid);
-
-        int totalRead = 0;
-        try {
-            Reader fileReader = getReader(cid);
-            long size = fileReader.getSize();
-            final AtomicInteger atomicProgress = new AtomicInteger(0);
-
-            try {
-                progress.setProgress(0);
-                fileReader.load(BLOCK_SIZE);
-
-                long bytesRead = fileReader.getRead();
+        checkNotNull(key);
 
 
-                while (bytesRead > 0) {
-                    outputStream.write(fileReader.getData(), 0, (int) bytesRead);
-                    totalRead += bytesRead;
-                    if (size > 0) {
-                        int percent = (int) ((totalRead * 100.0f) / size);
-                        if (atomicProgress.getAndSet(percent) < percent) {
-                            progress.setProgress(percent);
-                        }
-                    }
-                    fileReader.load(BLOCK_SIZE);
-                    bytesRead = fileReader.getRead();
-                }
-            } finally {
-                fileReader.close();
-            }
-
+        try (InputStream inputStream = getStream(cid, key)) {
+            IOUtils.copy(inputStream, outputStream);
         } catch (Throwable e) {
             return false;
         }
 
         return true;
+
     }
 
     public boolean loadToFile(@NonNull File file,
@@ -1352,7 +1274,7 @@ public class IPFS implements Listener {
         }
 
         try (FileOutputStream outputStream = new FileOutputStream(file)) {
-            return stream(outputStream, progress, cid, "", false, timeout, size);
+            return loadToOutputStream(outputStream, progress, cid, "", timeout, size);
         } catch (Throwable e) {
             evaluateException(e);
             return false;
@@ -1365,14 +1287,14 @@ public class IPFS implements Listener {
         checkNotNull(os);
         Reader reader = getReader(cid);
         try {
-            int size = 262158;
-            reader.load(size);
+
+            reader.load(BLOCK_SIZE);
             long read = reader.getRead();
             while (read > 0) {
                 byte[] bytes = reader.getData();
                 os.write(bytes, 0, bytes.length);
 
-                reader.load(size);
+                reader.load(BLOCK_SIZE);
                 read = reader.getRead();
             }
         } finally {
@@ -1382,13 +1304,13 @@ public class IPFS implements Listener {
     }
 
     @NonNull
-    private InputStream stream(@NonNull CID cid, int timeout, boolean offline) throws Exception {
+    private InputStream loadStream(@NonNull CID cid, int timeout) throws Exception {
         checkArgument(timeout > 0);
 
         PipedOutputStream pos = new PipedOutputStream();
         PipedInputStream pis = new PipedInputStream(pos);
 
-        List<LinkInfo> info = ls(cid, timeout, offline);
+        List<LinkInfo> info = ls(cid, timeout, false);
         if (info == null) {
             throw new TimeoutException("timeout " + timeout + " [s]");
         }
@@ -1397,7 +1319,8 @@ public class IPFS implements Listener {
         new Thread(() -> {
             try {
 
-                node.getStream(cid.getCid(), new Stream() {
+
+                node.getStream(cid.getCid(), new LoaderStream() {
                     @Override
                     public boolean close() {
                         return close.get();
@@ -1416,7 +1339,7 @@ public class IPFS implements Listener {
                         return -1;
                     }
 
-                }, offline);
+                });
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -1499,14 +1422,12 @@ public class IPFS implements Listener {
     }
 
     @Nullable
-    public ContentInfo getContentInfo(@NonNull CID cid, @NonNull String key,
-                                      int timeout, boolean offline) {
+    public ContentInfo getContentInfo(@NonNull CID cid) {
         checkNotNull(cid);
-        checkNotNull(key);
-        checkArgument(timeout > 0);
+
         try {
             try (InputStream inputStream = new BufferedInputStream(
-                    stream(cid, key, timeout, offline))) {
+                    getStream(cid))) {
 
                 return util.findMatch(inputStream);
 
@@ -1531,11 +1452,7 @@ public class IPFS implements Listener {
 
     @NonNull
     public File getCacheDir() {
-        File cacheDir = new File(this.cacheDir, CACHE);
-        if (!cacheDir.exists()) {
-            checkArgument(cacheDir.mkdir());
-        }
-        return cacheDir;
+        return this.cacheDir;
     }
 
     @NonNull
@@ -1544,53 +1461,92 @@ public class IPFS implements Listener {
     }
 
     @Nullable
-    public CID storeStream(@NonNull InputStream inputStream, boolean offline) throws Exception {
+    public CID storeStream(@NonNull InputStream inputStream) {
         checkNotNull(inputStream);
 
         if (!checkDaemonRunning()) {
             return null;
         }
 
-        return stream(inputStream, offline);
+        checkNotNull(inputStream);
+
+
+        String res = "";
+        try {
+            Writer writer = getWriter();
+            res = writer.stream(new WriterStream(writer, inputStream));
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+
+        if (!res.isEmpty()) {
+            return CID.create(res);
+        }
+        return null;
     }
 
     @Nullable
-    private CID storeInputStream(@NonNull InputStream inputStream,
-                                 @NonNull String key,
-                                 boolean offline) throws Exception {
+    private CID storeInputStream(@NonNull InputStream inputStream, @NonNull String key) throws Exception {
         checkNotNull(inputStream);
         checkNotNull(key);
 
         if (!checkDaemonRunning()) {
             return null;
         }
-
 
         if (!key.isEmpty()) {
             Key aesKey = Encryption.getKey(key);
             Cipher cipher = Cipher.getInstance("AES");
             cipher.init(Cipher.ENCRYPT_MODE, aesKey);
-            CipherInputStream cipherStream = new CipherInputStream(inputStream, cipher);
-            return stream(cipherStream, offline);
+            try (CipherInputStream cipherStream = new CipherInputStream(inputStream, cipher)) {
+                return storeStream(cipherStream);
+            }
         } else {
-            return stream(inputStream, offline);
+            return storeStream(inputStream);
         }
 
     }
 
     @Nullable
-    public String getText(@NonNull CID cid, @NonNull String key, int timeout, boolean offline) {
+    public String loadText(@NonNull CID cid, int timeout) {
+        checkNotNull(cid);
+
+        checkArgument(timeout > 0);
+        return loadText(cid, "", timeout);
+    }
+
+    @Nullable
+    public String loadText(@NonNull CID cid, @NonNull String key, int timeout) {
         checkNotNull(cid);
         checkNotNull(key);
         checkArgument(timeout > 0);
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            boolean success = stream(outputStream, new Progress() {
+            boolean success = loadToOutputStream(outputStream, new Progress() {
                 @Override
                 public void setProgress(int percent) {
 
                 }
-            }, cid, key, offline, timeout, -1);
+            }, cid, key, timeout, -1);
+            if (success) {
+                return new String(outputStream.toByteArray());
+            } else {
+                return null;
+            }
+        } catch (Throwable e) {
+            evaluateException(e);
+            return null;
+        }
+    }
+
+
+    @Nullable
+    public String getText(@NonNull CID cid, @NonNull String key) {
+        checkNotNull(cid);
+        checkNotNull(key);
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+            boolean success = getToOutputStream(outputStream, cid, key);
             if (success) {
                 return new String(outputStream.toByteArray());
             } else {
@@ -1603,17 +1559,40 @@ public class IPFS implements Listener {
     }
 
     @Nullable
-    public byte[] getData(@NonNull CID cid, int timeout, boolean offline) {
+    public byte[] getData(@NonNull CID cid, @NonNull String key) {
+        checkNotNull(cid);
+        checkNotNull(key);
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            boolean success = getToOutputStream(outputStream, cid, key);
+            if (success) {
+                return outputStream.toByteArray();
+            } else {
+                return null;
+            }
+        } catch (Throwable e) {
+            evaluateException(e);
+            return null;
+        }
+    }
+
+    @Nullable
+    public byte[] getData(@NonNull CID cid) {
+        checkNotNull(cid);
+
+        return getData(cid, "");
+    }
+
+    @Nullable
+    public byte[] loadData(@NonNull CID cid, int timeout) {
         checkNotNull(cid);
         checkArgument(timeout > 0);
-
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            boolean success = stream(outputStream, new Progress() {
+            boolean success = loadToOutputStream(outputStream, new Progress() {
                 @Override
                 public void setProgress(int percent) {
 
                 }
-            }, cid, "", offline, timeout, -1);
+            }, cid, "", timeout, -1);
             if (success) {
                 return outputStream.toByteArray();
             } else {
@@ -1627,25 +1606,31 @@ public class IPFS implements Listener {
     }
 
     @NonNull
-    public InputStream getStream(@NonNull CID cid, int timeout, boolean offline) throws Exception {
-        checkNotNull(cid);
-        checkArgument(timeout > 0);
-        return stream(cid, "", timeout, offline);
-    }
-
-    @NonNull
-    private InputStream stream(@NonNull CID cid, @NonNull String key, int timeout,
-                               boolean offline) throws Exception {
+    public InputStream loadStream(@NonNull CID cid, @NonNull String key, int timeout) throws Exception {
         checkNotNull(cid);
         checkArgument(timeout > 0);
 
         if (key.isEmpty()) {
-            return stream(cid, timeout, offline);
+            return loadStream(cid, timeout);
         } else {
             Key aesKey = Encryption.getKey(key);
             Cipher cipher = Cipher.getInstance("AES");
             cipher.init(Cipher.DECRYPT_MODE, aesKey);
-            return new CipherInputStream(stream(cid, timeout, offline), cipher);
+            return new CipherInputStream(loadStream(cid, timeout), cipher);
+        }
+    }
+
+    @NonNull
+    public InputStream getStream(@NonNull CID cid, @NonNull String key) throws Exception {
+        checkNotNull(cid);
+        checkNotNull(key);
+        if (key.isEmpty()) {
+            return getStream(cid);
+        } else {
+            Key aesKey = Encryption.getKey(key);
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.DECRYPT_MODE, aesKey);
+            return new CipherInputStream(getStream(cid), cipher);
         }
     }
 
@@ -1717,6 +1702,15 @@ public class IPFS implements Listener {
     @Override
     public void verbose(String s) {
         Log.i(TAG, "" + s);
+    }
+
+    @NonNull
+    public InputStream getStream(@NonNull CID cid) throws Exception {
+
+        Reader reader = getReader(cid);
+        checkNotNull(reader);
+        return new ReaderInputStream(reader);
+
     }
 
     public enum Style {
@@ -1795,6 +1789,79 @@ public class IPFS implements Listener {
             return this;
         }
 
+    }
+
+    private class ReaderInputStream extends InputStream implements AutoCloseable {
+        private final Reader mReader;
+        private int position = 0;
+        private byte[] data = null;
+
+        ReaderInputStream(@NonNull Reader reader) {
+            checkNotNull(reader);
+            mReader = reader;
+        }
+
+        @Override
+        public int read() throws IOException {
+
+            try {
+                if (data == null) {
+                    invalidate();
+                    preLoad();
+                }
+                if (data == null) {
+                    return -1;
+                }
+                if (position < data.length) {
+                    byte value = data[position];
+                    position++;
+                    return (value & 0xff);
+                } else {
+                    invalidate();
+                    if (preLoad()) {
+                        byte value = data[position];
+                        position++;
+                        return (value & 0xff);
+                    } else {
+                        return -1;
+                    }
+                }
+
+
+            } catch (Throwable e) {
+                throw new IOException(e);
+            }
+        }
+
+        private void invalidate() {
+            position = 0;
+            data = null;
+        }
+
+        @Override
+        public void reset() throws IOException {
+            super.reset();
+        }
+
+        private boolean preLoad() throws Exception {
+            mReader.load(BLOCK_SIZE);
+            int read = (int) mReader.getRead();
+            if (read > 0) {
+                data = new byte[read];
+                byte[] values = mReader.getData();
+                System.arraycopy(values, 0, data, 0, read);
+                return true;
+            }
+            return false;
+        }
+
+        public void close() {
+            try {
+                mReader.close();
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        }
     }
 
     private class WriterStream implements mobile.WriterStream {
