@@ -48,6 +48,8 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class FileDocumentsProvider extends DocumentsProvider {
     private static final String TAG = FileDocumentsProvider.class.getSimpleName();
+    private String appName;
+
     private final static String[] DEFAULT_ROOT_PROJECTION =
             new String[]{
                     DocumentsContract.Root.COLUMN_ROOT_ID,
@@ -56,8 +58,8 @@ public class FileDocumentsProvider extends DocumentsProvider {
                     DocumentsContract.Root.COLUMN_FLAGS,
                     DocumentsContract.Root.COLUMN_DOCUMENT_ID,
             };
-    // Use these as the default columns to return information about a document if no specific
-    // columns are requested in a query.
+
+
     private static final String[] DEFAULT_DOCUMENT_PROJECTION = new String[]{
             DocumentsContract.Document.COLUMN_DOCUMENT_ID,
             DocumentsContract.Document.COLUMN_MIME_TYPE,
@@ -66,17 +68,12 @@ public class FileDocumentsProvider extends DocumentsProvider {
             DocumentsContract.Document.COLUMN_FLAGS,
             DocumentsContract.Document.COLUMN_SIZE
     };
-    private static final int MAX_SEARCH_RESULTS = 20;
-    private static final int MAX_LAST_MODIFIED = 5;
+
     private static final int QR_CODE_SIZE = 250;
     private THREADS threads;
     private IPFS ipfs;
 
-    /**
-     * @param projection the requested root column projection
-     * @return either the requested root column projection, or the default projection if the
-     * requested projection is null.
-     */
+
     private static String[] resolveRootProjection(String[] projection) {
         return projection != null ? projection : DEFAULT_ROOT_PROJECTION;
     }
@@ -116,16 +113,15 @@ public class FileDocumentsProvider extends DocumentsProvider {
     }
 
     @Override
-    public Cursor queryRoots(String[] projection) throws FileNotFoundException {
-        MatrixCursor result = new MatrixCursor(
-                projection != null ? projection : DEFAULT_ROOT_PROJECTION);
+    public Cursor queryRoots(String[] projection) {
+        MatrixCursor result = new MatrixCursor(resolveRootProjection(projection));
 
         String rootId = BuildConfig.DOCUMENTS_AUTHORITY;
         String rootDocumentId = "0";
         MatrixCursor.RowBuilder row = result.newRow();
         row.add(DocumentsContract.Root.COLUMN_ROOT_ID, rootId);
         row.add(DocumentsContract.Root.COLUMN_ICON, R.mipmap.ic_launcher);
-        row.add(DocumentsContract.Root.COLUMN_TITLE, getContext().getString(R.string.app_name));
+        row.add(DocumentsContract.Root.COLUMN_TITLE, appName);
         row.add(DocumentsContract.Root.COLUMN_FLAGS,
                 DocumentsContract.Root.FLAG_LOCAL_ONLY |
                         DocumentsContract.Root.FLAG_SUPPORTS_RECENTS |
@@ -135,8 +131,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
     }
 
     @Override
-    public Cursor queryRecentDocuments(String rootId, String[] projection)
-            throws FileNotFoundException {
+    public Cursor queryRecentDocuments(String rootId, String[] projection) {
 
         final MatrixCursor result = new MatrixCursor(resolveDocumentProjection(projection));
 
@@ -150,8 +145,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
     }
 
     @Override
-    public Cursor querySearchDocuments(String rootId, String query, String[] projection)
-            throws FileNotFoundException {
+    public Cursor querySearchDocuments(String rootId, String query, String[] projection) {
         final MatrixCursor result = new MatrixCursor(resolveDocumentProjection(projection));
 
 
@@ -179,14 +173,11 @@ public class FileDocumentsProvider extends DocumentsProvider {
             throw new FileNotFoundException();
         }
         try {
-
-            //File impl = getContentFile(cid);
             if (signal != null) {
                 if (signal.isCanceled()) {
                     return null;
                 }
             }
-            //final ParcelFileDescriptor pfd = ParcelFileDescriptor.open(impl, MODE_READ_ONLY);
 
             final ParcelFileDescriptor pfd = ParcelFileDescriptorUtil.pipeFrom(ipfs, cid, signal);
             return new AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH);
@@ -209,7 +200,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
                 final MatrixCursor.RowBuilder row = result.newRow();
                 row.add(Document.COLUMN_DOCUMENT_ID, docId);
                 row.add(Document.COLUMN_DISPLAY_NAME, "ipfs");
-                row.add(Document.COLUMN_SIZE, null); // todo
+                row.add(Document.COLUMN_SIZE, null);
                 row.add(Document.COLUMN_MIME_TYPE, DocumentsContract.Document.MIME_TYPE_DIR);
                 row.add(Document.COLUMN_LAST_MODIFIED, new Date());
                 row.add(Document.COLUMN_FLAGS, flags);
@@ -232,7 +223,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
                 final MatrixCursor.RowBuilder row = result.newRow();
                 row.add(Document.COLUMN_DOCUMENT_ID, docId);
                 row.add(Document.COLUMN_DISPLAY_NAME, docId);
-                row.add(Document.COLUMN_SIZE, null); // todo
+                row.add(Document.COLUMN_SIZE, null);
                 row.add(Document.COLUMN_MIME_TYPE, "image/png");
                 row.add(Document.COLUMN_LAST_MODIFIED, new Date());
                 row.add(Document.COLUMN_FLAGS, 0);
@@ -274,13 +265,10 @@ public class FileDocumentsProvider extends DocumentsProvider {
     private void includeFile(MatrixCursor result, Thread file) {
         int flags = 0;
 
-
         final String displayName = file.getName();
-
         final String mimeType = file.getMimeType();
 
         if (file.hasImage()) {
-            // Allow the image to be represented by a thumbnail rather than an icon
             flags |= Document.FLAG_SUPPORTS_THUMBNAIL;
         }
 
@@ -297,20 +285,26 @@ public class FileDocumentsProvider extends DocumentsProvider {
     @Override
     public Cursor queryChildDocuments(String parentDocumentId, String[] projection, String sortOrder) throws FileNotFoundException {
 
-        long idx = Long.parseLong(parentDocumentId);
+        try {
+            long idx = Long.parseLong(parentDocumentId);
 
-        List<Thread> entries = threads.getChildrenByStatus(idx, Status.SEEDING);
+            List<Thread> entries = threads.getChildrenByStatus(idx, Status.SEEDING);
 
-        final MatrixCursor result = new MatrixCursor(resolveDocumentProjection(projection));
+            final MatrixCursor result = new MatrixCursor(resolveDocumentProjection(projection));
 
-        for (Thread file : entries) {
-            includeFile(result, file);
+            for (Thread file : entries) {
+                includeFile(result, file);
+            }
+            return result;
+        } catch (Throwable e) {
+            throw new FileNotFoundException("" + e.getLocalizedMessage());
         }
-        return result;
     }
 
     @Override
-    public ParcelFileDescriptor openDocument(String documentId, String mode, @Nullable CancellationSignal signal) throws FileNotFoundException {
+    public ParcelFileDescriptor openDocument(String documentId,
+                                             String mode,
+                                             @Nullable CancellationSignal signal) throws FileNotFoundException {
 
         final int accessMode = ParcelFileDescriptor.parseMode(mode);
 
@@ -327,13 +321,6 @@ public class FileDocumentsProvider extends DocumentsProvider {
                 throw new FileNotFoundException("");
             }
             try {
-                //File impl = getContentFile(cid);
-                if (signal != null) {
-                    if (signal.isCanceled()) {
-                        return null;
-                    }
-                }
-                //return ParcelFileDescriptor.open(impl, accessMode);
                 return ParcelFileDescriptorUtil.pipeFrom(ipfs, cid, signal);
             } catch (Throwable e) {
                 Log.e(TAG, e.getLocalizedMessage(), e);
@@ -343,11 +330,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
                 Multihash.fromBase58(documentId);
 
                 File impl = getBitmapFile(documentId);
-                if (signal != null) {
-                    if (signal.isCanceled()) {
-                        return null;
-                    }
-                }
+
                 return ParcelFileDescriptor.open(impl, accessMode);
             } catch (Throwable throwable) {
                 throw new FileNotFoundException("" + throwable.getLocalizedMessage());
@@ -357,14 +340,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         return null;
     }
 
-    private File getContentFile(@NonNull CID cid) throws IOException {
 
-        File file = new File(ipfs.getCacheDir(), cid.getCid());
-        if (!file.exists()) {
-            ipfs.storeToFile(file, cid);
-        }
-        return file;
-    }
 
     private File getBitmapFile(@NonNull String hash) throws IOException {
         Bitmap bitmap = getBitmap(hash);
@@ -383,7 +359,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
     public boolean onCreate() {
         Context context = getContext();
         checkNotNull(context);
-
+        appName = context.getString(R.string.app_name);
         threads = THREADS.getInstance(context);
         ipfs = IPFS.getInstance(getContext());
         return true;

@@ -1150,7 +1150,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     InfoDialogFragment.newInstance(multihash,
                             getString(R.string.content_id),
-                            getString(R.string.multihash_access, multihash))
+                            getString(R.string.multi_hash_access, multihash))
                             .show(getSupportFragmentManager(), InfoDialogFragment.TAG);
 
 
@@ -1412,13 +1412,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 checkNotNull(thread);
                 ComponentName[] names = {new ComponentName(
                         getApplicationContext(), MainActivity.class)};
-
-                Uri uri = FileDocumentsProvider.getUriForThread(thread);
+                CID cid = thread.getContent();
+                checkNotNull(cid);
+                Uri uri = FileDocumentsProvider.getUriForString(cid.getCid());
                 Intent intent = ShareCompat.IntentBuilder.from(this)
                         .setStream(uri)
                         .setType(thread.getMimeType())
                         .getIntent();
                 intent.setAction(Intent.ACTION_SEND);
+                intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.content_id));
+                intent.putExtra(Intent.EXTRA_TEXT, getString(R.string.content_file_access,
+                        cid.getCid(), thread.getName()));
                 intent.setData(uri);
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 intent.putExtra(Intent.EXTRA_TITLE, thread.getName());
