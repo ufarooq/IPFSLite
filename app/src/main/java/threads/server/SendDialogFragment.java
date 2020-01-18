@@ -60,7 +60,7 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
 
         Bundle args = getArguments();
         checkNotNull(args);
-        final long[] idxs = args.getLongArray(IDXS);
+        final long[] indices = args.getLongArray(IDXS);
         final ArrayList<String> pids = args.getStringArrayList(PIDS);
         checkNotNull(pids);
 
@@ -100,7 +100,7 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
 
                     List<User> users = contactsViewAdapter.getSelectedAccounts();
 
-                    Service.getInstance(mContext).sendThreads(mContext, users, idxs);
+                    Service.getInstance(mContext).sendThreads(mContext, users, indices);
 
 
                     dismiss();

@@ -91,14 +91,10 @@ public class DetailsDialogFragment extends DialogFragment {
 
             switch (type) {
                 case HTML:
-                    // TODO StandardCharsets.UTF_8.displayName()
                     wv.loadData(data, MimeType.HTML_MIME_TYPE, "UTF-8");
                     break;
                 case TEXT:
                     wv.loadData(data, MimeType.PLAIN_MIME_TYPE, "UTF-8");
-                    break;
-                case URL:
-                    wv.loadUrl(data);
                     break;
                 default:
                     wv.loadUrl(data);

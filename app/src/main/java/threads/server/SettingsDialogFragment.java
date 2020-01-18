@@ -23,7 +23,7 @@ import java.util.List;
 
 import threads.core.Preferences;
 import threads.ipfs.IPFS;
-import threads.ipfs.PubsubConfig;
+import threads.ipfs.PubSubConfig;
 import threads.ipfs.RoutingConfig;
 import threads.server.jobs.JobServicePublisher;
 
@@ -79,9 +79,9 @@ public class SettingsDialogFragment extends DialogFragment {
         });
 
         Switch mdns_support = view.findViewById(R.id.mdns_support);
-        mdns_support.setChecked(IPFS.isMdnsEnabled(activity));
+        mdns_support.setChecked(IPFS.isMDNSEnabled(activity));
         mdns_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            IPFS.setMdnsEnabled(activity, isChecked);
+            IPFS.setMDNSEnabled(activity, isChecked);
 
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,
@@ -118,9 +118,9 @@ public class SettingsDialogFragment extends DialogFragment {
 
 
         Switch pubsub_support = view.findViewById(R.id.pubsub_support);
-        pubsub_support.setChecked(IPFS.isPubsubEnabled(activity));
+        pubsub_support.setChecked(IPFS.isPubSubEnabled(activity));
         pubsub_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            IPFS.setPubsubEnabled(activity, isChecked);
+            IPFS.setPubSubEnabled(activity, isChecked);
 
             Toast.makeText(getContext(),
                     R.string.daemon_restart_config_changed,
@@ -130,13 +130,13 @@ public class SettingsDialogFragment extends DialogFragment {
         });
 
         Switch pubsub_router = view.findViewById(R.id.pubsub_router);
-        pubsub_router.setChecked(IPFS.getPubsubRouter(activity)
-                == PubsubConfig.RouterEnum.gossipsub);
+        pubsub_router.setChecked(IPFS.getPubSubRouter(activity)
+                == PubSubConfig.RouterEnum.gossipsub);
         pubsub_router.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (isChecked) {
-                IPFS.setPubsubRouter(activity, PubsubConfig.RouterEnum.gossipsub);
+                IPFS.setPubSubRouter(activity, PubSubConfig.RouterEnum.gossipsub);
             } else {
-                IPFS.setPubsubRouter(activity, PubsubConfig.RouterEnum.floodsub);
+                IPFS.setPubSubRouter(activity, PubSubConfig.RouterEnum.floodsub);
             }
 
             Toast.makeText(getContext(),

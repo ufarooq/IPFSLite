@@ -14,10 +14,6 @@ public class TestEnv {
 
     public static IPFS getTestInstance(@NonNull Context context) throws Exception {
 
-
-        IPFS.deleteConfigFile(context); // TODO remove later
-
-
         // Experimental Features
         IPFS.setQUICEnabled(context, true);
         IPFS.setPreferTLS(context, true);
@@ -31,22 +27,22 @@ public class TestEnv {
         IPFS.setRelayHopEnabled(context, false);
         IPFS.setAutoRelayEnabled(context, true);
 
-        IPFS.setPubsubEnabled(context, true);
-        IPFS.setPubsubRouter(context, PubsubConfig.RouterEnum.gossipsub);
+        IPFS.setPubSubEnabled(context, true);
+        IPFS.setPubSubRouter(context, PubSubConfig.RouterEnum.gossipsub);
 
         IPFS.setConnMgrConfigType(context, ConnMgrConfig.TypeEnum.basic);
         IPFS.setLowWater(context, 50);
         IPFS.setHighWater(context, 200);
         IPFS.setGracePeriod(context, "10s");
 
-        IPFS.setMdnsEnabled(context, true);
+        IPFS.setMDNSEnabled(context, true);
 
         IPFS.setRandomSwarmPort(context, true);
 
 
-        IPFS.setPubsubHandler(new IPFS.PubsubHandler() {
+        IPFS.setPubSubHandler(new IPFS.PubSubHandler() {
             @Override
-            public void receive(@NonNull PubsubInfo message) {
+            public void receive(@NonNull PubSubInfo message) {
                 AtomicInteger value = COUNTER.get(message.getTopic());
                 if (value != null) {
                     value.incrementAndGet();
@@ -58,13 +54,12 @@ public class TestEnv {
         });
 
         long time = System.currentTimeMillis();
-        IPFS.setPubsubEnabled(context, true);
+        IPFS.setPubSubEnabled(context, true);
         IPFS ipfs = IPFS.getInstance(context);
 
         Log.e(TAG, "Time Daemon : " + (System.currentTimeMillis() - time));
         if (ipfs.isDaemonRunning()) {
             ipfs.gc();
-            ipfs.cleanCacheDir();
             ipfs.logBaseDir();
         }
         return ipfs;

@@ -38,8 +38,8 @@ public class IpfsRelayTest {
     //@Test
     public void relay() throws Exception {
 
-        PubsubConfig pubsubConfig = PubsubConfig.create();
-        pubsubConfig.setRouter(PubsubConfig.RouterEnum.floodsub);
+        PubSubConfig pubsubConfig = PubSubConfig.create();
+        pubsubConfig.setRouter(PubSubConfig.RouterEnum.floodsub);
         IPFS ipfs = TestEnv.getTestInstance(context);
 
 

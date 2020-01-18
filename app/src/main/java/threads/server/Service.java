@@ -51,7 +51,7 @@ import threads.ipfs.LinkInfo;
 import threads.ipfs.Multihash;
 import threads.ipfs.PID;
 import threads.ipfs.PeerInfo;
-import threads.ipfs.PubsubConfig;
+import threads.ipfs.PubSubConfig;
 import threads.ipfs.RoutingConfig;
 import threads.server.jobs.JobServiceAutoConnect;
 import threads.server.jobs.JobServiceCleanup;
@@ -298,7 +298,7 @@ public class Service {
 
                                 // THIS is a try, it tries to find the pubsub of the PID
                                 // (for sending a message when done)
-                                ipfs.connectPubsubTopic(context, pid.getPid());
+                                ipfs.addPubSubTopic(context, pid.getPid());
 
 
                                 threads.core.contents.Content content =
@@ -511,19 +511,17 @@ public class Service {
 
             if (value) {
 
-                if (IPFS.isPubsubEnabled(context)) {
-                    PID host = IPFS.getPID(context);
-                    checkNotNull(host);
+                if (IPFS.isPubSubEnabled(context)) {
 
                     Content map = new Content();
                     map.put(Content.EST, "CONNECT");
-                    map.put(Content.ALIAS, peers.getUserAlias(host));
-                    map.put(Content.PKEY, peers.getUserPublicKey(host));
+                    map.put(Content.ALIAS, IPFS.getDeviceName());
+                    map.put(Content.PKEY, ipfs.getPublicKey());
 
                     Log.w(TAG, "Send Pubsub Notification to PID :" + user);
 
 
-                    ipfs.pubsubPub(user.getPid(), gson.toJson(map), 50);
+                    ipfs.pubSubPub(user.getPid(), gson.toJson(map), 50);
                 }
 
                 if (peers.getUserPublicKey(user).isEmpty()) {
@@ -557,7 +555,7 @@ public class Service {
         Gson gson = new Gson();
         IPFS ipfs = IPFS.getInstance(context);
         PEERS peers = PEERS.getInstance(context);
-        if (IPFS.isPubsubEnabled(context)) {
+        if (IPFS.isPubSubEnabled(context)) {
             PID host = IPFS.getPID(context);
             checkNotNull(host);
 
@@ -566,7 +564,7 @@ public class Service {
             map.put(Content.ALIAS, peers.getUserAlias(host));
 
             checkNotNull(ipfs, "IPFS not valid");
-            ipfs.pubsubPub(topic, gson.toJson(map), 50);
+            ipfs.pubSubPub(topic, gson.toJson(map), 50);
         }
     }
 
@@ -575,12 +573,12 @@ public class Service {
         checkNotNull(topic);
         Gson gson = new Gson();
         IPFS ipfs = IPFS.getInstance(context);
-        if (IPFS.isPubsubEnabled(context)) {
+        if (IPFS.isPubSubEnabled(context)) {
             Content map = new Content();
             map.put(Content.EST, "SHARE");
 
             checkNotNull(ipfs, "IPFS not valid");
-            ipfs.pubsubPub(topic, gson.toJson(map), 50);
+            ipfs.pubSubPub(topic, gson.toJson(map), 50);
         }
     }
 
@@ -610,8 +608,8 @@ public class Service {
                 IPFS.setRelayHopEnabled(context, false);
                 IPFS.setAutoRelayEnabled(context, true);
 
-                IPFS.setPubsubEnabled(context, true);
-                IPFS.setPubsubRouter(context, PubsubConfig.RouterEnum.gossipsub);
+                IPFS.setPubSubEnabled(context, true);
+                IPFS.setPubSubRouter(context, PubSubConfig.RouterEnum.gossipsub);
 
                 IPFS.setConnMgrConfigType(context, ConnMgrConfig.TypeEnum.basic);
                 IPFS.setLowWater(context, 50);
@@ -622,7 +620,7 @@ public class Service {
                 Preferences.setConnectionTimeout(context, 45);
                 EntityService.setTangleTimeout(context, 45);
 
-                IPFS.setMdnsEnabled(context, true);
+                IPFS.setMDNSEnabled(context, true);
 
                 IPFS.setRandomSwarmPort(context, true);
 
@@ -743,7 +741,7 @@ public class Service {
                 Preferences.error(events, context.getString(R.string.user_connect_try, alias));
             }
 
-            if (IPFS.isPubsubEnabled(context)) {
+            if (IPFS.isPubSubEnabled(context)) {
                 PID host = IPFS.getPID(context);
                 checkNotNull(host);
                 User hostUser = peers.getUserByPID(host);
@@ -756,7 +754,7 @@ public class Service {
 
                 Log.w(TAG, "Send Pubsub Notification to PID :" + senderPid);
 
-                ipfs.pubsubPub(senderPid.getPid(), gson.toJson(map), 50);
+                ipfs.pubSubPub(senderPid.getPid(), gson.toJson(map), 50);
             }
 
 
@@ -770,7 +768,7 @@ public class Service {
                                    @NonNull PID sender,
                                    @NonNull Thread thread) {
         try {
-            if (IPFS.isPubsubEnabled(context)) {
+            if (IPFS.isPubSubEnabled(context)) {
                 CID cid = thread.getContent();
                 checkNotNull(cid);
 
@@ -781,7 +779,7 @@ public class Service {
 
                 Log.w(TAG, "Send Pubsub Notification to PID :" + sender);
 
-                ipfs.pubsubPub(sender.getPid(), gson.toJson(map), 50);
+                ipfs.pubSubPub(sender.getPid(), gson.toJson(map), 50);
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -870,7 +868,7 @@ public class Service {
                                     @NonNull CID cid,
                                     @NonNull Status threadStatus,
                                     @Nullable String filename,
-                                    long filesize,
+                                    long fileSize,
                                     @Nullable String mimeType,
                                     @Nullable CID image) {
 
@@ -904,7 +902,7 @@ public class Service {
             }
             thread.setName(cid.getCid());
         }
-        thread.setSize(filesize);
+        thread.setSize(fileSize);
         thread.setThumbnail(image);
         return threads.storeThread(thread);
     }
@@ -922,10 +920,8 @@ public class Service {
         CID cid = thread.getContent();
         checkNotNull(cid);
 
-        String filename = thread.getName();
-        long filesize = thread.getSize();
 
-        return download(context, threads, ipfs, thread, cid, filename, filesize);
+        return download(context, threads, ipfs, thread, cid, thread.getName(), thread.getSize());
     }
 
     private static boolean download(@NonNull Context context,
@@ -1335,12 +1331,12 @@ public class Service {
                         context, user.getPID().getPid(), cid.getCid(), start);
             }
             // just backup
-            if (IPFS.isPubsubEnabled(context)) {
-                ipfs.connectPubsubTopic(context, user.getPID().getPid());
+            if (IPFS.isPubSubEnabled(context)) {
+                ipfs.addPubSubTopic(context, user.getPID().getPid());
                 if (!success) {
 
                     checkNotNull(ipfs, "IPFS not valid");
-                    ipfs.pubsubPub(user.getPID().getPid(), cid.getCid(), 50);
+                    ipfs.pubSubPub(user.getPID().getPid(), cid.getCid(), 50);
                 } else {
                     sendShareMessage(context, user.getPID().getPid());
                 }
@@ -1353,10 +1349,10 @@ public class Service {
     }
 
 
-    void sendThreads(@NonNull Context context, @NonNull List<User> users, long[] idxs) {
+    void sendThreads(@NonNull Context context, @NonNull List<User> users, long[] indices) {
         checkNotNull(context);
         checkNotNull(users);
-        checkNotNull(idxs);
+        checkNotNull(indices);
 
 
         final THREADS threads = THREADS.getInstance(context);
@@ -1370,21 +1366,21 @@ public class Service {
         executor.submit(() -> {
             try {
                 // clean-up (unset the unread number)
-                threads.resetThreadsNumber(idxs);
+                threads.resetThreadsNumber(indices);
 
                 if (users.isEmpty()) {
                     Preferences.error(events, context.getString(R.string.no_sharing_peers));
                 } else {
                     checkNotNull(host);
 
-                    threads.setThreadsPublishing(true, idxs);
+                    threads.setThreadsPublishing(true, indices);
 
 
                     long start = System.currentTimeMillis();
 
                     Contents contents = new Contents();
 
-                    List<Thread> threadList = threads.getThreadsByIdx(idxs);
+                    List<Thread> threadList = threads.getThreadsByIdx(indices);
                     contents.add(threadList);
 
                     String data = gson.toJson(contents);
@@ -1413,7 +1409,7 @@ public class Service {
                         future.get();
                     }
 
-                    threads.setThreadsPublishing(false, idxs);
+                    threads.setThreadsPublishing(false, indices);
                 }
 
             } catch (Throwable e) {
@@ -1457,7 +1453,7 @@ public class Service {
             try {
 
                 final PID host = IPFS.getPID(context);
-                IPFS.setPubsubHandler((message) -> {
+                IPFS.setPubSubHandler((message) -> {
                     try {
 
                         String sender = message.getSenderPid();

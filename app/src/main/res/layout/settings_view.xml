@@ -152,7 +152,6 @@
             android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1" />
 
         <TextView
-            android:id="@+id/publisher_gateways_text"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/fab_margin"

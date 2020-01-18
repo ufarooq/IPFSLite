@@ -82,11 +82,6 @@ public class ThreadsFragment extends Fragment implements
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-    }
-
-    @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
@@ -123,13 +118,12 @@ public class ThreadsFragment extends Fragment implements
         mSelectionViewModel = new ViewModelProvider(getActivity()).get(SelectionViewModel.class);
 
 
-        final Observer<Long> parentThread = new Observer<Long>() {
-            @Override
-            public void onChanged(@Nullable final Long threadIdx) {
+        final Observer<Long> parentThread = (threadIdx) -> {
+
                 if (threadIdx != null) {
                     updateDirectory(threadIdx);
                 }
-            }
+
         };
         mSelectionViewModel.getParentThread().observe(this, parentThread);
 
@@ -164,7 +158,7 @@ public class ThreadsFragment extends Fragment implements
         mRecyclerView.setAdapter(mThreadsViewAdapter);
 
         mSelectionTracker = new SelectionTracker.Builder<>(
-                "threds-selection",//unique id
+                "threads-selection",//unique id
                 mRecyclerView,
                 new ThreadsItemKeyProvider(mThreadsViewAdapter),
                 new ThreadItemDetailsLookup(mRecyclerView),
@@ -614,7 +608,7 @@ public class ThreadsFragment extends Fragment implements
 
     public interface ActionListener {
 
-        void clickThreadsSend(long[] idxs);
+        void clickThreadsSend(long[] indices);
 
         void showBottomNavigation(boolean visible);
 

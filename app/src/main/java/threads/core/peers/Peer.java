@@ -7,7 +7,6 @@ import androidx.room.ColumnInfo;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
-import java.util.Comparator;
 import java.util.Objects;
 
 import threads.core.Converter;
@@ -19,7 +18,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 @androidx.room.Entity
 public class Peer extends Basis implements IPeer, Comparable<Peer> {
 
-    public static Comparator<Peer> PeerComparator = (peer1, peer2) -> peer1.compareTo(peer2);
+
     @PrimaryKey
     @NonNull
     @ColumnInfo(name = "pid")

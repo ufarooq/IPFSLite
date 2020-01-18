@@ -17,7 +17,6 @@
         android:layout_height="match_parent">
 
         <TableRow
-            android:id="@+id/row_first"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             tools:ignore="UselessParent">

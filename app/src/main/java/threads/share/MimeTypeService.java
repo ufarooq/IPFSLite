@@ -38,9 +38,7 @@ public class MimeTypeService {
             if (mimeType.startsWith("audio")) {
                 return R.drawable.text_audio;
             }
-            if (mimeType.equals(MimeType.TORRENT_MIME_TYPE)) {
-                return R.drawable.text_torrent;
-            }
+
             return R.drawable.file_star;
         }
 

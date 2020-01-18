@@ -28,7 +28,7 @@ public class SwarmService {
         final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
 
         ConnectInfo info = new ConnectInfo(pid, tag);
-        if (ipfs != null) {
+
             if (ipfs.isConnected(pid)) {
                 info.setConnected();
                 ipfs.protectPeer(pid, tag);
@@ -59,7 +59,7 @@ public class SwarmService {
                 }
 
             }
-        }
+
 
         return info;
     }
@@ -68,12 +68,12 @@ public class SwarmService {
     public static void disconnect(@NonNull Context context, @NonNull ConnectInfo info) {
         checkNotNull(context);
         checkNotNull(info);
-        final IPFS ipfs = IPFS.getInstance(context);
-        if (ipfs != null) {
+        IPFS ipfs = IPFS.getInstance(context);
+
             if (info.isConnected()) {
                 ipfs.unProtectPeer(info.pid, info.tag);
             }
-        }
+
         if (info.getPeerInfo() != null) {
             ConnectService.swarmUnProtect(context, info.getPeerInfo(), info.tag);
         }

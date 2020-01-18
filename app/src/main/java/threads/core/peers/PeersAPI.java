@@ -496,6 +496,7 @@ public class PeersAPI {
         return getUserAlias(user.getPid());
     }
 
+    @Nullable
     public String getUserAlias(@NonNull String pid) {
         checkNotNull(pid);
         return getPeersDatabase().userDao().getAlias(pid);

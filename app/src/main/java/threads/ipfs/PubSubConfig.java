@@ -4,24 +4,24 @@ import androidx.annotation.NonNull;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class PubsubConfig {
+public class PubSubConfig {
 
     private RouterEnum Router;
     private boolean DisableSigning = false;
     private boolean StrictSignatureVerification = false;
 
-    private PubsubConfig() {
+    private PubSubConfig() {
         Router = RouterEnum.floodsub;
     }
 
-    public static PubsubConfig create() {
-        return new PubsubConfig();
+    public static PubSubConfig create() {
+        return new PubSubConfig();
     }
 
     @Override
     @NonNull
     public String toString() {
-        return "PubsubConfig{" +
+        return "PubSubConfig{" +
                 "Router=" + Router +
                 ", DisableSigning=" + DisableSigning +
                 ", StrictSignatureVerification=" + StrictSignatureVerification +

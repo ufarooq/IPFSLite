@@ -1260,7 +1260,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     @Override
-    public void clickThreadsSend(final long[] idxs) {
+    public void clickThreadsSend(final long[] indices) {
 
 
         // CHECKED
@@ -1285,12 +1285,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     List<User> users = new ArrayList<>();
                     users.add(peers.getUserByPID(PID.create(pids.get(0))));
                     Service.getInstance(getApplicationContext()).sendThreads(
-                            getApplicationContext(), users, idxs);
+                            getApplicationContext(), users, indices);
                 } else {
                     FragmentManager fm = getSupportFragmentManager();
                     SendDialogFragment dialogFragment = new SendDialogFragment();
                     Bundle bundle = new Bundle();
-                    bundle.putLongArray(SendDialogFragment.IDXS, idxs);
+                    bundle.putLongArray(SendDialogFragment.IDXS, indices);
                     bundle.putStringArrayList(SendDialogFragment.PIDS, pids);
                     dialogFragment.setArguments(bundle);
                     dialogFragment.show(fm, SendDialogFragment.TAG);
@@ -1540,13 +1540,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickThreadSend(long idx) {
-        long[] idxs = {idx};
-        clickThreadsSend(idxs);
+        long[] indices = {idx};
+        clickThreadsSend(indices);
     }
 
     @Override
     public void clickThreadCopy(long idx) {
-
 
         try {
             final THREADS threadsAPI = THREADS.getInstance(getApplicationContext());

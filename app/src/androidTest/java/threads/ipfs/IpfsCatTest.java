@@ -34,11 +34,10 @@ public class IpfsCatTest {
     @Test
     public void cat_test() throws Exception {
 
-
         IPFS ipfs = TestEnv.getTestInstance(context);
         CID cid = CID.create("Qmaisz6NMhDB51cCvNWa1GMS7LU1pAxdF4Ld6Ft9kZEP2a");
         long time = System.currentTimeMillis();
-        List<PID> provs = ipfs.dhtFindProvs(cid, 10, 45);
+        List<PID> provs = ipfs.dhtFindProviders(cid, 10, 45);
         for (PID prov : provs) {
             Log.e(TAG, "Provider " + prov.getPid());
         }

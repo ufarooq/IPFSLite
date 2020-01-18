@@ -12,7 +12,7 @@ import java.util.Objects;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 
-public class PubsubInfo {
+public class PubSubInfo {
 
     private static Gson gson = new Gson();
     @NonNull
@@ -24,7 +24,7 @@ public class PubsubInfo {
     @NonNull
     private final String topic;
 
-    private PubsubInfo(@NonNull String topic, @NonNull String from, @NonNull String data, @NonNull String seqno) {
+    private PubSubInfo(@NonNull String topic, @NonNull String from, @NonNull String data, @NonNull String seqno) {
         checkNotNull(topic);
         checkNotNull(from);
         checkNotNull(data);
@@ -35,7 +35,7 @@ public class PubsubInfo {
         this.seqno = seqno;
     }
 
-    public static PubsubInfo create(@NonNull String message, byte[] data) {
+    public static PubSubInfo create(@NonNull String message, byte[] data) {
         checkNotNull(message);
         Map map = gson.fromJson(message, Map.class);
         String topic = (String) map.get("Topic");
@@ -47,14 +47,14 @@ public class PubsubInfo {
 
         String encData = new String(Base64.decodeBase64(data));
 
-        return new PubsubInfo(topic, from, encData, seqno);
+        return new PubSubInfo(topic, from, encData, seqno);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        PubsubInfo that = (PubsubInfo) o;
+        PubSubInfo that = (PubSubInfo) o;
         return Objects.equals(from, that.from) &&
                 Objects.equals(data, that.data) &&
                 Objects.equals(seqno, that.seqno);

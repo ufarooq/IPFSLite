@@ -138,7 +138,7 @@ public class ContentsService {
             @NonNull PID sender,
             @NonNull CID cid,
             @Nullable String filename,
-            long filesize,
+            long fileSize,
             @Nullable String mimeType,
             @Nullable String image) {
 
@@ -163,7 +163,7 @@ public class ContentsService {
                 thumbnail = downloadImage(context, image);
             }
 
-            createThread(context, user, cid, filename, filesize, mimeType, thumbnail);
+            createThread(context, user, cid, filename, fileSize, mimeType, thumbnail);
 
 
         } catch (Throwable e) {
@@ -178,7 +178,7 @@ public class ContentsService {
             @NonNull User user,
             @NonNull CID cid,
             @Nullable String filename,
-            long filesize,
+            long fileSize,
             @Nullable String mimeType,
             @Nullable CID thumbnail) {
 
@@ -190,7 +190,7 @@ public class ContentsService {
         if (entries.isEmpty()) {
 
             Service.createThread(context, ipfs, user, cid,
-                    Status.ERROR, filename, filesize, mimeType, thumbnail);
+                    Status.ERROR, filename, fileSize, mimeType, thumbnail);
 
         }
 

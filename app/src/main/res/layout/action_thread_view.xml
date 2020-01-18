@@ -9,7 +9,6 @@
         android:layout_height="wrap_content">
 
         <TableRow
-            android:id="@+id/row_first"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
@@ -57,7 +56,6 @@
         </TableRow>
 
         <TableRow
-            android:id="@+id/row_second"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 

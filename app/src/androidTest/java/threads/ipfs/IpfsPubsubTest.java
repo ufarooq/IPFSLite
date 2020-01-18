@@ -52,18 +52,18 @@ public class IpfsPubsubTest {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future future = executor.submit(() -> {
             try {
-                ipfs.pubsubSub(topic, false);
+                ipfs.pubSubSub(topic, false);
             } catch (Throwable e) {
                 Log.e(TAG, e.getLocalizedMessage(), e);
             }
         });
 
         Thread.sleep(2000);
-        ipfs.pubsubPub(topic, text, 100);
+        ipfs.pubSubPub(topic, text, 100);
         Thread.sleep(2000);
 
 
-        List<String> peers = ipfs.pubsubPeers();
+        List<String> peers = ipfs.pubSubPeers();
         assertNotNull(peers);
 
 
@@ -87,15 +87,15 @@ public class IpfsPubsubTest {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future future = executor.submit(() -> {
             try {
-                ipfs.pubsubSub(topic, false);
+                ipfs.pubSubSub(topic, false);
             } catch (Throwable e) {
                 Log.e(TAG, e.getLocalizedMessage(), e);
             }
         });
         Thread.sleep(2000);
-        ipfs.pubsubPub(topic, text, 100);
+        ipfs.pubSubPub(topic, text, 100);
         Thread.sleep(2000);
-        List<String> peers = ipfs.pubsubPeers();
+        List<String> peers = ipfs.pubSubPeers();
         checkNotNull(peers);
         assertTrue(!peers.isEmpty());
 
@@ -119,7 +119,7 @@ public class IpfsPubsubTest {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future future = executor.submit(() -> {
             try {
-                ipfs.pubsubSub(topic, false);
+                ipfs.pubSubSub(topic, false);
             } catch (Throwable e) {
                 Log.e(TAG, e.getLocalizedMessage(), e);
             }
@@ -127,12 +127,12 @@ public class IpfsPubsubTest {
 
         Thread.sleep(1000);
         for (int i = 0; i < maxMessages; i++) {
-            ipfs.pubsubPub(topic, "" + i, 30);
+            ipfs.pubSubPub(topic, "" + i, 30);
         }
         Thread.sleep(2000);
 
 
-        List<String> peers = ipfs.pubsubPeers();
+        List<String> peers = ipfs.pubSubPeers();
         assertNotNull(peers);
 
 
@@ -156,12 +156,12 @@ public class IpfsPubsubTest {
 
         Thread.sleep(1000);
         for (int i = 0; i < maxMessages; i++) {
-            ipfs.pubsubPub(topic, "" + i, 30);
+            ipfs.pubSubPub(topic, "" + i, 30);
         }
         Thread.sleep(2000);
 
 
-        List<String> peers = ipfs.pubsubPeers();
+        List<String> peers = ipfs.pubSubPeers();
         assertNotNull(peers);
 
 

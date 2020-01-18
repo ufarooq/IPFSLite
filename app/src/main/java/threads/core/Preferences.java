@@ -225,9 +225,8 @@ public class Preferences {
         checkNotNull(identifier);
         checkNotNull(content);
         // todo context
-        new Thread(() -> {
-            events.invokeEvent(identifier, content);
-        }).start();
+        Thread thread = new Thread(() -> events.invokeEvent(identifier, content));
+        thread.start();
     }
 
 

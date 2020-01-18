@@ -91,9 +91,6 @@ public class WebViewDialogFragment extends DialogFragment {
                     case TEXT:
                         wv.loadData(data, MimeType.PLAIN_MIME_TYPE, "UTF-8");
                         break;
-                    case URL:
-                        wv.loadUrl(data);
-                        break;
                     default:
                         wv.loadUrl(data);
                 }

@@ -84,12 +84,12 @@ public class IPFS implements Listener {
     private static final String TAG = IPFS.class.getSimpleName();
     private static IPFS INSTANCE = null;
     @Nullable
-    private static PubsubHandler HANDLER = null;
+    private static PubSubHandler HANDLER = null;
     private final File baseDir;
     private final File cacheDir;
     private final Node node;
     private final PID pid;
-    private final PubsubReader pubsubReader;
+    private final PubSubReader pubsubReader;
     private final ContentInfoUtil util;
     private final Hashtable<String, Future> topics = new Hashtable<>();
     private Gson gson = new Gson();
@@ -104,7 +104,7 @@ public class IPFS implements Listener {
         checkNotNull(this.cacheDir);
         checkArgument(this.cacheDir.isDirectory());
         this.util = new ContentInfoUtil(builder.context);
-        this.pubsubReader = builder.pubsubReader;
+        this.pubsubReader = builder.pubSubReader;
 
         boolean init = !existConfigFile();
 
@@ -119,7 +119,7 @@ public class IPFS implements Listener {
         configTune(config,
                 builder.addresses,
                 builder.experimental,
-                builder.pubsub,
+                builder.pubSubConfig,
                 builder.discovery,
                 builder.swarm,
                 builder.routing);
@@ -166,11 +166,11 @@ public class IPFS implements Listener {
     }
 
     @Nullable
-    public static PubsubHandler getPubsubHandler() {
+    public static PubSubHandler getPubSubHandler() {
         return HANDLER;
     }
 
-    public static void setPubsubHandler(@Nullable PubsubHandler pubsubHandler) {
+    public static void setPubSubHandler(@Nullable PubSubHandler pubsubHandler) {
         HANDLER = pubsubHandler;
     }
 
@@ -234,16 +234,16 @@ public class IPFS implements Listener {
         editor.apply();
     }
 
-    public static PubsubConfig.RouterEnum getPubsubRouter(@NonNull Context context) {
+    public static PubSubConfig.RouterEnum getPubSubRouter(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(
                 PREF_KEY, Context.MODE_PRIVATE);
-        return PubsubConfig.RouterEnum.valueOf(
-                sharedPref.getString(ROUTER_ENUM_KEY, PubsubConfig.RouterEnum.floodsub.name()));
+        return PubSubConfig.RouterEnum.valueOf(
+                sharedPref.getString(ROUTER_ENUM_KEY, PubSubConfig.RouterEnum.floodsub.name()));
     }
 
-    public static void setPubsubRouter(@NonNull Context context,
-                                       @NonNull PubsubConfig.RouterEnum routerEnum) {
+    public static void setPubSubRouter(@NonNull Context context,
+                                       @NonNull PubSubConfig.RouterEnum routerEnum) {
         checkNotNull(context);
         checkNotNull(routerEnum);
         SharedPreferences sharedPref = context.getSharedPreferences(
@@ -324,13 +324,13 @@ public class IPFS implements Listener {
         editor.apply();
     }
 
-    public static boolean isPubsubEnabled(@NonNull Context context) {
+    public static boolean isPubSubEnabled(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
         return sharedPref.getBoolean(PUBSUB_KEY, true);
     }
 
-    public static void setPubsubEnabled(@NonNull Context context, boolean enable) {
+    public static void setPubSubEnabled(@NonNull Context context, boolean enable) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
@@ -338,14 +338,14 @@ public class IPFS implements Listener {
         editor.apply();
     }
 
-    public static boolean isMdnsEnabled(@NonNull Context context) {
+    public static boolean isMDNSEnabled(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
         return sharedPref.getBoolean(MDNS_KEY, true);
 
     }
 
-    public static void setMdnsEnabled(@NonNull Context context, boolean enable) {
+    public static void setMDNSEnabled(@NonNull Context context, boolean enable) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
@@ -428,7 +428,7 @@ public class IPFS implements Listener {
         if (INSTANCE == null) {
             synchronized (IPFS.class) {
                 if (INSTANCE == null) {
-                    PubsubReader pubsubReader = (message) -> {
+                    PubSubReader pubsubReader = (message) -> {
                         if (HANDLER != null) {
                             HANDLER.receive(message);
                         }
@@ -453,8 +453,8 @@ public class IPFS implements Listener {
                     experimental.setPreferTLS(isPreferTLS(context));
 
 
-                    PubsubConfig pubsubConfig = PubsubConfig.create();
-                    pubsubConfig.setRouter(getPubsubRouter(context));
+                    PubSubConfig pubsubConfig = PubSubConfig.create();
+                    pubsubConfig.setRouter(getPubSubRouter(context));
 
 
                     SwarmConfig swarmConfig = SwarmConfig.create();
@@ -472,7 +472,7 @@ public class IPFS implements Listener {
                     mgr.setType(getConnMgrConfigType(context));
 
                     DiscoveryConfig discoveryConfig = DiscoveryConfig.create();
-                    discoveryConfig.getMdns().setEnabled(isMdnsEnabled(context));
+                    discoveryConfig.getMdns().setEnabled(isMDNSEnabled(context));
 
 
                     RoutingConfig routingConfig = RoutingConfig.create();
@@ -482,17 +482,17 @@ public class IPFS implements Listener {
                     try {
                         INSTANCE = new Builder().
                                 context(context).
-                                pubsubReader(pubsubReader).
+                                pubSubReader(pubsubReader).
                                 addresses(addresses).
                                 experimental(experimental).
-                                pubsub(pubsubConfig).
+                                pubSubConfig(pubsubConfig).
                                 discovery(discoveryConfig).
                                 swarm(swarmConfig).
                                 routing(routingConfig).build();
 
                         IPFS.setPID(context, INSTANCE.getPeerID());
 
-                        boolean pubSubEnabled = IPFS.isPubsubEnabled(context);
+                        boolean pubSubEnabled = IPFS.isPubSubEnabled(context);
                         INSTANCE.daemon(pubSubEnabled);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
@@ -537,7 +537,7 @@ public class IPFS implements Listener {
         return phrase;
     }
 
-    public boolean connectPubsubTopic(@NonNull Context context, @NonNull String topic) {
+    public boolean addPubSubTopic(@NonNull Context context, @NonNull String topic) {
         checkNotNull(context);
         checkNotNull(topic);
 
@@ -550,7 +550,7 @@ public class IPFS implements Listener {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         topics.put(topic, executor.submit(() -> {
             try {
-                pubsubSub(topic, true);
+                pubSubSub(topic, true);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
@@ -603,7 +603,7 @@ public class IPFS implements Listener {
         return node.getPublicKey();
     }
 
-    public List<PID> dhtFindProvs(@NonNull CID cid, int numProvs, int timeout) {
+    public List<PID> dhtFindProviders(@NonNull CID cid, int numProvs, int timeout) {
         checkNotNull(cid);
         checkArgument(timeout > 0);
         List<PID> providers = new ArrayList<>();
@@ -701,7 +701,7 @@ public class IPFS implements Listener {
         return success.get();
     }
 
-    public void pubsubPub(@NonNull final String topic, @NonNull final String message, int timeout) {
+    public void pubSubPub(@NonNull final String topic, @NonNull final String message, int timeout) {
         checkNotNull(topic);
         checkNotNull(message);
         checkArgument(timeout > 0);
@@ -721,7 +721,7 @@ public class IPFS implements Listener {
         node.logs();
     }
 
-    public void pubsubSub(@NonNull String topic, boolean discover) throws Exception {
+    public void pubSubSub(@NonNull String topic, boolean discover) throws Exception {
         checkNotNull(topic);
 
         if (checkDaemonRunning()) {
@@ -987,10 +987,11 @@ public class IPFS implements Listener {
     }
 
     @NonNull
-    public List<String> pubsubPeers() {
+    public List<String> pubSubPeers() {
         List<String> peers = new ArrayList<>();
         try {
             if (checkDaemonRunning()) {
+                //noinspection Convert2MethodRef
                 node.pubsubPeers((peer) -> peers.add(peer));
             }
         } catch (Throwable e) {
@@ -1000,7 +1001,7 @@ public class IPFS implements Listener {
     }
 
     @NonNull
-    public List<PID> pubsubPeers(@NonNull String topic) {
+    public List<PID> pubSubPeers(@NonNull String topic) {
         checkNotNull(topic);
         List<PID> pidList = new ArrayList<>();
 
@@ -1036,7 +1037,7 @@ public class IPFS implements Listener {
     private void configTune(@NonNull Config config,
                             @Nullable AddressesConfig addresses,
                             @Nullable ExperimentalConfig experimental,
-                            @Nullable PubsubConfig pubsub,
+                            @Nullable PubSubConfig pubsub,
                             @Nullable DiscoveryConfig discovery,
                             @Nullable SwarmConfig swarm,
                             @Nullable RoutingConfig routing) throws Exception {
@@ -1074,7 +1075,7 @@ public class IPFS implements Listener {
         }
     }
 
-    private void daemon(boolean pubsub) throws Exception {
+    private void daemon(boolean pubSubEnable) throws Exception {
 
         AtomicBoolean failure = new AtomicBoolean(false);
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -1082,7 +1083,7 @@ public class IPFS implements Listener {
         executor.submit(() -> {
             try {
                 String topic = pid.getPid();
-                node.daemon(topic, pubsub);
+                node.daemon(topic, pubSubEnable);
             } catch (Throwable e) {
                 failure.set(true);
                 exception.set("" + e.getLocalizedMessage());
@@ -1134,7 +1135,7 @@ public class IPFS implements Listener {
         checkArgument(timeout > 0);
 
 
-        List<LinkInfo> infos = new ArrayList<>();
+        List<LinkInfo> infoList = new ArrayList<>();
         try {
             if (checkDaemonRunning()) {
                 node.ls(cid.getCid(), (json) -> {
@@ -1143,7 +1144,7 @@ public class IPFS implements Listener {
                         Map map = gson.fromJson(json, Map.class);
                         checkNotNull(map);
                         LinkInfo info = LinkInfo.create(map);
-                        infos.add(info);
+                        infoList.add(info);
                     } catch (Throwable e) {
                         evaluateException(e);
                     }
@@ -1155,7 +1156,7 @@ public class IPFS implements Listener {
             evaluateException(e);
             return null;
         }
-        return infos;
+        return infoList;
     }
 
 
@@ -1238,7 +1239,7 @@ public class IPFS implements Listener {
         checkNotNull(key);
 
 
-        try (InputStream inputStream = getStream(cid, key)) {
+        try (InputStream inputStream = getInputStream(cid, key)) {
             IOUtils.copy(inputStream, outputStream);
         } catch (Throwable e) {
             return false;
@@ -1318,8 +1319,6 @@ public class IPFS implements Listener {
         final AtomicBoolean close = new AtomicBoolean(false);
         new Thread(() -> {
             try {
-
-
                 node.getStream(cid.getCid(), new LoaderStream() {
                     @Override
                     public boolean close() {
@@ -1389,37 +1388,6 @@ public class IPFS implements Listener {
 
     }
 
-    private void stream(@NonNull OutputStream outputStream, @NonNull CID cid) {
-        checkNotNull(outputStream);
-        checkNotNull(cid);
-
-        int blockSize = 4096;
-        try {
-            Reader fileReader = getReader(cid);
-
-            try {
-
-                fileReader.load(blockSize);
-
-                long bytesRead = fileReader.getRead();
-
-
-                while (bytesRead > 0) {
-
-                    outputStream.write(fileReader.getData(), 0, (int) bytesRead);
-
-                    fileReader.load(blockSize);
-                    bytesRead = fileReader.getRead();
-                }
-            } finally {
-                fileReader.close();
-            }
-
-        } catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-
-    }
 
     @Nullable
     public ContentInfo getContentInfo(@NonNull CID cid) {
@@ -1427,7 +1395,7 @@ public class IPFS implements Listener {
 
         try {
             try (InputStream inputStream = new BufferedInputStream(
-                    getStream(cid))) {
+                    getInputStream(cid))) {
 
                 return util.findMatch(inputStream);
 
@@ -1522,11 +1490,7 @@ public class IPFS implements Listener {
         checkArgument(timeout > 0);
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            boolean success = loadToOutputStream(outputStream, new Progress() {
-                @Override
-                public void setProgress(int percent) {
-
-                }
+            boolean success = loadToOutputStream(outputStream, (percent) -> {
             }, cid, key, timeout, -1);
             if (success) {
                 return new String(outputStream.toByteArray());
@@ -1587,11 +1551,7 @@ public class IPFS implements Listener {
         checkNotNull(cid);
         checkArgument(timeout > 0);
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            boolean success = loadToOutputStream(outputStream, new Progress() {
-                @Override
-                public void setProgress(int percent) {
-
-                }
+            boolean success = loadToOutputStream(outputStream, (percent) -> {
             }, cid, "", timeout, -1);
             if (success) {
                 return outputStream.toByteArray();
@@ -1621,16 +1581,16 @@ public class IPFS implements Listener {
     }
 
     @NonNull
-    public InputStream getStream(@NonNull CID cid, @NonNull String key) throws Exception {
+    public InputStream getInputStream(@NonNull CID cid, @NonNull String key) throws Exception {
         checkNotNull(cid);
         checkNotNull(key);
         if (key.isEmpty()) {
-            return getStream(cid);
+            return getInputStream(cid);
         } else {
             Key aesKey = Encryption.getKey(key);
             Cipher cipher = Cipher.getInstance("AES");
             cipher.init(Cipher.DECRYPT_MODE, aesKey);
-            return new CipherInputStream(getStream(cid), cipher);
+            return new CipherInputStream(getInputStream(cid), cipher);
         }
     }
 
@@ -1688,10 +1648,10 @@ public class IPFS implements Listener {
     public void pubsub(final String message, final byte[] data) {
 
         try {
-            PubsubInfo pubsub = PubsubInfo.create(message, data);
+            PubSubInfo pubSub = PubSubInfo.create(message, data);
 
             if (pubsubReader != null) {
-                pubsubReader.receive(pubsub);
+                pubsubReader.receive(pubSub);
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -1705,7 +1665,7 @@ public class IPFS implements Listener {
     }
 
     @NonNull
-    public InputStream getStream(@NonNull CID cid) throws Exception {
+    public InputStream getInputStream(@NonNull CID cid) throws Exception {
 
         Reader reader = getReader(cid);
         checkNotNull(reader);
@@ -1717,16 +1677,11 @@ public class IPFS implements Listener {
         ipfs, ipns, p2p
     }
 
-    public interface PubsubHandler {
-        void receive(@NonNull PubsubInfo message);
+    public interface PubSubHandler {
+        void receive(@NonNull PubSubInfo message);
     }
 
     public interface Progress {
-        /**
-         * Setter for percent
-         *
-         * @param percent Value between 0-100 percent
-         */
         void setProgress(int percent);
     }
 
@@ -1735,11 +1690,11 @@ public class IPFS implements Listener {
         private Context context;
         private AddressesConfig addresses = null;
         private ExperimentalConfig experimental = null;
-        private PubsubConfig pubsub = null;
+        private PubSubConfig pubSubConfig = null;
         private DiscoveryConfig discovery = null;
         private SwarmConfig swarm = null;
         private RoutingConfig routing = null;
-        private PubsubReader pubsubReader = null;
+        private PubSubReader pubSubReader = null;
 
         IPFS build() throws Exception {
             checkNotNull(context);
@@ -1753,8 +1708,8 @@ public class IPFS implements Listener {
             return this;
         }
 
-        Builder pubsubReader(@NonNull PubsubReader pubsubReader) {
-            this.pubsubReader = pubsubReader;
+        Builder pubSubReader(@NonNull PubSubReader pubsubReader) {
+            this.pubSubReader = pubsubReader;
             return this;
         }
 
@@ -1769,8 +1724,8 @@ public class IPFS implements Listener {
             return this;
         }
 
-        Builder pubsub(@Nullable PubsubConfig pubsub) {
-            this.pubsub = pubsub;
+        Builder pubSubConfig(@Nullable PubSubConfig pubSubConfig) {
+            this.pubSubConfig = pubSubConfig;
             return this;
         }
 
@@ -1865,10 +1820,10 @@ public class IPFS implements Listener {
     }
 
     private class WriterStream implements mobile.WriterStream {
-        public final InputStream mInputStream;
+        private final InputStream mInputStream;
         private final Writer mWriter;
 
-        public WriterStream(Writer writer, InputStream inputStream) {
+        WriterStream(Writer writer, InputStream inputStream) {
             this.mWriter = writer;
             this.mInputStream = inputStream;
         }
@@ -1883,7 +1838,6 @@ public class IPFS implements Listener {
                 mWriter.setWritten(read);
                 mWriter.setData(data);
             } catch (Throwable e) {
-                // TODO maybe close
                 Log.e(TAG, "" + e.getLocalizedMessage());
             }
 

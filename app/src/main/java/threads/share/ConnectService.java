@@ -44,14 +44,13 @@ public class ConnectService {
             }
 
         }
-        final IPFS ipfs = IPFS.getInstance(context);
-        if (ipfs != null) {
-            ipfs.swarmConnect(pid, timeout);
 
-            return ipfs.isConnected(pid);
+        IPFS ipfs = IPFS.getInstance(context);
+        ipfs.swarmConnect(pid, timeout);
 
-        }
-        return false;
+        return ipfs.isConnected(pid);
+
+
     }
 
 
@@ -62,15 +61,15 @@ public class ConnectService {
         checkNotNull(peer);
         checkNotNull(tag);
         final IPFS ipfs = IPFS.getInstance(context);
-        if (ipfs != null) {
-            Addresses addresses = peer.getAddresses();
+
+        Addresses addresses = peer.getAddresses();
             for (String relay : addresses.keySet()) {
                 PID pid = PID.create(relay);
                 if (!tag.isEmpty()) {
                     ipfs.unProtectPeer(pid, tag);
                 }
             }
-        }
+
     }
 
     public static boolean swarmConnect(@NonNull Context context,
@@ -82,8 +81,8 @@ public class ConnectService {
         final int timeout = Preferences.getSwarmTimeout(context);
 
         final IPFS ipfs = IPFS.getInstance(context);
-        if (ipfs != null) {
-            Addresses addresses = peer.getAddresses();
+
+        Addresses addresses = peer.getAddresses();
             for (String relay : addresses.keySet()) {
                 try {
                     String ma = addresses.get(relay);
@@ -113,8 +112,7 @@ public class ConnectService {
             }
 
             return ipfs.isConnected(peer.getPID());
-        }
-        return false;
+
     }
 
 

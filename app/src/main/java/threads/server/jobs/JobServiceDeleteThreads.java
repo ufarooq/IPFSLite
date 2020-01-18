@@ -26,7 +26,7 @@ public class JobServiceDeleteThreads extends JobService {
     private static final String TAG = JobServiceDeleteThreads.class.getSimpleName();
     private static final String ICES = "ices";
 
-    public static void removeThreads(@NonNull Context context, long... idxs) {
+    public static void removeThreads(@NonNull Context context, long... indices) {
         checkNotNull(context);
 
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
@@ -34,7 +34,7 @@ public class JobServiceDeleteThreads extends JobService {
         if (jobScheduler != null) {
             ComponentName componentName = new ComponentName(context, JobServiceDeleteThreads.class);
             PersistableBundle bundle = new PersistableBundle();
-            bundle.putLongArray(ICES, idxs);
+            bundle.putLongArray(ICES, indices);
 
             JobInfo jobInfo = new JobInfo.Builder(TAG.hashCode(), componentName)
                     .setExtras(bundle)
@@ -55,7 +55,7 @@ public class JobServiceDeleteThreads extends JobService {
 
 
         PersistableBundle bundle = jobParameters.getExtras();
-        final long[] idxs = bundle.getLongArray(ICES);
+        final long[] indices = bundle.getLongArray(ICES);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -67,9 +67,9 @@ public class JobServiceDeleteThreads extends JobService {
                 IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
                 checkNotNull(ipfs, "IPFS is not valid");
-                threads.setThreadsStatus(Status.DELETING, idxs);
+                threads.setThreadsStatus(Status.DELETING, indices);
 
-                threads.removeThreads(ipfs, idxs);
+                threads.removeThreads(ipfs, indices);
 
                 ipfs.gc();
 
