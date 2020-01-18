@@ -37,7 +37,7 @@ public class NameDialogFragment extends DialogFragment {
     private final AtomicBoolean notPrintErrorMessages = new AtomicBoolean(false);
     private NameDialogFragment.ActionListener mListener;
     private long mLastClickTime = 0;
-    private TextInputLayout edit_multihash_layout;
+    private TextInputLayout edit_multi_hash_layout;
     private TextInputEditText multihash;
     private Context mContext;
 
@@ -80,7 +80,6 @@ public class NameDialogFragment extends DialogFragment {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
 
-
         LayoutInflater inflater = activity.getLayoutInflater();
 
         Bundle args = getArguments();
@@ -92,9 +91,9 @@ public class NameDialogFragment extends DialogFragment {
 
         @SuppressWarnings("all")
         View view = inflater.inflate(R.layout.name_view, null);
-        edit_multihash_layout = view.findViewById(R.id.edit_text_layout);
-        edit_multihash_layout.setCounterEnabled(true);
-        edit_multihash_layout.setCounterMaxLength(30);
+        edit_multi_hash_layout = view.findViewById(R.id.edit_text_layout);
+        edit_multi_hash_layout.setCounterEnabled(true);
+        edit_multi_hash_layout.setCounterMaxLength(30);
 
         multihash = view.findViewById(R.id.text);
         InputFilter[] filterTitle = new InputFilter[1];
@@ -176,13 +175,13 @@ public class NameDialogFragment extends DialogFragment {
             if (!notPrintErrorMessages.get()) {
 
                 if (multi.isEmpty()) {
-                    edit_multihash_layout.setError(getString(R.string.name_not_valid));
+                    edit_multi_hash_layout.setError(getString(R.string.name_not_valid));
                 } else {
-                    edit_multihash_layout.setError(null);
+                    edit_multi_hash_layout.setError(null);
                 }
 
             } else {
-                edit_multihash_layout.setError(null);
+                edit_multi_hash_layout.setError(null);
             }
         }
     }

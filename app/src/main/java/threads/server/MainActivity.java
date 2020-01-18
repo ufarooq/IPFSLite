@@ -10,6 +10,8 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.provider.DocumentsContract;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -92,10 +94,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ThreadActionDialogFragment.ActionListener,
         EditMultihashDialogFragment.ActionListener,
         EditPeerDialogFragment.ActionListener,
-        PeersFragment.ActionListener,
         ThreadsFragment.ActionListener,
         NameDialogFragment.ActionListener,
         PeerActionDialogFragment.ActionListener,
+        InfoDialogFragment.ActionListener,
         DontShowAgainDialog.ActionListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -105,13 +107,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private static final int FILE_EXPORT_REQUEST_CODE = 6;
     private static final int CONTENT_REQUEST_VIDEO_CAPTURE = 9;
     private static final int PEER_REQUEST_VIDEO_CAPTURE = 10;
-
+    private static final int CLICK_OFFSET = 500;
     private final AtomicReference<String> storedUser = new AtomicReference<>(null);
     private final AtomicBoolean idScan = new AtomicBoolean(false);
     private CID threadContent = null;
     private DrawerLayout mDrawerLayout;
     private AppBarLayout mAppBarLayout;
-
     private long mLastClickTime = 0;
     private CustomViewPager mCustomViewPager;
     private BottomNavigationView mNavigation;
@@ -119,6 +120,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private SelectionViewModel mSelectionViewModel;
     private int mTrafficColorId = android.R.color.holo_red_dark;
     private Toolbar mToolbar;
+    private AtomicBoolean mStartDaemon = new AtomicBoolean(false);
 
     @Override
     public void onRequestPermissionsResult
@@ -292,12 +294,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
     public void clickConnectPeer() {
 
         if (ContextCompat.checkSelfPermission(this,
@@ -310,6 +306,42 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
         clickConnectPeerWork();
+    }
+
+    @Override
+    public void shareQRCode(@NonNull String code, @NonNull String message) {
+        checkNotNull(code);
+        checkNotNull(message);
+        try {
+
+            Uri uri = FileDocumentsProvider.getUriForString(code);
+            ComponentName[] names = {new ComponentName(getApplicationContext(), MainActivity.class)};
+
+            String mimeType = "image/png";
+            Intent intent = ShareCompat.IntentBuilder.from(this)
+                    .setStream(uri)
+                    .setType(mimeType)
+                    .getIntent();
+            intent.setAction(Intent.ACTION_SEND);
+            intent.putExtra(Intent.EXTRA_SUBJECT, code);
+            intent.putExtra(Intent.EXTRA_TEXT, message);
+            intent.putExtra(Intent.EXTRA_STREAM, uri);
+            intent.setType(mimeType);
+            intent.putExtra(DocumentsContract.EXTRA_EXCLUDE_SELF, true);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+            if (intent.resolveActivity(getPackageManager()) != null) {
+                Intent chooser = Intent.createChooser(intent, getText(R.string.share));
+                chooser.putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, names);
+                startActivity(chooser);
+            } else {
+                Preferences.error(EVENTS.getInstance(getApplicationContext()),
+                        getString(R.string.no_activity_found_to_handle_uri));
+            }
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
     }
 
     public void clickConnectPeerWork() {
@@ -848,6 +880,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 new ViewModelProvider(this).get(EventViewModel.class);
 
 
+        eventViewModel.getDaemon().observe(this, (event) -> {
+
+            if (event != null) {
+                try {
+                    mStartDaemon.set(Boolean.parseBoolean(event.getContent()));
+                } catch (Exception e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+                invalidateOptionsMenu();
+            }
+
+
+        });
         eventViewModel.getException().observe(this, (event) -> {
             try {
                 if (event != null) {
@@ -924,6 +969,54 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main, menu);
+        MenuItem actionDaemon = menu.findItem(R.id.action_daemon);
+
+        if (!mStartDaemon.get()) {
+            actionDaemon.setIcon(R.drawable.play_circle);
+        } else {
+            actionDaemon.setIcon(R.drawable.stop_circle);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        switch (item.getItemId()) {
+
+            case R.id.action_daemon: {
+
+                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                    break;
+                }
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+                ExecutorService executor = Executors.newSingleThreadExecutor();
+                executor.submit(() -> {
+
+                    try {
+                        boolean startDaemon = mStartDaemon.get();
+                        boolean newStartDaemonValue = !startDaemon;
+                        mStartDaemon.set(newStartDaemonValue);
+
+                        EVENTS events = EVENTS.getInstance(getApplicationContext());
+                        events.invokeEvent(Preferences.DAEMON, mStartDaemon.toString());
+
+                        DaemonService.invoke(getApplicationContext(), newStartDaemonValue);
+                    } catch (Throwable e) {
+                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    }
+                });
+                return true;
+            }
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 
     private void threadsFabAction() {
         Long idx = mSelectionViewModel.getParentThread().getValue();
@@ -945,7 +1038,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     Thread thread = threads.getThreadByIdx(idx);
                     if (thread != null) {
                         long parent = thread.getParent();
-                        mSelectionViewModel.setParentThread(parent, true);
+                        mSelectionViewModel.setParentThread(parent);
                     }
 
                 } catch (Throwable e) {

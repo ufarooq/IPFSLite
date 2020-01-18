@@ -7,14 +7,10 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.lifecycle.ViewModelProvider;
@@ -71,50 +67,6 @@ public class SwarmFragment extends Fragment implements
     @Override
     public void onRefresh() {
         loadPeers(true);
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
-    }
-
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_swarm, menu);
-        MenuItem actionDaemon = menu.findItem(R.id.action_daemon);
-        if (!DaemonService.DAEMON_RUNNING.get()) {
-            actionDaemon.setIcon(R.drawable.play_circle);
-        } else {
-            actionDaemon.setIcon(R.drawable.stop_circle);
-        }
-        super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-
-        switch (item.getItemId()) {
-
-            case R.id.action_daemon: {
-
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                if (DaemonService.DAEMON_RUNNING.get()) {
-                    DaemonService.DAEMON_RUNNING.set(false);
-                } else {
-                    DaemonService.DAEMON_RUNNING.set(true);
-                }
-                DaemonService.invoke(mContext);
-
-                getActivity().invalidateOptionsMenu();
-                return true;
-            }
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     private void loadPeers(boolean animation) {

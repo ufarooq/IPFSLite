@@ -1,15 +1,11 @@
 package threads.share;
 
 import android.app.Dialog;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Paint;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,12 +15,10 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
-import androidx.core.app.ShareCompat;
 import androidx.fragment.app.DialogFragment;
 
 import threads.core.Preferences;
 import threads.core.events.EVENTS;
-import threads.server.MainActivity;
 import threads.server.R;
 import threads.server.provider.FileDocumentsProvider;
 
@@ -40,6 +34,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
     private String code;
     private String message;
     private Context mContext;
+    private InfoDialogFragment.ActionListener mListener;
 
     public static InfoDialogFragment newInstance(@NonNull String code,
                                                  @NonNull String title,
@@ -60,54 +55,23 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
 
     }
 
-    private void shareQRCode(@NonNull Context context,
-                             @NonNull String code,
-                             @NonNull String message) {
-        checkNotNull(context);
-        checkNotNull(code);
-        checkNotNull(message);
-        try {
-
-            Uri uri = FileDocumentsProvider.getUriForString(code);
-            ComponentName[] names = {new ComponentName(context, MainActivity.class)};
-
-            String mimeType = "image/png";
-            Intent intent = ShareCompat.IntentBuilder.from(getActivity())
-                    .setStream(uri)
-                    .setType(mimeType)
-                    .getIntent();
-            intent.setAction(Intent.ACTION_SEND);
-            intent.putExtra(Intent.EXTRA_SUBJECT, code);
-            intent.putExtra(Intent.EXTRA_TEXT, message);
-            intent.putExtra(Intent.EXTRA_STREAM, uri);
-            intent.setType(mimeType);
-            intent.putExtra(DocumentsContract.EXTRA_EXCLUDE_SELF, true);
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-            if (intent.resolveActivity(mContext.getPackageManager()) != null) {
-                Intent chooser = Intent.createChooser(intent, getText(R.string.share));
-                chooser.putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, names);
-                startActivity(chooser);
-            } else {
-                Preferences.error(EVENTS.getInstance(context),
-                        getString(R.string.no_activity_found_to_handle_uri));
-            }
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
 
     @Override
     public void onDetach() {
         super.onDetach();
         mContext = null;
+        mListener = null;
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
+        try {
+            mListener = (InfoDialogFragment.ActionListener) getActivity();
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
     }
 
     @NonNull
@@ -116,7 +80,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
 
         LayoutInflater inflater = LayoutInflater.from(getActivity());
         @SuppressWarnings("all")
-        View view = inflater.inflate(R.layout.dialog_info, null, false);
+        View view = inflater.inflate(R.layout.dialog_info, null);
 
         ImageView imageView = view.findViewById(R.id.dialog_server_info);
         Bundle bundle = getArguments();
@@ -173,7 +137,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
         switch (which) {
             case AlertDialog.BUTTON_POSITIVE: {
                 try {
-                    shareQRCode(mContext, code, message);
+                    mListener.shareQRCode(code, message);
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
@@ -191,5 +155,11 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
                 break;
             }
         }
+    }
+
+    public interface ActionListener {
+
+        void shareQRCode(@NonNull String code, @NonNull String message);
+
     }
 }

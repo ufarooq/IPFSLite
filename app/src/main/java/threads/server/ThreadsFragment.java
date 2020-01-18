@@ -10,7 +10,6 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,7 +44,6 @@ import threads.core.threads.Status;
 import threads.core.threads.THREADS;
 import threads.core.threads.Thread;
 import threads.ipfs.CID;
-import threads.ipfs.IPFS;
 import threads.server.jobs.JobServiceDeleteThreads;
 import threads.server.jobs.JobServiceLoadNotifications;
 import threads.server.mdl.SelectionViewModel;
@@ -60,7 +58,6 @@ public class ThreadsFragment extends Fragment implements
         SwipeRefreshLayout.OnRefreshListener, ThreadsViewAdapter.ThreadsViewAdapterListener {
 
     private static final String TAG = ThreadsFragment.class.getSimpleName();
-
     private static final int CLICK_OFFSET = 500;
     @NonNull
     private final AtomicReference<LiveData<List<Thread>>> observer = new AtomicReference<>(null);
@@ -69,7 +66,6 @@ public class ThreadsFragment extends Fragment implements
     @NonNull
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private SelectionViewModel mSelectionViewModel;
-
     private ThreadsViewAdapter mThreadsViewAdapter;
     private ThreadViewModel threadViewModel;
     private long mLastClickTime = 0;
@@ -109,7 +105,7 @@ public class ThreadsFragment extends Fragment implements
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@NonNull Bundle outState) {
         mSelectionTracker.onSaveInstanceState(outState);
         super.onSaveInstanceState(outState);
     }
@@ -122,7 +118,6 @@ public class ThreadsFragment extends Fragment implements
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
 
 
         mSelectionViewModel = new ViewModelProvider(getActivity()).get(SelectionViewModel.class);
@@ -142,46 +137,8 @@ public class ThreadsFragment extends Fragment implements
     }
 
     @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_threads, menu);
-        MenuItem actionDaemon = menu.findItem(R.id.action_daemon);
-        if (!DaemonService.DAEMON_RUNNING.get()) {
-            actionDaemon.setIcon(R.drawable.play_circle);
-        } else {
-            actionDaemon.setIcon(R.drawable.stop_circle);
-        }
-        super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.threads_view, container, false);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-
-        switch (item.getItemId()) {
-
-            case R.id.action_daemon: {
-
-                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                if (DaemonService.DAEMON_RUNNING.get()) {
-                    DaemonService.DAEMON_RUNNING.set(false);
-                } else {
-                    DaemonService.DAEMON_RUNNING.set(true);
-                }
-                DaemonService.invoke(mContext);
-
-                getActivity().invalidateOptionsMenu();
-                return true;
-            }
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -373,7 +330,6 @@ public class ThreadsFragment extends Fragment implements
         }
 
         if (!mSelectionTracker.hasSelection()) {
-            THREADS threads = THREADS.getInstance(mContext);
             Preferences.warning(events,
                     mContext.getString(R.string.no_marked_file_delete));
             return;
@@ -527,7 +483,7 @@ public class ThreadsFragment extends Fragment implements
                     try {
                         int children = threads.getThreadReferences(threadIdx);
                         if (children > 0) {
-                            mSelectionViewModel.setParentThread(threadIdx, true);
+                            mSelectionViewModel.setParentThread(threadIdx);
                         } else {
                             mHandler.post(() -> clickThreadPlay(threadIdx));
                         }
@@ -546,48 +502,46 @@ public class ThreadsFragment extends Fragment implements
     private void clickThreadPlay(long idx) {
         final EVENTS events = EVENTS.getInstance(mContext);
         final THREADS threads = THREADS.getInstance(mContext);
-        final IPFS ipfs = IPFS.getInstance(mContext);
-        final int timeout = Preferences.getConnectionTimeout(mContext);
-        if (ipfs != null) {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    Thread thread = threads.getThreadByIdx(idx);
-                    checkNotNull(thread);
-                    Status status = thread.getStatus();
-                    if (status == Status.SEEDING) {
 
-                        CID cid = thread.getContent();
-                        checkNotNull(cid);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                Thread thread = threads.getThreadByIdx(idx);
+                checkNotNull(thread);
+                Status status = thread.getStatus();
+                if (status == Status.SEEDING) {
+
+                    CID cid = thread.getContent();
+                    checkNotNull(cid);
 
 
-                        String mimeType = thread.getMimeType();
+                    String mimeType = thread.getMimeType();
 
 
-                        Uri uri = FileDocumentsProvider.getUriForThread(thread);
-                        Intent intent = ShareCompat.IntentBuilder.from(getActivity())
-                                .setStream(uri)
-                                .setType(mimeType)
-                                .getIntent();
-                        intent.setAction(Intent.ACTION_VIEW);
-                        intent.putExtra(Intent.EXTRA_TITLE, thread.getName());
-                        intent.setData(uri);
-                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    Uri uri = FileDocumentsProvider.getUriForThread(thread);
+                    Intent intent = ShareCompat.IntentBuilder.from(getActivity())
+                            .setStream(uri)
+                            .setType(mimeType)
+                            .getIntent();
+                    intent.setAction(Intent.ACTION_VIEW);
+                    intent.putExtra(Intent.EXTRA_TITLE, thread.getName());
+                    intent.setData(uri);
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
 
-                        if (intent.resolveActivity(
-                                mContext.getPackageManager()) != null) {
-                            startActivity(intent);
-                        } else {
-                            Preferences.error(events,
-                                    getString(R.string.no_activity_found_to_handle_uri));
-                        }
+                    if (intent.resolveActivity(
+                            mContext.getPackageManager()) != null) {
+                        startActivity(intent);
+                    } else {
+                        Preferences.error(events,
+                                getString(R.string.no_activity_found_to_handle_uri));
                     }
-                } catch (Throwable ex) {
-                    Preferences.error(events, getString(R.string.no_activity_found_to_handle_uri));
                 }
-            });
-        }
+            } catch (Throwable ex) {
+                Preferences.error(events, getString(R.string.no_activity_found_to_handle_uri));
+            }
+        });
+
     }
 
 

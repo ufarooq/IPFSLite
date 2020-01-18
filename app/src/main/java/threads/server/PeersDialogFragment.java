@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -25,9 +26,10 @@ import static androidx.core.util.Preconditions.checkNotNull;
 public class PeersDialogFragment extends DialogFragment {
     static final String TAG = PeersDialogFragment.class.getSimpleName();
 
-    private int backgroundColor;
-    private ActionListener actionListener;
+    private int mBackgroundColor;
+    private ActionListener mActionListener;
     private long mLastClickTime = 0;
+    private Context mContext;
 
     static PeersDialogFragment newInstance() {
 
@@ -42,14 +44,20 @@ public class PeersDialogFragment extends DialogFragment {
     }
 
     @Override
+    public void onDetach() {
+        super.onDetach();
+        mContext = null;
+    }
+
+    @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-
+        mContext = context;
 
         try {
-            actionListener = (ActionListener) getActivity();
+            mActionListener = (ActionListener) getActivity();
 
-            backgroundColor = getThemeBackgroundColor(context);
+            mBackgroundColor = getThemeBackgroundColor(context);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -68,10 +76,13 @@ public class PeersDialogFragment extends DialogFragment {
 
         @SuppressLint("InflateParams") View view = inflater.inflate(R.layout.peers_action_view, null);
 
-        view.setBackgroundColor(backgroundColor);
+        view.setBackgroundColor(mBackgroundColor);
 
         TextView menu_scan_peer = view.findViewById(R.id.menu_scan_pid);
-
+        PackageManager pm = mContext.getPackageManager();
+        if (!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+            menu_scan_peer.setVisibility(View.GONE);
+        }
         menu_scan_peer.setOnClickListener((v) -> {
 
             try {
@@ -80,7 +91,7 @@ public class PeersDialogFragment extends DialogFragment {
                 }
 
                 mLastClickTime = SystemClock.elapsedRealtime();
-                actionListener.clickConnectPeer();
+                mActionListener.clickConnectPeer();
             } finally {
                 dismiss();
             }
@@ -100,7 +111,7 @@ public class PeersDialogFragment extends DialogFragment {
 
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                actionListener.clickEditPeer();
+                mActionListener.clickEditPeer();
 
             } finally {
                 dismiss();
@@ -120,7 +131,7 @@ public class PeersDialogFragment extends DialogFragment {
 
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                actionListener.clickInfoPeer();
+                mActionListener.clickInfoPeer();
 
             } finally {
                 dismiss();

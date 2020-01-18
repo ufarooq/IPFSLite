@@ -15,8 +15,9 @@
     <string name="licences">Licences</string>
     <string name="application">Application</string>
 
-    <string name="multihash">Multihash</string>
-    <string name="multihash_access">The QR code (CID \"%1$s\") contains all necessary information to get the content of the hash.</string>
+    <string name="multi_hash">Multihash</string>
+    <string name="content_file_access">The QR code (CID \"%1$s\") contains all necessary information to get the content \"%2$s\" of the hash.</string>
+    <string name="multi_hash_access">The QR code (CID \"%1$s\") contains all necessary information to get the content of the hash.</string>
     <string name="feature_camera_required">Feature camera required</string>
     <string name="share">Share</string>
     <string name="settings">Settings</string>

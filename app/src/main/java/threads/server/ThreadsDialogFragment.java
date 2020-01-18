@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -26,9 +27,10 @@ import static androidx.core.util.Preconditions.checkNotNull;
 public class ThreadsDialogFragment extends DialogFragment {
     static final String TAG = ThreadsDialogFragment.class.getSimpleName();
 
-    private ThreadsDialogFragment.ActionListener actionListener;
+    private ThreadsDialogFragment.ActionListener mActionListener;
     private long mLastClickTime = 0;
-    private int backgroundColor;
+    private int mBackgroundColor;
+    private Context mContext;
 
     static ThreadsDialogFragment newInstance() {
 
@@ -42,14 +44,20 @@ public class ThreadsDialogFragment extends DialogFragment {
     }
 
     @Override
+    public void onDetach() {
+        super.onDetach();
+        mContext = null;
+    }
+
+    @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-
+        mContext = context;
 
         try {
-            actionListener = (ThreadsDialogFragment.ActionListener) getActivity();
+            mActionListener = (ThreadsDialogFragment.ActionListener) getActivity();
 
-            backgroundColor = getThemeBackgroundColor(context);
+            mBackgroundColor = getThemeBackgroundColor(context);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -69,7 +77,7 @@ public class ThreadsDialogFragment extends DialogFragment {
 
         @SuppressLint("InflateParams") View view = inflater.inflate(R.layout.threads_action_view, null);
 
-        view.setBackgroundColor(backgroundColor);
+        view.setBackgroundColor(mBackgroundColor);
 
 
         TextView menu_file_cid = view.findViewById(R.id.menu_file_cid);
@@ -82,7 +90,7 @@ public class ThreadsDialogFragment extends DialogFragment {
                 }
 
                 mLastClickTime = SystemClock.elapsedRealtime();
-                actionListener.clickUpload();
+                mActionListener.clickUpload();
             } finally {
                 dismiss();
             }
@@ -93,6 +101,10 @@ public class ThreadsDialogFragment extends DialogFragment {
 
         TextView menu_scan_cid = view.findViewById(R.id.menu_scan_cid);
 
+        PackageManager pm = mContext.getPackageManager();
+        if (!pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+            menu_scan_cid.setVisibility(View.GONE);
+        }
         menu_scan_cid.setOnClickListener((v) -> {
 
             try {
@@ -101,7 +113,7 @@ public class ThreadsDialogFragment extends DialogFragment {
                 }
 
                 mLastClickTime = SystemClock.elapsedRealtime();
-                actionListener.clickMultihash();
+                mActionListener.clickMultihash();
             } finally {
                 dismiss();
             }
@@ -121,7 +133,7 @@ public class ThreadsDialogFragment extends DialogFragment {
 
                 mLastClickTime = SystemClock.elapsedRealtime();
 
-                actionListener.clickEditMultihash();
+                mActionListener.clickEditMultihash();
 
             } finally {
                 dismiss();

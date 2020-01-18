@@ -15,7 +15,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class Preferences {
 
-
+    public static final String DAEMON = "DAEMON";
     public static final String EXCEPTION = "EXCEPTION";
     public static final String WARNING = "WARNING";
     public static final String INFO = "INFO";
@@ -229,6 +229,7 @@ public class Preferences {
             events.invokeEvent(identifier, content);
         }).start();
     }
+
 
     public static void error(@NonNull EVENTS events,
                              @NonNull String message) {

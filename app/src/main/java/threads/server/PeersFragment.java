@@ -5,14 +5,10 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -23,7 +19,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import threads.core.peers.User;
-import threads.core.peers.UserType;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.server.mdl.UsersViewModel;
@@ -39,7 +34,6 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
 
     private UsersViewAdapter usersViewAdapter;
-    private ActionListener mListener;
     private Context mContext;
 
 
@@ -47,64 +41,12 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
     public void onDetach() {
         super.onDetach();
         mContext = null;
-        mListener = null;
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
-        try {
-            mListener = (PeersFragment.ActionListener) getActivity();
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
-
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
-    }
-
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_peers, menu);
-        MenuItem actionDaemon = menu.findItem(R.id.action_daemon);
-        if (!DaemonService.DAEMON_RUNNING.get()) {
-            actionDaemon.setIcon(R.drawable.play_circle);
-        } else {
-            actionDaemon.setIcon(R.drawable.stop_circle);
-        }
-        super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-
-        switch (item.getItemId()) {
-            case R.id.action_daemon: {
-
-                if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                if (DaemonService.DAEMON_RUNNING.get()) {
-                    DaemonService.DAEMON_RUNNING.set(false);
-                } else {
-                    DaemonService.DAEMON_RUNNING.set(true);
-                }
-                DaemonService.invoke(mContext);
-
-                getActivity().invalidateOptionsMenu();
-                return true;
-            }
-
-
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -156,14 +98,13 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
     public void invokeGeneralAction(@NonNull User user) {
         checkNotNull(user);
         try {
-            // mis-clicking prevention, using threshold of 1000 ms
+
             if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
                 return;
             }
             mLastClickTime = SystemClock.elapsedRealtime();
 
             boolean valid = user.isValid();
-            boolean verified = user.getType() == UserType.VERIFIED;
 
             UserActionDialogFragment.newInstance(
                     user.getPID().getPid(), true, true, true,
@@ -182,8 +123,5 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         return !user.isDialing();
     }
 
-    public interface ActionListener {
 
-        void clickInfoPeer();
-    }
 }

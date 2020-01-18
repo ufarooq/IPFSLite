@@ -18,8 +18,6 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import threads.server.jobs.JobServiceAutoConnect;
 import threads.server.jobs.JobServicePeers;
 
@@ -27,11 +25,11 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 
 public class DaemonService extends Service {
-    public static final AtomicBoolean DAEMON_RUNNING = new AtomicBoolean(false);
 
     private static final String HIGH_CHANNEL_ID = "HIGH_CHANNEL_ID";
     private static final int NOTIFICATION_ID = 998;
     private static final String TAG = DaemonService.class.getSimpleName();
+    private static final String START_DAEMON = "START_DAEMON";
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
 
         @Override
@@ -45,10 +43,11 @@ public class DaemonService extends Service {
         }
     };
 
-    public static void invoke(@NonNull Context context) {
+    public static void invoke(@NonNull Context context, boolean startDaemon) {
         checkNotNull(context);
         try {
             Intent intent = new Intent(context, DaemonService.class);
+            intent.putExtra(START_DAEMON, startDaemon);
             ContextCompat.startForegroundService(context, intent);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -87,7 +86,7 @@ public class DaemonService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         checkNotNull(intent);
-        if (DAEMON_RUNNING.get()) {
+        if (intent.getBooleanExtra(START_DAEMON, false)) {
 
             startForeground(NOTIFICATION_ID, buildNotification());
             IntentFilter intentFilter = new IntentFilter();

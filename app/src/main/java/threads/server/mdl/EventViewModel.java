@@ -32,9 +32,12 @@ public class EventViewModel extends AndroidViewModel {
         return eventsDatabase.eventDao().getEvent(Preferences.WARNING);
     }
 
-
     public LiveData<Event> getInfo() {
         return eventsDatabase.eventDao().getEvent(Preferences.INFO);
+    }
+
+    public LiveData<Event> getDaemon() {
+        return eventsDatabase.eventDao().getEvent(Preferences.DAEMON);
     }
 
     public LiveData<Event> getEvent(@NonNull String event) {

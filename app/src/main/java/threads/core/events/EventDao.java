@@ -22,6 +22,12 @@ public interface EventDao {
     @Query("DELETE FROM Event WHERE  identifier =:identifier")
     void deleteEvent(String identifier);
 
+    @Query("SELECT content FROM Event WHERE identifier =:identifier")
+    String getContent(String identifier);
+
+    @Query("UPDATE Event SET content =:content  WHERE identifier =:identifier")
+    void setContent(String identifier, String content);
+
     @Query("DELETE FROM Event")
     void clear();
 }

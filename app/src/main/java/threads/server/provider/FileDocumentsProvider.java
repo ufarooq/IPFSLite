@@ -48,8 +48,6 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class FileDocumentsProvider extends DocumentsProvider {
     private static final String TAG = FileDocumentsProvider.class.getSimpleName();
-    private String appName;
-
     private final static String[] DEFAULT_ROOT_PROJECTION =
             new String[]{
                     DocumentsContract.Root.COLUMN_ROOT_ID,
@@ -58,8 +56,6 @@ public class FileDocumentsProvider extends DocumentsProvider {
                     DocumentsContract.Root.COLUMN_FLAGS,
                     DocumentsContract.Root.COLUMN_DOCUMENT_ID,
             };
-
-
     private static final String[] DEFAULT_DOCUMENT_PROJECTION = new String[]{
             DocumentsContract.Document.COLUMN_DOCUMENT_ID,
             DocumentsContract.Document.COLUMN_MIME_TYPE,
@@ -68,8 +64,8 @@ public class FileDocumentsProvider extends DocumentsProvider {
             DocumentsContract.Document.COLUMN_FLAGS,
             DocumentsContract.Document.COLUMN_SIZE
     };
-
     private static final int QR_CODE_SIZE = 250;
+    private String appName;
     private THREADS threads;
     private IPFS ipfs;
 
@@ -339,7 +335,6 @@ public class FileDocumentsProvider extends DocumentsProvider {
 
         return null;
     }
-
 
 
     private File getBitmapFile(@NonNull String hash) throws IOException {
