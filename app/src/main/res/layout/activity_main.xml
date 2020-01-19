@@ -36,7 +36,7 @@
             </com.google.android.material.appbar.AppBarLayout>
 
 
-            <threads.server.CustomViewPager
+            <threads.server.utils.CustomViewPager
                 android:id="@+id/customViewPager"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

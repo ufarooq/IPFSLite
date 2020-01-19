@@ -16,13 +16,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import threads.core.contents.CDS;
-import threads.core.peers.Content;
 import threads.ipfs.CID;
 import threads.ipfs.PID;
-import threads.server.Service;
+import threads.server.core.contents.CDS;
+import threads.server.core.peers.Content;
 import threads.server.services.ContentsService;
-import threads.share.Network;
+import threads.server.services.Service;
+import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -92,12 +92,12 @@ public class JobServiceContents extends JobService {
                             TimeUnit.MINUTES.toMillis(30);
 
 
-                    List<threads.core.contents.Content> contents =
+                    List<threads.server.core.contents.Content> contents =
                             contentService.getContentDatabase().
                                     contentDao().getContents(
                                     PID.create(pid), timestamp, false);
 
-                    for (threads.core.contents.Content entry : contents) {
+                    for (threads.server.core.contents.Content entry : contents) {
                         ContentsService.download(
                                 getApplicationContext(), entry.getPid(), entry.getCID());
                     }

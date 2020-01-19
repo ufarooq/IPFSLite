@@ -16,14 +16,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import threads.core.threads.THREADS;
-import threads.core.threads.Thread;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
-import threads.server.Preferences;
-import threads.server.Service;
+import threads.server.core.threads.THREADS;
+import threads.server.core.threads.Thread;
 import threads.server.services.GatewayService;
-import threads.share.Network;
+import threads.server.services.Service;
+import threads.server.utils.Network;
+import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

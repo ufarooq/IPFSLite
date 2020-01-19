@@ -32,7 +32,7 @@ import java.util.Optional;
 
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
-import threads.share.MimeType;
+import threads.server.utils.MimeType;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;

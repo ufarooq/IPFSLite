@@ -16,12 +16,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import threads.core.peers.PEERS;
-import threads.core.peers.User;
 import threads.ipfs.IPFS;
-import threads.server.Preferences;
-import threads.server.Service;
-import threads.share.Network;
+import threads.server.core.peers.PEERS;
+import threads.server.core.peers.User;
+import threads.server.services.Service;
+import threads.server.utils.Network;
+import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

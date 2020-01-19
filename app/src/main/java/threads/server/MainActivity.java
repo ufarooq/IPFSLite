@@ -48,19 +48,36 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.psdev.licensesdialog.LicensesDialogFragment;
-import threads.core.events.EVENTS;
-import threads.core.peers.AddressType;
-import threads.core.peers.PEERS;
-import threads.core.peers.User;
-import threads.core.threads.Kind;
-import threads.core.threads.Status;
-import threads.core.threads.THREADS;
-import threads.core.threads.Thread;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
 import threads.ipfs.PID;
 import threads.ipfs.PeerInfo;
+import threads.server.core.events.EVENTS;
+import threads.server.core.peers.AddressType;
+import threads.server.core.peers.PEERS;
+import threads.server.core.peers.User;
+import threads.server.core.threads.Kind;
+import threads.server.core.threads.Status;
+import threads.server.core.threads.THREADS;
+import threads.server.core.threads.Thread;
+import threads.server.fragments.DetailsDialogFragment;
+import threads.server.fragments.DontShowAgainFragmentDialog;
+import threads.server.fragments.EditMultihashDialogFragment;
+import threads.server.fragments.EditPeerDialogFragment;
+import threads.server.fragments.InfoDialogFragment;
+import threads.server.fragments.NameDialogFragment;
+import threads.server.fragments.PeerActionDialogFragment;
+import threads.server.fragments.PeersDialogFragment;
+import threads.server.fragments.PeersFragment;
+import threads.server.fragments.SendDialogFragment;
+import threads.server.fragments.SettingsDialogFragment;
+import threads.server.fragments.SwarmFragment;
+import threads.server.fragments.ThreadActionDialogFragment;
+import threads.server.fragments.ThreadsDialogFragment;
+import threads.server.fragments.ThreadsFragment;
+import threads.server.fragments.UserActionDialogFragment;
+import threads.server.fragments.WebViewDialogFragment;
 import threads.server.jobs.JobServiceDeleteThreads;
 import threads.server.jobs.JobServiceDownload;
 import threads.server.jobs.JobServiceIdentity;
@@ -72,19 +89,15 @@ import threads.server.provider.FileDocumentsProvider;
 import threads.server.services.ConnectService;
 import threads.server.services.DaemonService;
 import threads.server.services.GatewayService;
+import threads.server.services.Service;
 import threads.server.services.ThumbnailService;
 import threads.server.services.UploadService;
-import threads.share.DetailsDialogFragment;
-import threads.share.DontShowAgainDialog;
-import threads.share.InfoDialogFragment;
-import threads.share.MimeType;
-import threads.share.NameDialogFragment;
-import threads.share.Network;
-import threads.share.PeerActionDialogFragment;
-import threads.share.PermissionAction;
-import threads.share.ThreadActionDialogFragment;
-import threads.share.UserActionDialogFragment;
-import threads.share.WebViewDialogFragment;
+import threads.server.utils.CodecDecider;
+import threads.server.utils.CustomViewPager;
+import threads.server.utils.MimeType;
+import threads.server.utils.Network;
+import threads.server.utils.PermissionAction;
+import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -99,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NameDialogFragment.ActionListener,
         PeerActionDialogFragment.ActionListener,
         InfoDialogFragment.ActionListener,
-        DontShowAgainDialog.ActionListener {
+        DontShowAgainFragmentDialog.ActionListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -1630,9 +1643,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (pinned) {
             if (!Service.getDontShowAgain(this, Service.PIN_SERVICE_KEY)) {
                 try {
-                    DontShowAgainDialog.newInstance(
+                    DontShowAgainFragmentDialog.newInstance(
                             getString(R.string.pin_service_notice), Service.PIN_SERVICE_KEY).show(
-                            getSupportFragmentManager(), DontShowAgainDialog.TAG);
+                            getSupportFragmentManager(), DontShowAgainFragmentDialog.TAG);
 
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);

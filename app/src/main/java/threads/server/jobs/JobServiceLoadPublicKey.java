@@ -14,11 +14,11 @@ import androidx.annotation.NonNull;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.peers.PEERS;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.ipfs.PeerInfo;
-import threads.server.Preferences;
+import threads.server.core.peers.PEERS;
+import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

@@ -5,7 +5,7 @@ import android.provider.DocumentsContract;
 import androidx.annotation.NonNull;
 
 import threads.server.R;
-import threads.share.MimeType;
+import threads.server.utils.MimeType;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

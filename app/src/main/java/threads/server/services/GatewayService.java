@@ -9,12 +9,12 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import threads.core.peers.PEERS;
-import threads.core.peers.Peer;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.ipfs.PeerInfo;
-import threads.share.Network;
+import threads.server.core.peers.PEERS;
+import threads.server.core.peers.Peer;
+import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;

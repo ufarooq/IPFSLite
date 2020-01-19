@@ -14,9 +14,9 @@ import androidx.annotation.NonNull;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.threads.Status;
-import threads.core.threads.THREADS;
 import threads.ipfs.IPFS;
+import threads.server.core.threads.Status;
+import threads.server.core.threads.THREADS;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
