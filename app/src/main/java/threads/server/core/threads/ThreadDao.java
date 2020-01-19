@@ -196,4 +196,7 @@ public interface ThreadDao {
     @Query("SELECT * FROM Thread WHERE status = :status AND name LIKE :query")
     @TypeConverters({Status.class})
     List<Thread> getThreadsByQuery(Status status, String query);
+
+    @Query("UPDATE Thread SET progress = :progress WHERE idx = :idx")
+    void setProgress(long idx, int progress);
 }

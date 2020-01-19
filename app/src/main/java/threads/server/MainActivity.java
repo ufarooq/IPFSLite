@@ -228,6 +228,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     return;
                 }
                 case REQUEST_SELECT_FILES: {
+
                     if (data.getClipData() != null) {
                         ClipData mClipData = data.getClipData();
                         for (int i = 0; i < mClipData.getItemCount(); i++) {
@@ -1468,25 +1469,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         try {
-
-            if (Intent.ACTION_SEND.equals(action)) {
-                String type = intent.getType();
-                if ("text/plain".equals(type)) {
-                    handleSendText(intent);
-                } else {
-                    handleSend(intent, false);
-                }
-            } else if (Intent.ACTION_SEND_MULTIPLE.equals(action)) {
-                if (intent.hasExtra(Intent.EXTRA_STREAM)) {
-                    handleSend(intent, true);
-                } else {
-                    String type = intent.getType();
-                    if ("text/plain".equals(type)) {
-                        handleSendText(intent);
-                    } else {
-                        handleSend(intent, true);
-                    }
-                }
+            ShareCompat.IntentReader intentReader = ShareCompat.IntentReader.from(this);
+            if (Intent.ACTION_SEND.equals(action) ||
+                    Intent.ACTION_SEND_MULTIPLE.equals(action)) {
+                handleSend(intentReader);
             }
 
         } catch (Throwable e) {
@@ -1497,37 +1483,50 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-    private void handleSendText(Intent intent) {
-
+    private void handleSendHTML(ShareCompat.IntentReader intentReader) {
 
         try {
-            String text = intent.getStringExtra(Intent.EXTRA_TEXT);
-            if (text != null) {
+
+            String html = intentReader.getHtmlText();
+            if (!html.isEmpty()) {
+                storeText(html);
+            }
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
+    private void handleSendText(ShareCompat.IntentReader intentReader) {
+
+        try {
+            String text = intentReader.getText().toString();
+            if (!text.isEmpty()) {
                 storeText(text);
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-
     }
 
-    private void handleSend(Intent intent, boolean multi) {
+    private void handleSend(ShareCompat.IntentReader intentReader) {
 
         try {
-            Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-            if (multi) {
-                ClipData mClipData = intent.getClipData();
-                if (mClipData != null) {
-                    for (int i = 0; i < mClipData.getItemCount(); i++) {
-                        ClipData.Item item = mClipData.getItemAt(i);
-                        UploadService.invoke(getApplicationContext(), item.getUri());
-                    }
-                } else if (uri != null) {
+
+            if (intentReader.isMultipleShare()) {
+                for (int i = 0; i < intentReader.getStreamCount(); i++) {
+                    UploadService.invoke(getApplicationContext(), intentReader.getStream(i));
+                }
+            } else {
+                Uri uri = intentReader.getStream();
+                String type = intentReader.getType();
+                if ("text/plain".equals(type)) {
+                    handleSendText(intentReader);
+                } else if ("text/html".equals(type)) {
+                    handleSendHTML(intentReader);
+                } else {
                     UploadService.invoke(getApplicationContext(), uri);
                 }
-
-            } else if (uri != null) {
-                UploadService.invoke(getApplicationContext(), uri);
             }
 
 

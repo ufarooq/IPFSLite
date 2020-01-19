@@ -960,6 +960,7 @@ public class Service {
                     (percent) -> {
 
                         builder.setProgress(100, percent, false);
+                        threads.setThreadProgress(thread.getIdx(), percent);
                         if (notificationManager != null) {
                             notificationManager.notify(notifyID, builder.build());
                         }

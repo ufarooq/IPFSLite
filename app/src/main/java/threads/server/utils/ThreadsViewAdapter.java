@@ -162,6 +162,12 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                     0, 0, 0, 0);
             threadViewHolder.content_subtitle.setCompoundDrawablePadding(0);
 
+            int progress = thread.getProgress();
+            if (progress > 0 && progress < 101) {
+                threadViewHolder.progress_bar.setProgress(progress);
+            } else {
+                threadViewHolder.progress_bar.setIndeterminate(true);
+            }
             if (resource > 0 && number > 0) {
                 TextDrawable right = TextDrawable.builder().beginConfig()
                         .textColor(Color.BLACK).bold().height(dpToPx()).width(dpToPx()).endConfig()

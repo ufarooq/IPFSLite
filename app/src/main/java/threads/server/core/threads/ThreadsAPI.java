@@ -412,4 +412,9 @@ public class ThreadsAPI {
         }
         return getThreadsDatabase().threadDao().getThreadsByQuery(status, searchQuery);
     }
+
+    public void setThreadProgress(long idx, int progress) {
+        checkArgument(progress >= 0 && progress <= 100);
+        getThreadsDatabase().threadDao().setProgress(idx, progress);
+    }
 }
