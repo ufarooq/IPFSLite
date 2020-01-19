@@ -77,6 +77,7 @@ import threads.server.fragments.ThreadsDialogFragment;
 import threads.server.fragments.ThreadsFragment;
 import threads.server.fragments.UserActionDialogFragment;
 import threads.server.fragments.WebViewDialogFragment;
+import threads.server.jobs.JobServiceContents;
 import threads.server.jobs.JobServiceDeleteThreads;
 import threads.server.jobs.JobServiceDownload;
 import threads.server.jobs.JobServiceIdentity;
@@ -1460,31 +1461,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
 
-    private void handleSendHTML(ShareCompat.IntentReader intentReader) {
 
-        try {
-
-            String html = intentReader.getHtmlText();
-            if (!html.isEmpty()) {
-                storeText(html);
-            }
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
-
-    private void handleSendText(ShareCompat.IntentReader intentReader) {
-
-        try {
-            String text = intentReader.getText().toString();
-            if (!text.isEmpty()) {
-                storeText(text);
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
 
     private void handleSend(ShareCompat.IntentReader intentReader) {
 
@@ -1498,9 +1475,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Uri uri = intentReader.getStream();
                 String type = intentReader.getType();
                 if ("text/plain".equals(type)) {
-                    handleSendText(intentReader);
+                    String text = intentReader.getText().toString();
+                    if (!text.isEmpty()) {
+                        PID host = IPFS.getPID(getApplicationContext());
+                        checkNotNull(host);
+                        CodecDecider result = CodecDecider.evaluate(text);
+
+                        if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
+                            JobServiceContents.contents(getApplicationContext(),
+                                    host, CID.create(result.getMultihash()));
+                        } else if (result.getCodex() == CodecDecider.Codec.URI) {
+                            JobServiceDownload.download(getApplicationContext(),
+                                    host, CID.create(result.getMultihash()));
+
+                        } else {
+                            storeText(text);
+                        }
+                    }
                 } else if ("text/html".equals(type)) {
-                    handleSendHTML(intentReader);
+                    String html = intentReader.getHtmlText();
+                    if (!html.isEmpty()) {
+                        storeText(html);
+                    }
                 } else {
                     UploadService.invoke(getApplicationContext(), uri);
                 }
