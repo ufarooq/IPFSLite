@@ -75,9 +75,6 @@ public class JobServicePublisher extends JobService {
             long start = System.currentTimeMillis();
             try {
 
-                Service.getInstance(getApplicationContext());
-
-
                 IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
                 checkNotNull(ipfs, "IPFS not valid");

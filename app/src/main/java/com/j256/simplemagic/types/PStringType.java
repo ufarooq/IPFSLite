@@ -43,7 +43,7 @@ public class PStringType extends StringType {
         if (mutableOffset.offset >= bytes.length) {
             return null;
         }
-        // our maximum position is +1 to move past the length byte and then storeStream in the length
+        // our maximum position is +1 to move past the length byte and then storeInputStream in the length
         int len = (bytes[mutableOffset.offset] & 0xFF);
         int maxPos = 1 + len;
         if (maxPos > bytes.length) {

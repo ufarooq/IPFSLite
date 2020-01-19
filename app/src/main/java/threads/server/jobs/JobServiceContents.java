@@ -21,7 +21,6 @@ import threads.ipfs.PID;
 import threads.server.core.contents.CDS;
 import threads.server.core.peers.Content;
 import threads.server.services.ContentsService;
-import threads.server.services.Service;
 import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -77,7 +76,6 @@ public class JobServiceContents extends JobService {
             long start = System.currentTimeMillis();
 
             try {
-                Service.getInstance(getApplicationContext());
 
                 final CDS contentService =
                         CDS.getInstance(getApplicationContext());

@@ -17,7 +17,6 @@ import java.util.concurrent.Executors;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.server.core.peers.Content;
-import threads.server.services.Service;
 import threads.server.utils.Network;
 import threads.server.utils.Preferences;
 
@@ -71,11 +70,6 @@ public class JobServiceConnect extends JobService {
             long start = System.currentTimeMillis();
 
             try {
-
-
-                Service.getInstance(getApplicationContext());
-
-
                 IPFS ipfs = IPFS.getInstance(getApplicationContext());
                 checkNotNull(ipfs, "IPFS not defined");
 

@@ -88,10 +88,7 @@ public class IpfsPerformance {
         ipfs.gc();
 
 
-        data = ipfs.getData(cid);
-        assertNull(data);
-
-        data = ipfs.getData(cid);
+        data = ipfs.loadData(cid, 5);
         assertNull(data);
 
     }

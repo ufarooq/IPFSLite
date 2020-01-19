@@ -18,7 +18,6 @@ import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.server.core.peers.Content;
 import threads.server.services.GatewayService;
-import threads.server.services.Service;
 import threads.server.utils.Network;
 import threads.server.utils.Preferences;
 
@@ -70,10 +69,6 @@ public class JobServicePublish extends JobService {
         executor.submit(() -> {
             long start = System.currentTimeMillis();
             try {
-
-                Service.getInstance(getApplicationContext());
-
-
                 final IPFS ipfs = IPFS.getInstance(getApplicationContext());
                 checkNotNull(ipfs, "IPFS not valid");
 

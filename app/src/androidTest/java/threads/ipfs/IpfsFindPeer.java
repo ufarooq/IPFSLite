@@ -175,7 +175,7 @@ public class IpfsFindPeer {
     }
 
 
-    // TODO activate again @Test
+    @Test
     public void test_find_swarm_peers() throws Exception {
         IPFS ipfs = TestEnv.getTestInstance(context);
 

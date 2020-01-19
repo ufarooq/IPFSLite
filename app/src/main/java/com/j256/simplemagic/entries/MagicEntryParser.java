@@ -29,7 +29,7 @@ public class MagicEntryParser {
     public static MagicEntry parseLine(MagicEntry previous, String line, ErrorCallBack errorCallBack) {
         if (line.startsWith("!:")) {
             if (previous != null) {
-                // we ignore it if there is no previous entry to storeStream it to
+                // we ignore it if there is no previous entry to storeInputStream it to
                 handleSpecial(previous, line, errorCallBack);
             }
             return null;
@@ -432,7 +432,7 @@ public class MagicEntryParser {
                 add = Integer.decode(matcher.group(4));
             } catch (NumberFormatException e) {
                 if (errorCallBack != null) {
-                    errorCallBack.error(line, "invalid long storeStream value: " + matcher.group(4), e);
+                    errorCallBack.error(line, "invalid long storeInputStream value: " + matcher.group(4), e);
                 }
                 return null;
             }

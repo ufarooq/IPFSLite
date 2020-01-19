@@ -136,7 +136,6 @@ public class JobServiceDownload extends JobService {
             long start = System.currentTimeMillis();
 
             try {
-                Service.getInstance(getApplicationContext());
 
                 downloadContentID(getApplicationContext(), PID.create(pid), CID.create(cid));
             } catch (Throwable e) {

@@ -15,7 +15,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import threads.server.services.ContentsService;
-import threads.server.services.Service;
 import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -64,11 +63,7 @@ public class JobServiceDownloader extends JobService {
         executor.submit(() -> {
             long start = System.currentTimeMillis();
             try {
-
-                Service.getInstance(getApplicationContext());
-
                 ContentsService.contents(getApplicationContext());
-
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {

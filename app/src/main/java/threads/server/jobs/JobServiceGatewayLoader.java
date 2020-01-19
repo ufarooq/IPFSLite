@@ -92,9 +92,6 @@ public class JobServiceGatewayLoader extends JobService {
         executor.submit(() -> {
             long start = System.currentTimeMillis();
             try {
-
-                Service.getInstance(getApplicationContext());
-
                 String gateway = Service.getGateway(getApplicationContext());
 
 

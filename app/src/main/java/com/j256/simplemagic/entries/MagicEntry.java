@@ -172,7 +172,7 @@ public class MagicEntry {
             // no children so we have a full match and can set partial to false
             contentData.partial = false;
         } else {
-            // run through the children to storeStream more content-type details
+            // run through the children to storeInputStream more content-type details
             boolean allOptional = true;
             for (MagicEntry entry : children) {
                 if (!entry.isOptional()) {
@@ -180,7 +180,7 @@ public class MagicEntry {
                 }
                 // goes recursive here
                 entry.matchBytes(bytes, offset, level + 1, contentData);
-                // we continue to match to see if we can storeStream additional children info to the name
+                // we continue to match to see if we can storeInputStream additional children info to the name
             }
             if (allOptional) {
                 contentData.partial = false;

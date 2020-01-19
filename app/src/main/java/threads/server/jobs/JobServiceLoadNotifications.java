@@ -60,9 +60,6 @@ public class JobServiceLoadNotifications extends JobService {
         executor.submit(() -> {
             long start = System.currentTimeMillis();
             try {
-
-                Service.getInstance(getApplicationContext());
-
                 Service.notifications(getApplicationContext());
 
             } catch (Throwable e) {

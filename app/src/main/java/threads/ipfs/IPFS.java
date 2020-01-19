@@ -1127,7 +1127,7 @@ public class IPFS implements Listener {
         checkNotNull(data);
         checkArgument(data.length > 0);
         try (InputStream inputStream = new ByteArrayInputStream(data)) {
-            return storeStream(inputStream);
+            return storeInputStream(inputStream);
         }
     }
 
@@ -1186,7 +1186,7 @@ public class IPFS implements Listener {
         checkNotNull(target);
 
         try (InputStream io = new FileInputStream(target)) {
-            return storeStream(io);
+            return storeInputStream(io);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -1252,9 +1252,9 @@ public class IPFS implements Listener {
 
     }
 
-    private boolean getToOutputStream(@NonNull OutputStream outputStream,
-                                      @NonNull CID cid,
-                                      @NonNull String key) {
+    private void getToOutputStream(@NonNull OutputStream outputStream,
+                                   @NonNull CID cid,
+                                   @NonNull String key) throws Exception {
         checkNotNull(outputStream);
         checkNotNull(cid);
         checkNotNull(key);
@@ -1262,12 +1262,7 @@ public class IPFS implements Listener {
 
         try (InputStream inputStream = getInputStream(cid, key)) {
             IOUtils.copy(inputStream, outputStream);
-        } catch (Throwable e) {
-            return false;
         }
-
-        return true;
-
     }
 
     public boolean loadToFile(@NonNull File file,
@@ -1415,8 +1410,7 @@ public class IPFS implements Listener {
         checkNotNull(cid);
 
         try {
-            try (InputStream inputStream = new BufferedInputStream(
-                    getInputStream(cid))) {
+            try (InputStream inputStream = new BufferedInputStream(getInputStream(cid))) {
 
                 return util.findMatch(inputStream);
 
@@ -1450,7 +1444,7 @@ public class IPFS implements Listener {
     }
 
     @Nullable
-    public CID storeStream(@NonNull InputStream inputStream) {
+    public CID storeInputStream(@NonNull InputStream inputStream) {
         checkNotNull(inputStream);
 
         if (!checkDaemonRunning()) {
@@ -1488,10 +1482,10 @@ public class IPFS implements Listener {
             Cipher cipher = Cipher.getInstance("AES");
             cipher.init(Cipher.ENCRYPT_MODE, aesKey);
             try (CipherInputStream cipherStream = new CipherInputStream(inputStream, cipher)) {
-                return storeStream(cipherStream);
+                return storeInputStream(cipherStream);
             }
         } else {
-            return storeStream(inputStream);
+            return storeInputStream(inputStream);
         }
 
     }
@@ -1530,13 +1524,8 @@ public class IPFS implements Listener {
         checkNotNull(cid);
         checkNotNull(key);
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-
-            boolean success = getToOutputStream(outputStream, cid, key);
-            if (success) {
-                return new String(outputStream.toByteArray());
-            } else {
-                return null;
-            }
+            getToOutputStream(outputStream, cid, key);
+            return new String(outputStream.toByteArray());
         } catch (Throwable e) {
             evaluateException(e);
             return null;
@@ -1548,12 +1537,8 @@ public class IPFS implements Listener {
         checkNotNull(cid);
         checkNotNull(key);
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            boolean success = getToOutputStream(outputStream, cid, key);
-            if (success) {
-                return outputStream.toByteArray();
-            } else {
-                return null;
-            }
+            getToOutputStream(outputStream, cid, key);
+            return outputStream.toByteArray();
         } catch (Throwable e) {
             evaluateException(e);
             return null;
@@ -1814,10 +1799,6 @@ public class IPFS implements Listener {
             data = null;
         }
 
-        @Override
-        public void reset() throws IOException {
-            super.reset();
-        }
 
         private boolean preLoad() throws Exception {
             mReader.load(BLOCK_SIZE);

@@ -58,7 +58,6 @@ public class JobServicePeers extends JobService {
             long start = System.currentTimeMillis();
 
             try {
-                Service.getInstance(getApplicationContext());
 
                 GatewayService.connectStoredAutonat(getApplicationContext(),
                         3, 3);

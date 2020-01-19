@@ -66,10 +66,6 @@ public class JobServiceFindPeers extends JobService {
             long start = System.currentTimeMillis();
 
             try {
-
-
-                Service.getInstance(getApplicationContext());
-
                 IPFS ipfs = IPFS.getInstance(getApplicationContext());
                 checkNotNull(ipfs, "IPFS not defined");
 

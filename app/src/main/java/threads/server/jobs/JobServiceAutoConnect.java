@@ -19,7 +19,6 @@ import java.util.concurrent.Future;
 import threads.ipfs.IPFS;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
-import threads.server.services.Service;
 import threads.server.utils.Network;
 import threads.server.utils.Preferences;
 
@@ -66,11 +65,6 @@ public class JobServiceAutoConnect extends JobService {
             long start = System.currentTimeMillis();
 
             try {
-
-
-                Service.getInstance(getApplicationContext());
-
-
                 IPFS ipfs = IPFS.getInstance(getApplicationContext());
                 checkNotNull(ipfs, "IPFS not defined");
 

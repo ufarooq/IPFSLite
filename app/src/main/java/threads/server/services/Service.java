@@ -810,8 +810,6 @@ public class Service {
 
     @NonNull
     private static String evaluateMimeType(@NonNull Context context, @NonNull String filename) {
-        final EVENTS events = EVENTS.getInstance(context);
-
         try {
             Optional<String> extension = ThumbnailService.getExtension(filename);
             if (extension.isPresent()) {
@@ -1113,8 +1111,6 @@ public class Service {
         checkNotNull(ipfs);
         checkNotNull(thread);
 
-        final EVENTS events = EVENTS.getInstance(context);
-
         try {
             threads.setThreadLeaching(thread.getIdx(), true);
 
@@ -1281,8 +1277,6 @@ public class Service {
 
         THREADS threads = THREADS.getInstance(context);
         try {
-
-
             IPFS ipfs = IPFS.getInstance(context);
 
             threads.setThreadLeaching(thread.getIdx(), false);
@@ -1319,7 +1313,6 @@ public class Service {
         checkNotNull(user);
         checkNotNull(cid);
 
-        final EVENTS events = EVENTS.getInstance(context);
         final IPFS ipfs = IPFS.getInstance(context);
 
         JobServiceConnect.connect(context, user.getPID());
