@@ -215,6 +215,7 @@ public class Thread {
                 progress == o.getProgress() &&
                 publishing == o.isPublishing() &&
                 leaching == o.isLeaching() &&
+                Objects.equals(mimeType, o.getMimeType()) &&
                 Objects.equals(content, o.getContent()) &&
                 Objects.equals(senderAlias, o.getSenderAlias()) &&
                 Objects.equals(thumbnail, o.getThumbnail()) &&

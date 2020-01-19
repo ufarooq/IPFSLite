@@ -3,11 +3,9 @@ package threads.server.utils;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -33,6 +31,8 @@ import threads.server.R;
 import threads.server.core.threads.Thread;
 import threads.server.services.MimeTypeService;
 
+import static androidx.core.util.Preconditions.checkNotNull;
+
 public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.ViewHolder> {
 
     private static final String TAG = ThreadsViewAdapter.class.getSimpleName();
@@ -55,14 +55,19 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
     }
 
-    public static int getThemeAccentColor(final Context context) {
+    private static int getThemeAccentColor(final Context context) {
         final TypedValue value = new TypedValue();
         context.getTheme().resolveAttribute(R.attr.colorAccent, value, true);
         return value.data;
     }
 
-    public static int getThemeSelectedItemColor(final Context context) {
+    private static int getThemeSelectedItemColor(final Context context) {
         return ContextCompat.getColor(context, R.color.colorSelectedItem);
+    }
+
+    private static String getCompactString(@NonNull String title) {
+        checkNotNull(title);
+        return title.replace("\n", " ");
     }
 
     public void setSelectionTracker(SelectionTracker<Long> selectionTracker) {
@@ -83,7 +88,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
         return new ThreadViewHolder(v);
     }
 
-    public long getIdx(int position) {
+    long getIdx(int position) {
         return threads.get(position).getIdx();
     }
 
@@ -139,7 +144,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
             });
 
 
-            String title = listener.getTitle(thread);
+            String title = getCompactString(thread.getName());
             threadViewHolder.content_title.setText(title);
             if (thread.isPinned()) {
                 threadViewHolder.content_title.setCompoundDrawablesRelativeWithIntrinsicBounds(
@@ -152,11 +157,10 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
             }
 
 
-            String message = listener.getContent(thread);
+            String message = thread.getSenderAlias();
             threadViewHolder.content_subtitle.setText(message);
 
             int number = thread.getNumber();
-            int resource = listener.getMediaResource(thread);
 
             threadViewHolder.content_subtitle.setCompoundDrawablesRelativeWithIntrinsicBounds(
                     0, 0, 0, 0);
@@ -168,22 +172,8 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
             } else {
                 threadViewHolder.progress_bar.setIndeterminate(true);
             }
-            if (resource > 0 && number > 0) {
-                TextDrawable right = TextDrawable.builder().beginConfig()
-                        .textColor(Color.BLACK).bold().height(dpToPx()).width(dpToPx()).endConfig()
-                        .buildRound("" + number, accentColor);
-                Drawable left = context.getDrawable(resource);
-                threadViewHolder.content_subtitle.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                        left, null, right, null);
-                threadViewHolder.content_subtitle.setCompoundDrawablePadding(8);
-            }
-            if (resource > 0 && number <= 0) {
-                Drawable left = context.getDrawable(resource);
-                threadViewHolder.content_subtitle.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                        left, null, null, null);
-                threadViewHolder.content_subtitle.setCompoundDrawablePadding(8);
-            }
-            if (resource <= 0 && number > 0) {
+
+            if (number > 0) {
                 TextDrawable right = TextDrawable.builder().beginConfig()
                         .textColor(Color.BLACK).bold().height(dpToPx()).width(dpToPx()).endConfig()
                         .buildRound("" + number, accentColor);
@@ -309,7 +299,9 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
     public void selectAllThreads() {
         try {
             for (Thread thread : threads) {
-                mSelectionTracker.select(thread.getIdx());
+                if (mSelectionTracker != null) {
+                    mSelectionTracker.select(thread.getIdx());
+                }
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -326,13 +318,6 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
         void invokeActionError(@NonNull Thread thread);
 
-        @NonNull
-        String getContent(@NonNull Thread thread);
-
-        @NonNull
-        String getTitle(@NonNull Thread thread);
-
-        int getMediaResource(@NonNull Thread thread);
 
     }
 
@@ -379,7 +364,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
         }
 
-        public ItemDetailsLookup.ItemDetails<Long> getThreadsItemDetails(MotionEvent e) {
+        ItemDetailsLookup.ItemDetails<Long> getThreadsItemDetails() {
             return threadItemDetails;
         }
     }

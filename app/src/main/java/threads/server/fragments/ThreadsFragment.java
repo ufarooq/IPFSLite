@@ -79,10 +79,6 @@ public class ThreadsFragment extends Fragment implements
     private ActionMode mActionMode;
     private SelectionTracker<Long> mSelectionTracker;
 
-    private static String getCompactString(@NonNull String title) {
-        checkNotNull(title);
-        return title.replace("\n", " ");
-    }
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -575,27 +571,6 @@ public class ThreadsFragment extends Fragment implements
         }
     }
 
-    @Override
-    @NonNull
-    public String getContent(@NonNull Thread thread) {
-        checkNotNull(thread);
-
-        return thread.getSenderAlias();
-    }
-
-
-    @NonNull
-    @Override
-    public String getTitle(@NonNull Thread thread) {
-        return getCompactString(thread.getName());
-    }
-
-
-    @Override
-    public int getMediaResource(@NonNull Thread thread) {
-        checkNotNull(thread);
-        return -1;
-    }
 
     @Override
     public void onRefresh() {

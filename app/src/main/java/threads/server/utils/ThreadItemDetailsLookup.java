@@ -22,7 +22,7 @@ public class ThreadItemDetailsLookup extends ItemDetailsLookup<Long> {
         if (view != null) {
             RecyclerView.ViewHolder viewHolder = mRecyclerView.getChildViewHolder(view);
             if (viewHolder instanceof ThreadsViewAdapter.ThreadViewHolder) {
-                return ((ThreadsViewAdapter.ThreadViewHolder) viewHolder).getThreadsItemDetails(e);
+                return ((ThreadsViewAdapter.ThreadViewHolder) viewHolder).getThreadsItemDetails();
             }
         }
         return null;
