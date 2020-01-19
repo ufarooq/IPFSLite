@@ -1236,7 +1236,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    Service.connectPeer(getApplicationContext(), user);
+                    Service.connectPeer(getApplicationContext(), user, false);
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
@@ -1459,8 +1459,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     }
-
-
 
 
     private void handleSend(ShareCompat.IntentReader intentReader) {
@@ -1690,7 +1688,48 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void clickPeerAdd(@NonNull String pid) {
-        clickConnectPeer(pid);
+        checkNotNull(pid);
+
+        // CHECKED if pid is valid
+        try {
+            Multihash.fromBase58(pid);
+        } catch (Throwable e) {
+            java.lang.Thread threadError = new java.lang.Thread(()
+                    -> EVENTS.getInstance(getApplicationContext()).error(getString(R.string.multihash_not_valid)));
+            threadError.start();
+            return;
+        }
+
+        // CHECKED
+        PID host = IPFS.getPID(getApplicationContext());
+        PID user = PID.create(pid);
+
+        if (user.equals(host)) {
+
+            java.lang.Thread threadError = new java.lang.Thread(()
+                    -> EVENTS.getInstance(getApplicationContext()).error(
+                    getString(R.string.same_pid_like_host)));
+            threadError.start();
+
+            return;
+        }
+
+
+        try {
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    Service.connectPeer(getApplicationContext(),
+                            user, true);
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            });
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
     }
 
     private class PagerAdapter extends FragmentStatePagerAdapter {

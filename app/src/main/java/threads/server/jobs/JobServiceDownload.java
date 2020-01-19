@@ -63,29 +63,34 @@ public class JobServiceDownload extends JobService {
     }
 
     public static void downloadContentID(@NonNull Context context,
-                                         @NonNull PID pid,
+                                         @NonNull PID sender,
                                          @NonNull CID cid) {
 
         checkNotNull(context);
-        checkNotNull(pid);
+        checkNotNull(sender);
         checkNotNull(cid);
 
         final THREADS threads = THREADS.getInstance(context);
         final PEERS peers = PEERS.getInstance(context);
         final EVENTS events = EVENTS.getInstance(context);
-
-
-        final IPFS ipfs = IPFS.getInstance(context);
-
+        final PID host = IPFS.getPID(context);
 
         try {
 
-            User user = peers.getUserByPID(pid);
-            if (user == null) {
-                events.error(context.getString(R.string.unknown_peer_sends_data));
-                return;
-            }
+            String alias;
 
+            if (sender.equals(host)) {
+                alias = IPFS.getDeviceName();
+            } else {
+                User user = peers.getUserByPID(sender);
+
+                if (user == null) {
+                    events.error(context.getString(R.string.unknown_peer_sends_data));
+                    return;
+                } else {
+                    alias = user.getAlias();
+                }
+            }
             List<Thread> entries = threads.getThreadsByCIDAndParent(cid, 0L);
 
             if (!entries.isEmpty()) {
@@ -93,22 +98,22 @@ public class JobServiceDownload extends JobService {
 
                 if (entry.getStatus() == Status.DELETING ||
                         entry.getStatus() == Status.SEEDING) {
-                    Service.replySender(context, ipfs, pid, entry);
+                    Service.replySender(context, sender, entry);
                     return;
                 } else {
-                    Service.downloadMultihash(context, threads, ipfs, entry, pid);
+                    Service.downloadMultihash(context, entry, sender);
                     return;
                 }
 
 
             }
-            long idx = Service.createThread(context, ipfs, user, cid,
+            long idx = Service.createThread(context, sender, alias, cid,
                     Status.INIT, null, -1, null, null);
 
 
             Thread thread = threads.getThreadByIdx(idx);
             checkNotNull(thread);
-            Service.downloadMultihash(context, threads, ipfs, thread, pid);
+            Service.downloadMultihash(context, thread, sender);
 
 
         } catch (Throwable e) {

@@ -10,7 +10,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 public class EVENTS extends EventsAPI {
     public static final String TAG = EVENTS.class.getSimpleName();
     public static final String DAEMON = "DAEMON";
-    public static final String EXCEPTION = "EXCEPTION";
+    public static final String ERROR = "ERROR";
     public static final String WARNING = "WARNING";
     public static final String INFO = "INFO";
 
@@ -48,7 +48,13 @@ public class EVENTS extends EventsAPI {
 
     public void error(@NonNull String content) {
         checkNotNull(content);
-        storeEvent(createEvent(EXCEPTION, content));
+        storeEvent(createEvent(ERROR, content));
+    }
+
+
+    public void warning(@NonNull String content) {
+        checkNotNull(content);
+        storeEvent(createEvent(WARNING, content));
     }
 
     public void exception(@NonNull Throwable throwable) {

@@ -150,12 +150,21 @@ public class ContentsService {
 
         final PEERS peers = PEERS.getInstance(context);
         final EVENTS events = EVENTS.getInstance(context);
+        final PID host = IPFS.getPID(context);
         try {
+            String alias;
 
-            User user = peers.getUserByPID(sender);
-            if (user == null) {
-                events.error(context.getString(R.string.unknown_peer_sends_data));
-                return;
+            if (sender.equals(host)) {
+                alias = IPFS.getDeviceName();
+            } else {
+                User user = peers.getUserByPID(sender);
+
+                if (user == null) {
+                    events.error(context.getString(R.string.unknown_peer_sends_data));
+                    return;
+                } else {
+                    alias = user.getAlias();
+                }
             }
 
             CID thumbnail = null;
@@ -164,7 +173,7 @@ public class ContentsService {
                 thumbnail = downloadImage(context, image);
             }
 
-            createThread(context, user, cid, filename, fileSize, mimeType, thumbnail);
+            createThread(context, sender, alias, cid, filename, fileSize, mimeType, thumbnail);
 
 
         } catch (Throwable e) {
@@ -176,7 +185,8 @@ public class ContentsService {
 
     private static synchronized void createThread(
             @NonNull Context context,
-            @NonNull User user,
+            @NonNull PID sender,
+            @NonNull String alias,
             @NonNull CID cid,
             @Nullable String filename,
             long fileSize,
@@ -190,7 +200,7 @@ public class ContentsService {
 
         if (entries.isEmpty()) {
 
-            Service.createThread(context, ipfs, user, cid,
+            Service.createThread(context, sender, alias, cid,
                     Status.ERROR, filename, fileSize, mimeType, thumbnail);
 
         }

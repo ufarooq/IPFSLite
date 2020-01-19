@@ -383,7 +383,7 @@ public class Service {
                     success = false;
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
 
-                    events.invokeEvent(EVENTS.EXCEPTION,
+                    events.invokeEvent(EVENTS.ERROR,
                             context.getString(R.string.failed_notification, alias));
                 }
 
@@ -473,7 +473,9 @@ public class Service {
         }
     }
 
-    public static void connectPeer(@NonNull Context context, @NonNull PID user) throws Exception {
+    public static void connectPeer(@NonNull Context context,
+                                   @NonNull PID user,
+                                   boolean addMessage) throws Exception {
         checkNotNull(context);
         checkNotNull(user);
 
@@ -493,6 +495,10 @@ public class Service {
             User newUser = peers.createUser(user, "",
                     alias, UserType.VERIFIED, image);
             peers.storeUser(newUser);
+
+            if (addMessage) {
+                events.warning(context.getString(R.string.added_pid_to_peers, user));
+            }
 
         } else {
             events.invokeEvent(EVENTS.WARNING,
@@ -638,14 +644,12 @@ public class Service {
     }
 
     private static boolean handleDirectoryLink(@NonNull Context context,
-                                               @NonNull THREADS threads,
-                                               @NonNull IPFS ipfs,
                                                @NonNull Thread thread,
                                                @NonNull LinkInfo link) {
 
-        List<LinkInfo> links = getLinks(context, ipfs, link.getCid());
+        List<LinkInfo> links = getLinks(context, link.getCid());
         if (links != null) {
-            return downloadLinks(context, threads, ipfs, thread, links);
+            return downloadLinks(context, thread, links);
         } else {
             return false;
         }
@@ -765,10 +769,11 @@ public class Service {
     }
 
     public static void replySender(@NonNull Context context,
-                                   @NonNull IPFS ipfs,
                                    @NonNull PID sender,
                                    @NonNull Thread thread) {
         try {
+            IPFS ipfs = IPFS.getInstance(context);
+
             if (IPFS.isPubSubEnabled(context)) {
                 CID cid = thread.getContent();
                 checkNotNull(cid);
@@ -809,7 +814,8 @@ public class Service {
 
 
     @NonNull
-    private static String evaluateMimeType(@NonNull Context context, @NonNull String filename) {
+    private static String evaluateMimeType(@NonNull Context context,
+                                           @NonNull String filename) {
         try {
             Optional<String> extension = ThumbnailService.getExtension(filename);
             if (extension.isPresent()) {
@@ -826,21 +832,21 @@ public class Service {
 
     private static long createThread(@NonNull Context context,
                                      @NonNull IPFS ipfs,
-                                     @NonNull PID creator,
+                                     @NonNull PID sender,
                                      @NonNull CID cid,
                                      @NonNull LinkInfo link,
                                      long parent) {
 
         checkNotNull(context);
         checkNotNull(ipfs);
-        checkNotNull(creator);
+        checkNotNull(sender);
         checkNotNull(cid);
         checkNotNull(link);
 
 
         final THREADS threads = THREADS.getInstance(context);
         final PEERS peers = PEERS.getInstance(context);
-        User user = peers.getUserByPID(creator);
+        User user = peers.getUserByPID(sender);
         checkNotNull(user);
 
         Thread thread = threads.createThread(user.getPID(), user.getAlias(),
@@ -862,8 +868,8 @@ public class Service {
     }
 
     public static long createThread(@NonNull Context context,
-                                    @NonNull IPFS ipfs,
-                                    @NonNull User creator,
+                                    @NonNull PID sender,
+                                    @NonNull String alias,
                                     @NonNull CID cid,
                                     @NonNull Status threadStatus,
                                     @Nullable String filename,
@@ -872,17 +878,15 @@ public class Service {
                                     @Nullable CID image) {
 
         checkNotNull(context);
-        checkNotNull(ipfs);
-        checkNotNull(creator);
+        checkNotNull(sender);
         checkNotNull(cid);
         checkNotNull(threadStatus);
 
 
         final THREADS threads = THREADS.getInstance(context);
 
-
-        Thread thread = threads.createThread(creator.getPID(),
-                creator.getAlias(), threadStatus, Kind.OUT, 0L);
+        Thread thread = threads.createThread(sender,
+                alias, threadStatus, Kind.OUT, 0L);
         thread.setContent(cid);
 
 
@@ -920,24 +924,22 @@ public class Service {
         checkNotNull(cid);
 
 
-        return download(context, threads, ipfs, thread, cid, thread.getName(), thread.getSize());
+        return download(context, thread, cid, thread.getName(), thread.getSize());
     }
 
     private static boolean download(@NonNull Context context,
-                                    @NonNull THREADS threads,
-                                    @NonNull IPFS ipfs,
                                     @NonNull Thread thread,
                                     @NonNull CID cid,
                                     @NonNull String filename,
                                     long size) {
 
         checkNotNull(context);
-        checkNotNull(threads);
-        checkNotNull(ipfs);
         checkNotNull(thread);
         checkNotNull(cid);
         checkNotNull(filename);
 
+        THREADS threads = THREADS.getInstance(context);
+        IPFS ipfs = IPFS.getInstance(context);
 
         NotificationCompat.Builder builder =
                 ProgressChannel.createProgressNotification(
@@ -1011,14 +1013,12 @@ public class Service {
     }
 
     private static boolean downloadLink(@NonNull Context context,
-                                        @NonNull THREADS threads,
-                                        @NonNull IPFS ipfs,
                                         @NonNull Thread thread,
                                         @NonNull LinkInfo link) {
         if (link.isDirectory()) {
-            return handleDirectoryLink(context, threads, ipfs, thread, link);
+            return handleDirectoryLink(context, thread, link);
         } else {
-            return download(context, threads, ipfs, thread,
+            return download(context, thread,
                     link.getCid(), link.getName(), link.getSize());
         }
 
@@ -1040,11 +1040,10 @@ public class Service {
     }
 
     private static boolean downloadLinks(@NonNull Context context,
-                                         @NonNull THREADS threads,
-                                         @NonNull IPFS ipfs,
                                          @NonNull Thread thread,
                                          @NonNull List<LinkInfo> links) {
-
+        THREADS threads = THREADS.getInstance(context);
+        IPFS ipfs = IPFS.getInstance(context);
         AtomicInteger successCounter = new AtomicInteger(0);
         for (LinkInfo link : links) {
 
@@ -1053,7 +1052,7 @@ public class Service {
             if (entry != null) {
                 if (entry.getStatus() != Status.SEEDING) {
 
-                    boolean success = downloadLink(context, threads, ipfs, entry, link);
+                    boolean success = downloadLink(context, entry, link);
                     if (success) {
                         successCounter.incrementAndGet();
                     }
@@ -1067,7 +1066,7 @@ public class Service {
                         thread.getSender(), cid, link, thread.getIdx());
                 entry = threads.getThreadByIdx(idx);
                 checkNotNull(entry);
-                boolean success = downloadLink(context, threads, ipfs, entry, link);
+                boolean success = downloadLink(context, entry, link);
 
                 if (success) {
                     successCounter.incrementAndGet();
@@ -1084,10 +1083,10 @@ public class Service {
 
     @Nullable
     private static List<LinkInfo> getLinks(@NonNull Context context,
-                                           @NonNull IPFS ipfs,
                                            @NonNull CID cid) {
         checkNotNull(context);
         checkNotNull(cid);
+        IPFS ipfs = IPFS.getInstance(context);
         int timeout = Preferences.getConnectionTimeout(context);
         List<LinkInfo> links = ipfs.ls(cid, timeout, false);
         if (links == null) {
@@ -1103,22 +1102,20 @@ public class Service {
     }
 
     public static void downloadMultihash(@NonNull Context context,
-                                         @NonNull THREADS threads,
-                                         @NonNull IPFS ipfs,
                                          @NonNull Thread thread,
                                          @Nullable PID sender) {
         checkNotNull(context);
-        checkNotNull(threads);
-        checkNotNull(ipfs);
         checkNotNull(thread);
 
+        THREADS threads = THREADS.getInstance(context);
+        IPFS ipfs = IPFS.getInstance(context);
         try {
             threads.setThreadLeaching(thread.getIdx(), true);
 
             CID cid = thread.getContent();
             checkNotNull(cid);
 
-            List<LinkInfo> links = getLinks(context, ipfs, cid);
+            List<LinkInfo> links = getLinks(context, cid);
 
             if (links != null) {
                 if (links.isEmpty()) {
@@ -1127,7 +1124,7 @@ public class Service {
                     if (result) {
                         threads.setStatus(thread, Status.SEEDING);
                         if (sender != null) {
-                            replySender(context, ipfs, sender, thread);
+                            replySender(context, sender, thread);
                         }
                     } else {
                         threads.setStatus(thread, Status.ERROR);
@@ -1151,11 +1148,11 @@ public class Service {
                     }
 
 
-                    boolean result = downloadLinks(context, threads, ipfs, thread, links);
+                    boolean result = downloadLinks(context, thread, links);
                     if (result) {
                         threads.setStatus(thread, Status.SEEDING);
                         if (sender != null) {
-                            replySender(context, ipfs, sender, thread);
+                            replySender(context, sender, thread);
                         }
                     } else {
                         threads.setStatus(thread, Status.ERROR);
@@ -1290,13 +1287,13 @@ public class Service {
 
                 SwarmService.ConnectInfo info = SwarmService.connect(context, sender);
 
-                Service.downloadMultihash(context, threads, ipfs, thread, sender);
+                Service.downloadMultihash(context, thread, sender);
 
                 SwarmService.disconnect(context, info);
 
             } else {
 
-                Service.downloadMultihash(context, threads, ipfs, thread, null);
+                Service.downloadMultihash(context, thread, null);
             }
         } finally {
             threads.setThreadLeaching(thread.getIdx(), false);

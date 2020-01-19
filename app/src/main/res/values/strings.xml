@@ -129,4 +129,5 @@
     <string name="upload_failed">Upload failed for \"%1$s\"</string>
     <string name="upload_content">Upload Content</string>
     <string name="peer_actions">Peer Actions</string>
+    <string name="added_pid_to_peers">Added \"%1$s\" to your peers</string>
 </resources>
