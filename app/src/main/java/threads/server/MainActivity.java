@@ -45,7 +45,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 import de.psdev.licensesdialog.LicensesDialogFragment;
 import threads.ipfs.CID;
@@ -116,13 +115,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    private static final int REQUEST_VIDEO_CAPTURE = 1;
-    private static final int REQUEST_SELECT_FILES = 4;
-    private static final int FILE_EXPORT_REQUEST_CODE = 6;
-    private static final int CONTENT_REQUEST_VIDEO_CAPTURE = 9;
-    private static final int PEER_REQUEST_VIDEO_CAPTURE = 10;
+    private static final int REQUEST_SELECT_FILES = 1;
+    private static final int FILE_EXPORT_REQUEST_CODE = 2;
+    private static final int CONTENT_REQUEST_VIDEO_CAPTURE = 3;
+    private static final int PEER_REQUEST_VIDEO_CAPTURE = 4;
     private static final int CLICK_OFFSET = 500;
-    private final AtomicReference<String> storedUser = new AtomicReference<>(null);
+
+
     private final AtomicBoolean idScan = new AtomicBoolean(false);
     private CID threadContent = null;
     private DrawerLayout mDrawerLayout;
@@ -140,24 +139,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void onRequestPermissionsResult
             (int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
-            case REQUEST_VIDEO_CAPTURE: {
-                for (int i = 0, len = permissions.length; i < len; i++) {
-                    if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
-                        Snackbar snackbar = Snackbar.make(mDrawerLayout,
-                                getString(R.string.permission_camera_denied),
-                                Snackbar.LENGTH_LONG);
-                        snackbar.setAction(R.string.app_settings, new PermissionAction());
-                        snackbar.setAnchorView(mNavigation);
-                        snackbar.show();
-
-                    }
-                    if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                        clickUserCall(storedUser.get());
-                    }
-                }
-
-                break;
-            }
             case CONTENT_REQUEST_VIDEO_CAPTURE: {
                 for (int i = 0, len = permissions.length; i < len; i++) {
                     if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
@@ -200,9 +181,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        if (resultCode != RESULT_OK)
+        if (resultCode != RESULT_OK) {
             return;
-
+        }
 
         try {
 
@@ -1116,10 +1097,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     @Override
-    public void clickUserCall(@NonNull String pid) {
-    }
-
-    @Override
     public void clickUserDetails(@NonNull String pid) {
 
         // CHECKED
@@ -1623,11 +1600,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
 
 
-    }
-
-
-    @Override
-    public void clickUserVideoCall(@NonNull String pid) {
     }
 
 

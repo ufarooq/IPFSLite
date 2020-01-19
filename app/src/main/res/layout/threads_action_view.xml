@@ -12,56 +12,56 @@
         android:text="@string/upload_content"
         android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
-    <TableLayout
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        tools:ignore="UselessParent">
 
-        <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:ignore="UselessParent">
+        <TextView
+            android:id="@+id/menu_file_cid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:layout_weight="1"
+            android:drawableTop="@drawable/action_upload"
+            android:drawablePadding="8dp"
+            android:drawableTint="?android:textColorSecondary"
+            android:gravity="center"
+            android:singleLine="true"
+            android:text="@string/action_file_cid"
+            android:textAlignment="center" />
 
-            <TextView
-                android:id="@+id/menu_file_cid"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:layout_weight="1"
-                android:drawableTop="@drawable/action_upload"
-                android:drawablePadding="8dp"
-                android:drawableTint="?android:textColorSecondary"
-                android:singleLine="true"
-                android:text="@string/action_file_cid"
-                android:textAlignment="center" />
+        <TextView
+            android:id="@+id/menu_scan_cid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:layout_weight="1"
+            android:drawableTop="@drawable/action_scan_code"
+            android:drawablePadding="8dp"
+            android:drawableTint="?android:textColorSecondary"
+            android:gravity="center"
+            android:singleLine="true"
+            android:text="@string/action_scan_cid"
+            android:textAlignment="center" />
 
-            <TextView
-                android:id="@+id/menu_scan_cid"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:layout_weight="1"
-                android:drawableTop="@drawable/action_scan_code"
-                android:drawablePadding="8dp"
-                android:drawableTint="?android:textColorSecondary"
-                android:singleLine="true"
-                android:text="@string/action_scan_cid"
-                android:textAlignment="center" />
+        <TextView
+            android:id="@+id/menu_edit_cid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+            android:layout_weight="1"
+            android:drawableTop="@drawable/action_edit_code"
+            android:drawablePadding="8dp"
+            android:drawableTint="?android:textColorSecondary"
+            android:gravity="center"
+            android:singleLine="true"
+            android:text="@string/action_edit_cid"
+            android:textAlignment="center" />
 
-            <TextView
-                android:id="@+id/menu_edit_cid"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:layout_weight="1"
-                android:drawableTop="@drawable/action_edit_code"
-                android:drawablePadding="8dp"
-                android:drawableTint="?android:textColorSecondary"
-                android:singleLine="true"
-                android:text="@string/action_edit_cid"
-                android:textAlignment="center" />
-
-        </TableRow>
+    </LinearLayout>
 
 
-    </TableLayout>
 </LinearLayout>

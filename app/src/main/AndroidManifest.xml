@@ -17,13 +17,12 @@
 
     <application
         android:allowBackup="false"
-        android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher"
-        android:supportsRtl="true"
         android:theme="@style/ThreadsTheme"
         android:usesCleartextTraffic="true"
+        android:resizeableActivity="true"
         tools:ignore="GoogleAppIndexingWarning">
 
 
@@ -31,6 +30,7 @@
             android:name=".MainActivity"
             android:label="@string/app_name"
             android:theme="@style/SplashTheme">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

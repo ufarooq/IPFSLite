@@ -21,6 +21,7 @@
                 android:drawableTop="@drawable/action_connect"
                 android:drawablePadding="8dp"
                 android:drawableTint="?android:textColorSecondary"
+                android:gravity="center"
                 android:singleLine="true"
                 android:text="@string/action_connect"
                 android:textAlignment="center" />
@@ -34,6 +35,7 @@
                 android:drawableTop="@drawable/action_info"
                 android:drawablePadding="8dp"
                 android:drawableTint="?android:textColorSecondary"
+                android:gravity="center"
                 android:singleLine="true"
                 android:text="@string/action_info"
                 android:textAlignment="center" />
@@ -47,6 +49,7 @@
                 android:drawableTop="@drawable/action_details"
                 android:drawablePadding="8dp"
                 android:drawableTint="?android:textColorSecondary"
+                android:gravity="center"
                 android:singleLine="true"
                 android:text="@string/action_details"
                 android:textAlignment="center" />
@@ -60,32 +63,6 @@
 
 
             <TextView
-                android:id="@+id/menu_call"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:layout_weight="1"
-                android:drawableTop="@drawable/action_phone"
-                android:drawablePadding="8dp"
-                android:drawableTint="?android:textColorSecondary"
-                android:singleLine="true"
-                android:text="@string/action_call"
-                android:textAlignment="center" />
-
-            <TextView
-                android:id="@+id/menu_video_call"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:layout_weight="1"
-                android:drawableTop="@drawable/action_video_call"
-                android:drawablePadding="8dp"
-                android:drawableTint="?android:textColorSecondary"
-                android:singleLine="true"
-                android:text="@string/action_video_call"
-                android:textAlignment="center" />
-
-            <TextView
                 android:id="@+id/menu_edit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -94,6 +71,7 @@
                 android:drawableTop="@drawable/action_edit"
                 android:drawablePadding="8dp"
                 android:drawableTint="?android:textColorSecondary"
+                android:gravity="center"
                 android:text="@string/action_edit"
                 android:textAlignment="center" />
 
@@ -106,6 +84,7 @@
                 android:drawableTop="@drawable/action_delete"
                 android:drawablePadding="8dp"
                 android:drawableTint="?android:textColorSecondary"
+                android:gravity="center"
                 android:singleLine="true"
                 android:text="@string/action_delete"
                 android:textAlignment="center" />

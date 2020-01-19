@@ -38,8 +38,6 @@ public class UserActionDialogFragment extends DialogFragment {
     private static final String BLOCKED_VALUE = "BLOCKED_VALUE";
     private static final String BLOCKED_ACTIVE = "BLOCKED_ACTIVE";
     private static final String EDIT_ACTIVE = "EDIT_ACTIVE";
-    private static final String CALL_ACTIVE = "CALL_ACTIVE";
-    private static final String VIDEO_CALL_ACTIVE = "VIDEO_CALL_ACTIVE";
 
 
     private ActionListener mListener;
@@ -56,9 +54,7 @@ public class UserActionDialogFragment extends DialogFragment {
                                                        boolean deleteActive,
                                                        boolean blockedActive,
                                                        boolean blockedValue,
-                                                       boolean editActive,
-                                                       boolean callActive,
-                                                       boolean videoCallActive) {
+                                                       boolean editActive) {
 
         Bundle bundle = new Bundle();
         bundle.putString(PID, pid);
@@ -71,8 +67,7 @@ public class UserActionDialogFragment extends DialogFragment {
         bundle.putBoolean(BLOCKED_ACTIVE, blockedActive);
         bundle.putBoolean(BLOCKED_VALUE, blockedValue);
         bundle.putBoolean(EDIT_ACTIVE, editActive);
-        bundle.putBoolean(CALL_ACTIVE, callActive);
-        bundle.putBoolean(VIDEO_CALL_ACTIVE, videoCallActive);
+
 
         UserActionDialogFragment fragment = new UserActionDialogFragment();
         fragment.setArguments(bundle);
@@ -123,8 +118,6 @@ public class UserActionDialogFragment extends DialogFragment {
         boolean blockedActive = args.getBoolean(BLOCKED_ACTIVE);
         boolean connectActive = args.getBoolean(CONNECT_ACTIVE);
         boolean editActive = args.getBoolean(EDIT_ACTIVE);
-        boolean callActive = args.getBoolean(CALL_ACTIVE);
-        boolean videoCallActive = args.getBoolean(VIDEO_CALL_ACTIVE);
         boolean detailsActive = args.getBoolean(DETAILS_ACTIVE);
         boolean autoConnectValue = args.getBoolean(AUTO_CONNECT_VALUE);
         boolean autoConnectActive = args.getBoolean(AUTO_CONNECT_ACTIVE);
@@ -253,41 +246,6 @@ public class UserActionDialogFragment extends DialogFragment {
             });
         }
 
-        TextView menu_call = view.findViewById(R.id.menu_call);
-        if (!callActive) {
-            menu_call.setVisibility(View.GONE);
-        } else {
-            menu_call.setOnClickListener((v) -> {
-
-                try {
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                        return;
-                    }
-                    mLastClickTime = SystemClock.elapsedRealtime();
-                    mListener.clickUserCall(pid);
-                } finally {
-                    dismiss();
-                }
-            });
-        }
-
-        TextView menu_video_call = view.findViewById(R.id.menu_video_call);
-        if (!videoCallActive) {
-            menu_video_call.setVisibility(View.GONE);
-        } else {
-            menu_video_call.setOnClickListener((v) -> {
-
-                try {
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                        return;
-                    }
-                    mLastClickTime = SystemClock.elapsedRealtime();
-                    mListener.clickUserVideoCall(pid);
-                } finally {
-                    dismiss();
-                }
-            });
-        }
 
         TextView menu_delete = view.findViewById(R.id.menu_delete);
         if (!deleteActive) {
@@ -334,12 +292,9 @@ public class UserActionDialogFragment extends DialogFragment {
 
         void clickUserEdit(@NonNull String pid);
 
-        void clickUserCall(@NonNull String pid);
-
         void clickUserDetails(@NonNull String pid);
 
         void clickUserAutoConnect(@NonNull String pid, boolean value);
 
-        void clickUserVideoCall(@NonNull String pid);
     }
 }
