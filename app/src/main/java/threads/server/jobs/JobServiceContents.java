@@ -20,8 +20,8 @@ import threads.core.contents.CDS;
 import threads.core.peers.Content;
 import threads.ipfs.CID;
 import threads.ipfs.PID;
-import threads.server.ContentsService;
 import threads.server.Service;
+import threads.server.services.ContentsService;
 import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;

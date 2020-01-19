@@ -77,6 +77,7 @@ public class IPFS implements Listener {
     private static final String LOW_WATER_KEY = "lowWaterKey";
     private static final String GRACE_PERIOD_KEY = "gracePeriodKey";
     private static final String PREFER_TLS_KEY = "preferTLSKey";
+    private static final String TOPIC_KEY = "prefTopicKey";
     private static final int BLOCK_SIZE = 262158;
     private static final String P2P_CIRCUIT = "p2p-circuit";
     private static final String CONFIG_FILE_NAME = "config";
@@ -172,6 +173,26 @@ public class IPFS implements Listener {
 
     public static void setPubSubHandler(@Nullable PubSubHandler pubsubHandler) {
         HANDLER = pubsubHandler;
+    }
+
+    @NonNull
+    public static String getDefaultTopic(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                PREF_KEY, Context.MODE_PRIVATE);
+        return sharedPref.getString(TOPIC_KEY, "pubsub");
+    }
+
+    public static void setDefaultTopic(@NonNull Context context, @NonNull String topic) {
+        checkNotNull(context);
+        checkNotNull(topic);
+
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                PREF_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(TOPIC_KEY, topic);
+        editor.apply();
+
     }
 
     public static void setSwarmPort(@NonNull Context context, int port) {

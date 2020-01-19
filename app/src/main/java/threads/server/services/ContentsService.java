@@ -1,4 +1,4 @@
-package threads.server;
+package threads.server.services;
 
 import android.content.Context;
 import android.util.Log;
@@ -14,7 +14,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import threads.core.Preferences;
 import threads.core.contents.CDS;
 import threads.core.contents.Content;
 import threads.core.contents.ContentEntry;
@@ -29,6 +28,9 @@ import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
 import threads.ipfs.PID;
+import threads.server.Preferences;
+import threads.server.R;
+import threads.server.Service;
 import threads.server.jobs.JobServiceDownload;
 import threads.share.Network;
 
@@ -153,7 +155,7 @@ public class ContentsService {
 
             User user = peers.getUserByPID(sender);
             if (user == null) {
-                Preferences.error(events, context.getString(R.string.unknown_peer_sends_data));
+                events.error(context.getString(R.string.unknown_peer_sends_data));
                 return;
             }
 
@@ -167,7 +169,7 @@ public class ContentsService {
 
 
         } catch (Throwable e) {
-            Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+            events.exception(e);
         }
 
 

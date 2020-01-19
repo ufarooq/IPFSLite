@@ -20,7 +20,7 @@ import threads.core.peers.PEERS;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.server.Service;
-import threads.share.IdentityService;
+import threads.server.services.IdentityService;
 import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;

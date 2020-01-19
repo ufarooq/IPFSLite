@@ -1,4 +1,4 @@
-package threads.server;
+package threads.server.services;
 
 import android.content.Context;
 
@@ -7,12 +7,11 @@ import androidx.annotation.Nullable;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
-import threads.core.Preferences;
 import threads.core.peers.PeerInfo;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
-import threads.share.ConnectService;
-import threads.share.IdentityService;
+import threads.server.Preferences;
+import threads.server.Service;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -29,36 +28,36 @@ public class SwarmService {
 
         ConnectInfo info = new ConnectInfo(pid, tag);
 
-            if (ipfs.isConnected(pid)) {
-                info.setConnected();
-                ipfs.protectPeer(pid, tag);
-            } else {
+        if (ipfs.isConnected(pid)) {
+            info.setConnected();
+            ipfs.protectPeer(pid, tag);
+        } else {
 
-                if (peerDiscovery) {
-                    PeerInfo peerInfo = IdentityService.getPeerInfo(
-                            context, pid, true);
+            if (peerDiscovery) {
+                PeerInfo peerInfo = IdentityService.getPeerInfo(
+                        context, pid, true);
 
-                    if (peerInfo != null) {
-                        info.setPeerInfo(peerInfo);
-                        if (ConnectService.swarmConnect(context, peerInfo, tag)) {
-                            info.setConnected();
+                if (peerInfo != null) {
+                    info.setPeerInfo(peerInfo);
+                    if (ConnectService.swarmConnect(context, peerInfo, tag)) {
+                        info.setConnected();
 
-                            ipfs.protectPeer(pid, tag);
+                        ipfs.protectPeer(pid, tag);
 
-                            return info;
-                        }
-
+                        return info;
                     }
 
                 }
 
-                if (ipfs.swarmConnect(pid, timeout)) {
-                    info.setConnected();
-                    ipfs.protectPeer(pid, tag);
-                    return info;
-                }
-
             }
+
+            if (ipfs.swarmConnect(pid, timeout)) {
+                info.setConnected();
+                ipfs.protectPeer(pid, tag);
+                return info;
+            }
+
+        }
 
 
         return info;
@@ -70,16 +69,16 @@ public class SwarmService {
         checkNotNull(info);
         IPFS ipfs = IPFS.getInstance(context);
 
-            if (info.isConnected()) {
-                ipfs.unProtectPeer(info.pid, info.tag);
-            }
+        if (info.isConnected()) {
+            ipfs.unProtectPeer(info.pid, info.tag);
+        }
 
         if (info.getPeerInfo() != null) {
             ConnectService.swarmUnProtect(context, info.getPeerInfo(), info.tag);
         }
     }
 
-    static class ConnectInfo {
+    public static class ConnectInfo {
 
         private final PID pid;
         private final String tag;

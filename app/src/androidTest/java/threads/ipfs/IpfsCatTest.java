@@ -100,7 +100,6 @@ public class IpfsCatTest {
     @Test
     public void cat_empty() throws Exception {
 
-
         IPFS ipfs = TestEnv.getTestInstance(context);
         CID cid = CID.create("QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn");
         List<LinkInfo> res = ipfs.ls(cid, 10, false);

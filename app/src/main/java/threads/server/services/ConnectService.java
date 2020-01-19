@@ -1,15 +1,16 @@
-package threads.share;
+package threads.server.services;
 
 import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import threads.core.Preferences;
 import threads.core.peers.Addresses;
 import threads.core.peers.PeerInfo;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
+import threads.server.Preferences;
+import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -63,12 +64,12 @@ public class ConnectService {
         final IPFS ipfs = IPFS.getInstance(context);
 
         Addresses addresses = peer.getAddresses();
-            for (String relay : addresses.keySet()) {
-                PID pid = PID.create(relay);
-                if (!tag.isEmpty()) {
-                    ipfs.unProtectPeer(pid, tag);
-                }
+        for (String relay : addresses.keySet()) {
+            PID pid = PID.create(relay);
+            if (!tag.isEmpty()) {
+                ipfs.unProtectPeer(pid, tag);
             }
+        }
 
     }
 
@@ -83,35 +84,35 @@ public class ConnectService {
         final IPFS ipfs = IPFS.getInstance(context);
 
         Addresses addresses = peer.getAddresses();
-            for (String relay : addresses.keySet()) {
-                try {
-                    String ma = addresses.get(relay);
-                    checkNotNull(ma);
-                    PID relayPID = PID.create(relay);
-                    boolean relayConnected = ipfs.isConnected(relayPID);
-                    if (!relayConnected) {
-                        relayConnected = ipfs.swarmConnect(
-                                ma + "/" + IPFS.Style.p2p.name() + "/" + relay,
-                                timeout);
-                    }
-                    if (relayConnected) {
-
-                        if (!tag.isEmpty()) {
-                            ipfs.protectPeer(PID.create(relay), tag);
-                        }
-                    }
-
-                    if (relayConnected) {
-                        String address = ipfs.relayAddress(ma, relayPID, peer.getPID());
-                        ipfs.swarmConnect(address, timeout);
-                    }
-
-                } catch (Throwable e) {
-                    Log.e(TAG, e.getLocalizedMessage(), e);
+        for (String relay : addresses.keySet()) {
+            try {
+                String ma = addresses.get(relay);
+                checkNotNull(ma);
+                PID relayPID = PID.create(relay);
+                boolean relayConnected = ipfs.isConnected(relayPID);
+                if (!relayConnected) {
+                    relayConnected = ipfs.swarmConnect(
+                            ma + "/" + IPFS.Style.p2p.name() + "/" + relay,
+                            timeout);
                 }
-            }
+                if (relayConnected) {
 
-            return ipfs.isConnected(peer.getPID());
+                    if (!tag.isEmpty()) {
+                        ipfs.protectPeer(PID.create(relay), tag);
+                    }
+                }
+
+                if (relayConnected) {
+                    String address = ipfs.relayAddress(ma, relayPID, peer.getPID());
+                    ipfs.swarmConnect(address, timeout);
+                }
+
+            } catch (Throwable e) {
+                Log.e(TAG, e.getLocalizedMessage(), e);
+            }
+        }
+
+        return ipfs.isConnected(peer.getPID());
 
     }
 

@@ -44,10 +44,12 @@ import threads.ipfs.Multihash;
 import threads.server.BuildConfig;
 import threads.server.R;
 
+import static android.os.ParcelFileDescriptor.MODE_READ_ONLY;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class FileDocumentsProvider extends DocumentsProvider {
     private static final String TAG = FileDocumentsProvider.class.getSimpleName();
+    private final static long SPLIT = (long) 1e+7;
     private final static String[] DEFAULT_ROOT_PROJECTION =
             new String[]{
                     DocumentsContract.Root.COLUMN_ROOT_ID,
@@ -175,8 +177,15 @@ public class FileDocumentsProvider extends DocumentsProvider {
                 }
             }
 
-            final ParcelFileDescriptor pfd = ParcelFileDescriptorUtil.pipeFrom(ipfs, cid, signal);
-            return new AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH);
+            if (file.getSize() < SPLIT) {
+                ParcelFileDescriptor pfd = ParcelFileDescriptor.open(
+                        getContentFile(cid), MODE_READ_ONLY);
+                return new AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH);
+            } else {
+
+                final ParcelFileDescriptor pfd = ParcelFileDescriptorUtil.pipeFrom(ipfs, cid, signal);
+                return new AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH);
+            }
 
         } catch (Throwable e) {
             throw new FileNotFoundException(e.getLocalizedMessage());
@@ -317,7 +326,11 @@ public class FileDocumentsProvider extends DocumentsProvider {
                 throw new FileNotFoundException("");
             }
             try {
-                return ParcelFileDescriptorUtil.pipeFrom(ipfs, cid, signal);
+                if (file.getSize() < SPLIT) {
+                    return ParcelFileDescriptor.open(getContentFile(cid), accessMode);
+                } else {
+                    return ParcelFileDescriptorUtil.pipeFrom(ipfs, cid, signal);
+                }
             } catch (Throwable e) {
                 Log.e(TAG, e.getLocalizedMessage(), e);
             }
@@ -336,6 +349,14 @@ public class FileDocumentsProvider extends DocumentsProvider {
         return null;
     }
 
+    private File getContentFile(@NonNull CID cid) throws IOException {
+
+        File file = new File(ipfs.getCacheDir(), cid.getCid());
+        if (!file.exists()) {
+            ipfs.storeToFile(file, cid);
+        }
+        return file;
+    }
 
     private File getBitmapFile(@NonNull String hash) throws IOException {
         Bitmap bitmap = getBitmap(hash);

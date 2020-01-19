@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.Preferences;
 import threads.core.events.EVENTS;
 import threads.core.peers.Content;
 import threads.core.peers.PEERS;
@@ -83,7 +82,7 @@ public class JobServiceDownload extends JobService {
 
             User user = peers.getUserByPID(pid);
             if (user == null) {
-                Preferences.error(events, context.getString(R.string.unknown_peer_sends_data));
+                events.error(context.getString(R.string.unknown_peer_sends_data));
                 return;
             }
 
@@ -113,7 +112,7 @@ public class JobServiceDownload extends JobService {
 
 
         } catch (Throwable e) {
-            Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+            events.exception(e);
         }
 
     }

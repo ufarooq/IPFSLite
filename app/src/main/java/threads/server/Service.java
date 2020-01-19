@@ -26,7 +26,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import threads.core.Preferences;
 import threads.core.contents.CDS;
 import threads.core.contents.ContentDatabase;
 import threads.core.contents.Contents;
@@ -66,10 +65,12 @@ import threads.server.jobs.JobServiceLoadPublicKey;
 import threads.server.jobs.JobServicePeers;
 import threads.server.jobs.JobServicePublish;
 import threads.server.jobs.JobServicePublisher;
-import threads.share.ConnectService;
-import threads.share.IdentityService;
+import threads.server.services.ConnectService;
+import threads.server.services.ContentsService;
+import threads.server.services.IdentityService;
+import threads.server.services.SwarmService;
+import threads.server.services.ThumbnailService;
 import threads.share.MimeType;
-import threads.share.ThumbnailService;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -108,7 +109,7 @@ public class Service {
         editor.apply();
     }
 
-    static boolean isAutoDownload(@NonNull Context context) {
+    public static boolean isAutoDownload(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(
                 APP_KEY, Context.MODE_PRIVATE);
@@ -374,7 +375,7 @@ public class Service {
                     entityService.insertData(context, address, json);
                     long time = (System.currentTimeMillis() - startTime) / 1000;
 
-                    events.invokeEvent(Preferences.INFO,
+                    events.invokeEvent(EVENTS.INFO,
                             context.getString(R.string.success_notification,
                                     alias, String.valueOf(time)));
 
@@ -383,7 +384,7 @@ public class Service {
                     success = false;
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
 
-                    events.invokeEvent(Preferences.EXCEPTION,
+                    events.invokeEvent(EVENTS.EXCEPTION,
                             context.getString(R.string.failed_notification, alias));
                 }
 
@@ -495,7 +496,9 @@ public class Service {
             peers.storeUser(newUser);
 
         } else {
-            Preferences.warning(events, context.getString(R.string.peer_exists_with_pid));
+            events.invokeEvent(EVENTS.WARNING,
+                    context.getString(R.string.peer_exists_with_pid));
+
             return;
         }
 
@@ -549,7 +552,7 @@ public class Service {
         }
     }
 
-    static void sendReceiveMessage(@NonNull Context context, @NonNull String topic) {
+    public static void sendReceiveMessage(@NonNull Context context, @NonNull String topic) {
         checkNotNull(context);
         checkNotNull(topic);
         Gson gson = new Gson();
@@ -591,7 +594,6 @@ public class Service {
                     APP_KEY, Context.MODE_PRIVATE);
             if (prefs.getInt(UPDATE, 0) != versionCode) {
 
-                Preferences.setLoginFlag(context, false); // TODO remove later
                 IPFS.deleteConfigFile(context); // TODO remove later
 
 
@@ -738,7 +740,7 @@ public class Service {
                 sender.setBlocked(true);
                 peers.storeUser(sender);
 
-                Preferences.error(events, context.getString(R.string.user_connect_try, alias));
+                events.error(context.getString(R.string.user_connect_try, alias));
             }
 
             if (IPFS.isPubSubEnabled(context)) {
@@ -820,7 +822,7 @@ public class Service {
                 }
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
         return MimeType.OCTET_MIME_TYPE;
     }
@@ -1148,7 +1150,7 @@ public class Service {
                             checkNotNull(image);
                             threads.setImage(thread, image);
                         } catch (Throwable e) {
-                            Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
                         }
                     }
 
@@ -1342,7 +1344,7 @@ public class Service {
                 }
             }
         } catch (Throwable e) {
-            Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
 
@@ -1369,7 +1371,7 @@ public class Service {
                 threads.resetThreadsNumber(indices);
 
                 if (users.isEmpty()) {
-                    Preferences.error(events, context.getString(R.string.no_sharing_peers));
+                    events.error(context.getString(R.string.no_sharing_peers));
                 } else {
                     checkNotNull(host);
 
@@ -1413,7 +1415,7 @@ public class Service {
                 }
 
             } catch (Throwable e) {
-                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
         });
 
@@ -1511,7 +1513,7 @@ public class Service {
                                             String alias = content.get(Content.ALIAS);
                                             checkNotNull(alias);
 
-                                            Preferences.error(events, context.getString(
+                                            events.error(context.getString(
                                                     R.string.notification_received, alias));
                                         }
                                     } else if ("SHARE".equals(est)) {
@@ -1522,13 +1524,13 @@ public class Service {
                                                 3, TimeUnit.SECONDS);
                                     }
                                 } else {
-                                    Preferences.error(events, context.getString(
+                                    events.error(context.getString(
                                             R.string.unsupported_pubsub_message,
                                             senderPid.getPid()));
                                 }
                             } else if (result.getCodex() == CodecDecider.Codec.UNKNOWN) {
 
-                                Preferences.error(events, context.getString(
+                                events.error(context.getString(
                                         R.string.unsupported_pubsub_message,
                                         senderPid.getPid()));
                             }
@@ -1544,7 +1546,7 @@ public class Service {
                 });
 
             } catch (Throwable e) {
-                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
 
 

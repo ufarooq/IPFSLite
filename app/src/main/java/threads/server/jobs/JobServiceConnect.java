@@ -14,10 +14,10 @@ import androidx.annotation.NonNull;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.Preferences;
 import threads.core.peers.Content;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
+import threads.server.Preferences;
 import threads.server.Service;
 import threads.share.Network;
 

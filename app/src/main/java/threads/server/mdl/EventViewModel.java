@@ -6,7 +6,6 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
-import threads.core.Preferences;
 import threads.core.events.EVENTS;
 import threads.core.events.Event;
 import threads.core.events.EventsDatabase;
@@ -25,19 +24,19 @@ public class EventViewModel extends AndroidViewModel {
 
 
     public LiveData<Event> getException() {
-        return eventsDatabase.eventDao().getEvent(Preferences.EXCEPTION);
+        return eventsDatabase.eventDao().getEvent(EVENTS.EXCEPTION);
     }
 
     public LiveData<Event> getWarning() {
-        return eventsDatabase.eventDao().getEvent(Preferences.WARNING);
+        return eventsDatabase.eventDao().getEvent(EVENTS.WARNING);
     }
 
     public LiveData<Event> getInfo() {
-        return eventsDatabase.eventDao().getEvent(Preferences.INFO);
+        return eventsDatabase.eventDao().getEvent(EVENTS.INFO);
     }
 
     public LiveData<Event> getDaemon() {
-        return eventsDatabase.eventDao().getEvent(Preferences.DAEMON);
+        return eventsDatabase.eventDao().getEvent(EVENTS.DAEMON);
     }
 
     public LiveData<Event> getEvent(@NonNull String event) {

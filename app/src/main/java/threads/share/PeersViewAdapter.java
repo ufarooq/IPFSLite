@@ -18,10 +18,10 @@ import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 import java.util.List;
 
-import threads.core.Preferences;
 import threads.core.peers.IPeer;
 import threads.core.peers.Peer;
 import threads.ipfs.IPFS;
+import threads.server.Preferences;
 import threads.server.R;
 
 public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.ViewHolder> {

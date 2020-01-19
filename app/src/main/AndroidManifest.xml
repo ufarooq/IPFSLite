@@ -137,11 +137,11 @@
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
         <service
-            android:name=".DaemonService"
+            android:name=".services.DaemonService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".UploadService"
+            android:name=".services.UploadService"
             android:enabled="true"
             android:exported="false" />
         <provider

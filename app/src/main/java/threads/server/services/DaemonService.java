@@ -1,4 +1,4 @@
-package threads.server;
+package threads.server.services;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -18,6 +18,8 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
+import threads.server.MainActivity;
+import threads.server.R;
 import threads.server.jobs.JobServiceAutoConnect;
 import threads.server.jobs.JobServicePeers;
 

@@ -30,7 +30,7 @@ import threads.core.peers.Peer;
 import threads.core.threads.THREADS;
 import threads.ipfs.IPFS;
 import threads.server.mdl.PeersViewModel;
-import threads.share.GatewayService;
+import threads.server.services.GatewayService;
 import threads.share.PeerActionDialogFragment;
 import threads.share.PeersViewAdapter;
 

@@ -48,7 +48,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import de.psdev.licensesdialog.LicensesDialogFragment;
-import threads.core.Preferences;
 import threads.core.events.EVENTS;
 import threads.core.peers.AddressType;
 import threads.core.peers.PEERS;
@@ -70,10 +69,13 @@ import threads.server.jobs.JobServicePublish;
 import threads.server.mdl.EventViewModel;
 import threads.server.mdl.SelectionViewModel;
 import threads.server.provider.FileDocumentsProvider;
-import threads.share.ConnectService;
+import threads.server.services.ConnectService;
+import threads.server.services.DaemonService;
+import threads.server.services.GatewayService;
+import threads.server.services.ThumbnailService;
+import threads.server.services.UploadService;
 import threads.share.DetailsDialogFragment;
 import threads.share.DontShowAgainDialog;
-import threads.share.GatewayService;
 import threads.share.InfoDialogFragment;
 import threads.share.MimeType;
 import threads.share.NameDialogFragment;
@@ -81,7 +83,6 @@ import threads.share.Network;
 import threads.share.PeerActionDialogFragment;
 import threads.share.PermissionAction;
 import threads.share.ThreadActionDialogFragment;
-import threads.share.ThumbnailService;
 import threads.share.UserActionDialogFragment;
 import threads.share.WebViewDialogFragment;
 
@@ -262,7 +263,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // CHECKED
 
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(EVENTS.getInstance(getApplicationContext()), getString(R.string.offline_mode));
+            java.lang.Thread threadError = new java.lang.Thread(()
+                    -> EVENTS.getInstance(getApplicationContext()).error(getString(R.string.offline_mode)));
+            threadError.start();
             return;
         }
 
@@ -279,9 +282,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 JobServiceDownload.download(getApplicationContext(),
                         host, CID.create(multihash));
             } else {
+                java.lang.Thread threadError = new java.lang.Thread(()
+                        -> EVENTS.getInstance(getApplicationContext()).error(
+                        getString(R.string.codec_not_supported)));
+                threadError.start();
 
-                Preferences.error(EVENTS.getInstance(getApplicationContext()),
-                        getString(R.string.codec_not_supported));
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -335,8 +340,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 chooser.putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, names);
                 startActivity(chooser);
             } else {
-                Preferences.error(EVENTS.getInstance(getApplicationContext()),
-                        getString(R.string.no_activity_found_to_handle_uri));
+                java.lang.Thread threadError = new java.lang.Thread(()
+                        -> EVENTS.getInstance(getApplicationContext()).error(
+                        getString(R.string.no_activity_found_to_handle_uri)));
+                threadError.start();
             }
 
         } catch (Throwable e) {
@@ -425,8 +432,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startActivityForResult(Intent.createChooser(intent,
                         getString(R.string.select_files)), REQUEST_SELECT_FILES);
             } else {
-                Preferences.error(EVENTS.getInstance(getApplicationContext()),
-                        getString(R.string.no_activity_found_to_handle_uri));
+                java.lang.Thread threadError = new java.lang.Thread(()
+                        -> EVENTS.getInstance(getApplicationContext()).error(
+                        getString(R.string.no_activity_found_to_handle_uri)));
+                threadError.start();
             }
 
         } catch (Throwable e) {
@@ -498,7 +507,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                    events.exception(e);
                 }
             });
         } catch (Throwable e) {
@@ -511,7 +520,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(pid);
 
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(EVENTS.getInstance(getApplicationContext()), getString(R.string.offline_mode));
+            java.lang.Thread threadError = new java.lang.Thread(()
+                    -> EVENTS.getInstance(getApplicationContext()).error(getString(R.string.offline_mode)));
+            threadError.start();
             return;
         }
 
@@ -527,7 +538,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     PID user = PID.create(pid);
 
                     if (peers.isUserBlocked(user)) {
-                        Preferences.warning(events, getString(R.string.peer_is_blocked));
+                        events.invokeEvent(EVENTS.WARNING,
+                                getString(R.string.peer_is_blocked));
                     } else {
 
                         try {
@@ -559,7 +571,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         }
                     }
                 } catch (Throwable e) {
-                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                    events.exception(e);
                 }
             });
 
@@ -723,8 +735,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         chooser.putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, names);
                         startActivity(chooser);
                     } else {
-                        Preferences.error(EVENTS.getInstance(getApplicationContext()),
-                                getString(R.string.no_activity_found_to_handle_uri));
+                        java.lang.Thread threadError = new java.lang.Thread(()
+                                -> EVENTS.getInstance(getApplicationContext()).error(
+                                getString(R.string.no_activity_found_to_handle_uri)));
+                        threadError.start();
                     }
 
                 } catch (Throwable e) {
@@ -1004,7 +1018,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         mStartDaemon.set(newStartDaemonValue);
 
                         EVENTS events = EVENTS.getInstance(getApplicationContext());
-                        events.invokeEvent(Preferences.DAEMON, mStartDaemon.toString());
+                        events.invokeEvent(EVENTS.DAEMON, mStartDaemon.toString());
 
                         DaemonService.invoke(getApplicationContext(), newStartDaemonValue);
                     } catch (Throwable e) {
@@ -1042,7 +1056,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     }
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                    events.exception(e);
                 }
             });
 
@@ -1096,7 +1110,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(EVENTS.getInstance(getApplicationContext()), getString(R.string.offline_mode));
+            java.lang.Thread threadError = new java.lang.Thread(()
+                    -> EVENTS.getInstance(getApplicationContext()).error(getString(R.string.offline_mode)));
+            threadError.start();
             return;
         }
 
@@ -1154,7 +1170,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             getSupportFragmentManager(),
                             DetailsDialogFragment.TAG);
                 } catch (Throwable e) {
-                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                    events.exception(e);
                 } finally {
                     peers.setUserDialing(peer, false);
                 }
@@ -1192,7 +1208,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         try {
             Multihash.fromBase58(pid);
         } catch (Throwable e) {
-            Preferences.error(EVENTS.getInstance(getApplicationContext()), getString(R.string.multihash_not_valid));
+            java.lang.Thread threadError = new java.lang.Thread(()
+                    -> EVENTS.getInstance(getApplicationContext()).error(getString(R.string.multihash_not_valid)));
+            threadError.start();
             return;
         }
 
@@ -1201,13 +1219,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         PID user = PID.create(pid);
 
         if (user.equals(host)) {
-            Preferences.error(EVENTS.getInstance(getApplicationContext()), getString(R.string.same_pid_like_host));
+
+            java.lang.Thread threadError = new java.lang.Thread(()
+                    -> EVENTS.getInstance(getApplicationContext()).error(
+                    getString(R.string.same_pid_like_host)));
+            threadError.start();
+
             return;
         }
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(EVENTS.getInstance(getApplicationContext()), getString(R.string.offline_mode));
+            java.lang.Thread threadError = new java.lang.Thread(()
+                    -> EVENTS.getInstance(getApplicationContext()).error(
+                    getString(R.string.offline_mode)));
+            threadError.start();
+
             return;
         }
 
@@ -1248,7 +1275,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
                 } catch (Throwable e) {
-                    Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                    events.exception(e);
                 }
             });
 
@@ -1265,7 +1292,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-            Preferences.error(EVENTS.getInstance(getApplicationContext()), getString(R.string.offline_mode));
+
+            java.lang.Thread threadError = new java.lang.Thread(()
+                    -> EVENTS.getInstance(getApplicationContext()).error(
+                    getString(R.string.offline_mode)));
+            threadError.start();
+
             return;
         }
 
@@ -1279,8 +1311,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         getEnhancedUserPIDs(getApplicationContext());
 
                 if (pids.isEmpty()) {
-                    Preferences.error(events,
-                            getApplicationContext().getString(R.string.no_sharing_peers));
+                    events.error(getString(R.string.no_sharing_peers));
                 } else if (pids.size() == 1) {
                     List<User> users = new ArrayList<>();
                     users.add(peers.getUserByPID(PID.create(pids.get(0))));
@@ -1355,7 +1386,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 startActivity(intent);
 
             } catch (Throwable e) {
-                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                events.exception(e);
             }
         });
 
@@ -1526,12 +1557,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     chooser.putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, names);
                     startActivity(chooser);
                 } else {
-                    Preferences.error(events,
-                            getString(R.string.no_activity_found_to_handle_uri));
+                    events.error(getString(R.string.no_activity_found_to_handle_uri));
                 }
 
             } catch (Throwable e) {
-                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                events.exception(e);
             }
         });
 
@@ -1573,24 +1603,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 if (intent.resolveActivity(getPackageManager()) != null) {
                     startActivityForResult(intent, FILE_EXPORT_REQUEST_CODE);
                 } else {
-                    Preferences.error(events,
-                            getString(R.string.no_activity_found_to_handle_uri));
+                    events.error(getString(R.string.no_activity_found_to_handle_uri));
                 }
             });
-
-
-
-    /*
-            if (ContextCompat.checkSelfPermission(getApplicationContext(),
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                        REQUEST_EXTERNAL_STORAGE);
-
-            } else {
-                Service.localDownloadThread(getApplicationContext(), idx);
-            }*/
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -1631,7 +1646,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             try {
                 threads.setThreadPinned(idx, pinned);
             } catch (Throwable e) {
-                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                events.exception(e);
             }
         });
 
@@ -1662,7 +1677,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 threads.setThreadSenderAlias(user, name);
 
             } catch (Throwable e) {
-                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                events.exception(e);
             }
         });
 

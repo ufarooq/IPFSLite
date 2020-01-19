@@ -1,4 +1,4 @@
-package threads.share;
+package threads.server.services;
 
 import android.content.Context;
 
@@ -14,6 +14,7 @@ import threads.core.peers.Peer;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.ipfs.PeerInfo;
+import threads.share.Network;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;

@@ -38,7 +38,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import threads.core.Preferences;
 import threads.core.events.EVENTS;
 import threads.core.threads.Status;
 import threads.core.threads.THREADS;
@@ -120,9 +119,9 @@ public class ThreadsFragment extends Fragment implements
 
         final Observer<Long> parentThread = (threadIdx) -> {
 
-                if (threadIdx != null) {
-                    updateDirectory(threadIdx);
-                }
+            if (threadIdx != null) {
+                updateDirectory(threadIdx);
+            }
 
         };
         mSelectionViewModel.getParentThread().observe(this, parentThread);
@@ -268,9 +267,10 @@ public class ThreadsFragment extends Fragment implements
 
         Selection<Long> selection = mSelectionTracker.getSelection();
         if (selection.size() == 0) {
-
-            Preferences.warning(events,
-                    mContext.getString(R.string.no_marked_file_send));
+            java.lang.Thread thread = new java.lang.Thread(() -> events.invokeEvent(
+                    EVENTS.WARNING,
+                    getString(R.string.no_marked_file_send)));
+            thread.start();
             return;
         }
 
@@ -297,7 +297,7 @@ public class ThreadsFragment extends Fragment implements
                 checkNotNull(idx);
                 threadsAPI.resetThreadNumber(idx);
             } catch (Throwable e) {
-                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                events.exception(e);
             }
         });
     }
@@ -318,14 +318,18 @@ public class ThreadsFragment extends Fragment implements
 
         final EVENTS events = EVENTS.getInstance(mContext);
         if (!topLevel.get()) {
-            Preferences.warning(events,
-                    mContext.getString(R.string.deleting_files_within_directory_not_supported));
+            java.lang.Thread thread = new java.lang.Thread(() -> events.invokeEvent(
+                    EVENTS.WARNING,
+                    getString(R.string.deleting_files_within_directory_not_supported)));
+            thread.start();
             return;
         }
 
         if (!mSelectionTracker.hasSelection()) {
-            Preferences.warning(events,
-                    mContext.getString(R.string.no_marked_file_delete));
+            java.lang.Thread thread = new java.lang.Thread(() -> events.invokeEvent(
+                    EVENTS.WARNING,
+                    getString(R.string.no_marked_file_delete)));
+            thread.start();
             return;
         }
 
@@ -482,7 +486,7 @@ public class ThreadsFragment extends Fragment implements
                             mHandler.post(() -> clickThreadPlay(threadIdx));
                         }
                     } catch (Throwable e) {
-                        Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                        events.exception(e);
                     }
                 });
             }
@@ -527,12 +531,11 @@ public class ThreadsFragment extends Fragment implements
                             mContext.getPackageManager()) != null) {
                         startActivity(intent);
                     } else {
-                        Preferences.error(events,
-                                getString(R.string.no_activity_found_to_handle_uri));
+                        events.error(getString(R.string.no_activity_found_to_handle_uri));
                     }
                 }
             } catch (Throwable ex) {
-                Preferences.error(events, getString(R.string.no_activity_found_to_handle_uri));
+                events.error(getString(R.string.no_activity_found_to_handle_uri));
             }
         });
 
@@ -545,7 +548,11 @@ public class ThreadsFragment extends Fragment implements
         try {
 
             if (!Network.isConnected(mContext)) {
-                Preferences.error(EVENTS.getInstance(mContext), getString(R.string.offline_mode));
+
+                java.lang.Thread threadError = new java.lang.Thread(()
+                        -> EVENTS.getInstance(mContext).error(getString(R.string.offline_mode)));
+                threadError.start();
+
                 return;
             }
 

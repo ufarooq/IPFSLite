@@ -28,11 +28,10 @@ import com.bumptech.glide.Glide;
 import java.util.ArrayList;
 import java.util.List;
 
-import threads.core.Preferences;
 import threads.core.threads.Thread;
 import threads.ipfs.IPFS;
+import threads.server.services.MimeTypeService;
 import threads.share.IPFSData;
-import threads.share.MimeTypeService;
 import threads.share.ThreadDiffCallback;
 
 public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.ViewHolder> {

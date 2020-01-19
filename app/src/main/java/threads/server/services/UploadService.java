@@ -1,4 +1,4 @@
-package threads.server;
+package threads.server.services;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -25,7 +25,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import threads.core.Preferences;
 import threads.core.events.EVENTS;
 import threads.core.threads.Kind;
 import threads.core.threads.Status;
@@ -34,7 +33,7 @@ import threads.core.threads.Thread;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
-import threads.share.ThumbnailService;
+import threads.server.R;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -170,9 +169,9 @@ public class UploadService extends Service {
                 }
 
             } catch (FileNotFoundException e) {
-                Preferences.error(events, getString(R.string.file_not_found));
+                events.error(getString(R.string.file_not_found));
             } catch (Throwable e) {
-                Preferences.evaluateException(events, Preferences.EXCEPTION, e);
+                events.exception(e);
             } finally {
                 if (counter.decrementAndGet() == 0) {
                     try {

@@ -17,8 +17,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
-import threads.core.Preferences;
-import threads.core.events.EVENTS;
 import threads.server.R;
 import threads.server.provider.FileDocumentsProvider;
 
@@ -116,8 +114,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
             Bitmap imageBitmap = FileDocumentsProvider.getBitmap(code);
             imageView.setImageBitmap(imageBitmap);
         } catch (Throwable e) {
-            Preferences.evaluateException(EVENTS.getInstance(mContext),
-                    Preferences.EXCEPTION, e);
+            Log.e(TAG, "" + e.getLocalizedMessage());
         }
 
 

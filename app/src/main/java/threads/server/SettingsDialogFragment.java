@@ -21,7 +21,6 @@ import androidx.fragment.app.DialogFragment;
 import java.util.ArrayList;
 import java.util.List;
 
-import threads.core.Preferences;
 import threads.ipfs.IPFS;
 import threads.ipfs.PubSubConfig;
 import threads.ipfs.RoutingConfig;
