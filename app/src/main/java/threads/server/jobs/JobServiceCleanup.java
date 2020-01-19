@@ -14,7 +14,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import threads.server.Service;
+import threads.server.services.Service;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 

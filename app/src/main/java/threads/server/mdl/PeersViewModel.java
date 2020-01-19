@@ -8,9 +8,9 @@ import androidx.lifecycle.LiveData;
 
 import java.util.List;
 
-import threads.core.peers.PEERS;
-import threads.core.peers.Peer;
-import threads.core.peers.PeersDatabase;
+import threads.server.core.peers.PEERS;
+import threads.server.core.peers.Peer;
+import threads.server.core.peers.PeersDatabase;
 
 public class PeersViewModel extends AndroidViewModel {
 

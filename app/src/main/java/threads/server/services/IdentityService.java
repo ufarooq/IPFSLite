@@ -12,16 +12,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import threads.core.peers.Additional;
-import threads.core.peers.Additionals;
-import threads.core.peers.PEERS;
-import threads.core.peers.Peer;
-import threads.core.peers.User;
 import threads.iota.EntityService;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.ipfs.PeerInfo;
-import threads.share.Network;
+import threads.server.core.peers.Additional;
+import threads.server.core.peers.Additionals;
+import threads.server.core.peers.PEERS;
+import threads.server.core.peers.Peer;
+import threads.server.core.peers.User;
+import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -62,7 +62,7 @@ public class IdentityService {
             PID host = IPFS.getPID(context);
             if (host != null) {
 
-                threads.core.peers.PeerInfo peer = threads.getPeerInfoByPID(host);
+                threads.server.core.peers.PeerInfo peer = threads.getPeerInfoByPID(host);
                 if (peer != null) {
                     return updatePeerInfo(context, peer, storedRelays, params, tag,
                             timeout, numRelays);
@@ -102,7 +102,7 @@ public class IdentityService {
         final PEERS threads = PEERS.getInstance(context);
 
 
-        threads.core.peers.PeerInfo peerInfo = threads.createPeerInfo(user);
+        threads.server.core.peers.PeerInfo peerInfo = threads.createPeerInfo(user);
 
         updatesPeerInfo(context, peerInfo, storedRelays, params, tag, timeout, numPeers);
 
@@ -114,7 +114,7 @@ public class IdentityService {
     }
 
     private static boolean insertPeer(@NonNull Context context,
-                                      @NonNull threads.core.peers.PeerInfo peer) {
+                                      @NonNull threads.server.core.peers.PeerInfo peer) {
 
         PEERS threads = PEERS.getInstance(context);
 
@@ -137,16 +137,16 @@ public class IdentityService {
     }
 
 
-    public static threads.core.peers.PeerInfo getPeerInfo(@NonNull Context context,
-                                                          @NonNull PID pid,
-                                                          boolean updateUser) {
+    public static threads.server.core.peers.PeerInfo getPeerInfo(@NonNull Context context,
+                                                                 @NonNull PID pid,
+                                                                 boolean updateUser) {
         checkNotNull(context);
         checkNotNull(pid);
 
         final PEERS peers = PEERS.getInstance(context);
 
         final EntityService entityService = EntityService.getInstance(context);
-        threads.core.peers.PeerInfo peerInfo = peers.getPeer(context, entityService, pid);
+        threads.server.core.peers.PeerInfo peerInfo = peers.getPeer(context, entityService, pid);
         if (peerInfo != null && updateUser) {
             boolean update = false;
             User user = peers.getUserByPID(pid);
@@ -169,7 +169,7 @@ public class IdentityService {
 
 
     private static void updatesPeerInfo(@NonNull Context context,
-                                        @NonNull threads.core.peers.PeerInfo peerInfo,
+                                        @NonNull threads.server.core.peers.PeerInfo peerInfo,
                                         @NonNull List<Peer> storedRelays,
                                         @NonNull Map<String, String> params,
                                         @NonNull String tag, int timeout, int numPeers) {
@@ -212,7 +212,7 @@ public class IdentityService {
 
     private static ResultInfo updatePeerInfo(
             @NonNull Context context,
-            @NonNull threads.core.peers.PeerInfo peerInfo,
+            @NonNull threads.server.core.peers.PeerInfo peerInfo,
             @NonNull List<Peer> storedRelays,
             @NonNull Map<String, String> params,
             @NonNull String tag,
@@ -236,9 +236,9 @@ public class IdentityService {
         private final String tag;
         private final boolean insert;
         @NonNull
-        private final threads.core.peers.PeerInfo peerInfo;
+        private final threads.server.core.peers.PeerInfo peerInfo;
 
-        ResultInfo(@NonNull threads.core.peers.PeerInfo peerInfo,
+        ResultInfo(@NonNull threads.server.core.peers.PeerInfo peerInfo,
                    @NonNull String tag, boolean insert) {
 
             this.peerInfo = peerInfo;
@@ -252,7 +252,7 @@ public class IdentityService {
         }
 
         @NonNull
-        public threads.core.peers.PeerInfo getPeerInfo() {
+        public threads.server.core.peers.PeerInfo getPeerInfo() {
             return peerInfo;
         }
 

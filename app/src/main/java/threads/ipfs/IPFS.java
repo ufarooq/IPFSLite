@@ -54,7 +54,7 @@ import mobile.LoaderStream;
 import mobile.Node;
 import mobile.Reader;
 import mobile.Writer;
-import threads.share.Network;
+import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;

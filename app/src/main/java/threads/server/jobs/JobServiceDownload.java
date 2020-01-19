@@ -15,19 +15,19 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.events.EVENTS;
-import threads.core.peers.Content;
-import threads.core.peers.PEERS;
-import threads.core.peers.User;
-import threads.core.threads.Status;
-import threads.core.threads.THREADS;
-import threads.core.threads.Thread;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.server.R;
-import threads.server.Service;
-import threads.share.Network;
+import threads.server.core.events.EVENTS;
+import threads.server.core.peers.Content;
+import threads.server.core.peers.PEERS;
+import threads.server.core.peers.User;
+import threads.server.core.threads.Status;
+import threads.server.core.threads.THREADS;
+import threads.server.core.threads.Thread;
+import threads.server.services.Service;
+import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

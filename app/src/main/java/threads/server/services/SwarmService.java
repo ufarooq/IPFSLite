@@ -7,11 +7,10 @@ import androidx.annotation.Nullable;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
-import threads.core.peers.PeerInfo;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
-import threads.server.Preferences;
-import threads.server.Service;
+import threads.server.core.peers.PeerInfo;
+import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

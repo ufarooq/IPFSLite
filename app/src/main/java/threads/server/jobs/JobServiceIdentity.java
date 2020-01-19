@@ -15,13 +15,13 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.core.peers.Content;
-import threads.core.peers.PEERS;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
-import threads.server.Service;
+import threads.server.core.peers.Content;
+import threads.server.core.peers.PEERS;
 import threads.server.services.IdentityService;
-import threads.share.Network;
+import threads.server.services.Service;
+import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

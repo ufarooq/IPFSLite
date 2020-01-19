@@ -6,9 +6,9 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
-import threads.core.events.EVENTS;
-import threads.core.events.Event;
-import threads.core.events.EventsDatabase;
+import threads.server.core.events.EVENTS;
+import threads.server.core.events.Event;
+import threads.server.core.events.EventsDatabase;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

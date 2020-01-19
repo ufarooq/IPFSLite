@@ -35,14 +35,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import mobile.Reader;
-import threads.core.threads.Status;
-import threads.core.threads.THREADS;
-import threads.core.threads.Thread;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
 import threads.server.BuildConfig;
 import threads.server.R;
+import threads.server.core.threads.Status;
+import threads.server.core.threads.THREADS;
+import threads.server.core.threads.Thread;
 
 import static android.os.ParcelFileDescriptor.MODE_READ_ONLY;
 import static androidx.core.util.Preconditions.checkNotNull;

@@ -25,15 +25,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import threads.core.events.EVENTS;
-import threads.core.threads.Kind;
-import threads.core.threads.Status;
-import threads.core.threads.THREADS;
-import threads.core.threads.Thread;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.server.R;
+import threads.server.core.events.EVENTS;
+import threads.server.core.threads.Kind;
+import threads.server.core.threads.Status;
+import threads.server.core.threads.THREADS;
+import threads.server.core.threads.Thread;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 

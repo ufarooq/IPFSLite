@@ -8,9 +8,9 @@ import androidx.lifecycle.LiveData;
 
 import java.util.List;
 
-import threads.core.threads.THREADS;
-import threads.core.threads.Thread;
-import threads.core.threads.ThreadsDatabase;
+import threads.server.core.threads.THREADS;
+import threads.server.core.threads.Thread;
+import threads.server.core.threads.ThreadsDatabase;
 
 public class ThreadViewModel extends AndroidViewModel {
 

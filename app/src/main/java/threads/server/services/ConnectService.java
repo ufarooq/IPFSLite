@@ -5,12 +5,12 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import threads.core.peers.Addresses;
-import threads.core.peers.PeerInfo;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
-import threads.server.Preferences;
-import threads.share.Network;
+import threads.server.core.peers.Addresses;
+import threads.server.core.peers.PeerInfo;
+import threads.server.utils.Network;
+import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
