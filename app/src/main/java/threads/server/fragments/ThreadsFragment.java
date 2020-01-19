@@ -564,7 +564,7 @@ public class ThreadsFragment extends Fragment implements
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    Service.getInstance(mContext).downloadThread(mContext, thread);
+                    Service.getInstance(mContext).retryDownloadThread(mContext, thread);
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }

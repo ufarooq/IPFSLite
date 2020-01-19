@@ -42,16 +42,6 @@ public class ThumbnailService {
     private static final String TAG = ThumbnailService.class.getSimpleName();
     private static final int THUMBNAIL_SIZE = 128;
 
-    @Nullable
-    public static CID createResourceImage(@NonNull Context context,
-                                          @NonNull IPFS ipfs,
-                                          @DrawableRes int id) throws Exception {
-        checkNotNull(context);
-        checkNotNull(ipfs);
-        byte[] data = getImage(context, id);
-        return ipfs.storeData(data);
-    }
-
 
     @NonNull
     public static byte[] getImage(@NonNull Context context, @DrawableRes int id) {

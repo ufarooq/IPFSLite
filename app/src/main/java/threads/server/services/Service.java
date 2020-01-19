@@ -814,8 +814,7 @@ public class Service {
 
 
     @NonNull
-    private static String evaluateMimeType(@NonNull Context context,
-                                           @NonNull String filename) {
+    private static String evaluateMimeType(@NonNull String filename) {
         try {
             Optional<String> extension = ThumbnailService.getExtension(filename);
             if (extension.isPresent()) {
@@ -833,6 +832,7 @@ public class Service {
     private static long createThread(@NonNull Context context,
                                      @NonNull IPFS ipfs,
                                      @NonNull PID sender,
+                                     @NonNull String alias,
                                      @NonNull CID cid,
                                      @NonNull LinkInfo link,
                                      long parent) {
@@ -840,16 +840,15 @@ public class Service {
         checkNotNull(context);
         checkNotNull(ipfs);
         checkNotNull(sender);
+        checkNotNull(alias);
         checkNotNull(cid);
         checkNotNull(link);
 
 
         final THREADS threads = THREADS.getInstance(context);
         final PEERS peers = PEERS.getInstance(context);
-        User user = peers.getUserByPID(sender);
-        checkNotNull(user);
 
-        Thread thread = threads.createThread(user.getPID(), user.getAlias(),
+        Thread thread = threads.createThread(sender, alias,
                 Status.INIT, Kind.OUT, parent);
         thread.setContent(cid);
         String filename = link.getName();
@@ -861,7 +860,7 @@ public class Service {
         if (link.isDirectory()) {
             thread.setMimeType(DocumentsContract.Document.MIME_TYPE_DIR);
         } else {
-            thread.setMimeType(evaluateMimeType(context, filename));
+            thread.setMimeType(evaluateMimeType(filename));
         }
 
         return threads.storeThread(thread);
@@ -895,7 +894,7 @@ public class Service {
             if (mimeType != null) {
                 thread.setMimeType(mimeType);
             } else {
-                thread.setMimeType(evaluateMimeType(context, filename));
+                thread.setMimeType(evaluateMimeType(filename));
             }
         } else {
             if (mimeType != null) {
@@ -911,13 +910,9 @@ public class Service {
     }
 
     private static boolean downloadThread(@NonNull Context context,
-                                          @NonNull THREADS threads,
-                                          @NonNull IPFS ipfs,
                                           @NonNull Thread thread) {
 
         checkNotNull(context);
-        checkNotNull(threads);
-        checkNotNull(ipfs);
         checkNotNull(thread);
 
         CID cid = thread.getContent();
@@ -1063,7 +1058,8 @@ public class Service {
             } else {
 
                 long idx = createThread(context, ipfs,
-                        thread.getSender(), cid, link, thread.getIdx());
+                        thread.getSender(), thread.getSenderAlias(),
+                        cid, link, thread.getIdx());
                 entry = threads.getThreadByIdx(idx);
                 checkNotNull(entry);
                 boolean success = downloadLink(context, entry, link);
@@ -1108,7 +1104,7 @@ public class Service {
         checkNotNull(thread);
 
         THREADS threads = THREADS.getInstance(context);
-        IPFS ipfs = IPFS.getInstance(context);
+
         try {
             threads.setThreadLeaching(thread.getIdx(), true);
 
@@ -1120,7 +1116,7 @@ public class Service {
             if (links != null) {
                 if (links.isEmpty()) {
 
-                    boolean result = downloadThread(context, threads, ipfs, thread);
+                    boolean result = downloadThread(context, thread);
                     if (result) {
                         threads.setStatus(thread, Status.SEEDING);
                         if (sender != null) {
@@ -1136,15 +1132,6 @@ public class Service {
 
                     if (!thread.getMimeType().equals(DocumentsContract.Document.MIME_TYPE_DIR)) {
                         threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
-
-                        try {
-                            CID image = ThumbnailService.createResourceImage(context, ipfs,
-                                    R.drawable.folder_outline);
-                            checkNotNull(image);
-                            threads.setImage(thread, image);
-                        } catch (Throwable e) {
-                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                        }
                     }
 
 
@@ -1268,14 +1255,13 @@ public class Service {
         return users;
     }
 
-    public void downloadThread(@NonNull Context context, @NonNull Thread thread) {
+    public void retryDownloadThread(@NonNull Context context, @NonNull Thread thread) {
 
         checkNotNull(context);
         checkNotNull(thread);
 
         THREADS threads = THREADS.getInstance(context);
         try {
-            IPFS ipfs = IPFS.getInstance(context);
 
             threads.setThreadLeaching(thread.getIdx(), false);
             PID host = IPFS.getPID(context);
