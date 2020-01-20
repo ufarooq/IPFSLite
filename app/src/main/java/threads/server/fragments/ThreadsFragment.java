@@ -21,7 +21,6 @@ import androidx.appcompat.view.ActionMode;
 import androidx.core.app.ShareCompat;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.selection.Selection;
 import androidx.recyclerview.selection.SelectionTracker;
@@ -35,7 +34,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import threads.ipfs.CID;
@@ -64,8 +62,7 @@ public class ThreadsFragment extends Fragment implements
     private static final int CLICK_OFFSET = 500;
     @NonNull
     private final AtomicReference<LiveData<List<Thread>>> observer = new AtomicReference<>(null);
-    @NonNull
-    private final AtomicBoolean topLevel = new AtomicBoolean(true);
+
     @NonNull
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private SelectionViewModel mSelectionViewModel;
@@ -117,14 +114,13 @@ public class ThreadsFragment extends Fragment implements
         mSelectionViewModel = new ViewModelProvider(getActivity()).get(SelectionViewModel.class);
 
 
-        final Observer<Long> parentThread = (threadIdx) -> {
+        mSelectionViewModel.getParentThread().observe(this, (threadIdx) -> {
 
             if (threadIdx != null) {
                 updateDirectory(threadIdx);
             }
 
-        };
-        mSelectionViewModel.getParentThread().observe(this, parentThread);
+        });
 
 
     }
@@ -214,19 +210,18 @@ public class ThreadsFragment extends Fragment implements
 
     }
 
-    private void updateDirectory(long thread) {
+    private void updateDirectory(long parent) {
         try {
-            topLevel.set(thread == 0L);
 
             LiveData<List<Thread>> obs = observer.get();
             if (obs != null) {
                 obs.removeObservers(this);
             }
 
-            LiveData<List<Thread>> liveData = threadViewModel.getThreadsByThread(thread);
+            LiveData<List<Thread>> liveData = threadViewModel.getChildrenThreads(parent);
             observer.set(liveData);
 
-            liveData.observe(getViewLifecycleOwner(), (threads) -> {
+            liveData.observe(this, (threads) -> {
 
                 if (threads != null) {
 
@@ -317,7 +312,7 @@ public class ThreadsFragment extends Fragment implements
     private void deleteAction() {
 
         final EVENTS events = EVENTS.getInstance(mContext);
-        if (!topLevel.get()) {
+        if (!mSelectionViewModel.isTopLevel()) {
             java.lang.Thread thread = new java.lang.Thread(() -> events.invokeEvent(
                     EVENTS.WARNING,
                     getString(R.string.deleting_files_within_directory_not_supported)));
@@ -370,7 +365,7 @@ public class ThreadsFragment extends Fragment implements
 
             ThreadActionDialogFragment.newInstance(
                     thread.getIdx(), true, true,
-                    topLevel.get(), true, sendActive,
+                    mSelectionViewModel.isTopLevel(), true, sendActive,
                     true, true, thread.isPinned())
                     .show(getChildFragmentManager(), ThreadActionDialogFragment.TAG);
 
@@ -473,7 +468,7 @@ public class ThreadsFragment extends Fragment implements
             if (!mSelectionTracker.hasSelection()) {
                 long threadIdx = thread.getIdx();
 
-                final EVENTS events = EVENTS.getInstance(mContext);
+
                 final THREADS threads = THREADS.getInstance(mContext);
 
                 ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -486,7 +481,7 @@ public class ThreadsFragment extends Fragment implements
                             mHandler.post(() -> clickThreadPlay(threadIdx));
                         }
                     } catch (Throwable e) {
-                        events.exception(e);
+                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
                     }
                 });
             }

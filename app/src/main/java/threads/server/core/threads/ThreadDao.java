@@ -153,8 +153,8 @@ public interface ThreadDao {
     @TypeConverters({Converter.class})
     List<Thread> getThreadsBySenderPid(PID senderPid);
 
-    @Query("SELECT * FROM Thread WHERE parent =:thread")
-    LiveData<List<Thread>> getLiveDataThreadsByThread(long thread);
+    @Query("SELECT * FROM Thread WHERE parent =:parent")
+    LiveData<List<Thread>> getLiveDataChildren(long parent);
 
     @Query("UPDATE Thread SET number = number + 1  WHERE idx IN(:idxs)")
     void incrementNumber(long... idxs);

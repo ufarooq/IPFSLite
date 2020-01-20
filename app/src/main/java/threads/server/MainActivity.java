@@ -28,6 +28,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager.widget.ViewPager;
 
@@ -762,10 +763,20 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         Service.getInstance(getApplicationContext());
 
-        mSelectionViewModel = new ViewModelProvider(this).get(SelectionViewModel.class);
-
-
         mMainFab = findViewById(R.id.fab_main);
+        mSelectionViewModel = new ViewModelProvider(this).get(
+                SelectionViewModel.class);
+
+        final Observer<Long> parentObserver = (threadIdx) -> {
+
+            if (mNavigation != null) {
+                redrawFab(mNavigation.getSelectedItemId());
+            }
+
+        };
+        mSelectionViewModel.getParentThread().observe(this, parentObserver);
+
+
         mCustomViewPager = findViewById(R.id.customViewPager);
         PagerAdapter adapter = new PagerAdapter(getSupportFragmentManager(), 3);
         mCustomViewPager.setAdapter(adapter);
@@ -788,26 +799,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 mNavigation.getMenu().getItem(position).setChecked(true);
                 mAppBarLayout.setExpanded(true, false);
                 prevMenuItem = mNavigation.getMenu().getItem(position);
+                redrawFab(prevMenuItem.getItemId());
                 switch (prevMenuItem.getItemId()) {
                     case R.id.navigation_files:
                         mToolbar.setSubtitle(R.string.files);
-                        mMainFab.setImageResource(R.drawable.plus_thick);
-                        mMainFab.setBackgroundTintList(
-                                ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
-
                         break;
                     case R.id.navigation_peers:
                         mToolbar.setSubtitle(R.string.peers);
-                        mMainFab.setImageResource(R.drawable.account_plus);
-                        mMainFab.setBackgroundTintList(
-                                ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
-
                         break;
                     case R.id.navigation_swarm:
                         mToolbar.setSubtitle(R.string.swarm);
-                        mMainFab.setImageResource(R.drawable.traffic_light);
-                        mMainFab.setBackgroundTintList(
-                                ContextCompat.getColorStateList(getApplicationContext(), mTrafficColorId));
                         break;
                 }
             }
@@ -822,30 +823,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mNavigation.refreshDrawableState();
         mNavigation.setOnNavigationItemSelectedListener((item) -> {
             mAppBarLayout.setExpanded(true, false);
+            redrawFab(item.getItemId());
             switch (item.getItemId()) {
                 case R.id.navigation_files:
                     mCustomViewPager.setCurrentItem(0);
                     mToolbar.setSubtitle(R.string.files);
-                    mMainFab.setImageResource(R.drawable.plus_thick);
-                    mMainFab.setBackgroundTintList(
-                            ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
-
                     return true;
                 case R.id.navigation_peers:
                     mCustomViewPager.setCurrentItem(1);
                     mToolbar.setSubtitle(R.string.peers);
-                    mMainFab.setImageResource(R.drawable.account_plus);
-                    mMainFab.setBackgroundTintList(
-                            ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
-
                     return true;
                 case R.id.navigation_swarm:
                     mCustomViewPager.setCurrentItem(2);
                     mToolbar.setSubtitle(R.string.swarm);
-                    mMainFab.setImageResource(R.drawable.traffic_light);
-                    mMainFab.setBackgroundTintList(
-                            ContextCompat.getColorStateList(getApplicationContext(), mTrafficColorId));
-
                     return true;
             }
             return false;
@@ -993,6 +983,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         return true;
     }
 
+    private void redrawFab(int id) {
+        switch (id) {
+            case R.id.navigation_files:
+                if (mSelectionViewModel.isTopLevel()) {
+                    mMainFab.setImageResource(R.drawable.plus_thick);
+                } else {
+                    mMainFab.setImageResource(R.drawable.arrow_left_bold);
+                }
+
+                mMainFab.setBackgroundTintList(
+                        ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
+
+                break;
+            case R.id.navigation_peers:
+                mMainFab.setImageResource(R.drawable.account_plus);
+                mMainFab.setBackgroundTintList(
+                        ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
+                break;
+            case R.id.navigation_swarm:
+                mMainFab.setImageResource(R.drawable.traffic_light);
+                mMainFab.setBackgroundTintList(
+                        ContextCompat.getColorStateList(getApplicationContext(), mTrafficColorId));
+                break;
+        }
+    }
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
@@ -1029,16 +1044,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     private void threadsFabAction() {
-        Long idx = mSelectionViewModel.getParentThread().getValue();
-        checkNotNull(idx);
-        if (idx == 0L) {
+
+        if (mSelectionViewModel.isTopLevel()) {
 
             ThreadsDialogFragment.newInstance()
                     .show(getSupportFragmentManager(), ThreadsDialogFragment.TAG);
 
 
         } else {
-
+            Long idx = mSelectionViewModel.getParentThread().getValue();
+            checkNotNull(idx);
             final THREADS threads = THREADS.getInstance(getApplicationContext());
             final EVENTS events = EVENTS.getInstance(getApplicationContext());
             ExecutorService executor = Executors.newSingleThreadExecutor();

@@ -6,13 +6,11 @@ import androidx.lifecycle.ViewModel;
 
 public class SelectionViewModel extends ViewModel {
 
-    private MutableLiveData<Long> parentThread;
+    @NonNull
+    private MutableLiveData<Long> parentThread = new MutableLiveData<>(0L);
 
     @NonNull
     public MutableLiveData<Long> getParentThread() {
-        if (parentThread == null) {
-            parentThread = new MutableLiveData<>(0L);
-        }
         return parentThread;
     }
 
@@ -20,5 +18,12 @@ public class SelectionViewModel extends ViewModel {
         getParentThread().postValue(idx);
     }
 
+    public boolean isTopLevel() {
+        Long value = getParentThread().getValue();
+        if (value != null) {
+            return value == 0L;
+        }
+        return true;
+    }
 
 }

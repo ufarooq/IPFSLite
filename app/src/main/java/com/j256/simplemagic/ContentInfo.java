@@ -1,5 +1,7 @@
 package com.j256.simplemagic;
 
+import androidx.annotation.Nullable;
+
 import java.io.Serializable;
 
 /**
@@ -61,7 +63,7 @@ public class ContentInfo implements Serializable {
     /**
      * Returns the mime-type or null if none.
      */
-
+    @Nullable
     public String getMimeType() {
         return mimeType;
     }

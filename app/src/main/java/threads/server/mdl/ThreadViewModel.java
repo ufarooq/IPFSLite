@@ -23,7 +23,11 @@ public class ThreadViewModel extends AndroidViewModel {
     }
 
 
-    public LiveData<List<Thread>> getThreadsByThread(long thread) {
-        return threadsDatabase.threadDao().getLiveDataThreadsByThread(thread);
+    public LiveData<List<Thread>> getChildrenThreads(long thread) {
+        return threadsDatabase.threadDao().getLiveDataChildren(thread);
+    }
+
+    public LiveData<List<Thread>> getThreads() {
+        return threadsDatabase.threadDao().getLiveDataThreads();
     }
 }

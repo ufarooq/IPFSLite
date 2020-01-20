@@ -346,11 +346,10 @@ public class ThumbnailService {
             ContentInfo contentInfo = ipfs.getContentInfo(file);
             if (contentInfo != null) {
                 mimeType = contentInfo.getMimeType();
-
-                bitmap = getPreview(context, file, mimeType);
-
+                if (mimeType != null) {
+                    bitmap = getPreview(context, file, mimeType);
+                }
             }
-
         }
 
 

@@ -557,7 +557,8 @@ public class Service {
         }
     }
 
-    public static void sendReceiveMessage(@NonNull Context context, @NonNull String topic) {
+    public static void sendReceiveMessage(@NonNull Context context,
+                                          @NonNull String topic) {
         checkNotNull(context);
         checkNotNull(topic);
         Gson gson = new Gson();
@@ -846,7 +847,6 @@ public class Service {
 
 
         final THREADS threads = THREADS.getInstance(context);
-        final PEERS peers = PEERS.getInstance(context);
 
         Thread thread = threads.createThread(sender, alias,
                 Status.INIT, Kind.OUT, parent);
@@ -1158,7 +1158,6 @@ public class Service {
         executor.submit(() -> {
             try {
                 IPFS ipfs = IPFS.getInstance(context);
-
 
                 while (ipfs.isDaemonRunning()) {
                     java.lang.Thread.sleep(TimeUnit.SECONDS.toMillis(30));
