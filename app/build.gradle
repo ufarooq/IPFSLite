@@ -123,7 +123,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.6'
 
     // UI Graphics (LICENSE done)
-    implementation 'com.github.bumptech.glide:glide:4.10.0'
+    implementation 'com.github.bumptech.glide:glide:4.11.0'
 
     // API (LICENSE done)
     implementation 'commons-codec:commons-codec:1.12'

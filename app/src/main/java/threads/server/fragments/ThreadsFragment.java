@@ -384,6 +384,10 @@ public class ThreadsFragment extends Fragment implements
                 boolean active = Service.isSendNotificationsEnabled(mContext);
                 action_send.setVisible(active);
 
+                MenuItem action_delete = menu.findItem(R.id.action_mode_delete);
+                active = mSelectionViewModel.isTopLevel();
+                action_delete.setVisible(active);
+
                 mListener.showBottomNavigation(false);
                 mListener.setPagingEnabled(false);
                 mListener.showMainFab(false);
@@ -394,6 +398,8 @@ public class ThreadsFragment extends Fragment implements
 
             @Override
             public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+
+
                 return true;
             }
 
