@@ -117,6 +117,9 @@ dependencies {
     implementation 'threads.mobile:ipfs:0.4.1'
 
     // API (LICENSE done)
+    implementation 'threads.core:ipfs:0.4.6'
+
+    // API (LICENSE done)
     implementation 'com.google.code.gson:gson:2.8.6'
 
     // UI Graphics (LICENSE done)
@@ -129,14 +132,6 @@ dependencies {
 
     annotationProcessor 'androidx.room:room-compiler:2.2.3'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
-
-
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-    androidTestImplementation 'androidx.test:runner:1.2.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-    androidTestImplementation 'org.apache.commons:commons-text:1.8'
-
-
 
 }
 

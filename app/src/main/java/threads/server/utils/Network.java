@@ -8,16 +8,13 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -26,29 +23,6 @@ public class Network {
     // H+ HSPA+	21Mbit/s	4Mbit/s (3G)
     private static final int MIN_NETWORK_BANDWIDTH_KBPS = 4000;
 
-    public static int nextFreePort() {
-        return nextFreePort(4001, 65535);
-    }
-
-    public static int nextFreePort(int from, int to) {
-        int port = ThreadLocalRandom.current().nextInt(from, to);
-        while (true) {
-            if (isLocalPortFree(port)) {
-                return port;
-            } else {
-                port = ThreadLocalRandom.current().nextInt(from, to);
-            }
-        }
-    }
-
-    public static boolean isLocalPortFree(int port) {
-        try {
-            new ServerSocket(port).close();
-            return true;
-        } catch (IOException e) {
-            return false;
-        }
-    }
 
     private static boolean isIPv6(@NonNull String ma) {
         checkNotNull(ma);
@@ -143,7 +117,7 @@ public class Network {
     }
 
     @NonNull
-    public static List<InetAddress> getValidInetAddresses() throws Exception {
+    private static List<InetAddress> getValidInetAddresses() throws Exception {
         List<InetAddress> result = new ArrayList<>();
 
         List<NetworkInterface> interfaces =
