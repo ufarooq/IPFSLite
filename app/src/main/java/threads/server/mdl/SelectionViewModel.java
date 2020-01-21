@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel;
 public class SelectionViewModel extends ViewModel {
 
     @NonNull
-    private MutableLiveData<Long> parentThread = new MutableLiveData<>(0L);
+    private final MutableLiveData<Long> parentThread = new MutableLiveData<>(0L);
 
     @NonNull
     public MutableLiveData<Long> getParentThread() {

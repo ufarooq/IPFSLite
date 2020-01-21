@@ -8,7 +8,7 @@ import androidx.room.Room;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class EVENTS extends EventsAPI {
-    public static final String TAG = EVENTS.class.getSimpleName();
+
     public static final String DAEMON = "DAEMON";
     public static final String ERROR = "ERROR";
     public static final String WARNING = "WARNING";
@@ -65,13 +65,13 @@ public class EVENTS extends EventsAPI {
     public static class Builder {
         EventsDatabase eventsDatabase = null;
 
-        public EVENTS build() {
+        EVENTS build() {
             checkNotNull(eventsDatabase);
 
             return new EVENTS(this);
         }
 
-        public Builder eventsDatabase(@NonNull EventsDatabase eventsDatabase) {
+        Builder eventsDatabase(@NonNull EventsDatabase eventsDatabase) {
             checkNotNull(eventsDatabase);
             this.eventsDatabase = eventsDatabase;
             return this;

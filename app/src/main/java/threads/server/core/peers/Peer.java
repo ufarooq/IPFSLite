@@ -57,7 +57,7 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
         this.connected = false;
     }
 
-    public static Peer createPeer(@NonNull PID pid, @NonNull String multiAddress) {
+    static Peer createPeer(@NonNull PID pid, @NonNull String multiAddress) {
         checkNotNull(pid);
         checkNotNull(multiAddress);
         return new Peer(pid.getPid(), multiAddress);
@@ -112,7 +112,7 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
         isAutonat = autonat;
     }
 
-    public int getRating() {
+    int getRating() {
         return rating;
     }
 
@@ -129,6 +129,7 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
     }
 
     @Override
+    @NonNull
     public String toString() {
         return "Peer{" +
                 "pid='" + pid + '\'' +
@@ -174,6 +175,7 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
     }
 
     @Override
+    @NonNull
     public PID getPID() {
         return PID.create(getPid());
     }
@@ -197,21 +199,5 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
                 Objects.equals(image, peer.getImage());
     }
 
-    @Override
-    public boolean areItemsTheSame(@NonNull IPeer peer) {
-        checkNotNull(peer);
-        if (peer instanceof Peer) {
-            return this.areItemsTheSame((Peer) peer);
-        }
-        return false;
-    }
 
-    @Override
-    public boolean sameContent(@NonNull IPeer peer) {
-        checkNotNull(peer);
-        if (peer instanceof Peer) {
-            return sameContent((Peer) peer);
-        }
-        return false;
-    }
 }

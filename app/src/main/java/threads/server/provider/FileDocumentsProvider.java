@@ -349,8 +349,9 @@ public class FileDocumentsProvider extends DocumentsProvider {
         return null;
     }
 
-    private File getContentFile(@NonNull CID cid) throws IOException {
-
+    @NonNull
+    private File getContentFile(@NonNull CID cid) {
+        checkNotNull(cid);
         File file = new File(ipfs.getCacheDir(), cid.getCid());
         if (!file.exists()) {
             ipfs.storeToFile(file, cid);

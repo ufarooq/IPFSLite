@@ -14,9 +14,9 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class Basis {
     @NonNull
-    @TypeConverters(Additionals.class)
-    @ColumnInfo(name = "additionals")
-    private Additionals additionals = new Additionals();
+    @TypeConverters(Additions.class)
+    @ColumnInfo(name = "additions")
+    private Additions additions = new Additions();
 
     @Nullable
     @ColumnInfo(name = "hash")
@@ -25,7 +25,7 @@ public class Basis {
     @ColumnInfo(name = "timestamp")
     private long timestamp;
 
-    public Basis() {
+    Basis() {
         this.timestamp = System.currentTimeMillis();
     }
 
@@ -47,37 +47,33 @@ public class Basis {
     }
 
 
-    public boolean hasHash() {
-        return hash != null;
-    }
-
     @NonNull
-    public Additionals getAdditionals() {
-        return additionals;
+    public Additions getAdditions() {
+        return additions;
     }
 
-    public void setAdditionals(@NonNull Additionals additionals) {
-        checkNotNull(additionals);
-        this.additionals = additionals;
+    public void setAdditions(@NonNull Additions additions) {
+        checkNotNull(additions);
+        this.additions = additions;
     }
 
-    public void removeAdditionals() {
-        this.additionals.clear();
+    public void removeAdditions() {
+        this.additions.clear();
     }
 
     public void addAdditional(@NonNull String key, @NonNull String value, @NonNull Boolean internal) {
         checkNotNull(key);
         checkNotNull(value);
         checkNotNull(internal);
-        this.additionals.put(key, Additional.createAdditional(value, internal));
+        this.additions.put(key, Additional.createAdditional(value, internal));
     }
 
 
     @Nullable
-    public Additional getAdditional(@NonNull String key) {
+    Additional getAdditional(@NonNull String key) {
         checkNotNull(key);
 
-        return this.additionals.get(key);
+        return this.additions.get(key);
 
     }
 
@@ -85,23 +81,23 @@ public class Basis {
     public String getAdditionalValue(@NonNull String key) {
         checkNotNull(key);
 
-        Additional additional = this.additionals.get(key);
+        Additional additional = this.additions.get(key);
         if (additional != null) {
             return additional.getValue();
         }
         return "";
     }
 
-    public boolean hasAdditional(@NonNull String key) {
+    boolean hasAdditional(@NonNull String key) {
         checkNotNull(key);
 
-        return this.additionals.get(key) != null;
+        return this.additions.get(key) != null;
 
     }
 
     public void removeAdditional(@NonNull String key) {
         checkNotNull(key);
-        this.additionals.remove(key);
+        this.additions.remove(key);
     }
 
     @NonNull
@@ -109,7 +105,7 @@ public class Basis {
 
         HashMap<String, String> hashMap = new HashMap<>();
 
-        for (Map.Entry<String, Additional> entry : additionals.entrySet()) {
+        for (Map.Entry<String, Additional> entry : additions.entrySet()) {
             Additional additional = entry.getValue();
             if (!additional.getInternal()) {
                 hashMap.put(entry.getKey(), additional.getValue());
@@ -122,7 +118,7 @@ public class Basis {
     void setExternalAdditions(@NonNull Map<String, String> hashMap) {
         checkNotNull(hashMap);
         for (Map.Entry<String, String> entry : hashMap.entrySet()) {
-            this.additionals.put(entry.getKey(),
+            this.additions.put(entry.getKey(),
                     Additional.createAdditional(entry.getValue(), false));
         }
     }

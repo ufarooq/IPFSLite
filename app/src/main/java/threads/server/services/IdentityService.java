@@ -17,7 +17,7 @@ import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.ipfs.PeerInfo;
 import threads.server.core.peers.Additional;
-import threads.server.core.peers.Additionals;
+import threads.server.core.peers.Additions;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.Peer;
 import threads.server.core.peers.User;
@@ -28,7 +28,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class IdentityService {
 
-    public static final String TAG = IdentityService.class.getSimpleName();
+    private static final String TAG = IdentityService.class.getSimpleName();
 
     @Nullable
     public static ResultInfo publishIdentity(@NonNull Context context,
@@ -151,9 +151,9 @@ public class IdentityService {
             boolean update = false;
             User user = peers.getUserByPID(pid);
             if (user != null) {
-                Additionals additionals = peerInfo.getAdditionals();
-                for (String key : additionals.keySet()) {
-                    Additional additional = additionals.get(key);
+                Additions additions = peerInfo.getAdditions();
+                for (String key : additions.keySet()) {
+                    Additional additional = additions.get(key);
                     checkNotNull(additional);
                     String value = additional.getValue();
                     user.addAdditional(key, value, true);
@@ -203,7 +203,7 @@ public class IdentityService {
         }
 
 
-        peerInfo.removeAdditionals();
+        peerInfo.removeAdditions();
         for (Map.Entry<String, String> entry : params.entrySet()) {
             peerInfo.addAdditional(entry.getKey(), entry.getValue(), false);
         }

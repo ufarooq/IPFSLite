@@ -41,10 +41,8 @@ public interface PeerDao {
     @Query("SELECT * FROM Peer WHERE isPubsub = 1")
     List<Peer> getPubsubPeers();
 
-
     @Query("SELECT * FROM Peer")
     LiveData<List<Peer>> getLiveDataPeers();
-
 
     @Query("SELECT COUNT(pid) FROM Peer WHERE image =:cid")
     @TypeConverters({Converter.class})

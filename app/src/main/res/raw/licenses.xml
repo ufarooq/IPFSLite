@@ -2,13 +2,6 @@
 <notices>
 
     <notice>
-        <name>WebRTC</name>
-        <url>https://code.immersaview.com/remotes/webrtc</url>
-        <copyright />
-        <license>BSD 3-Clause License</license>
-    </notice>
-
-    <notice>
         <name>Android Support Library</name>
         <url>http://developer.android.com/tools/support-library/index.html</url>
         <copyright>Copyright (C) 2013 The Android Open Source Project</copyright>
@@ -91,13 +84,6 @@
         <url>https://github.com/ipfs/go-ipfs</url>
         <copyright />
         <license>MIT License</license>
-    </notice>
-
-    <notice>
-        <name>threads-ipfs</name>
-        <url>https://gitlab.com/remmer.wilts/threads-ipfs</url>
-        <copyright />
-        <license>Apache Software License 2.0</license>
     </notice>
 
     <notice>

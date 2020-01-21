@@ -282,8 +282,8 @@ public class PeersAPI {
         checkNotNull(newer);
         checkNotNull(older);
         boolean doUpdate = false;
-        Additionals additionals = older.getAdditionals();
-        for (String key : additionals.keySet()) {
+        Additions additions = older.getAdditions();
+        for (String key : additions.keySet()) {
             if (!newer.hasAdditional(key)) {
                 Additional additional = older.getAdditional(key);
                 checkNotNull(additional);

@@ -85,6 +85,7 @@ public class PeerInfo extends Basis {
         return this.addresses.size();
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean hasAddress(@NonNull PID pid) {
         return this.addresses.containsKey(pid.getPid());
     }
@@ -101,6 +102,7 @@ public class PeerInfo extends Basis {
     }
 
     @Override
+    @NonNull
     public String toString() {
         return "PeerInfo{" +
                 "pid='" + pid + '\'' +

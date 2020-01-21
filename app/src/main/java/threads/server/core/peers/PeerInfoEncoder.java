@@ -27,7 +27,7 @@ public class PeerInfoEncoder {
 
             HashMap<String, String> additions = peer.getExternalAdditions();
             checkNotNull(additions);
-            content.put(Content.ADDS, Additionals.toString(additions));
+            content.put(Content.ADDS, Additions.toString(additions));
 
             // NOT ENCRYPTED
             content.put(Content.DATE, String.valueOf(peer.getTimestamp()));

@@ -135,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private SelectionViewModel mSelectionViewModel;
     private int mTrafficColorId = android.R.color.holo_red_dark;
     private Toolbar mToolbar;
-    private AtomicBoolean mStartDaemon = new AtomicBoolean(false);
+    private final AtomicBoolean mStartDaemon = new AtomicBoolean(false);
 
     @Override
     public void onRequestPermissionsResult

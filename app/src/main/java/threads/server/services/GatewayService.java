@@ -105,7 +105,6 @@ public class GatewayService {
         final IPFS ipfs = IPFS.getInstance(context);
 
 
-        if (ipfs != null) {
 
             List<threads.ipfs.Peer> peers = ipfs.swarmPeers();
 
@@ -141,7 +140,7 @@ public class GatewayService {
                 }
             }
 
-        }
+
 
         return result;
     }
@@ -160,8 +159,6 @@ public class GatewayService {
 
         final IPFS ipfs = IPFS.getInstance(context);
 
-
-        if (ipfs != null) {
 
             List<threads.ipfs.Peer> peers = ipfs.swarmPeers();
 
@@ -182,7 +179,7 @@ public class GatewayService {
                     connected.add(storePeer(context, peer));
                 }
             }
-        }
+
         return connected;
     }
 
@@ -208,28 +205,28 @@ public class GatewayService {
         try {
             int timeout = 5;
             IPFS ipfs = IPFS.getInstance(context);
-            if (ipfs != null) {
-                PeerInfo info = ipfs.id(peer, timeout);
+
+            PeerInfo info = ipfs.id(peer, timeout);
                 if (info != null) {
 
                     String protocol = info.getProtocolVersion();
                     String agent = info.getAgentVersion();
 
-                    if (protocol != null && protocol.equals("ipfs/0.1.0")) {
+                    if (protocol.equals("ipfs/0.1.0")) {
                         rating = rating + 100;
                     } else {
                         rating = rating - 100;
                     }
-                    if (agent != null) {
-                        if (agent.startsWith("go-ipfs/0.4.2")) {
+
+                    if (agent.startsWith("go-ipfs/0.4.2")) {
                             rating = rating + 100;
                         } else if (agent.startsWith("go-ipfs/0.5")) {
                             rating = rating + 150;
                         }
-                    }
+
                 }
                 isConnected = ipfs.isConnected(peer.getPid());
-            }
+
         } catch (Throwable e) {
             // ignore any exceptions here
         }

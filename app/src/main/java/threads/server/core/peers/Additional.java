@@ -16,7 +16,8 @@ public class Additional {
     }
 
     @NonNull
-    public static Additional createAdditional(@NonNull String value, @NonNull Boolean internal) {
+    static Additional createAdditional(@NonNull String value,
+                                       @NonNull Boolean internal) {
         checkNotNull(value);
         checkNotNull(internal);
         return new Additional(value, internal);

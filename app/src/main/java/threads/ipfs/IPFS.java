@@ -705,6 +705,7 @@ public class IPFS implements Listener {
         checkNotNull(peer);
         checkArgument(timeout > 0);
         AtomicBoolean success = new AtomicBoolean(false);
+        //noinspection CatchMayIgnoreException
         try {
             PID pid = PID.create("QmWATWQ7fVPP2EFGu71UkfnqhYXDYH566qy47CnJDgvs8u"); // DUMMY
 
@@ -773,7 +774,6 @@ public class IPFS implements Listener {
         checkNotNull(relay);
         checkNotNull(pid);
         checkArgument(timeout > 0);
-        boolean result = false;
 
         if (swarmConnect(relay, timeout)) {
             Peer peer = swarmPeer(relay);
@@ -782,7 +782,7 @@ public class IPFS implements Listener {
             }
         }
 
-        return result;
+        return false;
     }
 
     public boolean relay(@NonNull PID relay, @NonNull PID pid, int timeout) {

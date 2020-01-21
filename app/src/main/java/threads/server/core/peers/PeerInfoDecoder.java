@@ -64,7 +64,7 @@ public class PeerInfoDecoder {
             checkNotNull(additions);
 
             if (!additions.isEmpty()) {
-                HashMap<String, String> adds = Additionals.toHashMap(additions);
+                HashMap<String, String> adds = Additions.toHashMap(additions);
                 checkNotNull(adds);
                 peer.setExternalAdditions(adds);
             }

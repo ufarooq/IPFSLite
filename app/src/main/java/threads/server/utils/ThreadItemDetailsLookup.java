@@ -9,9 +9,10 @@ import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class ThreadItemDetailsLookup extends ItemDetailsLookup<Long> {
-    RecyclerView mRecyclerView;
+    @NonNull
+    private final RecyclerView mRecyclerView;
 
-    public ThreadItemDetailsLookup(RecyclerView recyclerView) {
+    public ThreadItemDetailsLookup(@NonNull RecyclerView recyclerView) {
         this.mRecyclerView = recyclerView;
     }
 

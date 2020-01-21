@@ -73,8 +73,8 @@ public class Multihash {
         return Arrays.copyOf(hash, hash.length);
     }
 
-    public void serialize(DataOutput dout) throws IOException {
-        dout.write(toBytes());
+    public void serialize(DataOutput out) throws IOException {
+        out.write(toBytes());
     }
 
     @Override

@@ -42,12 +42,8 @@ public class Content {
         return new Content(pid, cid.getCid(), System.currentTimeMillis(), finished);
     }
 
-    public boolean isFinished() {
+    boolean isFinished() {
         return finished;
-    }
-
-    public void setFinished(boolean finished) {
-        this.finished = finished;
     }
 
     @NonNull

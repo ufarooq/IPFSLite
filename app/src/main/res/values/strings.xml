@@ -116,10 +116,8 @@
     <string name="action_send">Send</string>
     <string name="dont_show_again">Don\'t show again</string>
     <string name="action_publish">Publish via a gateway</string>
-    <string name="action_call">Call</string>
 
 
-    <string name="action_video_call">Video Call</string>
     <string name="action_details">Details</string>
     <string name="action_auto_connect">Automatic connection during startup</string>
     <string name="action_peer_add">Add Peer</string>

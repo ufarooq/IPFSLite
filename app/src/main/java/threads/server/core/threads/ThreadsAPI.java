@@ -36,10 +36,6 @@ public class ThreadsAPI {
     }
 
 
-    public int getThreadsNumber() {
-        return getThreadsDatabase().threadDao().getThreadsNumber();
-    }
-
     public void setThreadStatus(long idx, @NonNull Status status) {
         checkNotNull(status);
         getThreadsDatabase().threadDao().setStatus(idx, status);

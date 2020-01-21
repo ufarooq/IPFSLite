@@ -154,10 +154,6 @@ public class User extends Basis implements IPeer {
         this.image = image;
     }
 
-    @NonNull
-    public String getSesKey() {
-        return "";
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -190,27 +186,13 @@ public class User extends Basis implements IPeer {
                 Objects.equals(publicKey, user.getPublicKey());
     }
 
+    @Override
+    @NonNull
     public PID getPID() {
         return PID.create(pid);
     }
 
-    @Override
-    public boolean areItemsTheSame(@NonNull IPeer peer) {
-        checkNotNull(peer);
-        if (peer instanceof User) {
-            return areItemsTheSame((User) peer);
-        }
-        return false;
-    }
 
-    @Override
-    public boolean sameContent(@NonNull IPeer peer) {
-        checkNotNull(peer);
-        if (peer instanceof User) {
-            return sameContent((User) peer);
-        }
-        return false;
-    }
 
     public boolean isValid() {
         return !publicKey.isEmpty();

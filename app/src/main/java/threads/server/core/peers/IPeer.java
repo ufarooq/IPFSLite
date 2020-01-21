@@ -11,10 +11,6 @@ public interface IPeer {
     @NonNull
     PID getPID();
 
-    boolean areItemsTheSame(@NonNull IPeer peer);
-
-    boolean sameContent(@NonNull IPeer peer);
-
     boolean isBlocked();
 
     @NonNull

@@ -11,7 +11,7 @@ public class EventsAPI {
 
     private final EventsDatabase eventsDatabase;
 
-    public EventsAPI(@NonNull EventsDatabase eventsDatabase) {
+    EventsAPI(@NonNull EventsDatabase eventsDatabase) {
         checkNotNull(eventsDatabase);
 
         this.eventsDatabase = eventsDatabase;
@@ -26,7 +26,7 @@ public class EventsAPI {
 
 
     @NonNull
-    public Event createEvent(@NonNull String identifier, @NonNull String content) {
+    Event createEvent(@NonNull String identifier, @NonNull String content) {
         checkNotNull(identifier);
         checkNotNull(content);
         return Event.createEvent(identifier, content);
@@ -60,7 +60,7 @@ public class EventsAPI {
         storeEvent(createEvent(identifier, content));
     }
 
-    public void storeEvent(@NonNull Event event) {
+    void storeEvent(@NonNull Event event) {
         checkNotNull(event);
         getEventsDatabase().eventDao().insertEvent(event);
     }

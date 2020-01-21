@@ -129,40 +129,39 @@ public class Peer implements Comparable<Peer> {
     }
 
     public boolean hasCircuitRelayProtocol() {
-        boolean result = false;
+
         for (Protocol protocol : streams) {
             if (protocol.isCircuitRelay()) {
                 return true;
             }
         }
 
-        return result;
+        return false;
     }
 
     public boolean hasFloodSubProtocol() {
-        boolean result = false;
+
         for (Protocol protocol : streams) {
             if (protocol.isFloodSub()) {
                 return true;
             }
         }
 
-        return result;
+        return false;
     }
 
     public boolean hasMeshSubProtocol() {
-        boolean result = false;
+
         for (Protocol protocol : streams) {
             if (protocol.isMeshSub()) {
                 return true;
             }
         }
 
-        return result;
+        return false;
     }
 
     public boolean hasAutonatProtocol() {
-        boolean result = false;
 
         for (Protocol protocol : streams) {
             if (protocol.isAutonat()) {
@@ -170,7 +169,7 @@ public class Peer implements Comparable<Peer> {
             }
         }
 
-        return result;
+        return false;
     }
 
     public int getDirection() {

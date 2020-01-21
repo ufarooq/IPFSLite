@@ -9,24 +9,24 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Hashtable;
 
-public class Additionals extends Hashtable<String, Additional> {
+public class Additions extends Hashtable<String, Additional> {
 
     @TypeConverter
-    public static Additionals toAdditionals(String data) {
+    public static Additions toAdditions(String data) {
         if (data == null) {
             return null;
         }
         Gson gson = new Gson();
-        return gson.fromJson(data, Additionals.class);
+        return gson.fromJson(data, Additions.class);
     }
 
     @TypeConverter
-    public static String toString(Additionals additionals) {
-        if (additionals == null) {
+    public static String toString(Additions additions) {
+        if (additions == null) {
             return null;
         }
         Gson gson = new Gson();
-        return gson.toJson(additionals);
+        return gson.toJson(additions);
     }
 
 
