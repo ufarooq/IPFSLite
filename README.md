@@ -42,17 +42,12 @@ in the later sections.
     <br>Therefore this temporary mechanism was develop to establish a connection between nodes,
     even when both nodes are behind NAT's.
     <br>Still even with this solution, the connection is not always succeeded. Just to keep that in mind.
-- WebRTC (https://webrtc.org/) 
-<br>The WebRTC component is required to establish a telephony functionality within
-this application. Consider this feature as a proof of concept (PoC). Communicating via WebRTC 
-requires, that communicating nodes must use all the **IPFS Lite** application,  
-because the integration is **not** IPFS "standard" (see Limitation)
 
 
 ### **IPFS Lite** versus **IPFS**
 This section describes the differences between an **IPFS Lite** node and an regular **IPFS** node.
 <br>
-Despite the enhancements of the **IPFS Lite** application (like IOTA and WebRTC)
+Despite the enhancements of the **IPFS Lite** application (like IOTA)
 there are some small differences between such node kinds.
 <br>
 In general an **IPFS Lite** has the same functionality like an regular node.
@@ -85,9 +80,7 @@ through a notification, where a node A sends a notification to node B.
   **PID**
 - The **Outbox** contains information of the **Peer Discovery** feature. This information can be
   evaluated by other nodes for faster node access.
-- Integration of WebRTC via the Pubsub feature of IPFS to support telephony between two nodes
- (In the future Pubsub will be replaced by a built-in IPFS signaling technology, hopefully)
- 
+
  
 Example Notification Content:
 ```
@@ -226,13 +219,6 @@ and your **IPFS Lite** node also have this properties and
 additionally you and your connecting peers are all the time online, it definitely makes
 sense to deactivate the options.
 
-### Limitation
-This section contains a set of current limitations.
-* WebRTC Integration
-In the current version of this application it is required that both communicating nodes using 
-this app to communicate successfully over WebRTC. In a later version of this tool an official 
-enhancement of the IPFS technology should be used.
-More information on https://github.com/libp2p/specs/pull/159
 
 
 
@@ -300,8 +286,6 @@ In this use case scenario, you have a "friend" peer to share data with.
 
 ### Todo's
 This section contains a set of current and future todo's.
-* Official WebRTC Integration of IPFS, when it is ready
-<br>More information on https://github.com/libp2p/specs/pull/159
 * Deactivate the temporary feature **Support Peer Discovery**, when IPFS finally can better handle
 nodes behind NAT's (IPFS feature Relay, RelayHop, AutoNat etc.)
 * Storing data on IOTA Tangle is sometimes very time expensive and in general IOTA is not yet
