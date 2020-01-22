@@ -125,7 +125,7 @@
     <string name="upload_channel_name">Upload Channel</string>
     <string name="upload_channel_description">Upload notifications during upload of files to IPFS</string>
     <string name="upload_failed">Upload failed for \"%1$s\"</string>
-    <string name="upload_content">Upload Content</string>
+    <string name="adding_content">Adding Content</string>
     <string name="peer_actions">Peer Actions</string>
     <string name="added_pid_to_peers">Added \"%1$s\" to your peers</string>
 </resources>

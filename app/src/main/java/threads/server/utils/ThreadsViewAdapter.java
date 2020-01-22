@@ -148,7 +148,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
             threadViewHolder.content_title.setText(title);
             if (thread.isPinned()) {
                 threadViewHolder.content_title.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                        R.drawable.text_pin_outline, 0, 0, 0);
+                        R.drawable.pin, 0, 0, 0);
                 threadViewHolder.content_title.setCompoundDrawablePadding(8);
             } else {
                 threadViewHolder.content_title.setCompoundDrawablesRelativeWithIntrinsicBounds(
