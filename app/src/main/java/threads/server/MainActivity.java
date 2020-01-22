@@ -195,7 +195,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         Uri uri = data.getData();
                         if (uri != null) {
                             IPFS ipfs = IPFS.getInstance(getApplicationContext());
-
+                            //ParcelFileDescriptor desc = getContentResolver().openFileDescriptor(
+                            //        uri, "w");
                             OutputStream os = getContentResolver().openOutputStream(uri);
                             if (os != null) {
                                 try {
@@ -596,6 +597,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             case R.id.nav_privacy_policy: {
                 try {
                     String url = "file:///android_res/raw/privacy_policy.html";
+
+                    if (Service.isNightNode(getApplicationContext())) {
+                        url = "file:///android_res/raw/privacy_policy_night.html";
+                    }
+
                     WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.URL, url)
                             .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
 
@@ -663,6 +669,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
                     String data = "<html><h2>Config</h2><pre>" + ipfs.config_show() + "</pre></html>";
+
+                    if (Service.isNightNode(getApplicationContext())) {
+                        data = "<html><head><style>body { background-color: black; color: white; }</style></head><h2>Config</h2><pre>" + ipfs.config_show() + "</pre></html>";
+                    }
+
                     WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.HTML, data)
                             .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
 
@@ -1081,8 +1092,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 GatewayService.PeerSummary info = GatewayService.evaluateAllPeers(getApplicationContext());
 
 
-                String html = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Quality</h3><ul>";
-
+                String html = "<html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Quality</h3><ul>";
+                if (Service.isNightNode(getApplicationContext())) {
+                    html = "<html><head><style>body {background-color: black; color: white;}</style></head><h3 style=\"text-align:center; color:teal;\">Quality</h3><ul>";
+                }
 
                 String numPeers = "Number Peers : " + info.getNumPeers();
                 html = html.concat("<li><div style=\"width: 80%;" +
@@ -1127,7 +1140,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         try {
             final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
             final IPFS ipfs = IPFS.getInstance(getApplicationContext());
-            final PEERS peers = PEERS.getInstance(getApplicationContext());
             final EVENTS events = EVENTS.getInstance(getApplicationContext());
             final PID host = IPFS.getPID(getApplicationContext());
             checkNotNull(host);
@@ -1136,8 +1148,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             executor.submit(() -> {
                 PID peer = PID.create(pid);
                 try {
-
-                    peers.setUserDialing(peer, true);
 
                     String protocolVersion = "n.a.";
                     String agentVersion = "n.a.";
@@ -1152,8 +1162,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         addresses = info.getMultiAddresses();
                     }
 
-                    String html = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?><html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
-
+                    String html = "<html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
+                    if (Service.isNightNode(getApplicationContext())) {
+                        html = "<html><head><style>body { background-color: black; color: white;}</style></head><body><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
+                    }
 
                     html = html.concat("<div style=\"width: 80%;" +
                             "  word-wrap:break-word;\">").concat(pid).concat("</div><br/>");
@@ -1178,8 +1190,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                             DetailsDialogFragment.TAG);
                 } catch (Throwable e) {
                     events.exception(e);
-                } finally {
-                    peers.setUserDialing(peer, false);
                 }
             });
 
@@ -1588,9 +1598,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 threadContent = thread.getContent();
 
-                Intent intent = ShareCompat.IntentBuilder.from(this)
-                        .setType(thread.getMimeType())
-                        .getIntent();
+                Intent intent = ShareCompat.IntentBuilder.from(this).getIntent();
+                intent.setType(thread.getMimeType());
                 intent.setAction(Intent.ACTION_CREATE_DOCUMENT);
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 intent.putExtra(Intent.EXTRA_TITLE, thread.getName());

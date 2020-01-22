@@ -107,7 +107,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
             boolean valid = user.isValid();
 
             UserActionDialogFragment.newInstance(
-                    user.getPID().getPid(), true, true, true,
+                    user.getPID().getPid(), true, user.isConnected(), true,
                     valid, user.isAutoConnect(), true, true, user.isBlocked(),
                     true)
                     .show(getChildFragmentManager(), UserActionDialogFragment.TAG);

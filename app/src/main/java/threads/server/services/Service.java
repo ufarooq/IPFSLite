@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.provider.DocumentsContract;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
@@ -224,7 +225,7 @@ public class Service {
                     long time = System.currentTimeMillis();
 
                     INSTANCE = new Service();
-                    INSTANCE.startDaemon(context);
+                    INSTANCE.attachHandler(context);
                     Log.e(TAG, "Time Daemon : " + (System.currentTimeMillis() - time));
                     INSTANCE.init(context);
                 }
@@ -1420,7 +1421,21 @@ public class Service {
 
     }
 
-    private void startDaemon(@NonNull Context context) {
+    public static boolean isNightNode(@NonNull Context context) {
+        int nightModeFlags =
+                context.getResources().getConfiguration().uiMode &
+                        Configuration.UI_MODE_NIGHT_MASK;
+        switch (nightModeFlags) {
+            case Configuration.UI_MODE_NIGHT_YES:
+                return true;
+            case Configuration.UI_MODE_NIGHT_UNDEFINED:
+            case Configuration.UI_MODE_NIGHT_NO:
+                return false;
+        }
+        return false;
+    }
+
+    private void attachHandler(@NonNull Context context) {
         checkNotNull(context);
         try {
 

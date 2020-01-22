@@ -365,7 +365,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
         byte[] bytes = stream.toByteArray();
         bitmap.recycle();
-        File file = new File(ipfs.getCacheDir(), hash);
+        File file = new File(ipfs.getCacheDir(), "pic" + hash + ".png");
         if (!file.exists()) {
             FileUtils.writeByteArrayToFile(file, bytes);
         }

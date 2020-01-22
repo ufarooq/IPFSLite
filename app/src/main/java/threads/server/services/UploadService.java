@@ -228,7 +228,6 @@ public class UploadService extends Service {
     public Bitmap getBitmapThumbnail(@NonNull Uri uri) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             try {
-                // todo check if this requires a READ PERMISSION
                 return getContentResolver().loadThumbnail(
                         uri, new Size(144, 144), null);
 

@@ -2,7 +2,6 @@ package threads.server.utils;
 
 import android.content.Context;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,12 +36,6 @@ public class UsersViewAdapter extends RecyclerView.Adapter<UsersViewAdapter.View
         timeout = Preferences.getConnectionTimeout(context);
         this.context = context;
         this.listener = listener;
-    }
-
-    private static int getThemeTextColor(final Context context) {
-        final TypedValue value = new TypedValue();
-        context.getTheme().resolveAttribute(android.R.attr.textColorSecondary, value, true);
-        return value.data;
     }
 
     @Override
@@ -158,13 +151,9 @@ public class UsersViewAdapter extends RecyclerView.Adapter<UsersViewAdapter.View
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        // each data item is just a string in this case
-        final View view;
 
         ViewHolder(View v) {
             super(v);
-            view = v;
-
         }
     }
 
