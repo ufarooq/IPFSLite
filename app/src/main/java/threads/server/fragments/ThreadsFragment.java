@@ -362,11 +362,12 @@ public class ThreadsFragment extends Fragment implements
             mLastClickTime = SystemClock.elapsedRealtime();
 
             boolean sendActive = Service.isSendNotificationsEnabled(mContext);
+            boolean copyActive = !thread.isDir();
 
             ThreadActionDialogFragment.newInstance(
                     thread.getIdx(), true, true,
                     mSelectionViewModel.isTopLevel(), true, sendActive,
-                    true, true, thread.isPinned())
+                    copyActive, true, thread.isPinned())
                     .show(getChildFragmentManager(), ThreadActionDialogFragment.TAG);
 
         } catch (Throwable e) {
