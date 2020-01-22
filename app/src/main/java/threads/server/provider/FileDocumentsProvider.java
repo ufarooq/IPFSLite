@@ -118,7 +118,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         String rootDocumentId = "0";
         MatrixCursor.RowBuilder row = result.newRow();
         row.add(DocumentsContract.Root.COLUMN_ROOT_ID, rootId);
-        row.add(DocumentsContract.Root.COLUMN_ICON, R.mipmap.ic_launcher);
+        row.add(DocumentsContract.Root.COLUMN_ICON, R.drawable.app_icon);
         row.add(DocumentsContract.Root.COLUMN_TITLE, appName);
         row.add(DocumentsContract.Root.COLUMN_FLAGS,
                 DocumentsContract.Root.FLAG_LOCAL_ONLY |

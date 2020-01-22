@@ -3,6 +3,6 @@
     <item android:drawable="@color/colorBackground" />
 
     <item
-        android:drawable="@drawable/threads_server_icon"
+        android:drawable="@drawable/app_splash"
         android:gravity="center" />
 </layer-list>
