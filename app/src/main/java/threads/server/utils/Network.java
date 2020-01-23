@@ -20,7 +20,6 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class Network {
 
-    // H+ HSPA+	21Mbit/s	4Mbit/s (3G)
     private static final int MIN_NETWORK_BANDWIDTH_KBPS = 4000;
 
 
@@ -124,8 +123,8 @@ public class Network {
                 Collections.list(NetworkInterface.getNetworkInterfaces());
         for (NetworkInterface networkInterface : interfaces) {
             if (networkInterface.isUp()) {
-                List<InetAddress> addrs = Collections.list(networkInterface.getInetAddresses());
-                for (InetAddress address : addrs) {
+                List<InetAddress> addresses = Collections.list(networkInterface.getInetAddresses());
+                for (InetAddress address : addresses) {
                     if (!address.isLoopbackAddress()) {
                         if (address instanceof Inet4Address) {
                             if (isValidPublicIP(address)) {
@@ -155,27 +154,27 @@ public class Network {
         Pair<InetAddress, Boolean> result = null;
 
 
-        for (InetAddress addr : addresses) {
-            if (!addr.isLoopbackAddress()) {
+        for (InetAddress addresse : addresses) {
+            if (!addresse.isLoopbackAddress()) {
                 if (useIPv4) {
-                    if (addr instanceof Inet4Address) {
-                        if (isValidPublicIP(addr)) {
-                            return Pair.create(addr, true);
+                    if (addresse instanceof Inet4Address) {
+                        if (isValidPublicIP(addresse)) {
+                            return Pair.create(addresse, true);
                         } else {
-                            return Pair.create(addr, false);
+                            return Pair.create(addresse, false);
                         }
                     }
                 } else {
-                    if (addr instanceof Inet6Address) {
-                        if (isValidPublicIP(addr)) {
-                            if (isIPv6GlobalAddress((Inet6Address) addr)) {
-                                return Pair.create(addr, true);
+                    if (addresse instanceof Inet6Address) {
+                        if (isValidPublicIP(addresse)) {
+                            if (isIPv6GlobalAddress((Inet6Address) addresse)) {
+                                return Pair.create(addresse, true);
                             } else {
-                                result = Pair.create(addr, false);
+                                result = Pair.create(addresse, false);
                             }
                         } else {
                             if (result == null) {
-                                result = Pair.create(addr, false);
+                                result = Pair.create(addresse, false);
                             }
                         }
                     }

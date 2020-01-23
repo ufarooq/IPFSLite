@@ -212,7 +212,7 @@ When the three options **Support Sending Notifications**,
  **Support Receiving Notifications** and **Support Peer Discovery**
 are turned off, the **IPFS Lite** application behaves more like a regular IPFS node.
 Switching off might have a positive effect on the overall energy consumption. 
-Downside is that the **Send Data** feature is dprobalisticeactivated and the peer discovery 
+Downside is that the **Send Data** feature will work and the peer discovery 
 might not be working for peers behind NATs.
 For sure is, when you just connecting to nodes which have static public IP addresses
 and your **IPFS Lite** node also have this properties and 
@@ -270,7 +270,7 @@ In this use case scenario, some optimizations can be made.
      **Support Peer Discovery**) otherwise deactivate the options
     - When you have a public static IP address, and be nice to other peers, 
     activate **Enable Auto NAT Service** and **Enable Relay Hop**. The option **Enable Auto Relay** can
-    be deativated in this case.
+    be deactivated in this case.
     
 * Running the app to communicate with other "IPFS Lite" nodes
 Assumption is here, that you would like to communicate with other "IPFS Lite" nodes, to share
@@ -291,7 +291,7 @@ nodes behind NAT's (IPFS feature Relay, RelayHop, AutoNat etc.)
 * Storing data on IOTA Tangle is sometimes very time expensive and in general IOTA is not yet
 fully decentralized (Hope for a better version and better access to IOTA gateways)
 * Sometimes connection are not valid, thought they appear to be online, they are actually offline
-(Hope for a better IPFS core API, maybe IPFS eventbus seems to be a solution)
+(Hope for a better IPFS core API, maybe IPFS an event-bus seems to be a solution)
 * In the current implementation when an **IPFS Lite** node sends data to another **IPFS Lite** node,
 the download is triggered automatically. Even when the user is connected over a mobile connection.
 That might not be wished, can be somehow expensive for the receiving node.
