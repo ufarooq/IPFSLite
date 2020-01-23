@@ -105,41 +105,39 @@ public class GatewayService {
         final IPFS ipfs = IPFS.getInstance(context);
 
 
+        List<threads.ipfs.Peer> peers = ipfs.swarmPeers();
 
-            List<threads.ipfs.Peer> peers = ipfs.swarmPeers();
+        peers.sort(threads.ipfs.Peer::compareTo);
 
-            peers.sort(threads.ipfs.Peer::compareTo);
+        for (threads.ipfs.Peer peer : peers) {
 
-            for (threads.ipfs.Peer peer : peers) {
-
-                if (result.size() == numRelays) {
-                    break;
-                }
-
-                if (peer.isRelay()) {
-
-                    if (ipfs.isConnected(peer.getPid())) {
-
-                        if (!tag.isEmpty()) {
-                            ipfs.protectPeer(peer.getPid(), tag);
-                        }
-
-                        result.add(storePeer(context, peer));
-
-
-                    } else if (ipfs.swarmConnect(peer, timeout)) {
-
-                        if (!tag.isEmpty()) {
-                            ipfs.protectPeer(peer.getPid(), tag);
-                        }
-
-                        result.add(storePeer(context, peer));
-
-                    }
-
-                }
+            if (result.size() == numRelays) {
+                break;
             }
 
+            if (peer.isRelay()) {
+
+                if (ipfs.isConnected(peer.getPid())) {
+
+                    if (!tag.isEmpty()) {
+                        ipfs.protectPeer(peer.getPid(), tag);
+                    }
+
+                    result.add(storePeer(context, peer));
+
+
+                } else if (ipfs.swarmConnect(peer, timeout)) {
+
+                    if (!tag.isEmpty()) {
+                        ipfs.protectPeer(peer.getPid(), tag);
+                    }
+
+                    result.add(storePeer(context, peer));
+
+                }
+
+            }
+        }
 
 
         return result;
@@ -160,25 +158,25 @@ public class GatewayService {
         final IPFS ipfs = IPFS.getInstance(context);
 
 
-            List<threads.ipfs.Peer> peers = ipfs.swarmPeers();
+        List<threads.ipfs.Peer> peers = ipfs.swarmPeers();
 
-            peers.sort(threads.ipfs.Peer::compareTo);
+        peers.sort(threads.ipfs.Peer::compareTo);
 
-            for (threads.ipfs.Peer peer : peers) {
+        for (threads.ipfs.Peer peer : peers) {
 
-                if (connected.size() == numPeers) {
-                    break;
-                }
-
-
-                if (ipfs.isConnected(peer.getPid())) {
-
-                    if (!tag.isEmpty()) {
-                        ipfs.protectPeer(peer.getPid(), tag);
-                    }
-                    connected.add(storePeer(context, peer));
-                }
+            if (connected.size() == numPeers) {
+                break;
             }
+
+
+            if (ipfs.isConnected(peer.getPid())) {
+
+                if (!tag.isEmpty()) {
+                    ipfs.protectPeer(peer.getPid(), tag);
+                }
+                connected.add(storePeer(context, peer));
+            }
+        }
 
         return connected;
     }
@@ -207,25 +205,25 @@ public class GatewayService {
             IPFS ipfs = IPFS.getInstance(context);
 
             PeerInfo info = ipfs.id(peer, timeout);
-                if (info != null) {
+            if (info != null) {
 
-                    String protocol = info.getProtocolVersion();
-                    String agent = info.getAgentVersion();
+                String protocol = info.getProtocolVersion();
+                String agent = info.getAgentVersion();
 
-                    if (protocol.equals("ipfs/0.1.0")) {
-                        rating = rating + 100;
-                    } else {
-                        rating = rating - 100;
-                    }
-
-                    if (agent.startsWith("go-ipfs/0.4.2")) {
-                            rating = rating + 100;
-                        } else if (agent.startsWith("go-ipfs/0.5")) {
-                            rating = rating + 150;
-                        }
-
+                if (protocol.equals("ipfs/0.1.0")) {
+                    rating = rating + 100;
+                } else {
+                    rating = rating - 100;
                 }
-                isConnected = ipfs.isConnected(peer.getPid());
+
+                if (agent.startsWith("go-ipfs/0.4.2")) {
+                    rating = rating + 100;
+                } else if (agent.startsWith("go-ipfs/0.5")) {
+                    rating = rating + 150;
+                }
+
+            }
+            isConnected = ipfs.isConnected(peer.getPid());
 
         } catch (Throwable e) {
             // ignore any exceptions here

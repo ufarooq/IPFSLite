@@ -1,7 +1,5 @@
 package threads.server.services;
 
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -11,12 +9,9 @@ import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.NotificationCompat;
 
 import com.google.gson.Gson;
-import com.j256.simplemagic.ContentInfo;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +20,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import threads.iota.Entity;
 import threads.iota.EntityService;
@@ -51,7 +45,6 @@ import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
 import threads.server.core.peers.UserType;
 import threads.server.core.threads.Kind;
-import threads.server.core.threads.Status;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.jobs.JobServiceAutoConnect;
@@ -68,9 +61,9 @@ import threads.server.jobs.JobServicePeers;
 import threads.server.jobs.JobServicePublish;
 import threads.server.jobs.JobServicePublisher;
 import threads.server.utils.CodecDecider;
-import threads.server.utils.MimeType;
 import threads.server.utils.Preferences;
 import threads.server.utils.ProgressChannel;
+import threads.server.work.UploadContentWorker;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -645,17 +638,13 @@ public class Service {
         }
     }
 
-    private static boolean handleDirectoryLink(@NonNull Context context,
-                                               @NonNull Thread thread,
-                                               @NonNull LinkInfo link) {
+    private static void handleDirectoryLink(@NonNull Context context,
+                                            @NonNull Thread thread,
+                                            @NonNull LinkInfo link) {
 
         List<LinkInfo> links = getLinks(context, link.getCid());
-        if (links != null) {
-            return downloadLinks(context, thread, links);
-        } else {
-            return false;
-        }
-
+        checkNotNull(links);
+        downloadLinks(context, thread, links);
     }
 
     private static void adaptUser(@NonNull Context context,
@@ -807,7 +796,7 @@ public class Service {
             peers.resetUsersDialing();
             peers.resetPeersConnected();
             peers.resetUsersConnected();
-            threads.setThreadStatus(Status.INIT, Status.ERROR);
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -815,7 +804,7 @@ public class Service {
     }
 
 
-    @NonNull
+    @Nullable
     private static String evaluateMimeType(@NonNull String filename) {
         try {
             Optional<String> extension = ThumbnailService.getExtension(filename);
@@ -828,7 +817,7 @@ public class Service {
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-        return MimeType.OCTET_MIME_TYPE;
+        return null;
     }
 
     private static long createThread(@NonNull Context context,
@@ -849,8 +838,7 @@ public class Service {
 
         final THREADS threads = THREADS.getInstance(context);
 
-        Thread thread = threads.createThread(sender, alias,
-                Status.INIT, Kind.OUT, parent);
+        Thread thread = threads.createThread(sender, alias, Kind.OUT, parent);
         thread.setContent(cid);
         String filename = link.getName();
         thread.setName(filename);
@@ -861,7 +849,10 @@ public class Service {
         if (link.isDirectory()) {
             thread.setMimeType(DocumentsContract.Document.MIME_TYPE_DIR);
         } else {
-            thread.setMimeType(evaluateMimeType(filename));
+            String mimeType = evaluateMimeType(filename);
+            if (mimeType != null) {
+                thread.setMimeType(mimeType);
+            }
         }
 
         return threads.storeThread(thread);
@@ -871,7 +862,6 @@ public class Service {
                                     @NonNull PID sender,
                                     @NonNull String alias,
                                     @NonNull CID cid,
-                                    @NonNull Status threadStatus,
                                     @Nullable String filename,
                                     long fileSize,
                                     @Nullable String mimeType,
@@ -880,13 +870,11 @@ public class Service {
         checkNotNull(context);
         checkNotNull(sender);
         checkNotNull(cid);
-        checkNotNull(threadStatus);
 
 
         final THREADS threads = THREADS.getInstance(context);
 
-        Thread thread = threads.createThread(sender,
-                alias, threadStatus, Kind.OUT, 0L);
+        Thread thread = threads.createThread(sender, alias, Kind.OUT, 0L);
         thread.setContent(cid);
 
 
@@ -895,13 +883,15 @@ public class Service {
             if (mimeType != null) {
                 thread.setMimeType(mimeType);
             } else {
-                thread.setMimeType(evaluateMimeType(filename));
+                String evalMimeType = evaluateMimeType(filename);
+                if (evalMimeType != null) {
+                    thread.setMimeType(evalMimeType);
+                }
+
             }
         } else {
             if (mimeType != null) {
                 thread.setMimeType(mimeType);
-            } else {
-                thread.setMimeType(MimeType.OCTET_MIME_TYPE); // not known yet
             }
             thread.setName(cid.getCid());
         }
@@ -910,8 +900,8 @@ public class Service {
         return threads.storeThread(thread);
     }
 
-    private static boolean downloadThread(@NonNull Context context,
-                                          @NonNull Thread thread) {
+    private static void downloadThread(@NonNull Context context,
+                                       @NonNull Thread thread) {
 
         checkNotNull(context);
         checkNotNull(thread);
@@ -919,106 +909,23 @@ public class Service {
         CID cid = thread.getContent();
         checkNotNull(cid);
 
+        THREADS.getInstance(context).setThreadLeaching(thread.getIdx(), true);
+        UploadContentWorker.downloadContent(context, cid,
+                thread.getIdx(), thread.getName(), thread.getSize());
 
-        return download(context, thread, cid, thread.getName(), thread.getSize());
     }
 
-    private static boolean download(@NonNull Context context,
-                                    @NonNull Thread thread,
-                                    @NonNull CID cid,
-                                    @NonNull String filename,
-                                    long size) {
 
-        checkNotNull(context);
-        checkNotNull(thread);
-        checkNotNull(cid);
-        checkNotNull(filename);
-
-        THREADS threads = THREADS.getInstance(context);
-        IPFS ipfs = IPFS.getInstance(context);
-
-        NotificationCompat.Builder builder =
-                ProgressChannel.createProgressNotification(
-                        context, filename);
-
-        final NotificationManager notificationManager = (NotificationManager)
-                context.getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        int notifyID = cid.getCid().hashCode();
-        Notification notification = builder.build();
-        if (notificationManager != null) {
-            notificationManager.notify(notifyID, notification);
-        }
-
-        boolean success;
-        try {
-            threads.setThreadLeaching(thread.getIdx(), true);
-            int timeout = Preferences.getConnectionTimeout(context);
-            File file = ipfs.getTempCacheFile();
-            success = ipfs.loadToFile(file, cid,
-                    (percent) -> {
-
-                        builder.setProgress(100, percent, false);
-                        threads.setThreadProgress(thread.getIdx(), percent);
-                        if (notificationManager != null) {
-                            notificationManager.notify(notifyID, builder.build());
-                        }
-
-
-                    }, timeout, size);
-
-            if (success) {
-                // Now check if MIME TYPE of thread can be re-evaluated
-                if (threads.getMimeType(thread).equals(MimeType.OCTET_MIME_TYPE)) {
-                    ContentInfo contentInfo = ipfs.getContentInfo(file);
-                    if (contentInfo != null) {
-                        String mimeType = contentInfo.getMimeType();
-                        if (mimeType != null) {
-                            threads.setMimeType(thread, mimeType);
-                        }
-                    }
-                }
-
-                // check if image was not imported
-                try {
-                    if (thread.getThumbnail() == null) {
-                        ThumbnailService.Result res = ThumbnailService.getThumbnail(
-                                context, file, filename);
-                        CID image = res.getCid();
-                        if (image != null) {
-                            threads.setImage(thread, image);
-                        }
-                    }
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-            }
-            if (file.exists()) {
-                checkArgument(file.delete());
-            }
-        } catch (Throwable e) {
-            success = false;
-        } finally {
-            threads.setThreadLeaching(thread.getIdx(), false);
-            if (notificationManager != null) {
-                notificationManager.cancel(notifyID);
-            }
-
-        }
-
-        return success;
-    }
-
-    private static boolean downloadLink(@NonNull Context context,
-                                        @NonNull Thread thread,
-                                        @NonNull LinkInfo link) {
+    private static void downloadLink(@NonNull Context context,
+                                     @NonNull Thread thread,
+                                     @NonNull LinkInfo link) {
         if (link.isDirectory()) {
-            return handleDirectoryLink(context, thread, link);
+            handleDirectoryLink(context, thread, link);
         } else {
-            return download(context, thread,
-                    link.getCid(), link.getName(), link.getSize());
+            THREADS.getInstance(context).setThreadLeaching(thread.getIdx(), true);
+            UploadContentWorker.downloadContent(context, link.getCid(),
+                    thread.getIdx(), link.getName(), link.getSize());
         }
-
-
     }
 
     private static Thread getDirectoryThread(@NonNull THREADS threads,
@@ -1035,26 +942,18 @@ public class Service {
         return null;
     }
 
-    private static boolean downloadLinks(@NonNull Context context,
-                                         @NonNull Thread thread,
-                                         @NonNull List<LinkInfo> links) {
+    private static void downloadLinks(@NonNull Context context,
+                                      @NonNull Thread thread,
+                                      @NonNull List<LinkInfo> links) {
         THREADS threads = THREADS.getInstance(context);
         IPFS ipfs = IPFS.getInstance(context);
-        AtomicInteger successCounter = new AtomicInteger(0);
         for (LinkInfo link : links) {
 
             CID cid = link.getCid();
             Thread entry = getDirectoryThread(threads, thread, cid);
             if (entry != null) {
-                if (entry.getStatus() != Status.SEEDING) {
-
-                    boolean success = downloadLink(context, entry, link);
-                    if (success) {
-                        successCounter.incrementAndGet();
-                    }
-
-                } else {
-                    successCounter.incrementAndGet();
+                if (!entry.isSeeding()) {
+                    downloadLink(context, entry, link);
                 }
             } else {
 
@@ -1063,19 +962,11 @@ public class Service {
                         cid, link, thread.getIdx());
                 entry = threads.getThreadByIdx(idx);
                 checkNotNull(entry);
-                boolean success = downloadLink(context, entry, link);
-
-                if (success) {
-                    successCounter.incrementAndGet();
-                    threads.setStatus(entry, Status.SEEDING);
-                } else {
-                    threads.setStatus(entry, Status.ERROR);
-                }
+                downloadLink(context, entry, link);
             }
 
         }
 
-        return successCounter.get() == links.size();
     }
 
     @Nullable
@@ -1098,9 +989,9 @@ public class Service {
         return result;
     }
 
-    public static void downloadMultihash(@NonNull Context context,
-                                         @NonNull Thread thread,
-                                         @Nullable PID sender) {
+    public static void downloadThread(@NonNull Context context,
+                                      @NonNull Thread thread,
+                                      @Nullable PID sender) {
         checkNotNull(context);
         checkNotNull(thread);
 
@@ -1117,37 +1008,22 @@ public class Service {
             if (links != null) {
                 if (links.isEmpty()) {
 
-                    boolean result = downloadThread(context, thread);
-                    if (result) {
-                        threads.setStatus(thread, Status.SEEDING);
-                        if (sender != null) {
-                            replySender(context, sender, thread);
-                        }
-                    } else {
-                        threads.setStatus(thread, Status.ERROR);
+                    downloadThread(context, thread);
+                    if (sender != null) {
+                        replySender(context, sender, thread);
                     }
 
                 } else {
 
                     // thread is directory
+                    threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
 
-                    if (!thread.getMimeType().equals(DocumentsContract.Document.MIME_TYPE_DIR)) {
-                        threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
+                    downloadLinks(context, thread, links);
+                    if (sender != null) {
+                        replySender(context, sender, thread);
                     }
 
-
-                    boolean result = downloadLinks(context, thread, links);
-                    if (result) {
-                        threads.setStatus(thread, Status.SEEDING);
-                        if (sender != null) {
-                            replySender(context, sender, thread);
-                        }
-                    } else {
-                        threads.setStatus(thread, Status.ERROR);
-                    }
                 }
-            } else {
-                threads.setStatus(thread, Status.ERROR);
             }
         } finally {
             threads.setThreadLeaching(thread.getIdx(), false);
@@ -1235,6 +1111,19 @@ public class Service {
         }
     }
 
+    public static boolean isNightNode(@NonNull Context context) {
+        int nightModeFlags =
+                context.getResources().getConfiguration().uiMode &
+                        Configuration.UI_MODE_NIGHT_MASK;
+        switch (nightModeFlags) {
+            case Configuration.UI_MODE_NIGHT_YES:
+                return true;
+            case Configuration.UI_MODE_NIGHT_UNDEFINED:
+            case Configuration.UI_MODE_NIGHT_NO:
+                return false;
+        }
+        return false;
+    }
 
     public ArrayList<String> getEnhancedUserPIDs(@NonNull Context context) {
         checkNotNull(context);
@@ -1263,7 +1152,7 @@ public class Service {
         THREADS threads = THREADS.getInstance(context);
         try {
 
-            threads.setThreadLeaching(thread.getIdx(), false);
+            threads.setThreadLeaching(thread.getIdx(), true);
             PID host = IPFS.getPID(context);
             checkNotNull(host);
             PID sender = thread.getSender();
@@ -1273,13 +1162,13 @@ public class Service {
 
                 SwarmService.ConnectInfo info = SwarmService.connect(context, sender);
 
-                Service.downloadMultihash(context, thread, sender);
+                Service.downloadThread(context, thread, sender);
 
                 SwarmService.disconnect(context, info);
 
             } else {
 
-                Service.downloadMultihash(context, thread, null);
+                Service.downloadThread(context, thread, null);
             }
         } finally {
             threads.setThreadLeaching(thread.getIdx(), false);
@@ -1287,7 +1176,6 @@ public class Service {
 
 
     }
-
 
     private void sharePeer(@NonNull Context context,
                            @NonNull User user,
@@ -1325,7 +1213,6 @@ public class Service {
 
 
     }
-
 
     public void sendThreads(@NonNull Context context, @NonNull List<User> users, long[] indices) {
         checkNotNull(context);
@@ -1419,20 +1306,6 @@ public class Service {
             }
         }).start();
 
-    }
-
-    public static boolean isNightNode(@NonNull Context context) {
-        int nightModeFlags =
-                context.getResources().getConfiguration().uiMode &
-                        Configuration.UI_MODE_NIGHT_MASK;
-        switch (nightModeFlags) {
-            case Configuration.UI_MODE_NIGHT_YES:
-                return true;
-            case Configuration.UI_MODE_NIGHT_UNDEFINED:
-            case Configuration.UI_MODE_NIGHT_NO:
-                return false;
-        }
-        return false;
     }
 
     private void attachHandler(@NonNull Context context) {

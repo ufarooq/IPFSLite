@@ -7,12 +7,16 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.selection.ItemDetailsLookup;
 
 public class ThreadItemDetails extends ItemDetailsLookup.ItemDetails<Long> {
-    int position;
-    long idx;
+    private final ThreadItemPosition mThreadItemPosition;
+    public long idx;
+
+    ThreadItemDetails(@NonNull ThreadItemPosition threadItemPosition) {
+        this.mThreadItemPosition = threadItemPosition;
+    }
 
     @Override
     public int getPosition() {
-        return position;
+        return mThreadItemPosition.getPosition(idx);
     }
 
     @Nullable

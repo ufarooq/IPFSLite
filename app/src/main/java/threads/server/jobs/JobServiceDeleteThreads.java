@@ -15,7 +15,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.ipfs.IPFS;
-import threads.server.core.threads.Status;
 import threads.server.core.threads.THREADS;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -67,7 +66,8 @@ public class JobServiceDeleteThreads extends JobService {
                 IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
                 checkNotNull(ipfs, "IPFS is not valid");
-                threads.setThreadsStatus(Status.DELETING, indices);
+
+                threads.setThreadsDeleting(indices);
 
                 threads.removeThreads(ipfs, indices);
 

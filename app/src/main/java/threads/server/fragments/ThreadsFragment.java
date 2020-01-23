@@ -29,7 +29,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -39,7 +38,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import threads.ipfs.CID;
 import threads.server.R;
 import threads.server.core.events.EVENTS;
-import threads.server.core.threads.Status;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.jobs.JobServiceDeleteThreads;
@@ -218,29 +216,24 @@ public class ThreadsFragment extends Fragment implements
                 obs.removeObservers(this);
             }
 
-            LiveData<List<Thread>> liveData = threadViewModel.getChildrenThreads(parent);
+            LiveData<List<Thread>> liveData = threadViewModel.getVisibleChildren(parent);
             observer.set(liveData);
 
             liveData.observe(this, (threads) -> {
 
                 if (threads != null) {
 
-                    List<Thread> data = new ArrayList<>();
-                    for (Thread threadObject : threads) {
-                        if (threadObject.getStatus() != Status.DELETING) {
-                            data.add(threadObject);
-                        }
-                    }
-                    data.sort(Comparator.comparing(Thread::getLastModified).reversed());
+                    threads.sort(Comparator.comparing(Thread::getLastModified).reversed());
 
                     boolean scrollToTop = false;
 
-                    if (!data.isEmpty()) {
-                        int pos = mThreadsViewAdapter.getPositionOfItem(data.get(0).getIdx());
+                    if (!threads.isEmpty()) {
+                        int pos = mThreadsViewAdapter.getPositionOfItem(
+                                threads.get(0).getIdx());
                         scrollToTop = pos != 0;
                     }
 
-                    mThreadsViewAdapter.updateData(data);
+                    mThreadsViewAdapter.updateData(threads);
 
                     if (scrollToTop) {
                         try {
@@ -349,7 +342,7 @@ public class ThreadsFragment extends Fragment implements
         if (thread.isPublishing()) {
             return false;
         }
-        return thread.getStatus() == Status.SEEDING;
+        return thread.isSeeding();
     }
 
     @Override
@@ -508,8 +501,8 @@ public class ThreadsFragment extends Fragment implements
             try {
                 Thread thread = threads.getThreadByIdx(idx);
                 checkNotNull(thread);
-                Status status = thread.getStatus();
-                if (status == Status.SEEDING) {
+
+                if (thread.isSeeding()) {
 
                     CID cid = thread.getContent();
                     checkNotNull(cid);
@@ -545,7 +538,7 @@ public class ThreadsFragment extends Fragment implements
 
 
     @Override
-    public void invokeActionError(@NonNull Thread thread) {
+    public void invokeDownload(@NonNull Thread thread) {
         checkNotNull(thread);
         try {
 

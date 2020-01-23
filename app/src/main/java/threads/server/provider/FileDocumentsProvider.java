@@ -40,7 +40,6 @@ import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
 import threads.server.BuildConfig;
 import threads.server.R;
-import threads.server.core.threads.Status;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 
@@ -134,7 +133,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         final MatrixCursor result = new MatrixCursor(resolveDocumentProjection(projection));
 
 
-        List<Thread> entries = threads.getNewestThreadsByStatus(Status.SEEDING, 5);
+        List<Thread> entries = threads.getNewestSeedingThreads(5);
         for (Thread thread : entries) {
             includeFile(result, thread);
         }
@@ -147,7 +146,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         final MatrixCursor result = new MatrixCursor(resolveDocumentProjection(projection));
 
 
-        List<Thread> entries = threads.getThreadsByQuery(Status.SEEDING, query);
+        List<Thread> entries = threads.getSeedingThreadsByQuery(query);
         for (Thread thread : entries) {
             includeFile(result, thread);
         }
@@ -293,7 +292,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         try {
             long idx = Long.parseLong(parentDocumentId);
 
-            List<Thread> entries = threads.getChildrenByStatus(idx, Status.SEEDING);
+            List<Thread> entries = threads.getSeedingChildren(idx);
 
             final MatrixCursor result = new MatrixCursor(resolveDocumentProjection(projection));
 

@@ -78,6 +78,9 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
     // Android (LICENSE done)
+    implementation "androidx.work:work-runtime:2.3.0"
+
+    // Android (LICENSE done)
     implementation "androidx.work:work-runtime:2.2.0"
 
     // Android (LICENSE done)

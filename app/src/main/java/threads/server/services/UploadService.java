@@ -31,7 +31,6 @@ import threads.ipfs.PID;
 import threads.server.R;
 import threads.server.core.events.EVENTS;
 import threads.server.core.threads.Kind;
-import threads.server.core.threads.Status;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 
@@ -130,8 +129,7 @@ public class UploadService extends Service {
 
                 buildNotification(name);
 
-                Thread thread = threads.createThread(
-                        pid, alias, Status.INIT, Kind.IN, 0L);
+                Thread thread = threads.createThread(pid, alias, Kind.IN, 0L);
 
                 thread.setName(name);
                 thread.setSize(size);
@@ -160,8 +158,8 @@ public class UploadService extends Service {
 
 
                     threads.setThreadContent(idx, cid);
-                    threads.setThreadStatus(idx, Status.SEEDING);
-                    threads.setThreadLeaching(idx, false);
+                    threads.setThreadSeeding(idx);
+
                 } catch (Throwable e) {
                     threads.removeThreads(ipfs, idx);
                     buildFailedNotification(name);

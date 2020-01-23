@@ -13,7 +13,6 @@ import java.util.Objects;
 import threads.ipfs.CID;
 import threads.ipfs.PID;
 import threads.server.core.Converter;
-import threads.server.utils.MimeType;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -44,8 +43,6 @@ public class Thread {
     @ColumnInfo(name = "thumbnail")
     @TypeConverters(Converter.class)
     private CID thumbnail;  // checked
-    @ColumnInfo(name = "marked")
-    private boolean marked;  // todo
     @ColumnInfo(name = "number")
     private int number = 0;  // checked
     @ColumnInfo(name = "progress")
@@ -54,31 +51,27 @@ public class Thread {
     @TypeConverters(Converter.class)
     @ColumnInfo(name = "content")
     private CID content;  // checked
-    @ColumnInfo(name = "expire")
-    private long expire;  // checked
     @ColumnInfo(name = "size")
     private long size;  // checked
-    @NonNull
-    @TypeConverters(Status.class)
-    @ColumnInfo(name = "status")
-    private Status status;  // todo
     @NonNull
     @ColumnInfo(name = "mimeType")
     private String mimeType;  // checked
     @ColumnInfo(name = "pinned")
-    private boolean pinned; // todo
+    private boolean pinned; // checked
     @ColumnInfo(name = "publishing")
-    private boolean publishing; // todo
+    private boolean publishing; // checked
     @ColumnInfo(name = "leaching")
-    private boolean leaching; // todo
-
+    private boolean leaching; // checked
+    @ColumnInfo(name = "seeding")
+    private boolean seeding; // checked
+    @ColumnInfo(name = "deleting")
+    private boolean deleting; // checked
     @NonNull
     @ColumnInfo(name = "name")
     private String name = "";
 
 
-    Thread(@NonNull Status status,
-           @NonNull PID sender,
+    Thread(@NonNull PID sender,
            @NonNull String senderAlias,
            @NonNull Kind kind,
            long parent) {
@@ -86,27 +79,23 @@ public class Thread {
         this.sender = sender;
         this.senderAlias = senderAlias;
         this.kind = kind;
-        this.expire = System.currentTimeMillis();
-        this.status = status;
-        this.marked = false;
         this.lastModified = System.currentTimeMillis();
-        this.mimeType = MimeType.PLAIN_MIME_TYPE;
+        this.mimeType = "";
         this.pinned = false;
         this.publishing = false;
         this.leaching = false;
+        this.seeding = false;
+        this.deleting = false;
     }
 
-    public static Thread createThread(@NonNull Status status,
-                                      @NonNull PID senderPid,
-                                      @NonNull String senderAlias,
-                                      @NonNull Kind kind,
-                                      long thread) {
-        checkNotNull(status);
+    static Thread createThread(@NonNull PID senderPid,
+                               @NonNull String senderAlias,
+                               @NonNull Kind kind,
+                               long parent) {
         checkNotNull(senderPid);
         checkNotNull(senderAlias);
         checkNotNull(kind);
-        return new Thread(status,
-                senderPid, senderAlias, kind, thread);
+        return new Thread(senderPid, senderAlias, kind, parent);
     }
 
     public boolean isLeaching() {
@@ -117,13 +106,6 @@ public class Thread {
         this.leaching = leaching;
     }
 
-    public boolean isMarked() {
-        return marked;
-    }
-
-    public void setMarked(boolean marked) {
-        this.marked = marked;
-    }
 
     public long getLastModified() {
         return lastModified;
@@ -131,15 +113,6 @@ public class Thread {
 
     public void setLastModified(long lastModified) {
         this.lastModified = lastModified;
-    }
-
-
-    public long getExpire() {
-        return expire;
-    }
-
-    public void setExpire(long expire) {
-        this.expire = expire;
     }
 
 
@@ -173,6 +146,7 @@ public class Thread {
     }
 
     public void setMimeType(@NonNull String mimeType) {
+        checkNotNull(mimeType);
         this.mimeType = mimeType;
     }
 
@@ -181,23 +155,6 @@ public class Thread {
         return sender;
     }
 
-    public long getExpireDate() {
-        return expire;
-    }
-
-    public void setExpireDate(long expireDate) {
-        this.expire = expireDate;
-    }
-
-    @NonNull
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(@NonNull Status status) {
-        checkNotNull(status);
-        this.status = status;
-    }
 
     @NonNull
     public Kind getKind() {
@@ -209,12 +166,12 @@ public class Thread {
         checkNotNull(o);
         if (this == o) return true;
         return number == o.getNumber() &&
-                marked == o.isMarked() &&
-                status == o.getStatus() &&
                 pinned == o.isPinned() &&
                 progress == o.getProgress() &&
                 publishing == o.isPublishing() &&
                 leaching == o.isLeaching() &&
+                seeding == o.isSeeding() &&
+                deleting == o.isDeleting() &&
                 Objects.equals(mimeType, o.getMimeType()) &&
                 Objects.equals(content, o.getContent()) &&
                 Objects.equals(senderAlias, o.getSenderAlias()) &&
@@ -282,14 +239,6 @@ public class Thread {
         return parent;
     }
 
-    public void increaseUnreadMessagesNumber() {
-        number++;
-    }
-
-    public boolean isExpired() {
-        return getExpire() < System.currentTimeMillis();
-    }
-
     public boolean hasImage() {
         return thumbnail != null;
     }
@@ -321,5 +270,21 @@ public class Thread {
 
     public void setProgress(int progress) {
         this.progress = progress;
+    }
+
+    public boolean isSeeding() {
+        return seeding;
+    }
+
+    public void setSeeding(boolean seeding) {
+        this.seeding = seeding;
+    }
+
+    public boolean isDeleting() {
+        return deleting;
+    }
+
+    public void setDeleting(boolean deleting) {
+        this.deleting = deleting;
     }
 }

@@ -36,13 +36,6 @@ public interface ThreadDao {
     @Query("SELECT * FROM Thread WHERE lastModified =:lastModified")
     List<Thread> getThreadsByLastModified(long lastModified);
 
-    @Query("SELECT * FROM Thread WHERE expire < :lastModified")
-    List<Thread> getExpiredThreads(long lastModified);
-
-    @Query("SELECT * FROM Thread WHERE kind LIKE :kind AND status = :status")
-    @TypeConverters({Kind.class, Status.class})
-    List<Thread> getThreadsByKindAndStatus(Kind kind, Status status);
-
     @Query("SELECT * FROM Thread WHERE pinned = :pinned")
     List<Thread> getThreadsByPinned(boolean pinned);
 
@@ -57,10 +50,6 @@ public interface ThreadDao {
     @TypeConverters({Converter.class})
     CID getThumbnail(long idx);
 
-    @Query("UPDATE Thread SET status = :status  WHERE idx = :idx")
-    @TypeConverters({Status.class})
-    void setStatus(long idx, Status status);
-
     @Query("UPDATE Thread SET publishing = :publish  WHERE idx = :idx")
     void setPublishing(long idx, boolean publish);
 
@@ -70,9 +59,8 @@ public interface ThreadDao {
     @Query("UPDATE Thread SET lastModified = :lastModified  WHERE idx = :idx")
     void setThreadLastModified(long idx, long lastModified);
 
-    @Query("UPDATE Thread SET status = :status  WHERE idx IN (:idxs)")
-    @TypeConverters({Status.class})
-    void setThreadsStatus(Status status, long... idxs);
+    @Query("UPDATE Thread SET seeding = 0, deleting = 1 WHERE idx IN (:idxs)")
+    void setThreadsDeleting(long... idxs);
 
     @Query("UPDATE Thread SET publishing = :publish  WHERE idx IN (:idxs)")
     void setThreadsPublishing(boolean publish, long... idxs);
@@ -92,14 +80,6 @@ public interface ThreadDao {
     @Query("UPDATE Thread SET senderAlias = :alias  WHERE sender = :pid")
     @TypeConverters(Converter.class)
     void setSenderAlias(PID pid, String alias);
-
-    @Query("UPDATE Thread SET status = :newStatus  WHERE status = :oldStatus")
-    @TypeConverters({Status.class})
-    void setStatus(Status oldStatus, Status newStatus);
-
-    @Query("SELECT * FROM Thread WHERE status = :status")
-    @TypeConverters({Status.class})
-    List<Thread> getThreadsByStatus(Status status);
 
     @Query("SELECT * FROM Thread WHERE content = :cid")
     @TypeConverters({Converter.class})
@@ -153,8 +133,8 @@ public interface ThreadDao {
     @TypeConverters({Converter.class})
     List<Thread> getThreadsBySenderPid(PID senderPid);
 
-    @Query("SELECT * FROM Thread WHERE parent =:parent")
-    LiveData<List<Thread>> getLiveDataChildren(long parent);
+    @Query("SELECT * FROM Thread WHERE parent =:parent AND deleting = 0")
+    LiveData<List<Thread>> getLiveDataVisibleChildren(long parent);
 
     @Query("UPDATE Thread SET number = number + 1  WHERE idx IN(:idxs)")
     void incrementNumber(long... idxs);
@@ -171,32 +151,22 @@ public interface ThreadDao {
     @TypeConverters({Converter.class})
     void setThumbnail(long idx, CID image);
 
-    @Query("SELECT status FROM Thread WHERE idx = :idx")
-    @TypeConverters({Status.class})
-    Status getStatus(long idx);
-
-    @Query("SELECT marked FROM Thread WHERE idx = :idx")
-    boolean getMarkedFlag(long idx);
-
-    @Query("UPDATE Thread SET marked = :marked WHERE idx = :idx")
-    void setMarkedFlag(long idx, boolean marked);
-
     @Query("UPDATE Thread SET name = :name WHERE idx = :idx")
     void setName(long idx, String name);
 
-    @Query("SELECT * FROM Thread WHERE parent =:parent AND status = :status")
-    @TypeConverters({Status.class})
-    List<Thread> getChildrenByStatus(long parent, Status status);
+    @Query("SELECT * FROM Thread WHERE parent =:parent AND seeding = 1")
+    List<Thread> getSeedingChildren(long parent);
 
-    @Query("SELECT * FROM Thread WHERE status = :status ORDER BY lastModified DESC LIMIT :limit")
-    @TypeConverters({Status.class})
-    List<Thread> getNewestThreadsByStatus(Status status, int limit);
+    @Query("SELECT * FROM Thread WHERE seeding = 1 ORDER BY lastModified DESC LIMIT :limit")
+    List<Thread> getNewestSeedingThreads(int limit);
 
 
-    @Query("SELECT * FROM Thread WHERE status = :status AND name LIKE :query")
-    @TypeConverters({Status.class})
-    List<Thread> getThreadsByQuery(Status status, String query);
+    @Query("SELECT * FROM Thread WHERE seeding = 1 AND name LIKE :query")
+    List<Thread> getSeedingThreadsByQuery(String query);
 
     @Query("UPDATE Thread SET progress = :progress WHERE idx = :idx")
     void setProgress(long idx, int progress);
+
+    @Query("UPDATE Thread SET seeding = 1, leaching = 0 WHERE idx = :idx")
+    void setSeeding(long idx);
 }

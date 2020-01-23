@@ -39,11 +39,14 @@ public class MimeTypeService {
             if (mimeType.startsWith("audio")) {
                 return R.drawable.text_audio;
             }
+            if (mimeType.startsWith("application")) {
+                return R.drawable.application;
+            }
 
-            return R.drawable.file_star;
+            return R.drawable.settings;
         }
 
-        return R.drawable.settings;
+        return R.drawable.help;
 
     }
 }

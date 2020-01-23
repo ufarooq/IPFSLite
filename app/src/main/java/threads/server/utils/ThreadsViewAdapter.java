@@ -3,6 +3,7 @@ package threads.server.utils;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.os.Handler;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -33,10 +34,11 @@ import threads.server.services.MimeTypeService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.ViewHolder> {
+public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.ViewHolder> implements ThreadItemPosition {
 
     private static final String TAG = ThreadsViewAdapter.class.getSimpleName();
-    private final Context context;
+    private final Context mContext;
+    private final Handler mHandler;
     private final ThreadsViewAdapterListener listener;
     private final List<Thread> threads = new ArrayList<>();
     private final int accentColor;
@@ -47,8 +49,9 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
     public ThreadsViewAdapter(@NonNull Context context,
                               @NonNull ThreadsViewAdapterListener listener) {
-        this.context = context;
+        this.mContext = context;
         this.listener = listener;
+        mHandler = new Handler(context.getMainLooper());
         accentColor = getThemeAccentColor(context);
         selectedItemColor = getThemeSelectedItemColor(context);
         timeout = Preferences.getConnectionTimeout(context);
@@ -70,6 +73,10 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
         return title.replace("\n", " ");
     }
 
+    private void runOnUiThread(Runnable r) {
+        mHandler.post(r);
+    }
+
     public void setSelectionTracker(SelectionTracker<Long> selectionTracker) {
         this.mSelectionTracker = selectionTracker;
     }
@@ -85,7 +92,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                                                             int viewType) {
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.threads, parent, false);
-        return new ThreadViewHolder(v);
+        return new ThreadViewHolder(this, v);
     }
 
     long getIdx(int position) {
@@ -114,7 +121,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
             }
         }
 
-        threadViewHolder.bind(position, isSelected, thread);
+        threadViewHolder.bind(isSelected, thread);
         try {
             if (isSelected) {
                 threadViewHolder.view.setBackgroundColor(selectedItemColor);
@@ -124,9 +131,9 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
             }
 
             if (thread.getThumbnail() != null) {
-                IPFS ipfs = IPFS.getInstance(context);
+                IPFS ipfs = IPFS.getInstance(mContext);
                 IPFSData data = IPFSData.create(ipfs, thread.getThumbnail(), timeout);
-                Glide.with(context).
+                Glide.with(mContext).
                         load(data).
                         into(threadViewHolder.main_image);
 
@@ -168,7 +175,9 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
             int progress = thread.getProgress();
             if (progress > 0 && progress < 101) {
-                threadViewHolder.progress_bar.setProgress(progress);
+                runOnUiThread(() ->
+                        threadViewHolder.progress_bar.setProgress(progress)
+                );
             } else {
                 threadViewHolder.progress_bar.setIndeterminate(true);
             }
@@ -204,6 +213,18 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
                 threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
 
+            } else if (thread.isSeeding()) {
+                threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
+                if (listener.generalActionSupport(thread)) {
+                    threadViewHolder.general_action.setImageResource(R.drawable.dots);
+                    threadViewHolder.general_action.setVisibility(View.VISIBLE);
+
+                    threadViewHolder.general_action.setOnClickListener((v) ->
+                            listener.invokeGeneralAction(thread)
+                    );
+                } else {
+                    threadViewHolder.general_action.setVisibility(View.INVISIBLE);
+                }
             } else if (thread.isLeaching()) {
 
                 if (listener.generalActionSupport(thread)) {
@@ -217,42 +238,16 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                 }
 
                 threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
+            } else if (thread.isDeleting()) {
+                threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
+                threadViewHolder.general_action.setVisibility(View.INVISIBLE);
             } else {
-                switch (thread.getStatus()) {
-                    case ERROR: {
-                        threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
-                        threadViewHolder.general_action.setVisibility(View.VISIBLE);
-                        threadViewHolder.general_action.setImageResource(R.drawable.text_download);
-                        threadViewHolder.general_action.setOnClickListener((v) ->
-                                listener.invokeActionError(thread)
-                        );
-
-                        break;
-                    }
-                    case INIT:
-                    case DELETING: {
-                        threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
-                        threadViewHolder.general_action.setVisibility(View.INVISIBLE);
-                        break;
-                    }
-                    default: {
-                        threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
-                        if (listener.generalActionSupport(thread)) {
-                            threadViewHolder.general_action.setImageResource(R.drawable.dots);
-                            threadViewHolder.general_action.setVisibility(View.VISIBLE);
-
-                            threadViewHolder.general_action.setOnClickListener((v) ->
-                                    listener.invokeGeneralAction(thread)
-                            );
-
-
-                        } else {
-                            threadViewHolder.general_action.setVisibility(View.INVISIBLE);
-                        }
-
-                        break;
-                    }
-                }
+                threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
+                threadViewHolder.general_action.setVisibility(View.VISIBLE);
+                threadViewHolder.general_action.setImageResource(R.drawable.download);
+                threadViewHolder.general_action.setOnClickListener((v) ->
+                        listener.invokeDownload(thread)
+                );
             }
 
         } catch (Throwable e) {
@@ -308,6 +303,16 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
         }
     }
 
+    @Override
+    public synchronized int getPosition(long idx) {
+        for (int i = 0; i < threads.size(); i++) {
+            if (threads.get(i).getIdx() == idx) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
     public interface ThreadsViewAdapterListener {
 
         boolean generalActionSupport(@NonNull Thread thread);
@@ -316,7 +321,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
         void onClick(@NonNull Thread thread);
 
-        void invokeActionError(@NonNull Thread thread);
+        void invokeDownload(@NonNull Thread thread);
 
 
     }
@@ -345,18 +350,18 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
         final ProgressBar progress_bar;
         final ThreadItemDetails threadItemDetails;
 
-        ThreadViewHolder(View v) {
+        ThreadViewHolder(ThreadItemPosition pos, View v) {
             super(v);
             session_date = v.findViewById(R.id.session_date);
             general_action = v.findViewById(R.id.general_action);
             progress_bar = v.findViewById(R.id.progress_bar);
             main_image = v.findViewById(R.id.main_image);
-            threadItemDetails = new ThreadItemDetails();
+            threadItemDetails = new ThreadItemDetails(pos);
 
         }
 
-        void bind(int position, boolean isSelected, Thread thread) {
-            threadItemDetails.position = position;
+        void bind(boolean isSelected, Thread thread) {
+
             threadItemDetails.idx = thread.getIdx();
 
             itemView.setActivated(isSelected);
@@ -365,6 +370,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
         }
 
         ItemDetailsLookup.ItemDetails<Long> getThreadsItemDetails() {
+
             return threadItemDetails;
         }
     }

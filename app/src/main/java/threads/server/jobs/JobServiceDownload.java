@@ -23,11 +23,9 @@ import threads.server.core.events.EVENTS;
 import threads.server.core.peers.Content;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
-import threads.server.core.threads.Status;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.Service;
-import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -50,7 +48,7 @@ public class JobServiceDownload extends JobService {
             bundle.putString(Content.CID, cid.getCid());
 
             JobInfo jobInfo = new JobInfo.Builder(cid.hashCode(), componentName)
-                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                    .setOverrideDeadline(0)
                     .setExtras(bundle)
                     .build();
             int resultCode = jobScheduler.schedule(jobInfo);
@@ -96,24 +94,20 @@ public class JobServiceDownload extends JobService {
             if (!entries.isEmpty()) {
                 Thread entry = entries.get(0);
 
-                if (entry.getStatus() == Status.DELETING ||
-                        entry.getStatus() == Status.SEEDING) {
+                if (entry.isDeleting() || entry.isSeeding()) {
                     Service.replySender(context, sender, entry);
                     return;
                 } else {
-                    Service.downloadMultihash(context, entry, sender);
+                    Service.downloadThread(context, entry, sender);
                     return;
                 }
-
-
             }
             long idx = Service.createThread(context, sender, alias, cid,
-                    Status.INIT, null, -1, null, null);
-
+                    null, -1, null, null);
 
             Thread thread = threads.getThreadByIdx(idx);
             checkNotNull(thread);
-            Service.downloadMultihash(context, thread, sender);
+            Service.downloadThread(context, thread, sender);
 
 
         } catch (Throwable e) {
@@ -132,9 +126,6 @@ public class JobServiceDownload extends JobService {
         final String cid = bundle.getString(Content.CID);
         checkNotNull(cid);
 
-        if (!Network.isConnected(getApplicationContext())) {
-            return false;
-        }
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {

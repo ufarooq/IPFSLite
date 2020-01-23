@@ -36,18 +36,16 @@ public class ThreadsAPI {
     }
 
 
-    public void setThreadStatus(long idx, @NonNull Status status) {
-        checkNotNull(status);
-        getThreadsDatabase().threadDao().setStatus(idx, status);
-    }
-
-    public void setThreadsStatus(@NonNull Status status, long... idxs) {
-        checkNotNull(status);
-        getThreadsDatabase().threadDao().setThreadsStatus(status, idxs);
+    public void setThreadsDeleting(long... idxs) {
+        getThreadsDatabase().threadDao().setThreadsDeleting(idxs);
     }
 
     public void setThreadLeaching(long idx, boolean leaching) {
         getThreadsDatabase().threadDao().setLeaching(idx, leaching);
+    }
+
+    public void setThreadSeeding(long idx) {
+        getThreadsDatabase().threadDao().setSeeding(idx);
     }
 
     public void setThreadPublishing(long idx, boolean publish) {
@@ -63,20 +61,18 @@ public class ThreadsAPI {
     }
 
 
-    public void setThreadStatus(@NonNull Status oldStatus, @NonNull Status newStatus) {
-        checkNotNull(oldStatus);
-        getThreadsDatabase().threadDao().setStatus(oldStatus, newStatus);
-    }
-
-
     public void setImage(@NonNull Thread thread, @NonNull CID image) {
         checkNotNull(thread);
         checkNotNull(image);
         getThreadsDatabase().threadDao().setThumbnail(thread.getIdx(), image);
     }
 
+    public void setThreadImage(long idx, @NonNull CID image) {
+        checkNotNull(image);
+        getThreadsDatabase().threadDao().setThumbnail(idx, image);
+    }
 
-    @NonNull
+    @Nullable
     public String getMimeType(@NonNull Thread thread) {
         checkNotNull(thread);
         return getThreadsDatabase().threadDao().getMimeType(thread.getIdx());
@@ -102,25 +98,22 @@ public class ThreadsAPI {
         getThreadsDatabase().threadDao().setMimeType(thread.getIdx(), mimeType);
     }
 
+    public void setThreadMimeType(long idx, @NonNull String mimeType) {
+        checkNotNull(mimeType);
+        getThreadsDatabase().threadDao().setMimeType(idx, mimeType);
+    }
 
     @NonNull
     public Thread createThread(@NonNull PID creatorPid,
                                @NonNull String alias,
-                               @NonNull Status status,
                                @NonNull Kind kind,
-                               long thread) {
+                               long parent) {
 
         checkNotNull(creatorPid);
         checkNotNull(alias);
-        checkNotNull(status);
         checkNotNull(kind);
-        checkArgument(thread >= 0);
-        return createThread(
-                status,
-                kind,
-                creatorPid,
-                alias,
-                thread);
+        checkArgument(parent >= 0);
+        return Thread.createThread(creatorPid, alias, kind, parent);
 
     }
 
@@ -161,14 +154,9 @@ public class ThreadsAPI {
     }
 
 
-    public List<Thread> getNewestThreadsByStatus(@NonNull Status status, int limit) {
-        return getThreadsDatabase().threadDao().getNewestThreadsByStatus(status, limit);
+    public List<Thread> getNewestSeedingThreads(int limit) {
+        return getThreadsDatabase().threadDao().getNewestSeedingThreads(limit);
     }
-
-    public List<Thread> getExpiredThreads() {
-        return getThreadsDatabase().threadDao().getExpiredThreads(System.currentTimeMillis());
-    }
-
 
     public void removeThreads(@NonNull IPFS ipfs, long... idxs) {
         checkNotNull(ipfs);
@@ -239,13 +227,6 @@ public class ThreadsAPI {
         return getThreadsDatabase().threadDao().insertThread(thread);
     }
 
-
-    public void setStatus(@NonNull Thread thread, @NonNull Status status) {
-        checkNotNull(thread);
-        checkNotNull(status);
-        getThreadsDatabase().threadDao().setStatus(thread.getIdx(), status);
-    }
-
     public void setThreadPinned(long idx, boolean pinned) {
         getThreadsDatabase().threadDao().setPinned(idx, pinned);
 
@@ -282,21 +263,6 @@ public class ThreadsAPI {
 
 
     @NonNull
-    public Status getStatus(@NonNull Thread thread) {
-        checkNotNull(thread);
-        return getThreadsDatabase().threadDao().getStatus(thread.getIdx());
-    }
-
-
-    public boolean getThreadMarkedFlag(long idx) {
-        return getThreadsDatabase().threadDao().getMarkedFlag(idx);
-    }
-
-    public void setThreadMarkedFlag(long idx, boolean flag) {
-        getThreadsDatabase().threadDao().setMarkedFlag(idx, flag);
-    }
-
-    @NonNull
     public List<Thread> getPinnedThreads() {
         return getThreadsDatabase().threadDao().getThreadsByPinned(true);
     }
@@ -304,12 +270,6 @@ public class ThreadsAPI {
     @NonNull
     public List<Thread> getThreadsByDate(long date) {
         return getThreadsDatabase().threadDao().getThreadsByLastModified(date);
-    }
-
-
-    @Nullable
-    public Status getThreadStatus(long idx) {
-        return getThreadsDatabase().threadDao().getStatus(idx);
     }
 
 
@@ -325,14 +285,13 @@ public class ThreadsAPI {
     }
 
     @NonNull
-    private List<Thread> getChildren(long thread) {
+    public List<Thread> getChildren(long thread) {
         return getThreadsDatabase().threadDao().getChildren(thread);
     }
 
     @NonNull
-    public List<Thread> getChildrenByStatus(long thread, @NonNull Status status) {
-        checkNotNull(status);
-        return getThreadsDatabase().threadDao().getChildrenByStatus(thread, status);
+    public List<Thread> getSeedingChildren(long thread) {
+        return getThreadsDatabase().threadDao().getSeedingChildren(thread);
     }
 
     public int getThreadReferences(long thread) {
@@ -360,29 +319,6 @@ public class ThreadsAPI {
         return getThreadsDatabase().threadDao().getThumbnail(idx);
     }
 
-    @NonNull
-    public List<Thread> getThreadsByStatus(@NonNull Status status) {
-        checkNotNull(status);
-        return getThreadsDatabase().threadDao().getThreadsByStatus(status);
-    }
-
-
-    @NonNull
-    public List<Thread> getThreadsByKindAndStatus(@NonNull Kind kind, @NonNull Status status) {
-        checkNotNull(kind);
-        checkNotNull(status);
-        return getThreadsDatabase().threadDao().getThreadsByKindAndStatus(kind, status);
-    }
-
-    @NonNull
-    private Thread createThread(@NonNull Status status,
-                                @NonNull Kind kind,
-                                @NonNull PID senderPid,
-                                @NonNull String senderAlias,
-                                long thread) {
-        return Thread.createThread(status, senderPid, senderAlias, kind, thread);
-    }
-
 
     @NonNull
     public List<Thread> getThreadsByCIDAndParent(@NonNull CID cid, long thread) {
@@ -396,8 +332,8 @@ public class ThreadsAPI {
         return getThreadsDatabase().threadDao().getThreadsByCid(cid);
     }
 
-    public List<Thread> getThreadsByQuery(Status status, String query) {
-        checkNotNull(status);
+    public List<Thread> getSeedingThreadsByQuery(String query) {
+
         checkNotNull(query);
         String searchQuery = query.trim();
         if (!searchQuery.startsWith("%")) {
@@ -406,7 +342,7 @@ public class ThreadsAPI {
         if (!searchQuery.endsWith("%")) {
             searchQuery = searchQuery + "%";
         }
-        return getThreadsDatabase().threadDao().getThreadsByQuery(status, searchQuery);
+        return getThreadsDatabase().threadDao().getSeedingThreadsByQuery(searchQuery);
     }
 
     public void setThreadProgress(long idx, int progress) {

@@ -3,7 +3,7 @@ package threads.server.core.contents;
 import androidx.room.RoomDatabase;
 
 
-@androidx.room.Database(entities = {Content.class}, version = 1, exportSchema = false)
+@androidx.room.Database(entities = {Content.class}, version = 100, exportSchema = false)
 public abstract class ContentDatabase extends RoomDatabase {
 
     public abstract ContentDao contentDao();

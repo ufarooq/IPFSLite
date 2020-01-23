@@ -26,7 +26,6 @@ import threads.server.core.contents.Contents;
 import threads.server.core.events.EVENTS;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
-import threads.server.core.threads.Status;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.jobs.JobServiceDownload;
@@ -201,7 +200,7 @@ public class ContentsService {
         if (entries.isEmpty()) {
 
             Service.createThread(context, sender, alias, cid,
-                    Status.ERROR, filename, fileSize, mimeType, thumbnail);
+                    filename, fileSize, mimeType, thumbnail);
 
         }
 

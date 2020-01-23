@@ -193,7 +193,6 @@ public class User extends Basis implements IPeer {
     }
 
 
-
     public boolean isValid() {
         return !publicKey.isEmpty();
     }

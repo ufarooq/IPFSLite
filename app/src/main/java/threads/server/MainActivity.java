@@ -58,7 +58,6 @@ import threads.server.core.peers.AddressType;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
 import threads.server.core.threads.Kind;
-import threads.server.core.threads.Status;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.fragments.DetailsDialogFragment;
@@ -78,7 +77,6 @@ import threads.server.fragments.ThreadsDialogFragment;
 import threads.server.fragments.ThreadsFragment;
 import threads.server.fragments.UserActionDialogFragment;
 import threads.server.fragments.WebViewDialogFragment;
-import threads.server.jobs.JobServiceContents;
 import threads.server.jobs.JobServiceDeleteThreads;
 import threads.server.jobs.JobServiceDownload;
 import threads.server.jobs.JobServiceIdentity;
@@ -125,6 +123,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
     private final AtomicBoolean idScan = new AtomicBoolean(false);
+    private final AtomicBoolean mStartDaemon = new AtomicBoolean(false);
     private CID threadContent = null;
     private DrawerLayout mDrawerLayout;
     private AppBarLayout mAppBarLayout;
@@ -135,7 +134,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private SelectionViewModel mSelectionViewModel;
     private int mTrafficColorId = android.R.color.holo_red_dark;
     private Toolbar mToolbar;
-    private final AtomicBoolean mStartDaemon = new AtomicBoolean(false);
 
     @Override
     public void onRequestPermissionsResult
@@ -257,15 +255,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     public void downloadMultihash(@NonNull String codec) {
         checkNotNull(codec);
-
-        // CHECKED
-
-        if (!Network.isConnected(getApplicationContext())) {
-            java.lang.Thread threadError = new java.lang.Thread(()
-                    -> EVENTS.getInstance(getApplicationContext()).error(getString(R.string.offline_mode)));
-            threadError.start();
-            return;
-        }
 
 
         try {
@@ -1019,6 +1008,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
         }
     }
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
@@ -1429,8 +1419,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 long size = text.length();
 
-                Thread thread = threads.createThread(pid, alias,
-                        Status.INIT, Kind.IN, 0L);
+                Thread thread = threads.createThread(pid, alias, Kind.IN, 0L);
                 thread.setSize(size);
                 thread.setMimeType(mimeType);
 
@@ -1450,11 +1439,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                     threads.setThreadName(idx, cid.getCid());
                     threads.setThreadContent(idx, cid);
-                    threads.setThreadStatus(idx, Status.SEEDING);
-
-
+                    threads.setThreadSeeding(idx);
                 } catch (Throwable e) {
-                    threads.setThreadStatus(idx, Status.ERROR);
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 } finally {
                     threads.setThreadLeaching(idx, false);
                 }
@@ -1504,10 +1491,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         checkNotNull(host);
                         CodecDecider result = CodecDecider.evaluate(text);
 
-                        if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
-                            JobServiceContents.contents(getApplicationContext(),
-                                    host, CID.create(result.getMultihash()));
-                        } else if (result.getCodex() == CodecDecider.Codec.URI) {
+                        if (result.getCodex() == CodecDecider.Codec.MULTIHASH ||
+                                result.getCodex() == CodecDecider.Codec.URI) {
                             JobServiceDownload.download(getApplicationContext(),
                                     host, CID.create(result.getMultihash()));
 
