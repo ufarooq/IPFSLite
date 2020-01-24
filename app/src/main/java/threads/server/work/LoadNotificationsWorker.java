@@ -26,6 +26,7 @@ public class LoadNotificationsWorker extends Worker {
         super(context, params);
 
     }
+
     public static void notifications(@NonNull Context context) {
         checkNotNull(context);
 

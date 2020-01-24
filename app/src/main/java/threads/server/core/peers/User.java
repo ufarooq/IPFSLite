@@ -27,10 +27,6 @@ public class User extends Basis implements IPeer {
     @NonNull
     @ColumnInfo(name = "alias")
     private String alias;
-    @NonNull
-    @TypeConverters(UserType.class)
-    @ColumnInfo(name = "type")
-    private UserType type;
 
     @ColumnInfo(name = "autoConnect")
     private boolean autoConnect;
@@ -45,12 +41,10 @@ public class User extends Basis implements IPeer {
     @ColumnInfo(name = "dialing")
     private boolean dialing;
 
-    User(@NonNull UserType type,
-         @NonNull String alias,
+    User(@NonNull String alias,
          @NonNull String publicKey,
          @NonNull String pid,
          @Nullable CID image) {
-        this.type = type;
         this.alias = alias;
         this.publicKey = publicKey;
         this.pid = pid;
@@ -62,17 +56,14 @@ public class User extends Basis implements IPeer {
     }
 
     @NonNull
-    public static User createUser(@NonNull UserType type,
-                                  @NonNull String alias,
+    public static User createUser(@NonNull String alias,
                                   @NonNull String publicKey,
                                   @NonNull PID pid,
                                   @Nullable CID image) {
-        checkNotNull(type);
-
         checkNotNull(alias);
         checkNotNull(publicKey);
         checkNotNull(pid);
-        return new User(type, alias, publicKey, pid.getPid(), image);
+        return new User(alias, publicKey, pid.getPid(), image);
     }
 
     public boolean isAutoConnect() {
@@ -110,20 +101,9 @@ public class User extends Basis implements IPeer {
     }
 
     @NonNull
-    public UserType getType() {
-        return type;
-    }
-
-    public void setType(@NonNull UserType type) {
-        checkNotNull(type);
-        this.type = type;
-    }
-
-    @NonNull
     public String getPid() {
         return pid;
     }
-
 
     @NonNull
     public String getAlias() {
@@ -196,4 +176,5 @@ public class User extends Basis implements IPeer {
     public boolean isValid() {
         return !publicKey.isEmpty();
     }
+
 }

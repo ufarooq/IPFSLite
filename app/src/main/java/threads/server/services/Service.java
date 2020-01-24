@@ -43,7 +43,6 @@ import threads.server.core.peers.AddressType;
 import threads.server.core.peers.Content;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
-import threads.server.core.peers.UserType;
 import threads.server.core.threads.Kind;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
@@ -318,8 +317,10 @@ public class Service {
 
     }
 
-    private static boolean notify(@NonNull Context context, @NonNull String pid,
-                                  @NonNull String cid, long startTime) {
+    private static boolean notify(@NonNull Context context,
+                                  @NonNull String pid,
+                                  @NonNull String cid,
+                                  long startTime) {
 
         checkNotNull(context);
         checkNotNull(pid);
@@ -362,6 +363,9 @@ public class Service {
 
 
                 String alias = peers.getUserAlias(pid);
+                if (alias == null) {
+                    alias = pid;
+                }
                 String json = gson.toJson(content);
 
                 try {
@@ -455,8 +459,7 @@ public class Service {
                                         alias,
                                         R.drawable.server_network);
 
-                                User user = peers.createUser(pid, pubKey, alias,
-                                        UserType.UNKNOWN, image);
+                                User user = peers.createUser(pid, pubKey, alias, image);
                                 user.setBlocked(true);
                                 peers.storeUser(user);
                             }
@@ -486,8 +489,7 @@ public class Service {
             CID image = ThumbnailService.getImage(
                     context, alias, R.drawable.server_network);
 
-            User newUser = peers.createUser(user, "",
-                    alias, UserType.VERIFIED, image);
+            User newUser = peers.createUser(user, "", alias, image);
             peers.storeUser(newUser);
 
             if (addMessage) {
@@ -551,8 +553,7 @@ public class Service {
         }
     }
 
-    public static void sendReceiveMessage(@NonNull Context context,
-                                          @NonNull String topic) {
+    static void sendReceiveMessage(@NonNull Context context, @NonNull String topic) {
         checkNotNull(context);
         checkNotNull(topic);
         Gson gson = new Gson();
@@ -662,7 +663,6 @@ public class Service {
             sender.setPublicKey(pubKey);
             sender.setAlias(alias);
             sender.setImage(image);
-            sender.setType(UserType.VERIFIED);
 
             peers.storeUser(sender);
 
@@ -724,8 +724,9 @@ public class Service {
                 CID image = ThumbnailService.getImage(
                         context, alias, R.drawable.server_network);
 
-                sender = peers.createUser(senderPid, pubKey, alias, UserType.VERIFIED, image);
+                sender = peers.createUser(senderPid, pubKey, alias, image);
                 sender.setBlocked(true);
+
                 peers.storeUser(sender);
 
                 events.error(context.getString(R.string.user_connect_try, alias));
@@ -1032,7 +1033,6 @@ public class Service {
     }
 
 
-
     private static void peersOnlineStatus(@NonNull Context context) {
         checkNotNull(context);
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -1177,7 +1177,7 @@ public class Service {
 
         try {
             boolean success = false;
-            if (user.getType() == UserType.VERIFIED) {
+            if (!user.isBlocked()) {
 
                 success = Service.notify(
                         context, user.getPID().getPid(), cid.getCid(), start);

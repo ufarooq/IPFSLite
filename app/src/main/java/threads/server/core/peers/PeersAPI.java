@@ -158,15 +158,13 @@ public class PeersAPI {
     public User createUser(@NonNull PID pid,
                            @NonNull String publicKey,
                            @NonNull String name,
-                           @NonNull UserType type,
                            @Nullable CID image) {
         checkNotNull(pid);
         checkNotNull(publicKey);
         checkNotNull(name);
-        checkNotNull(type);
         checkArgument(!pid.getPid().isEmpty());
 
-        return User.createUser(type, name, publicKey, pid, image);
+        return User.createUser(name, publicKey, pid, image);
     }
 
 
@@ -486,22 +484,11 @@ public class PeersAPI {
         return getPeersDatabase().userDao().getPublicKey(pid);
     }
 
-    public String getUserAlias(@NonNull User user) {
-        checkNotNull(user);
-        return getUserAlias(user.getPid());
-    }
 
     @Nullable
     public String getUserAlias(@NonNull String pid) {
         checkNotNull(pid);
         return getPeersDatabase().userDao().getAlias(pid);
-    }
-
-
-    public void setUserAlias(@NonNull User user, @NonNull String alias) {
-        checkNotNull(user);
-        checkNotNull(alias);
-        setUserAlias(user.getPid(), alias);
     }
 
     public void setUserAlias(@NonNull PID user, @NonNull String alias) {
@@ -527,25 +514,6 @@ public class PeersAPI {
         checkNotNull(pid);
         checkNotNull(image);
         getPeersDatabase().userDao().setImage(pid, image);
-    }
-
-
-    public void setUserType(@NonNull User user, @NonNull UserType type) {
-        checkNotNull(user);
-        checkNotNull(type);
-        setUserType(user.getPid(), type);
-    }
-
-    public void setUserType(@NonNull PID user, @NonNull UserType type) {
-        checkNotNull(user);
-        checkNotNull(type);
-        setUserType(user.getPid(), type);
-    }
-
-    public void setUserType(@NonNull String pid, @NonNull UserType type) {
-        checkNotNull(pid);
-        checkNotNull(type);
-        getPeersDatabase().userDao().setUserType(pid, type);
     }
 
 

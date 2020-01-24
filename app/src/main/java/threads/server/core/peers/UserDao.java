@@ -78,14 +78,6 @@ public interface UserDao {
     @Query("UPDATE User SET dialing = 0")
     void resetUsersDialing();
 
-    @Query("SELECT * FROM User WHERE type = :type")
-    @TypeConverters({UserType.class})
-    LiveData<List<User>> getLiveDataUsersByType(UserType type);
-
-    @Query("UPDATE User SET type = :type WHERE pid = :pid")
-    @TypeConverters({UserType.class})
-    void setUserType(String pid, UserType type);
-
     @Query("UPDATE User SET dialing = :dialing WHERE pid = :pid")
     void setUserDialing(String pid, boolean dialing);
 
