@@ -385,40 +385,43 @@ public class ThumbnailService {
         checkNotNull(file);
         checkNotNull(mimeType);
 
+        try {
+            if (mimeType.startsWith("video")) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    return ThumbnailUtils.createVideoThumbnail(file, new Size(THUMBNAIL_SIZE, THUMBNAIL_SIZE), null);
+                } else {
+                    MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+                    mediaMetadataRetriever.setDataSource(context, Uri.fromFile(file));
 
-        if (mimeType.startsWith("video")) {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                return ThumbnailUtils.createVideoThumbnail(file, new Size(THUMBNAIL_SIZE, THUMBNAIL_SIZE), null);
-            } else {
-                MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-                mediaMetadataRetriever.setDataSource(context, Uri.fromFile(file));
+                    // mediaMetadataRetriever.getPrimaryImage(); // TODO support in the future
+                    Bitmap bitmap;
+                    try {
+                        String time = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                        Long timeUs = Long.decode(time);
+                        long timeFrame = (timeUs / 100) * 5;
 
-                // mediaMetadataRetriever.getPrimaryImage(); // TODO support in the future
-                Bitmap bitmap;
-                try {
-                    String time = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-                    Long timeUs = Long.decode(time);
-                    long timeFrame = (timeUs / 100) * 5;
-
-                    bitmap = mediaMetadataRetriever.getFrameAtTime(timeFrame);
-                } catch (Throwable e) {
-                    bitmap = mediaMetadataRetriever.getFrameAtTime();
+                        bitmap = mediaMetadataRetriever.getFrameAtTime(timeFrame);
+                    } catch (Throwable e) {
+                        bitmap = mediaMetadataRetriever.getFrameAtTime();
+                    }
+                    mediaMetadataRetriever.release();
+                    return bitmap;
                 }
-                mediaMetadataRetriever.release();
-                return bitmap;
+            } else if (mimeType.startsWith("application/pdf")) {
+                return getPDFBitmap(context, Uri.fromFile(file));
+            } else if (mimeType.startsWith("image")) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                    return ThumbnailUtils.createImageThumbnail(file,
+                            new Size(THUMBNAIL_SIZE, THUMBNAIL_SIZE), null);
+                } else {
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(
+                            context.getContentResolver(), Uri.fromFile(file));
+                    return ThumbnailUtils.extractThumbnail(
+                            bitmap, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
+                }
             }
-        } else if (mimeType.startsWith("application/pdf")) {
-            return getPDFBitmap(context, Uri.fromFile(file));
-        } else if (mimeType.startsWith("image")) {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                return ThumbnailUtils.createImageThumbnail(file,
-                        new Size(THUMBNAIL_SIZE, THUMBNAIL_SIZE), null);
-            } else {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(
-                        context.getContentResolver(), Uri.fromFile(file));
-                return ThumbnailUtils.extractThumbnail(
-                        bitmap, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
-            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
         return null;

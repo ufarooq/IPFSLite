@@ -5,7 +5,8 @@
     android:layout_height="@dimen/nav_header_height"
     android:gravity="start|center"
     android:orientation="horizontal"
-    android:paddingTop="32dp">
+    android:paddingTop="32dp"
+    tools:ignore="UseCompoundDrawables">
 
     <ImageView
         android:layout_width="40dp"

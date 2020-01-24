@@ -28,12 +28,11 @@ public class UsersViewAdapter extends RecyclerView.Adapter<UsersViewAdapter.View
     private final List<User> users = new ArrayList<>();
     private final Context context;
     private final UsersViewAdapterListener listener;
-    private final int timeout;
+
 
     public UsersViewAdapter(@NonNull Context context,
                             @NonNull UsersViewAdapter.UsersViewAdapterListener listener) {
 
-        timeout = Preferences.getConnectionTimeout(context);
         this.context = context;
         this.listener = listener;
     }
@@ -107,7 +106,7 @@ public class UsersViewAdapter extends RecyclerView.Adapter<UsersViewAdapter.View
                 if (user.getImage() != null) {
                     userViewHolder.user_image.setVisibility(View.VISIBLE);
                     IPFS ipfs = IPFS.getInstance(context);
-                    IPFSData data = IPFSData.create(ipfs, user.getImage(), timeout);
+                    IPFSData data = IPFSData.create(ipfs, user.getImage());
                     Glide.with(context).load(data).into(userViewHolder.user_image);
                 } else {
                     userViewHolder.user_image.setVisibility(View.GONE);

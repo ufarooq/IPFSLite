@@ -207,12 +207,19 @@ public class UploadContentWorker extends Worker {
                     allSeeding++;
                 }
             }
-            if (allSeeding == list.size()) {
+
+            boolean finished = allSeeding == list.size();
+            if (finished) {
                 threads.setThreadSeeding(parent);
             }
             int progress = (int) (((double) allSeeding * 100) / (double) list.size());
             threads.setThreadProgress(parent, progress);
 
+            if (finished) {
+                Thread thread = threads.getThreadByIdx(parent);
+                checkNotNull(thread);
+                checkParentComplete(thread.getParent());
+            }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }

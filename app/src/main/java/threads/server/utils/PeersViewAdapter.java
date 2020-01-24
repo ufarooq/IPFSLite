@@ -2,7 +2,6 @@ package threads.server.utils;
 
 import android.content.Context;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,20 +28,12 @@ public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.View
     private final List<Peer> peers = new ArrayList<>();
     private final Context context;
     private final PeersViewAdapterListener listener;
-    private final int timeout;
+
 
     public PeersViewAdapter(@NonNull Context context,
                             @NonNull PeersViewAdapterListener listener) {
-
-        timeout = Preferences.getConnectionTimeout(context);
         this.context = context;
         this.listener = listener;
-    }
-
-    private static int getThemeTextColor(final Context context) {
-        final TypedValue value = new TypedValue();
-        context.getTheme().resolveAttribute(android.R.attr.textColorSecondary, value, true);
-        return value.data;
     }
 
     @Override
@@ -97,7 +88,7 @@ public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.View
                 if (peer.getImage() != null) {
                     peerViewHolder.user_image.setVisibility(View.VISIBLE);
                     IPFS ipfs = IPFS.getInstance(context);
-                    IPFSData data = IPFSData.create(ipfs, peer.getImage(), timeout);
+                    IPFSData data = IPFSData.create(ipfs, peer.getImage());
                     Glide.with(context).load(data).into(peerViewHolder.user_image);
                 } else {
                     peerViewHolder.user_image.setVisibility(View.GONE);

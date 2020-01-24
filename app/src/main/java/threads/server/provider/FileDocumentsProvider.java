@@ -48,6 +48,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class FileDocumentsProvider extends DocumentsProvider {
     private static final String TAG = FileDocumentsProvider.class.getSimpleName();
+    private static final String BMP = "__bmp__";
     private final static long SPLIT = (long) 1e+7;
     private final static String[] DEFAULT_ROOT_PROJECTION =
             new String[]{
@@ -84,11 +85,11 @@ public class FileDocumentsProvider extends DocumentsProvider {
         builder.scheme("content")
                 .authority(BuildConfig.DOCUMENTS_AUTHORITY)
                 .appendPath("document")
-                .appendPath("" + thread.getIdx());
+                .appendPath("" + thread.getContent());
         return builder.build();
     }
 
-    public static Uri getUriForString(String hash) {
+    public static Uri getUriForBitmap(String hash) {
         Uri.Builder builder = new Uri.Builder();
         builder.scheme("content")
                 .authority(BuildConfig.DOCUMENTS_AUTHORITY)
@@ -220,18 +221,34 @@ public class FileDocumentsProvider extends DocumentsProvider {
         } catch (NumberFormatException e) {
 
             try {
+                if (docId.startsWith(BMP)) {
+                    Multihash.fromBase58(docId);
 
-                Multihash.fromBase58(docId);
 
+                    final MatrixCursor.RowBuilder row = result.newRow();
+                    row.add(Document.COLUMN_DOCUMENT_ID, docId);
+                    row.add(Document.COLUMN_DISPLAY_NAME, "cid_code.png");
+                    row.add(Document.COLUMN_SIZE, null);
+                    row.add(Document.COLUMN_MIME_TYPE, "image/png");
+                    row.add(Document.COLUMN_LAST_MODIFIED, new Date());
+                    row.add(Document.COLUMN_FLAGS, 0);
+                } else {
+                    Multihash.fromBase58(docId);
+                    CID cid = CID.create(docId);
+                    List<Thread> files = threads.getThreadsByCID(cid);
+                    if (files.isEmpty()) {
+                        throw new FileNotFoundException("File not found.");
+                    }
+                    Thread file = files.get(0);
+                    final MatrixCursor.RowBuilder row = result.newRow();
+                    row.add(Document.COLUMN_DOCUMENT_ID, file.getContent());
+                    row.add(Document.COLUMN_DISPLAY_NAME, file.getName());
+                    row.add(Document.COLUMN_SIZE, file.getSize());
+                    row.add(Document.COLUMN_MIME_TYPE, file.getMimeType());
+                    row.add(Document.COLUMN_LAST_MODIFIED, file.getLastModified());
+                    row.add(Document.COLUMN_FLAGS, 0);
 
-                final MatrixCursor.RowBuilder row = result.newRow();
-                row.add(Document.COLUMN_DOCUMENT_ID, docId);
-                row.add(Document.COLUMN_DISPLAY_NAME, docId);
-                row.add(Document.COLUMN_SIZE, null);
-                row.add(Document.COLUMN_MIME_TYPE, "image/png");
-                row.add(Document.COLUMN_LAST_MODIFIED, new Date());
-                row.add(Document.COLUMN_FLAGS, 0);
-
+                }
             } catch (Throwable throwable) {
                 throw new FileNotFoundException("" + throwable.getLocalizedMessage());
             }
@@ -258,8 +275,18 @@ public class FileDocumentsProvider extends DocumentsProvider {
             }
         } catch (NumberFormatException e) {
             try {
-                Multihash.fromBase58(documentId);
-                return "image/png";
+                if (documentId.startsWith(BMP)) {
+                    return "image/png";
+                } else {
+                    Multihash.fromBase58(documentId);
+                    CID cid = CID.create(documentId);
+                    List<Thread> files = threads.getThreadsByCID(cid);
+                    if (files.isEmpty()) {
+                        throw new FileNotFoundException("File not found.");
+                    }
+                    Thread file = files.get(0);
+                    return file.getMimeType();
+                }
             } catch (Throwable throwable) {
                 throw new FileNotFoundException("" + throwable.getLocalizedMessage());
             }
@@ -335,11 +362,26 @@ public class FileDocumentsProvider extends DocumentsProvider {
             }
         } catch (NumberFormatException e) {
             try {
-                Multihash.fromBase58(documentId);
 
-                File impl = getBitmapFile(documentId);
+                if (documentId.startsWith(BMP)) {
+                    File impl = getBitmapFile(documentId);
+                    return ParcelFileDescriptor.open(impl, accessMode);
+                } else {
+                    Multihash.fromBase58(documentId);
+                    CID cid = CID.create(documentId);
+                    List<Thread> files = threads.getThreadsByCID(cid);
+                    if (files.isEmpty()) {
+                        throw new FileNotFoundException("File not found.");
+                    }
+                    Thread file = files.get(0);
 
-                return ParcelFileDescriptor.open(impl, accessMode);
+                    if (file.getSize() < SPLIT) {
+                        return ParcelFileDescriptor.open(getContentFile(cid), accessMode);
+                    } else {
+                        return ParcelFileDescriptorUtil.pipeFrom(ipfs, cid, signal);
+                    }
+
+                }
             } catch (Throwable throwable) {
                 throw new FileNotFoundException("" + throwable.getLocalizedMessage());
             }
@@ -364,7 +406,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
         byte[] bytes = stream.toByteArray();
         bitmap.recycle();
-        File file = new File(ipfs.getCacheDir(), "pic" + hash + ".png");
+        File file = new File(ipfs.getCacheDir(), hash + ".png");
         if (!file.exists()) {
             FileUtils.writeByteArrayToFile(file, bytes);
         }

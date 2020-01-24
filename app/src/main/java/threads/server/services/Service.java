@@ -619,7 +619,7 @@ public class Service {
                 IPFS.setGracePeriod(context, "10s");
 
 
-                Preferences.setConnectionTimeout(context, 45);
+                Preferences.setConnectionTimeout(context, 45000);
                 EntityService.setTangleTimeout(context, 45);
 
                 IPFS.setMDNSEnabled(context, true);
@@ -638,14 +638,6 @@ public class Service {
         }
     }
 
-    private static void handleDirectoryLink(@NonNull Context context,
-                                            @NonNull Thread thread,
-                                            @NonNull LinkInfo link) {
-
-        List<LinkInfo> links = getLinks(context, link.getCid());
-        checkNotNull(links);
-        downloadLinks(context, thread, links);
-    }
 
     private static void adaptUser(@NonNull Context context,
                                   @NonNull PID senderPid,
@@ -919,13 +911,18 @@ public class Service {
     private static void downloadLink(@NonNull Context context,
                                      @NonNull Thread thread,
                                      @NonNull LinkInfo link) {
-        if (link.isDirectory()) {
-            handleDirectoryLink(context, thread, link);
-        } else {
-            THREADS.getInstance(context).setThreadLeaching(thread.getIdx(), true);
-            UploadContentWorker.downloadContent(context, link.getCid(),
-                    thread.getIdx(), link.getName(), link.getSize());
-        }
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            if (link.isDirectory()) {
+                List<LinkInfo> links = getLinks(context, link.getCid());
+                checkNotNull(links);
+                downloadLinks(context, thread, links);
+            } else {
+                THREADS.getInstance(context).setThreadLeaching(thread.getIdx(), true);
+                UploadContentWorker.downloadContent(context, link.getCid(),
+                        thread.getIdx(), link.getName(), link.getSize());
+            }
+        });
     }
 
     private static Thread getDirectoryThread(@NonNull THREADS threads,
@@ -962,6 +959,7 @@ public class Service {
                         cid, link, thread.getIdx());
                 entry = threads.getThreadByIdx(idx);
                 checkNotNull(entry);
+
                 downloadLink(context, entry, link);
             }
 
@@ -978,6 +976,7 @@ public class Service {
         int timeout = Preferences.getConnectionTimeout(context);
         List<LinkInfo> links = ipfs.ls(cid, timeout, false);
         if (links == null) {
+            Log.e(TAG, "no links");
             return null;
         }
         List<LinkInfo> result = new ArrayList<>();

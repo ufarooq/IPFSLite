@@ -154,27 +154,27 @@ public class Network {
         Pair<InetAddress, Boolean> result = null;
 
 
-        for (InetAddress addresse : addresses) {
-            if (!addresse.isLoopbackAddress()) {
+        for (InetAddress address : addresses) {
+            if (!address.isLoopbackAddress()) {
                 if (useIPv4) {
-                    if (addresse instanceof Inet4Address) {
-                        if (isValidPublicIP(addresse)) {
-                            return Pair.create(addresse, true);
+                    if (address instanceof Inet4Address) {
+                        if (isValidPublicIP(address)) {
+                            return Pair.create(address, true);
                         } else {
-                            return Pair.create(addresse, false);
+                            return Pair.create(address, false);
                         }
                     }
                 } else {
-                    if (addresse instanceof Inet6Address) {
-                        if (isValidPublicIP(addresse)) {
-                            if (isIPv6GlobalAddress((Inet6Address) addresse)) {
-                                return Pair.create(addresse, true);
+                    if (address instanceof Inet6Address) {
+                        if (isValidPublicIP(address)) {
+                            if (isIPv6GlobalAddress((Inet6Address) address)) {
+                                return Pair.create(address, true);
                             } else {
-                                result = Pair.create(addresse, false);
+                                result = Pair.create(address, false);
                             }
                         } else {
                             if (result == null) {
-                                result = Pair.create(addresse, false);
+                                result = Pair.create(address, false);
                             }
                         }
                     }

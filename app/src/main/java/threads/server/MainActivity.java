@@ -306,7 +306,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         checkNotNull(message);
         try {
 
-            Uri uri = FileDocumentsProvider.getUriForString(code);
+            Uri uri = FileDocumentsProvider.getUriForBitmap(code);
             ComponentName[] names = {new ComponentName(getApplicationContext(), MainActivity.class)};
 
             String mimeType = "image/png";
@@ -1531,7 +1531,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                         getApplicationContext(), MainActivity.class)};
                 CID cid = thread.getContent();
                 checkNotNull(cid);
-                Uri uri = FileDocumentsProvider.getUriForString(cid.getCid());
+                Uri uri = FileDocumentsProvider.getUriForBitmap(cid.getCid());
                 Intent intent = ShareCompat.IntentBuilder.from(this)
                         .setStream(uri)
                         .setType(thread.getMimeType())

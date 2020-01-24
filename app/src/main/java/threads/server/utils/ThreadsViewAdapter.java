@@ -3,7 +3,6 @@ package threads.server.utils;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Color;
-import android.os.Handler;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -38,12 +37,11 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
     private static final String TAG = ThreadsViewAdapter.class.getSimpleName();
     private final Context mContext;
-    private final Handler mHandler;
     private final ThreadsViewAdapterListener listener;
     private final List<Thread> threads = new ArrayList<>();
     private final int accentColor;
     private final int selectedItemColor;
-    private final int timeout;
+
     @Nullable
     private SelectionTracker<Long> mSelectionTracker;
 
@@ -51,11 +49,8 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                               @NonNull ThreadsViewAdapterListener listener) {
         this.mContext = context;
         this.listener = listener;
-        mHandler = new Handler(context.getMainLooper());
         accentColor = getThemeAccentColor(context);
         selectedItemColor = getThemeSelectedItemColor(context);
-        timeout = Preferences.getConnectionTimeout(context);
-
     }
 
     private static int getThemeAccentColor(final Context context) {
@@ -71,10 +66,6 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
     private static String getCompactString(@NonNull String title) {
         checkNotNull(title);
         return title.replace("\n", " ");
-    }
-
-    private void runOnUiThread(Runnable r) {
-        mHandler.post(r);
     }
 
     public void setSelectionTracker(SelectionTracker<Long> selectionTracker) {
@@ -132,7 +123,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
             if (thread.getThumbnail() != null) {
                 IPFS ipfs = IPFS.getInstance(mContext);
-                IPFSData data = IPFSData.create(ipfs, thread.getThumbnail(), timeout);
+                IPFSData data = IPFSData.create(ipfs, thread.getThumbnail());
                 Glide.with(mContext).
                         load(data).
                         into(threadViewHolder.main_image);
@@ -175,9 +166,10 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
             int progress = thread.getProgress();
             if (progress > 0 && progress < 101) {
-                runOnUiThread(() ->
-                        threadViewHolder.progress_bar.setProgress(progress)
-                );
+                if (threadViewHolder.progress_bar.isIndeterminate()) {
+                    threadViewHolder.progress_bar.setIndeterminate(false);
+                }
+                threadViewHolder.progress_bar.setProgress(progress);
             } else {
                 threadViewHolder.progress_bar.setIndeterminate(true);
             }

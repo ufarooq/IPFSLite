@@ -8,7 +8,6 @@ import java.util.Objects;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 
-import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class IPFSData {
@@ -16,27 +15,22 @@ public class IPFSData {
     private final String multihash;
     @Nullable
     private final IPFS ipfs;
-    private final int timeout;
 
-    private IPFSData(@Nullable IPFS ipfs, @NonNull String multihash, int timeout) {
+    private IPFSData(@Nullable IPFS ipfs, @NonNull String multihash) {
         checkNotNull(ipfs);
         checkNotNull(multihash);
-
-        checkArgument(timeout > 0);
         this.ipfs = ipfs;
         this.multihash = multihash;
-
-        this.timeout = timeout;
     }
 
     @NonNull
-    public static IPFSData create(@Nullable IPFS ipfs, @NonNull String cid, int timeout) {
-        return new IPFSData(ipfs, cid, timeout);
+    public static IPFSData create(@Nullable IPFS ipfs, @NonNull String cid) {
+        return new IPFSData(ipfs, cid);
     }
 
     @NonNull
-    public static IPFSData create(@Nullable IPFS ipfs, @NonNull CID cid, int timeout) {
-        return create(ipfs, cid.getCid(), timeout);
+    public static IPFSData create(@Nullable IPFS ipfs, @NonNull CID cid) {
+        return create(ipfs, cid.getCid());
     }
 
     @Nullable
@@ -62,8 +56,4 @@ public class IPFSData {
         return CID.create(multihash);
     }
 
-
-    public int getTimeout() {
-        return timeout;
-    }
 }

@@ -93,7 +93,7 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
             if (account.getImage() != null) {
                 IPFS ipfs = IPFS.getInstance(context);
                 IPFSData data = IPFSData.create(ipfs,
-                        account.getImage(), timeout);
+                        account.getImage());
                 Glide.with(context).load(data).into(holder.account_icon);
             } else {
                 holder.account_icon.setVisibility(View.GONE);
@@ -109,7 +109,7 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
                     if (account.getImage() != null) {
                         IPFS ipfs = IPFS.getInstance(context);
                         IPFSData data = IPFSData.create(ipfs,
-                                account.getImage(), timeout);
+                                account.getImage());
                         Glide.with(context).load(data).into(holder.account_icon);
                     } else {
                         holder.account_icon.setVisibility(View.GONE);
