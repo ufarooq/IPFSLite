@@ -48,7 +48,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class FileDocumentsProvider extends DocumentsProvider {
     private static final String TAG = FileDocumentsProvider.class.getSimpleName();
-    private static final String BMP = "__bmp__";
+    private static final String DOTCID = ".cid";
     private final static long SPLIT = (long) 1e+7;
     private final static String[] DEFAULT_ROOT_PROJECTION =
             new String[]{
@@ -94,7 +94,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         builder.scheme("content")
                 .authority(BuildConfig.DOCUMENTS_AUTHORITY)
                 .appendPath("document")
-                .appendPath(hash);
+                .appendPath(hash + DOTCID);
         return builder.build();
     }
 
@@ -221,13 +221,10 @@ public class FileDocumentsProvider extends DocumentsProvider {
         } catch (NumberFormatException e) {
 
             try {
-                if (docId.startsWith(BMP)) {
-                    Multihash.fromBase58(docId);
-
-
+                if (docId.endsWith(DOTCID)) {
                     final MatrixCursor.RowBuilder row = result.newRow();
                     row.add(Document.COLUMN_DOCUMENT_ID, docId);
-                    row.add(Document.COLUMN_DISPLAY_NAME, "cid_code.png");
+                    row.add(Document.COLUMN_DISPLAY_NAME, docId);
                     row.add(Document.COLUMN_SIZE, null);
                     row.add(Document.COLUMN_MIME_TYPE, "image/png");
                     row.add(Document.COLUMN_LAST_MODIFIED, new Date());
@@ -275,7 +272,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
             }
         } catch (NumberFormatException e) {
             try {
-                if (documentId.startsWith(BMP)) {
+                if (documentId.endsWith(DOTCID)) {
                     return "image/png";
                 } else {
                     Multihash.fromBase58(documentId);
@@ -363,7 +360,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         } catch (NumberFormatException e) {
             try {
 
-                if (documentId.startsWith(BMP)) {
+                if (documentId.endsWith(DOTCID)) {
                     File impl = getBitmapFile(documentId);
                     return ParcelFileDescriptor.open(impl, accessMode);
                 } else {
