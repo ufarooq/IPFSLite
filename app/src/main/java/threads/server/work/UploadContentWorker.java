@@ -177,8 +177,8 @@ public class UploadContentWorker extends Worker {
         }
 
         return Result.success();
-    }
 
+    }
     private void markLeaching(long parent) {
         if (parent == 0L) {
             return;

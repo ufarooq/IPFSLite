@@ -18,10 +18,8 @@ import java.util.concurrent.Executors;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.server.core.peers.Content;
-import threads.server.core.peers.PEERS;
 import threads.server.services.IdentityService;
 import threads.server.services.Service;
-import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -56,24 +54,22 @@ public class JobServiceIdentity extends JobService {
         if (!peerDiscovery) {
             return false;
         }
-        if (!Network.isConnected(getApplicationContext())) {
-            return false;
-        }
+
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             long start = System.currentTimeMillis();
 
             try {
 
-                PEERS peers = PEERS.getInstance(getApplicationContext());
                 PID host = IPFS.getPID(getApplicationContext());
-
+                checkNotNull(host);
+                String alias = IPFS.getDeviceName();
+                checkNotNull(alias);
 
                 Map<String, String> params = new HashMap<>();
-                if (host != null) {
-                    String alias = peers.getUserAlias(host);
-                    params.put(Content.ALIAS, alias);
-                }
+                params.put(Content.ALIAS, alias);
+
 
                 IdentityService.publishIdentity(getApplicationContext(), params, Service.RELAYS);
 

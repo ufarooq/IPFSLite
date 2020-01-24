@@ -41,7 +41,6 @@ import threads.server.core.events.EVENTS;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.jobs.JobServiceDeleteThreads;
-import threads.server.jobs.JobServiceLoadNotifications;
 import threads.server.mdl.SelectionViewModel;
 import threads.server.mdl.ThreadViewModel;
 import threads.server.provider.FileDocumentsProvider;
@@ -50,6 +49,7 @@ import threads.server.utils.Network;
 import threads.server.utils.ThreadItemDetailsLookup;
 import threads.server.utils.ThreadsItemKeyProvider;
 import threads.server.utils.ThreadsViewAdapter;
+import threads.server.work.LoadNotificationsWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -577,7 +577,7 @@ public class ThreadsFragment extends Fragment implements
         mSwipeRefreshLayout.setRefreshing(true);
 
         try {
-            JobServiceLoadNotifications.notifications(mContext);
+            LoadNotificationsWorker.notifications(mContext);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {

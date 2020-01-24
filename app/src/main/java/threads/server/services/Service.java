@@ -55,7 +55,6 @@ import threads.server.jobs.JobServiceDownload;
 import threads.server.jobs.JobServiceDownloader;
 import threads.server.jobs.JobServiceFindPeers;
 import threads.server.jobs.JobServiceIdentity;
-import threads.server.jobs.JobServiceLoadNotifications;
 import threads.server.jobs.JobServiceLoadPublicKey;
 import threads.server.jobs.JobServicePeers;
 import threads.server.jobs.JobServicePublish;
@@ -63,6 +62,7 @@ import threads.server.jobs.JobServicePublisher;
 import threads.server.utils.CodecDecider;
 import threads.server.utils.Preferences;
 import threads.server.utils.ProgressChannel;
+import threads.server.work.LoadNotificationsWorker;
 import threads.server.work.UploadContentWorker;
 
 import static androidx.core.util.Preconditions.checkArgument;
@@ -557,14 +557,16 @@ public class Service {
         checkNotNull(topic);
         Gson gson = new Gson();
         IPFS ipfs = IPFS.getInstance(context);
-        PEERS peers = PEERS.getInstance(context);
+
         if (IPFS.isPubSubEnabled(context)) {
             PID host = IPFS.getPID(context);
             checkNotNull(host);
+            String alias = IPFS.getDeviceName();
+            checkNotNull(alias);
 
             Content map = new Content();
             map.put(Content.EST, "RECEIVED");
-            map.put(Content.ALIAS, peers.getUserAlias(host));
+            map.put(Content.ALIAS, alias);
 
             checkNotNull(ipfs, "IPFS not valid");
             ipfs.pubSubPub(topic, gson.toJson(map), 50);
@@ -1029,22 +1031,7 @@ public class Service {
         }
     }
 
-    private static void checkNotifications(@NonNull Context context) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                IPFS ipfs = IPFS.getInstance(context);
 
-                while (ipfs.isDaemonRunning()) {
-                    java.lang.Thread.sleep(TimeUnit.SECONDS.toMillis(30));
-                    JobServiceLoadNotifications.notifications(context);
-                }
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        });
-    }
 
     private static void peersOnlineStatus(@NonNull Context context) {
         checkNotNull(context);
@@ -1286,7 +1273,7 @@ public class Service {
     private void init(@NonNull Context context) {
         checkNotNull(context);
 
-        JobServiceLoadNotifications.notifications(context);
+        LoadNotificationsWorker.notifications(context);
         JobServiceDownloader.downloader(context);
         JobServicePublisher.publish(context);
         JobServicePeers.peers(context);
@@ -1298,7 +1285,6 @@ public class Service {
         new java.lang.Thread(() -> {
             try {
                 Service.cleanStates(context);
-                Service.checkNotifications(context);
                 Service.peersOnlineStatus(context);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

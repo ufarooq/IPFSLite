@@ -491,11 +491,6 @@ public class PeersAPI {
         return getUserAlias(user.getPid());
     }
 
-    public String getUserAlias(@NonNull PID user) {
-        checkNotNull(user);
-        return getUserAlias(user.getPid());
-    }
-
     @Nullable
     public String getUserAlias(@NonNull String pid) {
         checkNotNull(pid);
