@@ -37,7 +37,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
     private static final String TAG = ThreadsViewAdapter.class.getSimpleName();
     private final Context mContext;
-    private final ThreadsViewAdapterListener listener;
+    private final ThreadsViewAdapterListener mListener;
     private final List<Thread> threads = new ArrayList<>();
     private final int accentColor;
     private final int selectedItemColor;
@@ -48,7 +48,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
     public ThreadsViewAdapter(@NonNull Context context,
                               @NonNull ThreadsViewAdapterListener listener) {
         this.mContext = context;
-        this.listener = listener;
+        this.mListener = listener;
         accentColor = getThemeAccentColor(context);
         selectedItemColor = getThemeSelectedItemColor(context);
     }
@@ -135,7 +135,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
             threadViewHolder.view.setOnClickListener((v) -> {
                 try {
-                    listener.onClick(thread);
+                    mListener.onClick(thread);
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
@@ -193,11 +193,11 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                 }
                 threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
             } else if (thread.isPublishing()) {
-                if (listener.generalActionSupport(thread)) {
+                if (mListener.generalActionSupport(thread)) {
                     threadViewHolder.general_action.setVisibility(View.VISIBLE);
                     threadViewHolder.general_action.setImageResource(R.drawable.dots);
                     threadViewHolder.general_action.setOnClickListener((v) ->
-                            listener.invokeGeneralAction(thread)
+                            mListener.invokeGeneralAction(thread)
                     );
                 } else {
                     threadViewHolder.general_action.setVisibility(View.INVISIBLE);
@@ -207,23 +207,23 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
             } else if (thread.isSeeding()) {
                 threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
-                if (listener.generalActionSupport(thread)) {
+                if (mListener.generalActionSupport(thread)) {
                     threadViewHolder.general_action.setImageResource(R.drawable.dots);
                     threadViewHolder.general_action.setVisibility(View.VISIBLE);
 
                     threadViewHolder.general_action.setOnClickListener((v) ->
-                            listener.invokeGeneralAction(thread)
+                            mListener.invokeGeneralAction(thread)
                     );
                 } else {
                     threadViewHolder.general_action.setVisibility(View.INVISIBLE);
                 }
             } else if (thread.isLeaching()) {
 
-                if (listener.generalActionSupport(thread)) {
+                if (mListener.generalActionSupport(thread)) {
                     threadViewHolder.general_action.setVisibility(View.VISIBLE);
                     threadViewHolder.general_action.setImageResource(R.drawable.dots);
                     threadViewHolder.general_action.setOnClickListener((v) ->
-                            listener.invokeGeneralAction(thread)
+                            mListener.invokeGeneralAction(thread)
                     );
                 } else {
                     threadViewHolder.general_action.setVisibility(View.INVISIBLE);
@@ -238,7 +238,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                 threadViewHolder.general_action.setVisibility(View.VISIBLE);
                 threadViewHolder.general_action.setImageResource(R.drawable.download);
                 threadViewHolder.general_action.setOnClickListener((v) ->
-                        listener.invokeDownload(thread)
+                        mListener.invokeDownload(thread)
                 );
             }
 
@@ -270,18 +270,6 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
     }
 
-    public int getPositionOfItem(long idx) {
-        try {
-            for (int i = 0; i < threads.size(); i++) {
-                if (threads.get(i).getIdx() == idx) {
-                    return i;
-                }
-            }
-        } catch (Throwable e) {
-            // ignore exception
-        }
-        return -1;
-    }
 
     public void selectAllThreads() {
         try {

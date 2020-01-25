@@ -22,7 +22,7 @@ public class ThreadsItemKeyProvider extends ItemKeyProvider<Long> {
 
     @Override
     public int getPosition(@NonNull Long key) {
-        return mThreadsViewAdapter.getPositionOfItem(key);
+        return mThreadsViewAdapter.getPosition(key);
     }
 
 }

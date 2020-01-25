@@ -228,7 +228,7 @@ public class ThreadsFragment extends Fragment implements
                     boolean scrollToTop = false;
 
                     if (!threads.isEmpty()) {
-                        int pos = mThreadsViewAdapter.getPositionOfItem(
+                        int pos = mThreadsViewAdapter.getPosition(
                                 threads.get(0).getIdx());
                         scrollToTop = pos != 0;
                     }
@@ -321,11 +321,11 @@ public class ThreadsFragment extends Fragment implements
             return;
         }
 
-        long[] entries = convert(mSelectionTracker.getSelection());
-
-        JobServiceDeleteThreads.removeThreads(mContext, entries);
 
         try {
+            long[] entries = convert(mSelectionTracker.getSelection());
+
+            JobServiceDeleteThreads.removeThreads(mContext, entries);
 
             mSelectionTracker.clearSelection();
 

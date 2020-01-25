@@ -1291,6 +1291,33 @@ public class Service {
 
     }
 
+
+    public void deleteUser(@NonNull Context context, @NonNull String pid) {
+        checkNotNull(context);
+        checkNotNull(pid);
+        try {
+            final IPFS ipfs = IPFS.getInstance(context);
+            final PEERS peers = PEERS.getInstance(context);
+            final EVENTS events = EVENTS.getInstance(context);
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    checkNotNull(ipfs, "IPFS is not valid");
+                    User user = peers.getUserByPID(PID.create(pid));
+                    if (user != null) {
+                        peers.removeUser(ipfs, user);
+                    }
+
+                } catch (Throwable e) {
+                    events.exception(e);
+                }
+            });
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
     private void attachHandler(@NonNull Context context) {
         checkNotNull(context);
         try {

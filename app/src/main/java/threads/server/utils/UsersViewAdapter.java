@@ -10,6 +10,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.selection.ItemDetailsLookup;
+import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -22,19 +25,34 @@ import threads.ipfs.IPFS;
 import threads.server.R;
 import threads.server.core.peers.User;
 
-public class UsersViewAdapter extends RecyclerView.Adapter<UsersViewAdapter.ViewHolder> {
+public class UsersViewAdapter extends
+        RecyclerView.Adapter<UsersViewAdapter.ViewHolder> implements UserItemPosition {
 
     private static final String TAG = UsersViewAdapter.class.getSimpleName();
     private final List<User> users = new ArrayList<>();
     private final Context context;
     private final UsersViewAdapterListener listener;
 
+    @Nullable
+    private SelectionTracker<String> mSelectionTracker;
 
     public UsersViewAdapter(@NonNull Context context,
                             @NonNull UsersViewAdapter.UsersViewAdapterListener listener) {
 
         this.context = context;
         this.listener = listener;
+    }
+
+
+    public void setSelectionTracker(SelectionTracker<String> selectionTracker) {
+        this.mSelectionTracker = selectionTracker;
+    }
+
+    private boolean hasSelection() {
+        if (mSelectionTracker != null) {
+            return mSelectionTracker.hasSelection();
+        }
+        return false;
     }
 
     @Override
@@ -49,7 +67,7 @@ public class UsersViewAdapter extends RecyclerView.Adapter<UsersViewAdapter.View
 
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.users, parent, false);
-        return new UsersViewAdapter.UserViewHolder(v);
+        return new UsersViewAdapter.UserViewHolder(this, v);
 
     }
 
@@ -62,17 +80,38 @@ public class UsersViewAdapter extends RecyclerView.Adapter<UsersViewAdapter.View
         if (holder instanceof UsersViewAdapter.UserViewHolder) {
             UsersViewAdapter.UserViewHolder userViewHolder = (UsersViewAdapter.UserViewHolder) holder;
 
+            boolean isSelected = false;
+            if (mSelectionTracker != null) {
+                if (mSelectionTracker.isSelected(user.getPid())) {
+                    isSelected = true;
+                }
+            }
+
+            userViewHolder.bind(isSelected, user);
+
+
             try {
 
-                if (listener.generalActionSupport(user)) {
-                    userViewHolder.user_action.setVisibility(View.VISIBLE);
-                    userViewHolder.user_action.setOnClickListener((v) ->
-                            listener.invokeGeneralAction(user)
-                    );
+                if (hasSelection()) {
+                    if (isSelected) {
+                        userViewHolder.user_action.setVisibility(View.VISIBLE);
+                        userViewHolder.user_action.setImageResource(R.drawable.check_circle_outline);
+                    } else {
+                        userViewHolder.user_action.setVisibility(View.VISIBLE);
+                        userViewHolder.user_action.setImageResource(R.drawable.checkbox_blank_circle_outline);
+                    }
+                    userViewHolder.progress_bar.setVisibility(View.GONE);
                 } else {
-                    userViewHolder.user_action.setVisibility(View.GONE);
+                    if (listener.generalActionSupport(user)) {
+                        userViewHolder.user_action.setImageResource(R.drawable.dots);
+                        userViewHolder.user_action.setVisibility(View.VISIBLE);
+                        userViewHolder.user_action.setOnClickListener((v) ->
+                                listener.invokeGeneralAction(user)
+                        );
+                    } else {
+                        userViewHolder.user_action.setVisibility(View.INVISIBLE);
+                    }
                 }
-
 
                 if (user.isBlocked()) {
                     userViewHolder.progress_bar.setVisibility(View.GONE);
@@ -129,6 +168,32 @@ public class UsersViewAdapter extends RecyclerView.Adapter<UsersViewAdapter.View
         diffResult.dispatchUpdatesTo(this);
     }
 
+    @Override
+    public synchronized int getPosition(String pid) {
+        for (int i = 0; i < users.size(); i++) {
+            if (users.get(i).getPid().equals(pid)) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    String getPid(int position) {
+        return users.get(position).getPid();
+    }
+
+    public void selectAllUsers() {
+        try {
+            for (User user : users) {
+                if (mSelectionTracker != null) {
+                    mSelectionTracker.select(user.getPid());
+                }
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
 
     public interface UsersViewAdapterListener {
 
@@ -153,14 +218,30 @@ public class UsersViewAdapter extends RecyclerView.Adapter<UsersViewAdapter.View
         final ImageView user_action;
         final ImageView user_image;
         final ProgressBar progress_bar;
+        final UserItemDetails userItemDetails;
 
-        UserViewHolder(View v) {
+
+        UserViewHolder(UserItemPosition pos, View v) {
             super(v);
             user_image = v.findViewById(R.id.user_image);
             user_alias = v.findViewById(R.id.user_alias);
             user_action = v.findViewById(R.id.user_action);
             progress_bar = v.findViewById(R.id.progress_bar);
+            userItemDetails = new UserItemDetails(pos);
+        }
 
+        void bind(boolean isSelected, User user) {
+
+            userItemDetails.pid = user.getPid();
+
+            itemView.setActivated(isSelected);
+
+
+        }
+
+        ItemDetailsLookup.ItemDetails<String> getUserItemDetails() {
+
+            return userItemDetails;
         }
     }
 }

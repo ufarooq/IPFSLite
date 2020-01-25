@@ -108,6 +108,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         EditMultihashDialogFragment.ActionListener,
         EditPeerDialogFragment.ActionListener,
         ThreadsFragment.ActionListener,
+        PeersFragment.ActionListener,
         NameDialogFragment.ActionListener,
         PeerActionDialogFragment.ActionListener,
         InfoDialogFragment.ActionListener,
@@ -479,27 +480,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public void clickUserDelete(@NonNull String pid) {
         checkNotNull(pid);
-        try {
-            final IPFS ipfs = IPFS.getInstance(getApplicationContext());
-            final PEERS peers = PEERS.getInstance(getApplicationContext());
-            final EVENTS events = EVENTS.getInstance(getApplicationContext());
 
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    checkNotNull(ipfs, "IPFS is not valid");
-                    User user = peers.getUserByPID(PID.create(pid));
-                    if (user != null) {
-                        peers.removeUser(ipfs, user);
-                    }
-
-                } catch (Throwable e) {
-                    events.exception(e);
-                }
-            });
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
+        Service.getInstance(getApplicationContext()).deleteUser(
+                getApplicationContext(), pid);
     }
 
     @Override
