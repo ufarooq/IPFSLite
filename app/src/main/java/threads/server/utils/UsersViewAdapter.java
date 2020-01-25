@@ -48,8 +48,8 @@ public class UsersViewAdapter extends RecyclerView.Adapter<UsersViewAdapter.View
                                                               int viewType) {
 
         View v = LayoutInflater.from(parent.getContext())
-                        .inflate(R.layout.users, parent, false);
-                return new UsersViewAdapter.UserViewHolder(v);
+                .inflate(R.layout.users, parent, false);
+        return new UsersViewAdapter.UserViewHolder(v);
 
     }
 
@@ -72,7 +72,6 @@ public class UsersViewAdapter extends RecyclerView.Adapter<UsersViewAdapter.View
                 } else {
                     userViewHolder.user_action.setVisibility(View.GONE);
                 }
-
 
 
                 if (user.isBlocked()) {
