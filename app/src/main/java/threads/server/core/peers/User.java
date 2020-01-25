@@ -28,8 +28,6 @@ public class User extends Basis implements IPeer {
     @ColumnInfo(name = "alias")
     private String alias;
 
-    @ColumnInfo(name = "autoConnect")
-    private boolean autoConnect;
     @ColumnInfo(name = "connected")
     private boolean connected;
     @Nullable
@@ -52,7 +50,6 @@ public class User extends Basis implements IPeer {
         this.blocked = false;
         this.dialing = false;
         this.connected = false;
-        this.autoConnect = false;
     }
 
     @NonNull
@@ -64,14 +61,6 @@ public class User extends Basis implements IPeer {
         checkNotNull(publicKey);
         checkNotNull(pid);
         return new User(alias, publicKey, pid.getPid(), image);
-    }
-
-    public boolean isAutoConnect() {
-        return autoConnect;
-    }
-
-    public void setAutoConnect(boolean autoConnect) {
-        this.autoConnect = autoConnect;
     }
 
     @Override
@@ -158,7 +147,6 @@ public class User extends Basis implements IPeer {
         checkNotNull(user);
         if (this == user) return true;
         return Objects.equals(connected, user.isConnected()) &&
-                Objects.equals(autoConnect, user.isAutoConnect()) &&
                 Objects.equals(dialing, user.isDialing()) &&
                 Objects.equals(alias, user.getAlias()) &&
                 Objects.equals(blocked, user.isBlocked()) &&

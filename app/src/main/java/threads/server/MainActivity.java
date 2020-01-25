@@ -1189,23 +1189,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     }
 
-    @Override
-    public void clickUserAutoConnect(@NonNull String pid, boolean autoConnect) {
-
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                PEERS peers = PEERS.getInstance(getApplicationContext());
-                peers.setUserAutoConnect(PID.create(pid), autoConnect);
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        });
-
-    }
-
 
     @Override
     public void clickConnectPeer(@NonNull String pid) {

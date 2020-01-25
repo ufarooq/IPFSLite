@@ -20,8 +20,8 @@ import androidx.core.content.ContextCompat;
 
 import threads.server.MainActivity;
 import threads.server.R;
-import threads.server.jobs.JobServiceAutoConnect;
 import threads.server.jobs.JobServicePeers;
+import threads.server.work.AutoConnectWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -38,7 +38,7 @@ public class DaemonService extends Service {
         public void onReceive(Context context, Intent intent) {
             try {
                 JobServicePeers.peers(getApplicationContext());
-                JobServiceAutoConnect.autoConnect(getApplicationContext());
+                AutoConnectWorker.autoConnect(getApplicationContext(), false, 30);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }

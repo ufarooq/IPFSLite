@@ -380,18 +380,10 @@ public class PeersAPI {
         getPeersDatabase().userDao().setConnected(user.getPid(), connected);
     }
 
-    public void setUserAutoConnect(@NonNull PID user, boolean autoConnect) {
-        checkNotNull(user);
-        getPeersDatabase().userDao().setAutoConnect(user.getPid(), autoConnect);
-    }
 
     public void setUserDialing(@NonNull PID user, boolean dialing) {
         checkNotNull(user);
         getPeersDatabase().userDao().setUserDialing(user.getPid(), dialing);
-    }
-
-    public List<User> getAutoConnectUsers() {
-        return getPeersDatabase().userDao().getAutoConnectUsers(true);
     }
 
 
@@ -420,16 +412,6 @@ public class PeersAPI {
     public boolean isUserConnected(@NonNull String pid) {
         checkNotNull(pid);
         return getPeersDatabase().userDao().isConnected(pid);
-    }
-
-    public boolean isUserAutoConnect(@NonNull PID user) {
-        checkNotNull(user);
-        return isUserAutoConnect(user.getPid());
-    }
-
-    public boolean isUserAutoConnect(@NonNull String pid) {
-        checkNotNull(pid);
-        return getPeersDatabase().userDao().isAutoConnect(pid);
     }
 
     public void resetUsersDialing() {

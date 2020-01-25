@@ -31,10 +31,6 @@ public interface UserDao {
     @Query("SELECT * FROM User WHERE blocked = :blocked")
     List<User> getBlockedUsers(boolean blocked);
 
-
-    @Query("SELECT * FROM User WHERE autoConnect = :autoConnect")
-    List<User> getAutoConnectUsers(boolean autoConnect);
-
     @Query("SELECT pid FROM User")
     List<String> getUserPids();
 
@@ -102,12 +98,6 @@ public interface UserDao {
 
     @Query("SELECT connected FROM User WHERE pid = :pid ")
     boolean isConnected(String pid);
-
-    @Query("SELECT autoConnect FROM User WHERE pid = :pid ")
-    boolean isAutoConnect(String pid);
-
-    @Query("UPDATE User SET autoConnect = :autoConnect WHERE pid = :pid")
-    void setAutoConnect(String pid, boolean autoConnect);
 
     @Query("UPDATE User SET blocked = :blocked WHERE pid = :pid")
     void setBlocked(String pid, boolean blocked);

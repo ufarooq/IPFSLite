@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,16 +25,18 @@ import threads.server.R;
 import threads.server.core.peers.User;
 import threads.server.mdl.UsersViewModel;
 import threads.server.utils.UsersViewAdapter;
+import threads.server.work.AutoConnectWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class PeersFragment extends Fragment implements UsersViewAdapter.UsersViewAdapterListener {
+public class PeersFragment extends Fragment implements
+        SwipeRefreshLayout.OnRefreshListener, UsersViewAdapter.UsersViewAdapterListener {
 
     private static final String TAG = PeersFragment.class.getSimpleName();
     private long mLastClickTime = 0;
 
-
-    private UsersViewAdapter usersViewAdapter;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+    private UsersViewAdapter mUsersViewAdapter;
     private Context mContext;
 
 
@@ -57,10 +60,19 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
         RecyclerView mRecyclerView = view.findViewById(R.id.recycler_users);
         mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
 
+
+        mSwipeRefreshLayout = view.findViewById(R.id.swipe_container);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+        mSwipeRefreshLayout.setColorSchemeResources(R.color.colorAccent,
+                android.R.color.holo_green_dark,
+                android.R.color.holo_orange_dark,
+                android.R.color.holo_blue_dark);
+
+
         LinearLayoutManager linearLayout = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(linearLayout);
-        usersViewAdapter = new UsersViewAdapter(mContext, this);
-        mRecyclerView.setAdapter(usersViewAdapter);
+        mUsersViewAdapter = new UsersViewAdapter(mContext, this);
+        mRecyclerView.setAdapter(mUsersViewAdapter);
 
         final PID host = IPFS.getPID(mContext);
         UsersViewModel messagesViewModel = new ViewModelProvider(this).get(UsersViewModel.class);
@@ -79,7 +91,7 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
 
                         peers.sort(Comparator.comparing(User::getAlias));
 
-                        usersViewAdapter.updateData(peers);
+                        mUsersViewAdapter.updateData(peers);
                     } catch (Throwable e) {
                         Log.e(TAG, "" + e.getLocalizedMessage(), e);
                     }
@@ -104,11 +116,9 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
             }
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            boolean valid = user.isValid();
-
             UserActionDialogFragment.newInstance(
                     user.getPID().getPid(), true, user.isConnected(), true,
-                    valid, user.isAutoConnect(), true, true, user.isBlocked(),
+                    true, true, user.isBlocked(),
                     true)
                     .show(getChildFragmentManager(), UserActionDialogFragment.TAG);
 
@@ -124,4 +134,17 @@ public class PeersFragment extends Fragment implements UsersViewAdapter.UsersVie
     }
 
 
+    @Override
+    public void onRefresh() {
+        mSwipeRefreshLayout.setRefreshing(true);
+
+        try {
+            AutoConnectWorker.autoConnect(mContext, true, 0);
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        } finally {
+            mSwipeRefreshLayout.setRefreshing(false);
+        }
+
+    }
 }

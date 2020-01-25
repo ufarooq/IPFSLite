@@ -33,8 +33,6 @@ public class UserActionDialogFragment extends DialogFragment {
     private static final String DETAILS_ACTIVE = "DETAILS_ACTIVE";
     private static final String DELETE_ACTIVE = "DELETE_ACTIVE";
     private static final String CONNECT_ACTIVE = "CONNECT_ACTIVE";
-    private static final String AUTO_CONNECT_ACTIVE = "AUTO_CONNECT_ACTIVE";
-    private static final String AUTO_CONNECT_VALUE = "AUTO_CONNECT_VALUE";
     private static final String BLOCKED_VALUE = "BLOCKED_VALUE";
     private static final String BLOCKED_ACTIVE = "BLOCKED_ACTIVE";
     private static final String EDIT_ACTIVE = "EDIT_ACTIVE";
@@ -49,8 +47,6 @@ public class UserActionDialogFragment extends DialogFragment {
                                                        boolean infoActive,
                                                        boolean detailsActive,
                                                        boolean connectActive,
-                                                       boolean autoConnectActive,
-                                                       boolean autoConnectValue,
                                                        boolean deleteActive,
                                                        boolean blockedActive,
                                                        boolean blockedValue,
@@ -62,8 +58,6 @@ public class UserActionDialogFragment extends DialogFragment {
         bundle.putBoolean(DETAILS_ACTIVE, detailsActive);
         bundle.putBoolean(DELETE_ACTIVE, deleteActive);
         bundle.putBoolean(CONNECT_ACTIVE, connectActive);
-        bundle.putBoolean(AUTO_CONNECT_ACTIVE, autoConnectActive);
-        bundle.putBoolean(AUTO_CONNECT_VALUE, autoConnectValue);
         bundle.putBoolean(BLOCKED_ACTIVE, blockedActive);
         bundle.putBoolean(BLOCKED_VALUE, blockedValue);
         bundle.putBoolean(EDIT_ACTIVE, editActive);
@@ -119,8 +113,6 @@ public class UserActionDialogFragment extends DialogFragment {
         boolean connectActive = args.getBoolean(CONNECT_ACTIVE);
         boolean editActive = args.getBoolean(EDIT_ACTIVE);
         boolean detailsActive = args.getBoolean(DETAILS_ACTIVE);
-        boolean autoConnectValue = args.getBoolean(AUTO_CONNECT_VALUE);
-        boolean autoConnectActive = args.getBoolean(AUTO_CONNECT_ACTIVE);
 
 
         @SuppressLint("InflateParams")
@@ -128,29 +120,6 @@ public class UserActionDialogFragment extends DialogFragment {
 
         view.setBackgroundColor(backgroundColor);
 
-
-        final CheckBox menu_auto_connect = view.findViewById(R.id.menu_auto_connect);
-
-        if (!autoConnectActive) {
-            menu_auto_connect.setVisibility(View.GONE);
-        } else {
-            menu_auto_connect.setChecked(autoConnectValue);
-
-            menu_auto_connect.setOnClickListener((v) -> {
-
-                try {
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                        return;
-                    }
-                    mLastClickTime = SystemClock.elapsedRealtime();
-
-                    mListener.clickUserAutoConnect(pid, menu_auto_connect.isChecked());
-                } finally {
-                    dismiss();
-                }
-
-            });
-        }
 
         TextView menu_connect = view.findViewById(R.id.menu_connect);
         if (!connectActive) {
@@ -294,7 +263,6 @@ public class UserActionDialogFragment extends DialogFragment {
 
         void clickUserDetails(@NonNull String pid);
 
-        void clickUserAutoConnect(@NonNull String pid, boolean value);
 
     }
 }

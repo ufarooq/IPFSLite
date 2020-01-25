@@ -19,7 +19,7 @@ public class Preferences {
     public static int getConnectionTimeout(@NonNull Context context) {
         checkNotNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getInt(TIMEOUT_KEY, 3000);
+        return sharedPref.getInt(TIMEOUT_KEY, 5);
     }
 
     public static void setConnectionTimeout(@NonNull Context context, int timeout) {

@@ -122,11 +122,6 @@
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
         <service
-            android:name=".jobs.JobServiceAutoConnect"
-            android:enabled="true"
-            android:exported="false"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-        <service
             android:name=".jobs.JobServiceLoadPublicKey"
             android:enabled="true"
             android:exported="false"

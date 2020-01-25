@@ -569,11 +569,6 @@ public class ThreadsFragment extends Fragment implements
 
     @Override
     public void onRefresh() {
-        loadNotifications();
-    }
-
-    private void loadNotifications() {
-
         mSwipeRefreshLayout.setRefreshing(true);
 
         try {
@@ -581,7 +576,7 @@ public class ThreadsFragment extends Fragment implements
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {
-            mHandler.post(() -> mSwipeRefreshLayout.setRefreshing(false));
+            mSwipeRefreshLayout.setRefreshing(false);
         }
 
     }

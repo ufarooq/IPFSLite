@@ -47,14 +47,10 @@ public class UsersViewAdapter extends RecyclerView.Adapter<UsersViewAdapter.View
     public UsersViewAdapter.UserViewHolder onCreateViewHolder(@NonNull ViewGroup parent,
                                                               int viewType) {
 
-        View v;
-        switch (viewType) {
-            case 0:
-                v = LayoutInflater.from(parent.getContext())
+        View v = LayoutInflater.from(parent.getContext())
                         .inflate(R.layout.users, parent, false);
                 return new UsersViewAdapter.UserViewHolder(v);
-        }
-        throw new RuntimeException("View type not supported.");
+
     }
 
 
@@ -77,29 +73,24 @@ public class UsersViewAdapter extends RecyclerView.Adapter<UsersViewAdapter.View
                     userViewHolder.user_action.setVisibility(View.GONE);
                 }
 
-                int end = 0;
-                if (!user.isValid()) {
-                    end = R.drawable.exclamation;
-                } else if (user.isAutoConnect()) {
-                    end = R.drawable.text_rocket;
-                }
+
 
                 if (user.isBlocked()) {
                     userViewHolder.progress_bar.setVisibility(View.GONE);
                     userViewHolder.user_alias.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            R.drawable.blocked, 0, end, 0);
+                            R.drawable.blocked, 0, 0, 0);
                 } else if (user.isDialing()) {
                     userViewHolder.progress_bar.setVisibility(View.VISIBLE);
                     userViewHolder.user_alias.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            R.drawable.text_lan_pending, 0, end, 0);
+                            R.drawable.text_lan_pending, 0, 0, 0);
                 } else if (user.isConnected()) {
                     userViewHolder.progress_bar.setVisibility(View.GONE);
                     userViewHolder.user_alias.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            R.drawable.green_bubble, 0, end, 0);
+                            R.drawable.green_bubble, 0, 0, 0);
                 } else {
                     userViewHolder.progress_bar.setVisibility(View.GONE);
                     userViewHolder.user_alias.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            R.drawable.record, 0, end, 0);
+                            R.drawable.record, 0, 0, 0);
                 }
 
 

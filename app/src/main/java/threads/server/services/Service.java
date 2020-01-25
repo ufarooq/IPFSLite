@@ -46,7 +46,6 @@ import threads.server.core.peers.User;
 import threads.server.core.threads.Kind;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
-import threads.server.jobs.JobServiceAutoConnect;
 import threads.server.jobs.JobServiceCleanup;
 import threads.server.jobs.JobServiceConnect;
 import threads.server.jobs.JobServiceContents;
@@ -1278,7 +1277,6 @@ public class Service {
         JobServicePublisher.publish(context);
         JobServicePeers.peers(context);
         JobServiceFindPeers.findPeers(context);
-        JobServiceAutoConnect.autoConnect(context);
         JobServiceCleanup.cleanup(context);
         ContentsService.contents(context);
 
