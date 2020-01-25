@@ -23,7 +23,6 @@ import threads.server.core.threads.Thread;
 import threads.server.services.GatewayService;
 import threads.server.services.Service;
 import threads.server.utils.Network;
-import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -69,7 +68,6 @@ public class JobServicePublisher extends JobService {
         }
 
 
-        int timeout = Preferences.getConnectionTimeout(getApplicationContext());
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             long start = System.currentTimeMillis();
@@ -99,7 +97,7 @@ public class JobServicePublisher extends JobService {
 
                 for (CID content : contents) {
                     Executors.newSingleThreadExecutor().submit(
-                            () -> ipfs.dhtPublish(content, true, timeout));
+                            () -> ipfs.dhtPublish(content, true, 1000));
                 }
 
 

@@ -28,7 +28,6 @@ import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.ThumbnailService;
 import threads.server.utils.MimeType;
-import threads.server.utils.Preferences;
 import threads.server.utils.ProgressChannel;
 
 import static androidx.core.util.Preconditions.checkArgument;
@@ -116,7 +115,6 @@ public class UploadContentWorker extends Worker {
             threads.setThreadLeaching(idx, true);
             markLeaching(thread.getParent());
 
-            int timeout = Preferences.getConnectionTimeout(getApplicationContext());
             File file = ipfs.getTempCacheFile();
             success = ipfs.loadToFile(file, cid,
                     (percent) -> {
@@ -128,7 +126,7 @@ public class UploadContentWorker extends Worker {
                         }
 
 
-                    }, timeout, size);
+                    }, 1000, size);
 
             if (success) {
                 threads.setThreadSeeding(idx);

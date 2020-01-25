@@ -19,7 +19,6 @@ import threads.ipfs.IPFS;
 import threads.server.core.peers.Content;
 import threads.server.services.GatewayService;
 import threads.server.utils.Network;
-import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -63,7 +62,6 @@ public class JobServicePublish extends JobService {
         if (!Network.isConnected(getApplicationContext())) {
             return false;
         }
-        int timeout = Preferences.getConnectionTimeout(getApplicationContext());
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -79,7 +77,7 @@ public class JobServicePublish extends JobService {
                             20, 3);
                 }
 
-                ipfs.dhtPublish(CID.create(cid), true, timeout);
+                ipfs.dhtPublish(CID.create(cid), true, 1000);
 
 
                 GatewayService.evaluatePeers(getApplicationContext(), false);

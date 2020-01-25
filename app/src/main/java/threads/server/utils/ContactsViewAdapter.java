@@ -30,12 +30,10 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
     private final ValidateListener listener;
     private final List<Pair<User, AtomicBoolean>> accounts = new ArrayList<>();
     private final Context context;
-    private final int timeout;
 
     public ContactsViewAdapter(@NonNull Context context, @NonNull ValidateListener listener) {
         this.context = context;
         this.listener = listener;
-        this.timeout = Preferences.getConnectionTimeout(context);
     }
 
 
