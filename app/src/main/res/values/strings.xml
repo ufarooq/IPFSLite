@@ -119,7 +119,6 @@
 
 
     <string name="action_details">Details</string>
-    <string name="action_auto_connect">Automatic connection during startup</string>
     <string name="action_peer_add">Add Peer</string>
     <string name="upload_to_ipfs">Upload to IPFS</string>
     <string name="upload_channel_name">Upload Channel</string>

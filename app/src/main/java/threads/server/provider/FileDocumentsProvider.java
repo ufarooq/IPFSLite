@@ -48,7 +48,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class FileDocumentsProvider extends DocumentsProvider {
     private static final String TAG = FileDocumentsProvider.class.getSimpleName();
-    private static final String DOTCID = ".cid";
+    private static final String HASH_ID = ".hid";
     private final static long SPLIT = (long) 1e+7;
     private final static String[] DEFAULT_ROOT_PROJECTION =
             new String[]{
@@ -94,7 +94,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         builder.scheme("content")
                 .authority(BuildConfig.DOCUMENTS_AUTHORITY)
                 .appendPath("document")
-                .appendPath(hash + DOTCID);
+                .appendPath(hash + HASH_ID);
         return builder.build();
     }
 
@@ -221,7 +221,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         } catch (NumberFormatException e) {
 
             try {
-                if (docId.endsWith(DOTCID)) {
+                if (docId.endsWith(HASH_ID)) {
                     final MatrixCursor.RowBuilder row = result.newRow();
                     row.add(Document.COLUMN_DOCUMENT_ID, docId);
                     row.add(Document.COLUMN_DISPLAY_NAME, docId);
@@ -272,7 +272,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
             }
         } catch (NumberFormatException e) {
             try {
-                if (documentId.endsWith(DOTCID)) {
+                if (documentId.endsWith(HASH_ID)) {
                     return "image/png";
                 } else {
                     Multihash.fromBase58(documentId);
@@ -360,7 +360,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         } catch (NumberFormatException e) {
             try {
 
-                if (documentId.endsWith(DOTCID)) {
+                if (documentId.endsWith(HASH_ID)) {
                     File impl = getBitmapFile(documentId);
                     return ParcelFileDescriptor.open(impl, accessMode);
                 } else {
