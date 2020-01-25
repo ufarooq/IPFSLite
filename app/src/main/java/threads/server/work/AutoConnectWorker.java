@@ -79,24 +79,24 @@ public class AutoConnectWorker extends Worker {
 
             for (User user : users) {
 
-                if (dialing) {
-                    peers.setUserDialing(user.getPID(), true);
+                if (!user.isBlocked()) {
+                    if (dialing) {
+                        peers.setUserDialing(user.getPID(), true);
+                    }
+
+                    ipfs.addPubSubTopic(
+                            getApplicationContext(), user.getPID().getPid());
+
+
+                    boolean result = ipfs.swarmConnect(user.getPID(), timeout);
+                    if (result) {
+                        ipfs.protectPeer(user.getPID(), TAG);
+                    }
+
+                    if (dialing) {
+                        peers.setUserDialing(user.getPID(), false);
+                    }
                 }
-
-                ipfs.addPubSubTopic(
-                        getApplicationContext(), user.getPID().getPid());
-
-
-                boolean result = ipfs.swarmConnect(user.getPID(), timeout);
-                if (result) {
-                    ipfs.protectPeer(user.getPID(), TAG);
-                }
-
-                if (dialing) {
-                    peers.setUserDialing(user.getPID(), false);
-                }
-
-
             }
 
         } catch (Throwable e) {
