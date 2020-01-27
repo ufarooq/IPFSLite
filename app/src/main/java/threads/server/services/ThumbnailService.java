@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
@@ -27,6 +28,9 @@ import com.j256.simplemagic.ContentInfo;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.Optional;
 
@@ -378,9 +382,7 @@ public class ThumbnailService {
     }
 
     @Nullable
-    private static Bitmap getPreview(@NonNull Context context,
-                                     @NonNull File file,
-                                     @NonNull String mimeType) throws Exception {
+    private static Bitmap getPreview(@NonNull Context context, @NonNull File file, @NonNull String mimeType) {
         checkNotNull(context);
         checkNotNull(file);
         checkNotNull(mimeType);
@@ -392,8 +394,6 @@ public class ThumbnailService {
                 } else {
                     MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
                     mediaMetadataRetriever.setDataSource(context, Uri.fromFile(file));
-
-                    // mediaMetadataRetriever.getPrimaryImage(); // TODO support in the future
                     Bitmap bitmap;
                     try {
                         String time = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
@@ -414,10 +414,8 @@ public class ThumbnailService {
                     return ThumbnailUtils.createImageThumbnail(file,
                             new Size(THUMBNAIL_SIZE, THUMBNAIL_SIZE), null);
                 } else {
-                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(
-                            context.getContentResolver(), Uri.fromFile(file));
-                    return ThumbnailUtils.extractThumbnail(
-                            bitmap, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
+                    Bitmap bitmap = getBitmap(file);
+                    return ThumbnailUtils.extractThumbnail(bitmap, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
                 }
             }
         } catch (Throwable e) {
@@ -426,6 +424,14 @@ public class ThumbnailService {
 
         return null;
 
+    }
+
+    private static Bitmap getBitmap(File file) throws IOException {
+        try (InputStream input = new FileInputStream(file)) {
+            Bitmap bitmap = BitmapFactory.decodeStream(input);
+            input.close();
+            return bitmap;
+        }
     }
 
     public static class FileDetails {

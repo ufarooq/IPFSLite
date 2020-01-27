@@ -8,6 +8,8 @@ public class SelectionViewModel extends ViewModel {
 
     @NonNull
     private final MutableLiveData<Long> parentThread = new MutableLiveData<>(0L);
+    @NonNull
+    private final MutableLiveData<String> query = new MutableLiveData<>("");
 
     @NonNull
     public MutableLiveData<Long> getParentThread() {
@@ -16,6 +18,15 @@ public class SelectionViewModel extends ViewModel {
 
     public void setParentThread(long idx) {
         getParentThread().postValue(idx);
+    }
+
+    @NonNull
+    public MutableLiveData<String> getQuery() {
+        return query;
+    }
+
+    public void setQuery(String query) {
+        getQuery().postValue(query);
     }
 
     public boolean isTopLevel() {

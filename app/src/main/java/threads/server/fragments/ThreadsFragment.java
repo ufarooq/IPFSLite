@@ -1,5 +1,6 @@
 package threads.server.fragments;
 
+import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -10,9 +11,12 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.SearchView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,6 +24,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
 import androidx.core.app.ShareCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.selection.Selection;
@@ -68,28 +73,27 @@ public class ThreadsFragment extends Fragment implements
     private ThreadViewModel threadViewModel;
     private long mLastClickTime = 0;
     private Context mContext;
+    private FragmentActivity mActivity;
     private ThreadsFragment.ActionListener mListener;
     private RecyclerView mRecyclerView;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private ActionMode mActionMode;
     private SelectionTracker<Long> mSelectionTracker;
-
+    private SearchView mSearchView;
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
-        try {
-            mListener = (ThreadsFragment.ActionListener) getActivity();
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
+        mActivity = getActivity();
+        mListener = (ThreadsFragment.ActionListener) mActivity;
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
         mContext = null;
+        mActivity = null;
         mListener = null;
     }
 
@@ -107,21 +111,123 @@ public class ThreadsFragment extends Fragment implements
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.setHasOptionsMenu(true);
 
-
-        mSelectionViewModel = new ViewModelProvider(getActivity()).get(SelectionViewModel.class);
+        mSelectionViewModel = new ViewModelProvider(mActivity).get(SelectionViewModel.class);
 
 
         mSelectionViewModel.getParentThread().observe(this, (threadIdx) -> {
 
             if (threadIdx != null) {
-                updateDirectory(threadIdx);
+                updateDirectory(threadIdx, mSelectionViewModel.getQuery().getValue());
             }
 
         });
 
+        mSelectionViewModel.getQuery().observe(this, (query) -> {
+
+            if (query != null) {
+                Long parent = mSelectionViewModel.getParentThread().getValue();
+                checkNotNull(parent);
+                updateDirectory(parent, query);
+            }
+
+        });
 
     }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+        super.onCreateOptionsMenu(menu, menuInflater);
+        menuInflater.inflate(R.menu.menu_threads_fragment, menu);
+
+
+        SearchManager searchManager = (SearchManager)
+                mActivity.getSystemService(Context.SEARCH_SERVICE);
+        checkNotNull(searchManager);
+
+        MenuItem searchMenuItem = menu.findItem(R.id.action_search);
+        searchMenuItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                mListener.showBottomNavigation(false);
+                mListener.setPagingEnabled(false);
+                mListener.showMainFab(false);
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                String query = "";
+                mSearchView.setQuery(query, false);
+                mSelectionViewModel.setQuery(query);
+                removeKeyboards();
+                mListener.showBottomNavigation(true);
+                mListener.setPagingEnabled(true);
+                mListener.showMainFab(true);
+
+                return true;
+            }
+        });
+        mSearchView = (SearchView) searchMenuItem.getActionView();
+        mSearchView.setSearchableInfo(searchManager.getSearchableInfo(mActivity.getComponentName()));
+        mSearchView.setIconifiedByDefault(false);
+        String query = mSelectionViewModel.getQuery().getValue();
+        checkNotNull(query);
+        mSearchView.setQuery(query, false);
+        if (!query.isEmpty()) {
+            searchMenuItem.expandActionView();
+        }
+
+
+        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+
+                mSelectionViewModel.getQuery().setValue(query);
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+
+                mSelectionViewModel.getQuery().setValue(newText);
+                return false;
+            }
+        });
+    }
+
+    private void removeKeyboards() {
+        try {
+            InputMethodManager imm = (InputMethodManager)
+                    mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+            if (imm != null && mSearchView != null) {
+                imm.hideSoftInputFromWindow(mSearchView.getWindowToken(), 0);
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        if (item.getItemId() == R.id.action_search) {
+
+            if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                return true;
+            }
+
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            mSearchView.setQuery("", false);
+            mActivity.onSearchRequested();
+
+            return true;
+
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -169,7 +275,7 @@ public class ThreadsFragment extends Fragment implements
                 } else {
                     if (mActionMode == null) {
                         mActionMode = ((AppCompatActivity)
-                                getActivity()).startSupportActionMode(
+                                mActivity).startSupportActionMode(
                                 createActionModeCallback());
                     }
                 }
@@ -188,7 +294,7 @@ public class ThreadsFragment extends Fragment implements
                 } else {
                     if (mActionMode == null) {
                         mActionMode = ((AppCompatActivity)
-                                getActivity()).startSupportActionMode(
+                                mActivity).startSupportActionMode(
                                 createActionModeCallback());
                     }
                 }
@@ -208,7 +314,7 @@ public class ThreadsFragment extends Fragment implements
 
     }
 
-    private void updateDirectory(long parent) {
+    private void updateDirectory(Long parent, String query) {
         try {
 
             LiveData<List<Thread>> obs = observer.get();
@@ -216,7 +322,7 @@ public class ThreadsFragment extends Fragment implements
                 obs.removeObservers(this);
             }
 
-            LiveData<List<Thread>> liveData = threadViewModel.getVisibleChildren(parent);
+            LiveData<List<Thread>> liveData = threadViewModel.getVisibleChildrenByQuery(parent, query);
             observer.set(liveData);
 
             liveData.observe(this, (threads) -> {
@@ -283,7 +389,7 @@ public class ThreadsFragment extends Fragment implements
             try {
                 Long idx = mSelectionViewModel.getParentThread().getValue();
                 checkNotNull(idx);
-                threadsAPI.resetThreadNumber(idx);
+                threadsAPI.resetParentThreadsNumber(idx);
             } catch (Throwable e) {
                 events.exception(e);
             }
@@ -292,8 +398,9 @@ public class ThreadsFragment extends Fragment implements
 
 
     private long[] convert(Selection<Long> entries) {
-        long[] basic = new long[entries.size()];
         int i = 0;
+
+        long[] basic = new long[entries.size()];
         for (Long entry : entries) {
             basic[i] = entry;
             i++;
@@ -385,6 +492,7 @@ public class ThreadsFragment extends Fragment implements
                 mListener.showBottomNavigation(false);
                 mListener.setPagingEnabled(false);
                 mListener.showMainFab(false);
+                removeKeyboards();
                 mHandler.post(() -> mThreadsViewAdapter.notifyDataSetChanged());
 
                 return true;
@@ -442,10 +550,15 @@ public class ThreadsFragment extends Fragment implements
             public void onDestroyActionMode(ActionMode mode) {
 
                 mSelectionTracker.clearSelection();
-                clearUnreadNotes();
-                mListener.showBottomNavigation(true);
-                mListener.setPagingEnabled(true);
-                mListener.showMainFab(true);
+                clearUnreadNotes(); // todo check if this is nice solution
+
+                boolean stillSearchView = true;
+                if (mSearchView != null) {
+                    stillSearchView = !mSearchView.isShown();
+                }
+                mListener.showBottomNavigation(stillSearchView);
+                mListener.setPagingEnabled(stillSearchView);
+                mListener.showMainFab(stillSearchView);
                 if (mActionMode != null) {
                     mActionMode = null;
                 }
@@ -512,7 +625,7 @@ public class ThreadsFragment extends Fragment implements
 
 
                     Uri uri = FileDocumentsProvider.getUriForThread(thread);
-                    Intent intent = ShareCompat.IntentBuilder.from(getActivity())
+                    Intent intent = ShareCompat.IntentBuilder.from(mActivity)
                             .setStream(uri)
                             .setType(mimeType)
                             .getIntent();

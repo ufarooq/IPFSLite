@@ -11,6 +11,14 @@
         app:iconTint="@color/colorAccent"
         app:showAsAction="ifRoom" />
 
+    <item
+        android:id="@+id/action_mode_connect"
+        android:icon="@drawable/connect"
+        android:orderInCategory="3"
+        android:title="@string/action_connect"
+        android:visible="true"
+        app:iconTint="@color/colorAccent"
+        app:showAsAction="ifRoom" />
 
     <item
         android:id="@+id/action_mode_mark_all"

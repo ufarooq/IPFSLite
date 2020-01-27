@@ -20,8 +20,8 @@ public class ConnectService {
     private static final String TAG = ConnectService.class.getSimpleName();
 
 
-    public static boolean connectPeer(@NonNull Context context, @NonNull PID pid,
-                                      boolean supportDiscovery, boolean updateUser, int timeout) {
+    static boolean connectPeer(@NonNull Context context, @NonNull PID pid,
+                               boolean supportDiscovery, int timeout) {
 
         checkNotNull(context);
 
@@ -35,7 +35,7 @@ public class ConnectService {
 
         if (supportDiscovery) {
             PeerInfo peer = IdentityService.getPeerInfo(
-                    context, pid, updateUser);
+                    context, pid, true);
             if (peer != null) {
 
                 if (swarmConnect(context, peer, "")) {

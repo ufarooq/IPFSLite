@@ -198,7 +198,6 @@ public class NameDialogFragment extends DialogFragment {
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-
     }
 
 

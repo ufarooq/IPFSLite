@@ -79,6 +79,7 @@ public class AutoConnectWorker extends Worker {
 
             for (User user : users) {
 
+                // TODO compare this with Service.connectUser
                 if (!user.isBlocked()) {
                     if (dialing) {
                         peers.setUserDialing(user.getPID(), true);
@@ -92,7 +93,7 @@ public class AutoConnectWorker extends Worker {
                     if (result) {
                         ipfs.protectPeer(user.getPID(), TAG);
                     }
-
+                    peers.setUserConnected(user.getPID(), result);
                     if (dialing) {
                         peers.setUserDialing(user.getPID(), false);
                     }

@@ -80,12 +80,10 @@ import threads.server.fragments.WebViewDialogFragment;
 import threads.server.jobs.JobServiceDeleteThreads;
 import threads.server.jobs.JobServiceDownload;
 import threads.server.jobs.JobServiceIdentity;
-import threads.server.jobs.JobServiceLoadPublicKey;
 import threads.server.jobs.JobServicePublish;
 import threads.server.mdl.EventViewModel;
 import threads.server.mdl.SelectionViewModel;
 import threads.server.provider.FileDocumentsProvider;
-import threads.server.services.ConnectService;
 import threads.server.services.DaemonService;
 import threads.server.services.GatewayService;
 import threads.server.services.Service;
@@ -481,8 +479,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public void clickUserDelete(@NonNull String pid) {
         checkNotNull(pid);
 
-        Service.getInstance(getApplicationContext()).deleteUser(
-                getApplicationContext(), pid);
+        Service.deleteUser(getApplicationContext(), pid);
     }
 
     @Override
@@ -496,58 +493,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return;
         }
 
+        Service.connectUser(getApplicationContext(), pid, true);
 
-        try {
-
-            final PEERS peers = PEERS.getInstance(getApplicationContext());
-            final EVENTS events = EVENTS.getInstance(getApplicationContext());
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-
-                    PID user = PID.create(pid);
-
-                    if (peers.isUserBlocked(user)) {
-                        events.invokeEvent(EVENTS.WARNING,
-                                getString(R.string.peer_is_blocked));
-                    } else {
-
-                        try {
-                            peers.setUserDialing(user, true);
-
-                            boolean peerDiscovery = Service.isSupportPeerDiscovery(
-                                    getApplicationContext());
-                            int timeout = Preferences.getConnectionTimeout(getApplicationContext());
-                            boolean value = ConnectService.connectPeer(getApplicationContext(),
-                                    user, peerDiscovery, true, timeout);
-
-                            peers.setUserConnected(user, value);
-
-                            if (value) {
-                                String publicKey = peers.getUserPublicKey(pid);
-                                checkNotNull(publicKey,
-                                        "Public key should be at least not null");
-                                if (publicKey.isEmpty()) {
-                                    JobServiceLoadPublicKey.publicKey(getApplicationContext(), pid);
-                                }
-                            }
-
-
-                        } catch (Throwable e) {
-                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                            peers.setUserConnected(user, false);
-                        } finally {
-                            peers.setUserDialing(user, false);
-                        }
-                    }
-                } catch (Throwable e) {
-                    events.exception(e);
-                }
-            });
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
     }
 
     @Override
@@ -747,8 +694,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Service.getInstance(getApplicationContext());
 
         mMainFab = findViewById(R.id.fab_main);
-        mSelectionViewModel = new ViewModelProvider(this).get(
-                SelectionViewModel.class);
+
+
+        mSelectionViewModel = new ViewModelProvider(this).get(SelectionViewModel.class);
 
         final Observer<Long> parentObserver = (threadIdx) -> {
 
@@ -761,9 +709,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         mCustomViewPager = findViewById(R.id.customViewPager);
-        PagerAdapter adapter = new PagerAdapter(getSupportFragmentManager(), 3);
+        PagerAdapter adapter = new PagerAdapter(getSupportFragmentManager());
         mCustomViewPager.setAdapter(adapter);
-        // mCustomViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+
         mCustomViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             private MenuItem prevMenuItem;
 
@@ -807,6 +755,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mNavigation.setOnNavigationItemSelectedListener((item) -> {
             mAppBarLayout.setExpanded(true, false);
             redrawFab(item.getItemId());
+
             switch (item.getItemId()) {
                 case R.id.navigation_files:
                     mCustomViewPager.setCurrentItem(0);
@@ -948,8 +897,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             }
 
         });
-        handleIntents();
-
+        Intent intent = getIntent();
+        handleIntents(intent);
     }
 
     @Override
@@ -963,8 +912,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else {
             actionDaemon.setIcon(R.drawable.stop_circle);
         }
+
         return true;
     }
+
 
     private void redrawFab(int id) {
         switch (id) {
@@ -995,33 +946,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
-        switch (item.getItemId()) {
+        if (item.getItemId() == R.id.action_daemon) {
 
-            case R.id.action_daemon: {
-
-                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
-                    break;
-                }
-                mLastClickTime = SystemClock.elapsedRealtime();
-
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.submit(() -> {
-
-                    try {
-                        boolean startDaemon = mStartDaemon.get();
-                        boolean newStartDaemonValue = !startDaemon;
-                        mStartDaemon.set(newStartDaemonValue);
-
-                        EVENTS events = EVENTS.getInstance(getApplicationContext());
-                        events.invokeEvent(EVENTS.DAEMON, mStartDaemon.toString());
-
-                        DaemonService.invoke(getApplicationContext(), newStartDaemonValue);
-                    } catch (Throwable e) {
-                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    }
-                });
+            if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
                 return true;
             }
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+
+                try {
+                    boolean startDaemon = mStartDaemon.get();
+                    boolean newStartDaemonValue = !startDaemon;
+                    mStartDaemon.set(newStartDaemonValue);
+
+                    EVENTS events = EVENTS.getInstance(getApplicationContext());
+                    events.invokeEvent(EVENTS.DAEMON, mStartDaemon.toString());
+
+                    DaemonService.invoke(getApplicationContext(), newStartDaemonValue);
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+            });
+            return true;
+
         }
         return super.onOptionsItemSelected(item);
     }
@@ -1213,7 +1162,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
 
         try {
-
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
@@ -1418,9 +1366,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
 
-    private void handleIntents() {
+    private void handleIntents(Intent intent) {
 
-        Intent intent = getIntent();
         final String action = intent.getAction();
 
 
@@ -1708,11 +1655,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     private class PagerAdapter extends FragmentStatePagerAdapter {
-        final int mNumOfTabs;
 
-        PagerAdapter(FragmentManager fm, int NumOfTabs) {
+
+        PagerAdapter(FragmentManager fm) {
             super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
-            this.mNumOfTabs = NumOfTabs;
         }
 
 
@@ -1734,7 +1680,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         @Override
         public int getCount() {
-            return mNumOfTabs;
+            return 3;
         }
     }
 

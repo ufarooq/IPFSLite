@@ -7,7 +7,6 @@ import androidx.annotation.Nullable;
 
 import com.google.common.collect.Iterables;
 
-import java.util.Date;
 import java.util.List;
 
 import threads.ipfs.CID;
@@ -199,28 +198,17 @@ public class ThreadsAPI {
 
 
     public void resetThreadsNumber(long... idxs) {
-        getThreadsDatabase().threadDao().resetNumber(idxs);
+        getThreadsDatabase().threadDao().resetThreadsNumber(idxs);
     }
 
-    public void resetThreadNumber(long thread) {
-        getThreadsDatabase().threadDao().resetThreadNumber(thread);
+    public void resetParentThreadsNumber(long parent) {
+        getThreadsDatabase().threadDao().resetParentThreadsNumber(parent);
     }
 
     public void resetThreadsNumber() {
         getThreadsDatabase().threadDao().resetThreadsNumber();
     }
 
-
-    public void setDate(@NonNull Thread thread, @NonNull Date date) {
-        checkNotNull(thread);
-        checkNotNull(date);
-        getThreadsDatabase().threadDao().setThreadLastModified(thread.getIdx(), date.getTime());
-    }
-
-    public void resetThreadNumber(@NonNull Thread thread) {
-        checkNotNull(thread);
-        getThreadsDatabase().threadDao().resetNumber(thread.getIdx());
-    }
 
     public long storeThread(@NonNull Thread thread) {
         checkNotNull(thread);

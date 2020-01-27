@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
 
     <item
         android:id="@+id/navigation_files"
         android:icon="@drawable/selector_files"
-        android:iconTint="@color/colorAccent"
+        app:iconTint="@color/colorAccent"
         android:title="@string/files" />
     <item
         android:id="@+id/navigation_peers"
         android:icon="@drawable/selector_peers"
-        android:iconTint="@color/colorAccent"
+        app:iconTint="@color/colorAccent"
         android:title="@string/peers" />
     <item
         android:id="@+id/navigation_swarm"
         android:icon="@drawable/selector_swarm"
-        android:iconTint="@color/colorAccent"
+        app:iconTint="@color/colorAccent"
         android:title="@string/swarm" />
 </menu>
 

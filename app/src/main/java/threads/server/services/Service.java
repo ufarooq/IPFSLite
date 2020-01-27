@@ -509,7 +509,7 @@ public class Service {
             final int timeout = Preferences.getConnectionTimeout(context);
             final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
             boolean value = ConnectService.connectPeer(context, user,
-                    peerDiscovery, true, timeout);
+                    peerDiscovery, timeout);
             peers.setUserConnected(user, value);
 
             if (value) {
@@ -910,6 +910,67 @@ public class Service {
     }
 
 
+    public static void connectUser(@NonNull Context context,
+                                   @NonNull String pid,
+                                   boolean issueWarning) {
+        checkNotNull(context);
+        checkNotNull(pid);
+        try {
+            // TODO big compare with AutoConnectWorker
+
+            final PEERS peers = PEERS.getInstance(context);
+            final EVENTS events = EVENTS.getInstance(context);
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+
+                    PID user = PID.create(pid);
+
+                    if (peers.isUserBlocked(user)) {
+                        if (issueWarning) {
+                            events.invokeEvent(EVENTS.WARNING,
+                                    context.getString(R.string.peer_is_blocked));
+                        }
+                    } else {
+
+                        try {
+                            peers.setUserDialing(user, true);
+
+                            boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
+                            int timeout = Preferences.getConnectionTimeout(context);
+                            boolean value = ConnectService.connectPeer(context,
+                                    user, peerDiscovery, timeout);
+
+                            peers.setUserConnected(user, value);
+
+                            if (value) {
+                                String publicKey = peers.getUserPublicKey(pid);
+                                checkNotNull(publicKey);
+                                if (publicKey.isEmpty()) {
+                                    JobServiceLoadPublicKey.publicKey(context, pid);
+                                }
+                            }
+
+
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                            peers.setUserConnected(user, false);
+                        } finally {
+                            peers.setUserDialing(user, false);
+                        }
+                    }
+                } catch (Throwable e) {
+                    events.exception(e);
+                }
+            });
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+
+
+    }
+
     private static void downloadLink(@NonNull Context context,
                                      @NonNull Thread thread,
                                      @NonNull LinkInfo link) {
@@ -1110,6 +1171,32 @@ public class Service {
         return false;
     }
 
+    public static void deleteUser(@NonNull Context context, @NonNull String pid) {
+        checkNotNull(context);
+        checkNotNull(pid);
+        try {
+            final IPFS ipfs = IPFS.getInstance(context);
+            final PEERS peers = PEERS.getInstance(context);
+            final EVENTS events = EVENTS.getInstance(context);
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+                    checkNotNull(ipfs, "IPFS is not valid");
+                    User user = peers.getUserByPID(PID.create(pid));
+                    if (user != null) {
+                        peers.removeUser(ipfs, user);
+                    }
+
+                } catch (Throwable e) {
+                    events.exception(e);
+                }
+            });
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
     public ArrayList<String> getEnhancedUserPIDs(@NonNull Context context) {
         checkNotNull(context);
 
@@ -1289,33 +1376,6 @@ public class Service {
             }
         }).start();
 
-    }
-
-
-    public void deleteUser(@NonNull Context context, @NonNull String pid) {
-        checkNotNull(context);
-        checkNotNull(pid);
-        try {
-            final IPFS ipfs = IPFS.getInstance(context);
-            final PEERS peers = PEERS.getInstance(context);
-            final EVENTS events = EVENTS.getInstance(context);
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    checkNotNull(ipfs, "IPFS is not valid");
-                    User user = peers.getUserByPID(PID.create(pid));
-                    if (user != null) {
-                        peers.removeUser(ipfs, user);
-                    }
-
-                } catch (Throwable e) {
-                    events.exception(e);
-                }
-            });
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
     }
 
     private void attachHandler(@NonNull Context context) {

@@ -127,4 +127,6 @@
     <string name="adding_content">Adding Content</string>
     <string name="peer_actions">Peer Actions</string>
     <string name="added_pid_to_peers">Added \"%1$s\" to your peers</string>
+    <string name="search_hint">Search for files</string>
+    <string name="search">Search</string>
 </resources>

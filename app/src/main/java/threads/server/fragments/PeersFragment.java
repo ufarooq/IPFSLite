@@ -16,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.selection.Selection;
 import androidx.recyclerview.selection.SelectionTracker;
@@ -24,12 +25,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 
-import threads.ipfs.IPFS;
-import threads.ipfs.PID;
 import threads.server.R;
 import threads.server.core.peers.User;
 import threads.server.mdl.UsersViewModel;
@@ -54,6 +51,7 @@ public class PeersFragment extends Fragment implements
     private Context mContext;
     private SelectionTracker<String> mSelectionTracker;
     private ActionMode mActionMode;
+    private FragmentActivity mActivity;
     private PeersFragment.ActionListener mListener;
 
 
@@ -62,17 +60,15 @@ public class PeersFragment extends Fragment implements
         super.onDetach();
         mContext = null;
         mListener = null;
+        mActivity = null;
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
-        try {
-            mListener = (PeersFragment.ActionListener) getActivity();
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
+        mActivity = getActivity();
+        mListener = (PeersFragment.ActionListener) mActivity;
     }
 
     @Override
@@ -121,8 +117,7 @@ public class PeersFragment extends Fragment implements
                     }
                 } else {
                     if (mActionMode == null) {
-                        mActionMode = ((AppCompatActivity)
-                                getActivity()).startSupportActionMode(
+                        mActionMode = ((AppCompatActivity) mActivity).startSupportActionMode(
                                 createActionModeCallback());
                     }
                 }
@@ -140,8 +135,7 @@ public class PeersFragment extends Fragment implements
                     }
                 } else {
                     if (mActionMode == null) {
-                        mActionMode = ((AppCompatActivity)
-                                getActivity()).startSupportActionMode(
+                        mActionMode = ((AppCompatActivity) mActivity).startSupportActionMode(
                                 createActionModeCallback());
                     }
                 }
@@ -160,21 +154,12 @@ public class PeersFragment extends Fragment implements
         }
 
 
-        final PID host = IPFS.getPID(mContext);
         UsersViewModel messagesViewModel = new ViewModelProvider(this).get(UsersViewModel.class);
-        messagesViewModel.getUsers().observe(getViewLifecycleOwner(), (users) -> {
+        messagesViewModel.getUsers().observe(getViewLifecycleOwner(), (peers) -> {
 
             try {
-                if (users != null) {
-                    List<User> peers = new ArrayList<>();
-                    for (User user : users) {
-                        if (!user.getPID().equals(host)) {
-                            peers.add(user);
-                        }
-
-                    }
+                if (peers != null) {
                     try {
-
                         peers.sort(Comparator.comparing(User::getAlias));
 
                         mUsersViewAdapter.updateData(peers);
@@ -225,6 +210,22 @@ public class PeersFragment extends Fragment implements
 
                         return true;
                     }
+                    case R.id.action_mode_connect: {
+                        if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                            break;
+                        }
+                        mLastClickTime = SystemClock.elapsedRealtime();
+                        try {
+                            Selection<String> entries = mSelectionTracker.getSelection();
+                            for (String pid : entries) {
+                                Service.connectUser(mContext, pid, false);
+                            }
+                            mSelectionTracker.clearSelection();
+
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                        }
+                    }
                     case R.id.action_mode_delete: {
 
                         if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
@@ -236,7 +237,7 @@ public class PeersFragment extends Fragment implements
                             Selection<String> entries = mSelectionTracker.getSelection();
 
                             for (String pid : entries) {
-                                Service.getInstance(mContext).deleteUser(mContext, pid);
+                                Service.deleteUser(mContext, pid);
                             }
 
                             mSelectionTracker.clearSelection();

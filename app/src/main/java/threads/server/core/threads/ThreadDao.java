@@ -96,7 +96,7 @@ public interface ThreadDao {
     void updateThreads(Thread... threads);
 
     @Query("UPDATE Thread SET number = 0 WHERE idx IN (:idxs)")
-    void resetNumber(long... idxs);
+    void resetThreadsNumber(long... idxs);
 
     @Query("UPDATE Thread SET number = 0")
     void resetThreadsNumber();
@@ -107,11 +107,8 @@ public interface ThreadDao {
     @Query("UPDATE Thread SET leaching = 0")
     void resetThreadsLeaching();
 
-    @Query("UPDATE Thread SET number = 0 WHERE parent IN (:threads)")
-    void resetThreadNumber(long... threads);
-
-    @Query("Select SUM(number) FROM THREAD")
-    int getThreadsNumber();
+    @Query("UPDATE Thread SET number = 0 WHERE parent =:thread")
+    void resetParentThreadsNumber(long thread);
 
     @Query("SELECT COUNT(idx) FROM Thread WHERE content =:cid OR thumbnail =:cid")
     @TypeConverters({Converter.class})
@@ -133,8 +130,8 @@ public interface ThreadDao {
     @TypeConverters({Converter.class})
     List<Thread> getThreadsBySenderPid(PID senderPid);
 
-    @Query("SELECT * FROM Thread WHERE parent =:parent AND deleting = 0")
-    LiveData<List<Thread>> getLiveDataVisibleChildren(long parent);
+    @Query("SELECT * FROM Thread WHERE parent =:parent AND deleting = 0 AND name LIKE :query")
+    LiveData<List<Thread>> getLiveDataVisibleChildrenByQuery(long parent, String query);
 
     @Query("UPDATE Thread SET number = number + 1  WHERE idx IN(:idxs)")
     void incrementNumber(long... idxs);
@@ -145,7 +142,6 @@ public interface ThreadDao {
 
     @Query("UPDATE Thread SET mimeType =:mimeType  WHERE idx = :idx")
     void setMimeType(long idx, String mimeType);
-
 
     @Query("UPDATE Thread SET thumbnail = :image WHERE idx = :idx")
     @TypeConverters({Converter.class})
