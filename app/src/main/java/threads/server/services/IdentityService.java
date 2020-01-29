@@ -4,7 +4,6 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
@@ -21,7 +20,6 @@ import threads.server.core.peers.Additions;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.Peer;
 import threads.server.core.peers.User;
-import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -30,19 +28,16 @@ public class IdentityService {
 
     private static final String TAG = IdentityService.class.getSimpleName();
 
-    @Nullable
-    public static ResultInfo publishIdentity(@NonNull Context context,
-                                             @NonNull Map<String, String> params,
-                                             int numRelays) {
+
+    public static void publishIdentity(@NonNull Context context,
+                                       @NonNull Map<String, String> params,
+                                       int numRelays) {
 
         checkNotNull(context);
         checkNotNull(params);
 
         checkArgument(numRelays >= 0);
 
-        if (!Network.isConnected(context)) {
-            return null;
-        }
 
         int timeout = 3;
 
@@ -64,11 +59,11 @@ public class IdentityService {
 
                 threads.server.core.peers.PeerInfo peer = threads.getPeerInfoByPID(host);
                 if (peer != null) {
-                    return updatePeerInfo(context, peer, storedRelays, params, tag,
+                    updatePeerInfo(context, peer, storedRelays, params, tag,
                             timeout, numRelays);
 
                 } else {
-                    return createPeerInfo(context, storedRelays, host, params, tag,
+                    createPeerInfo(context, storedRelays, host, params, tag,
                             timeout, numRelays);
                 }
             }
@@ -77,7 +72,6 @@ public class IdentityService {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
-        return null;
     }
 
     private static List<String> getMultiAddresses(@NonNull PeerInfo info) {

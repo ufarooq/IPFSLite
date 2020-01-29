@@ -12,6 +12,22 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import com.google.gson.Gson;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import threads.iota.Entity;
+import threads.iota.EntityService;
+import threads.ipfs.CID;
+import threads.ipfs.Encryption;
+import threads.ipfs.IPFS;
+import threads.ipfs.Multihash;
+import threads.ipfs.PID;
+import threads.server.core.contents.CDS;
+import threads.server.core.peers.AddressType;
+import threads.server.core.peers.Content;
+import threads.server.jobs.JobServiceContents;
 import threads.server.services.Service;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -27,13 +43,13 @@ public class LoadNotificationsWorker extends Worker {
 
     }
 
-    public static void notifications(@NonNull Context context) {
+    public static void notifications(@NonNull Context context,
+                                     int secondsDelay) {
         checkNotNull(context);
 
         if (!Service.isReceiveNotificationsEnabled(context)) {
             return;
         }
-
 
         Constraints.Builder builder = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED);
@@ -41,6 +57,7 @@ public class LoadNotificationsWorker extends Worker {
 
         OneTimeWorkRequest syncWorkRequest =
                 new OneTimeWorkRequest.Builder(LoadNotificationsWorker.class)
+                        .setInitialDelay(secondsDelay, TimeUnit.SECONDS)
                         .addTag(TAG)
                         .setConstraints(builder.build())
                         .build();
@@ -56,8 +73,83 @@ public class LoadNotificationsWorker extends Worker {
 
         long start = System.currentTimeMillis();
         try {
-            Service.notifications(getApplicationContext());
+            Gson gson = new Gson();
+            final PID host = IPFS.getPID(getApplicationContext());
+            checkNotNull(host);
 
+            final EntityService entityService = EntityService.getInstance(getApplicationContext());
+            final CDS contentService = CDS.getInstance(getApplicationContext());
+
+            String address = AddressType.getAddress(host, AddressType.NOTIFICATION);
+            List<Entity> entities = entityService.loadEntities(getApplicationContext(), address);
+
+            for (Entity entity : entities) {
+                String notification = entity.getContent();
+                Content data;
+                try {
+                    data = gson.fromJson(notification, Content.class);
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    continue;
+                }
+                if (data != null) {
+
+                    final IPFS ipfs = IPFS.getInstance(getApplicationContext());
+                    checkNotNull(ipfs, "IPFS not valid");
+                    if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
+                        try {
+                            String privateKey = ipfs.getPrivateKey();
+                            checkNotNull(privateKey, "Private Key not valid");
+                            String encPid = data.get(Content.PID);
+                            checkNotNull(encPid);
+                            final String pidStr = Encryption.decryptRSA(encPid, privateKey);
+                            checkNotNull(pidStr);
+
+                            String encCid = data.get(Content.CID);
+                            checkNotNull(encCid);
+                            final String cidStr = Encryption.decryptRSA(encCid, privateKey);
+                            checkNotNull(cidStr);
+
+                            // check if cid is valid
+                            try {
+                                Multihash.fromBase58(cidStr);
+                            } catch (Throwable e) {
+                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                                continue;
+                            }
+
+                            // check if pid is valid
+                            try {
+                                Multihash.fromBase58(pidStr);
+                            } catch (Throwable e) {
+                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                                continue;
+                            }
+
+                            PID pid = PID.create(pidStr);
+                            CID cid = CID.create(cidStr);
+
+                            // THIS is a try, it tries to find the pubsub of the PID
+                            // (for sending a message when done)
+                            ipfs.addPubSubTopic(getApplicationContext(), pid.getPid());
+
+
+                            threads.server.core.contents.Content content =
+                                    contentService.getContent(cid);
+                            if (content == null) {
+                                contentService.insertContent(pid, cid, false);
+                            }
+
+                            JobServiceContents.contents(getApplicationContext(), pid, cid);
+
+
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                        }
+                    }
+
+                }
+            }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {

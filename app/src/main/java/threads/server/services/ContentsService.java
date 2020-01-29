@@ -211,7 +211,7 @@ public class ContentsService {
                                      @NonNull String image) {
 
         final IPFS ipfs = IPFS.getInstance(context);
-        final int timeout = Preferences.getConnectionTimeout(context);
+        final int timeout = Preferences.getConnectionTimeout(context);// todo
 
         try {
             try {
@@ -238,7 +238,7 @@ public class ContentsService {
                                              @NonNull CID cid) {
         final Gson gson = new Gson();
         final IPFS ipfs = IPFS.getInstance(context);
-        final int timeout = Preferences.getConnectionTimeout(context);
+        final int timeout = Preferences.getConnectionTimeout(context);//todo
 
         try {
 

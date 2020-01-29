@@ -280,7 +280,7 @@ public class SettingsDialogFragment extends DialogFragment {
         SeekBar connection_timeout = view.findViewById(R.id.connection_timeout);
 
 
-        connection_timeout.setMax(180);
+        connection_timeout.setMax(60);
 
         int connectionTimeout = Preferences.getConnectionTimeout(activity);
 

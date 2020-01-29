@@ -17,7 +17,6 @@ import java.util.concurrent.Executors;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.server.core.peers.Content;
-import threads.server.utils.Network;
 import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -59,9 +58,6 @@ public class JobServiceConnect extends JobService {
         final String pid = bundle.getString(Content.PID);
         checkNotNull(pid);
 
-        if (!Network.isConnected(getApplicationContext())) {
-            return false;
-        }
 
         final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
 

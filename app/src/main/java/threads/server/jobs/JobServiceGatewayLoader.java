@@ -24,7 +24,6 @@ import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.GatewayService;
 import threads.server.services.Service;
-import threads.server.utils.Network;
 import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -83,9 +82,7 @@ public class JobServiceGatewayLoader extends JobService {
         PersistableBundle bundle = jobParameters.getExtras();
         final long idx = bundle.getLong(IDX);
 
-        if (!Network.isConnected(getApplicationContext())) {
-            return false;
-        }
+
         int timeout = Preferences.getConnectionTimeout(getApplicationContext());
 
         ExecutorService executor = Executors.newSingleThreadExecutor();

@@ -15,7 +15,7 @@ import threads.server.utils.Preferences;
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class ConnectService {
+class ConnectService {
 
     private static final String TAG = ConnectService.class.getSimpleName();
 
@@ -55,9 +55,9 @@ public class ConnectService {
     }
 
 
-    public static void swarmUnProtect(@NonNull Context context,
-                                      @NonNull PeerInfo peer,
-                                      @NonNull String tag) {
+    static void swarmUnProtect(@NonNull Context context,
+                               @NonNull PeerInfo peer,
+                               @NonNull String tag) {
         checkNotNull(context);
         checkNotNull(peer);
         checkNotNull(tag);
@@ -73,9 +73,9 @@ public class ConnectService {
 
     }
 
-    public static boolean swarmConnect(@NonNull Context context,
-                                       @NonNull PeerInfo peer,
-                                       @NonNull String tag) {
+    static boolean swarmConnect(@NonNull Context context,
+                                @NonNull PeerInfo peer,
+                                @NonNull String tag) {
         checkNotNull(context);
         checkNotNull(peer);
 

@@ -24,7 +24,6 @@ import androidx.annotation.Nullable;
 
 import com.amulyakhare.textdrawable.TextDrawable;
 import com.amulyakhare.textdrawable.util.ColorGenerator;
-import com.j256.simplemagic.ContentInfo;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -178,7 +177,8 @@ public class ThumbnailService {
             }
             try {
                 if (bitmap == null) {
-                    final WeakReference<Bitmap> weakBmp = new WeakReference<>(mediaMetadataRetriever.getFrameAtTime());
+                    final WeakReference<Bitmap> weakBmp = new WeakReference<>(
+                            mediaMetadataRetriever.getFrameAtTime());
                     bitmap = weakBmp.get();
                 }
             } catch (Throwable e) {
@@ -249,8 +249,7 @@ public class ThumbnailService {
 
 
     @Nullable
-    public static FileDetails getFileDetails(@NonNull Context context,
-                                             @NonNull Uri uri) {
+    static FileDetails getFileDetails(@NonNull Context context, @NonNull Uri uri) {
         checkNotNull(context);
         checkNotNull(uri);
 
@@ -314,72 +313,48 @@ public class ThumbnailService {
     }
 
 
-    public static Optional<String> getExtension(String filename) {
+    static Optional<String> getExtension(String filename) {
         return Optional.ofNullable(filename)
                 .filter(f -> f.contains("."))
                 .map(f -> f.substring(filename.lastIndexOf(".") + 1));
     }
 
-    @NonNull
-    public static Result getThumbnail(@NonNull Context context,
-                                      @NonNull File file,
-                                      @NonNull String mimeType) throws Exception {
+    @Nullable
+    public static CID getThumbnail(@NonNull Context context,
+                                   @NonNull File file,
+                                   @NonNull String mimeType) {
         checkNotNull(context);
         checkNotNull(file);
         checkNotNull(mimeType);
 
-        Bitmap bitmap = null;
-        byte[] bytes = null;
-        CID cid = null;
-        boolean thumbnail = false;
+
+        try {
+            Bitmap bitmap = getPreview(context, file, mimeType);
+            byte[] bytes = null;
 
 
-        if (!mimeType.isEmpty()) {
-
-            bitmap = getPreview(context, file, mimeType);
             if (bitmap != null) {
-                thumbnail = true;
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.WEBP, 100, stream);
+                bytes = stream.toByteArray();
+                bitmap.recycle();
             }
 
+            if (bytes != null) {
+                final IPFS ipfs = IPFS.getInstance(context);
 
-        }
 
-        if (bitmap == null) {
-            IPFS ipfs = IPFS.getInstance(context);
+                return ipfs.storeData(bytes);
 
-            ContentInfo contentInfo = ipfs.getContentInfo(file);
-            if (contentInfo != null) {
-                String evalMimeType = contentInfo.getMimeType();
-                if (evalMimeType != null) {
-                    bitmap = getPreview(context, file, evalMimeType);
-                }
+
             }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-
-
-        if (bitmap != null) {
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.WEBP, 100, stream);
-            bytes = stream.toByteArray();
-            bitmap.recycle();
-        }
-
-        if (bytes != null) {
-            final IPFS ipfs = IPFS.getInstance(context);
-
-            try {
-                cid = ipfs.storeData(bytes);
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-
-        }
-        if (cid == null) {
-            thumbnail = false;
-        }
-        return new Result(cid, thumbnail);
+        return null;
 
     }
+
 
     @Nullable
     private static Bitmap getPreview(@NonNull Context context, @NonNull File file, @NonNull String mimeType) {
@@ -458,7 +433,7 @@ public class ThumbnailService {
         }
 
         @NonNull
-        public String getFileName() {
+        String getFileName() {
             return fileName;
         }
 
@@ -467,29 +442,8 @@ public class ThumbnailService {
             return mimeType;
         }
 
-        public long getFileSize() {
+        long getFileSize() {
             return fileSize;
-        }
-
-    }
-
-    public static class Result {
-        @Nullable
-        private final CID cid;
-        private final boolean thumbnail;
-
-        Result(@Nullable CID cid, boolean thumbnail) {
-            this.cid = cid;
-            this.thumbnail = thumbnail;
-        }
-
-        @Nullable
-        public CID getCid() {
-            return cid;
-        }
-
-        public boolean isThumbnail() {
-            return thumbnail;
         }
 
     }

@@ -165,4 +165,7 @@ public interface ThreadDao {
 
     @Query("UPDATE Thread SET seeding = 1, leaching = 0 WHERE idx = :idx")
     void setSeeding(long idx);
+
+    @Query("UPDATE Thread SET size = :size WHERE idx = :idx")
+    void setSize(long idx, long size);
 }

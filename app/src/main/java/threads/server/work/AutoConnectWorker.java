@@ -30,9 +30,7 @@ public class AutoConnectWorker extends Worker {
     private static final String DIALING = "DIALING";
 
 
-    public AutoConnectWorker(
-            @NonNull Context context,
-            @NonNull WorkerParameters params) {
+    public AutoConnectWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
     }
 

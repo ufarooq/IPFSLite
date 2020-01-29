@@ -105,14 +105,12 @@ public class ThreadsAPI {
     @NonNull
     public Thread createThread(@NonNull PID creatorPid,
                                @NonNull String alias,
-                               @NonNull Kind kind,
                                long parent) {
 
         checkNotNull(creatorPid);
         checkNotNull(alias);
-        checkNotNull(kind);
         checkArgument(parent >= 0);
-        return Thread.createThread(creatorPid, alias, kind, parent);
+        return Thread.createThread(creatorPid, alias, parent);
 
     }
 
@@ -336,5 +334,9 @@ public class ThreadsAPI {
     public void setThreadProgress(long idx, int progress) {
         checkArgument(progress >= 0 && progress <= 100);
         getThreadsDatabase().threadDao().setProgress(idx, progress);
+    }
+
+    public void setThreadSize(long idx, long size) {
+        getThreadsDatabase().threadDao().setSize(idx, size);
     }
 }

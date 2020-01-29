@@ -18,7 +18,6 @@ import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.ipfs.Peer;
 import threads.server.services.Service;
-import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -58,9 +57,6 @@ public class JobServiceFindPeers extends JobService {
             return false;
         }
 
-        if (!Network.isConnected(getApplicationContext())) {
-            return false;
-        }
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             long start = System.currentTimeMillis();

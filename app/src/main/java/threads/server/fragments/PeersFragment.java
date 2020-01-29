@@ -99,6 +99,20 @@ public class PeersFragment extends Fragment implements
         mUsersViewAdapter = new UsersViewAdapter(mContext, this);
         mRecyclerView.setAdapter(mUsersViewAdapter);
 
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                boolean hasSelection = mSelectionTracker.hasSelection();
+                if (dy > 0 && !hasSelection) {
+                    mListener.showMainFab(false);
+                } else if (dy < 0 && !hasSelection) {
+                    mListener.showMainFab(true);
+                }
+
+            }
+        });
+
         mSelectionTracker = new SelectionTracker.Builder<>(
                 "user-selection",//unique id
                 mRecyclerView,

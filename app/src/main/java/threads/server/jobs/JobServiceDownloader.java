@@ -15,7 +15,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import threads.server.services.ContentsService;
-import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -52,12 +51,6 @@ public class JobServiceDownloader extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
-
-
-        if (!Network.isConnected(getApplicationContext())) {
-            return false;
-        }
-
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {

@@ -22,10 +22,7 @@ public class Thread {
 
     @ColumnInfo(name = "parent")
     private final long parent; // checked
-    @NonNull
-    @TypeConverters(Kind.class)
-    @ColumnInfo(name = "kind")
-    private final Kind kind; // checked
+
     @NonNull
     @TypeConverters(Converter.class)
     @ColumnInfo(name = "sender")
@@ -73,12 +70,10 @@ public class Thread {
 
     Thread(@NonNull PID sender,
            @NonNull String senderAlias,
-           @NonNull Kind kind,
            long parent) {
         this.parent = parent;
         this.sender = sender;
         this.senderAlias = senderAlias;
-        this.kind = kind;
         this.lastModified = System.currentTimeMillis();
         this.mimeType = "";
         this.pinned = false;
@@ -88,14 +83,10 @@ public class Thread {
         this.deleting = false;
     }
 
-    static Thread createThread(@NonNull PID senderPid,
-                               @NonNull String senderAlias,
-                               @NonNull Kind kind,
-                               long parent) {
+    static Thread createThread(@NonNull PID senderPid, @NonNull String senderAlias, long parent) {
         checkNotNull(senderPid);
         checkNotNull(senderAlias);
-        checkNotNull(kind);
-        return new Thread(senderPid, senderAlias, kind, parent);
+        return new Thread(senderPid, senderAlias, parent);
     }
 
     public boolean isLeaching() {
@@ -153,12 +144,6 @@ public class Thread {
     @NonNull
     public PID getSender() {
         return sender;
-    }
-
-
-    @NonNull
-    public Kind getKind() {
-        return kind;
     }
 
 

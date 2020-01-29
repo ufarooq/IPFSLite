@@ -30,7 +30,6 @@ import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.server.R;
 import threads.server.core.events.EVENTS;
-import threads.server.core.threads.Kind;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 
@@ -129,7 +128,7 @@ public class UploadService extends Service {
 
                 buildNotification(name);
 
-                Thread thread = threads.createThread(pid, alias, Kind.IN, 0L);
+                Thread thread = threads.createThread(pid, alias, 0L);
 
                 thread.setName(name);
                 thread.setSize(size);
@@ -183,8 +182,7 @@ public class UploadService extends Service {
     }
 
     @Nullable
-    public CID getThumbnail(@NonNull Uri uri) {
-
+    private CID getThumbnail(@NonNull Uri uri) {
         checkNotNull(uri);
 
         CID cid = null;
@@ -223,7 +221,7 @@ public class UploadService extends Service {
         return null;
     }
 
-    public Bitmap getBitmapThumbnail(@NonNull Uri uri) {
+    private Bitmap getBitmapThumbnail(@NonNull Uri uri) {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             try {
                 return getContentResolver().loadThumbnail(

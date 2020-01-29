@@ -70,7 +70,7 @@ public class ThreadsFragment extends Fragment implements
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private SelectionViewModel mSelectionViewModel;
     private ThreadsViewAdapter mThreadsViewAdapter;
-    private ThreadViewModel threadViewModel;
+    private ThreadViewModel mThreadViewModel;
     private long mLastClickTime = 0;
     private Context mContext;
     private FragmentActivity mActivity;
@@ -147,37 +147,32 @@ public class ThreadsFragment extends Fragment implements
         checkNotNull(searchManager);
 
         MenuItem searchMenuItem = menu.findItem(R.id.action_search);
-        searchMenuItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
-            @Override
-            public boolean onMenuItemActionExpand(MenuItem item) {
-                mListener.showBottomNavigation(false);
-                mListener.setPagingEnabled(false);
-                mListener.showMainFab(false);
-                return true;
-            }
 
-            @Override
-            public boolean onMenuItemActionCollapse(MenuItem item) {
-                String query = "";
-                mSearchView.setQuery(query, false);
-                mSelectionViewModel.setQuery(query);
-                removeKeyboards();
+
+        mSearchView = (SearchView) searchMenuItem.getActionView();
+        mSearchView.setSearchableInfo(searchManager.getSearchableInfo(mActivity.getComponentName()));
+        mSearchView.setOnCloseListener(() -> {
+            removeKeyboards();
                 mListener.showBottomNavigation(true);
                 mListener.setPagingEnabled(true);
                 mListener.showMainFab(true);
 
-                return true;
-            }
+            return false;
+
         });
-        mSearchView = (SearchView) searchMenuItem.getActionView();
-        mSearchView.setSearchableInfo(searchManager.getSearchableInfo(mActivity.getComponentName()));
-        mSearchView.setIconifiedByDefault(false);
+        mSearchView.setOnSearchClickListener((v) -> {
+            mListener.showBottomNavigation(false);
+            mListener.setPagingEnabled(false);
+            mListener.showMainFab(false);
+        });
+        mSearchView.setIconifiedByDefault(true);
         String query = mSelectionViewModel.getQuery().getValue();
         checkNotNull(query);
-        mSearchView.setQuery(query, false);
-        if (!query.isEmpty()) {
-            searchMenuItem.expandActionView();
-        }
+        mSearchView.setQuery(query, true);
+        mSearchView.setIconified(query.isEmpty());
+
+
+
 
 
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -239,7 +234,7 @@ public class ThreadsFragment extends Fragment implements
         super.onViewCreated(view, savedInstanceState);
 
 
-        threadViewModel = new ViewModelProvider(this).get(ThreadViewModel.class);
+        mThreadViewModel = new ViewModelProvider(this).get(ThreadViewModel.class);
 
         mRecyclerView = view.findViewById(R.id.recycler_view_message_list);
 
@@ -256,6 +251,20 @@ public class ThreadsFragment extends Fragment implements
         mThreadsViewAdapter = new ThreadsViewAdapter(mContext, this);
         mRecyclerView.setAdapter(mThreadsViewAdapter);
 
+
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                boolean hasSelection = mSelectionTracker.hasSelection();
+                if (dy > 0 && !hasSelection) {
+                    mListener.showMainFab(false);
+                } else if (dy < 0 && !hasSelection) {
+                    mListener.showMainFab(true);
+                }
+
+            }
+        });
         mSelectionTracker = new SelectionTracker.Builder<>(
                 "threads-selection",//unique id
                 mRecyclerView,
@@ -322,7 +331,7 @@ public class ThreadsFragment extends Fragment implements
                 obs.removeObservers(this);
             }
 
-            LiveData<List<Thread>> liveData = threadViewModel.getVisibleChildrenByQuery(parent, query);
+            LiveData<List<Thread>> liveData = mThreadViewModel.getVisibleChildrenByQuery(parent, query);
             observer.set(liveData);
 
             liveData.observe(this, (threads) -> {
@@ -661,18 +670,11 @@ public class ThreadsFragment extends Fragment implements
                         -> EVENTS.getInstance(mContext).error(getString(R.string.offline_mode)));
                 threadError.start();
 
-                return;
             }
 
 
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    Service.getInstance(mContext).retryDownloadThread(mContext, thread);
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-            });
+            Service.retryDownloadThread(mContext, thread);
+
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -685,7 +687,7 @@ public class ThreadsFragment extends Fragment implements
         mSwipeRefreshLayout.setRefreshing(true);
 
         try {
-            LoadNotificationsWorker.notifications(mContext);
+            LoadNotificationsWorker.notifications(mContext, 0);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {

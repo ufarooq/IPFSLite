@@ -22,7 +22,6 @@ import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.GatewayService;
 import threads.server.services.Service;
-import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -61,11 +60,6 @@ public class JobServicePublisher extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
-
-
-        if (!Network.isConnected(getApplicationContext())) {
-            return false;
-        }
 
 
         ExecutorService executor = Executors.newSingleThreadExecutor();

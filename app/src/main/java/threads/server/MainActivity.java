@@ -1,6 +1,7 @@
 package threads.server;
 
 import android.Manifest;
+import android.app.SearchManager;
 import android.content.ClipData;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -57,7 +58,6 @@ import threads.server.core.events.EVENTS;
 import threads.server.core.peers.AddressType;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
-import threads.server.core.threads.Kind;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.fragments.DetailsDialogFragment;
@@ -98,7 +98,8 @@ import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener,
+public class MainActivity extends AppCompatActivity implements
+        NavigationView.OnNavigationItemSelectedListener,
         PeersDialogFragment.ActionListener,
         ThreadsDialogFragment.ActionListener,
         UserActionDialogFragment.ActionListener,
@@ -110,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         NameDialogFragment.ActionListener,
         PeerActionDialogFragment.ActionListener,
         InfoDialogFragment.ActionListener,
+        SwarmFragment.ActionListener,
         DontShowAgainFragmentDialog.ActionListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -490,7 +492,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             java.lang.Thread threadError = new java.lang.Thread(()
                     -> EVENTS.getInstance(getApplicationContext()).error(getString(R.string.offline_mode)));
             threadError.start();
-            return;
         }
 
         Service.connectUser(getApplicationContext(), pid, true);
@@ -685,6 +686,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        setDefaultKeyMode(DEFAULT_KEYS_SEARCH_LOCAL);
+
         mToolbar = findViewById(R.id.toolbar);
         mAppBarLayout = findViewById(R.id.app_bar_layout);
 
@@ -694,7 +697,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         Service.getInstance(getApplicationContext());
 
         mMainFab = findViewById(R.id.fab_main);
-
 
         mSelectionViewModel = new ViewModelProvider(this).get(SelectionViewModel.class);
 
@@ -730,6 +732,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 mNavigation.getMenu().getItem(position).setChecked(true);
                 mAppBarLayout.setExpanded(true, false);
                 prevMenuItem = mNavigation.getMenu().getItem(position);
+                showMainFab(true);
                 redrawFab(prevMenuItem.getItemId());
                 switch (prevMenuItem.getItemId()) {
                     case R.id.navigation_files:
@@ -754,6 +757,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mNavigation.refreshDrawableState();
         mNavigation.setOnNavigationItemSelectedListener((item) -> {
             mAppBarLayout.setExpanded(true, false);
+            showMainFab(true);
             redrawFab(item.getItemId());
 
             switch (item.getItemId()) {
@@ -1055,7 +1059,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             java.lang.Thread threadError = new java.lang.Thread(()
                     -> EVENTS.getInstance(getApplicationContext()).error(getString(R.string.offline_mode)));
             threadError.start();
-            return;
         }
 
 
@@ -1156,8 +1159,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     -> EVENTS.getInstance(getApplicationContext()).error(
                     getString(R.string.offline_mode)));
             threadError.start();
-
-            return;
         }
 
 
@@ -1218,8 +1219,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                     -> EVENTS.getInstance(getApplicationContext()).error(
                     getString(R.string.offline_mode)));
             threadError.start();
-
-            return;
         }
 
 
@@ -1267,11 +1266,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public void showMainFab(boolean visible) {
+
         if (visible) {
-            mMainFab.setVisibility(View.VISIBLE);
+            mMainFab.show();
         } else {
-            mMainFab.setVisibility(View.GONE);
+            mMainFab.hide();
         }
+
     }
 
     @Override
@@ -1333,7 +1334,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 long size = text.length();
 
-                Thread thread = threads.createThread(pid, alias, Kind.IN, 0L);
+                Thread thread = threads.createThread(pid, alias, 0L);
                 thread.setSize(size);
                 thread.setMimeType(mimeType);
 
@@ -1366,12 +1367,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
     }
 
+    @Override
+    public void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleIntents(intent);
+    }
     private void handleIntents(Intent intent) {
 
         final String action = intent.getAction();
 
 
         try {
+            if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
+                String query = intent.getStringExtra(SearchManager.QUERY);
+                Log.e(TAG, "" + query);
+                mSelectionViewModel.setQuery(query);
+            }
             ShareCompat.IntentReader intentReader = ShareCompat.IntentReader.from(this);
             if (Intent.ACTION_SEND.equals(action) ||
                     Intent.ACTION_SEND_MULTIPLE.equals(action)) {

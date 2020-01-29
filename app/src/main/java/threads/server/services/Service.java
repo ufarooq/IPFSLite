@@ -18,10 +18,8 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import threads.iota.Entity;
 import threads.iota.EntityService;
 import threads.iota.HashDatabase;
 import threads.ipfs.CID;
@@ -29,7 +27,6 @@ import threads.ipfs.ConnMgrConfig;
 import threads.ipfs.Encryption;
 import threads.ipfs.IPFS;
 import threads.ipfs.LinkInfo;
-import threads.ipfs.Multihash;
 import threads.ipfs.PID;
 import threads.ipfs.PeerInfo;
 import threads.ipfs.PubSubConfig;
@@ -43,7 +40,6 @@ import threads.server.core.peers.AddressType;
 import threads.server.core.peers.Content;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
-import threads.server.core.threads.Kind;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.jobs.JobServiceCleanup;
@@ -209,7 +205,7 @@ public class Service {
             synchronized (Service.class) {
 
                 if (INSTANCE == null) {
-                    runUpdatesIfNecessary(context);
+                    runUpdatesIfNecessary(context); // todo not the right location anymore
 
                     ProgressChannel.createProgressChannel(context);
 
@@ -231,90 +227,6 @@ public class Service {
         return System.currentTimeMillis() - TimeUnit.DAYS.toMillis(days);
     }
 
-    public static void notifications(@NonNull Context context) {
-        checkNotNull(context);
-        final PID host = IPFS.getPID(context);
-        if (host != null) {
-
-            final EntityService entityService = EntityService.getInstance(context);
-            final CDS contentService = CDS.getInstance(context);
-            try {
-                String address = AddressType.getAddress(host, AddressType.NOTIFICATION);
-                List<Entity> entities = entityService.loadEntities(context, address);
-
-                for (Entity entity : entities) {
-                    String notification = entity.getContent();
-                    Content data;
-                    try {
-                        data = gson.fromJson(notification, Content.class);
-                    } catch (Throwable e) {
-                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                        continue;
-                    }
-                    if (data != null) {
-
-                        final IPFS ipfs = IPFS.getInstance(context);
-                        checkNotNull(ipfs, "IPFS not valid");
-                        if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
-                            try {
-                                String privateKey = ipfs.getPrivateKey();
-                                checkNotNull(privateKey, "Private Key not valid");
-                                String encPid = data.get(Content.PID);
-                                checkNotNull(encPid);
-                                final String pidStr = Encryption.decryptRSA(encPid, privateKey);
-                                checkNotNull(pidStr);
-
-                                String encCid = data.get(Content.CID);
-                                checkNotNull(encCid);
-                                final String cidStr = Encryption.decryptRSA(encCid, privateKey);
-                                checkNotNull(cidStr);
-
-                                // check if cid is valid
-                                try {
-                                    Multihash.fromBase58(cidStr);
-                                } catch (Throwable e) {
-                                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                                    continue;
-                                }
-
-                                // check if pid is valid
-                                try {
-                                    Multihash.fromBase58(pidStr);
-                                } catch (Throwable e) {
-                                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                                    continue;
-                                }
-
-                                PID pid = PID.create(pidStr);
-                                CID cid = CID.create(cidStr);
-
-                                // THIS is a try, it tries to find the pubsub of the PID
-                                // (for sending a message when done)
-                                ipfs.addPubSubTopic(context, pid.getPid());
-
-
-                                threads.server.core.contents.Content content =
-                                        contentService.getContent(cid);
-                                if (content == null) {
-                                    contentService.insertContent(pid, cid, false);
-                                }
-
-                                JobServiceContents.contents(context, pid, cid);
-
-
-                            } catch (Throwable e) {
-                                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                            }
-                        }
-
-                    }
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        }
-
-    }
 
     private static boolean notify(@NonNull Context context,
                                   @NonNull String pid,
@@ -379,9 +291,6 @@ public class Service {
                 } catch (Throwable e) {
                     success = false;
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
-
-                    events.invokeEvent(EVENTS.ERROR,
-                            context.getString(R.string.failed_notification, alias));
                 }
 
             }
@@ -621,7 +530,7 @@ public class Service {
                 IPFS.setGracePeriod(context, "10s");
 
 
-                Preferences.setConnectionTimeout(context, 45000);
+                Preferences.setConnectionTimeout(context, 15);
                 EntityService.setTangleTimeout(context, 45);
 
                 IPFS.setMDNSEnabled(context, true);
@@ -832,7 +741,7 @@ public class Service {
 
         final THREADS threads = THREADS.getInstance(context);
 
-        Thread thread = threads.createThread(sender, alias, Kind.OUT, parent);
+        Thread thread = threads.createThread(sender, alias, parent);
         thread.setContent(cid);
         String filename = link.getName();
         thread.setName(filename);
@@ -868,7 +777,7 @@ public class Service {
 
         final THREADS threads = THREADS.getInstance(context);
 
-        Thread thread = threads.createThread(sender, alias, Kind.OUT, 0L);
+        Thread thread = threads.createThread(sender, alias, 0L);
         thread.setContent(cid);
 
 
@@ -1197,6 +1106,44 @@ public class Service {
         }
     }
 
+    public static void retryDownloadThread(@NonNull Context context, @NonNull Thread thread) {
+
+        checkNotNull(context);
+        checkNotNull(thread);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                THREADS threads = THREADS.getInstance(context);
+                try {
+
+                    threads.setThreadLeaching(thread.getIdx(), true);
+                    PID host = IPFS.getPID(context);
+                    checkNotNull(host);
+                    PID sender = thread.getSender();
+
+
+                    if (!host.equals(sender)) {
+
+                        SwarmService.ConnectInfo info = SwarmService.connect(context, sender);
+
+                        Service.downloadThread(context, thread, sender);
+
+                        SwarmService.disconnect(context, info);
+
+                    } else {
+
+                        Service.downloadThread(context, thread, null);
+                    }
+                } finally {
+                    threads.setThreadLeaching(thread.getIdx(), false);
+                }
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        });
+    }
+
     public ArrayList<String> getEnhancedUserPIDs(@NonNull Context context) {
         checkNotNull(context);
 
@@ -1214,39 +1161,6 @@ public class Service {
             }
         }
         return users;
-    }
-
-    public void retryDownloadThread(@NonNull Context context, @NonNull Thread thread) {
-
-        checkNotNull(context);
-        checkNotNull(thread);
-
-        THREADS threads = THREADS.getInstance(context);
-        try {
-
-            threads.setThreadLeaching(thread.getIdx(), true);
-            PID host = IPFS.getPID(context);
-            checkNotNull(host);
-            PID sender = thread.getSender();
-
-
-            if (!host.equals(sender)) {
-
-                SwarmService.ConnectInfo info = SwarmService.connect(context, sender);
-
-                Service.downloadThread(context, thread, sender);
-
-                SwarmService.disconnect(context, info);
-
-            } else {
-
-                Service.downloadThread(context, thread, null);
-            }
-        } finally {
-            threads.setThreadLeaching(thread.getIdx(), false);
-        }
-
-
     }
 
     private void sharePeer(@NonNull Context context,
@@ -1302,6 +1216,7 @@ public class Service {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
+                checkNotNull(ipfs, "IPFS not valid");
                 // clean-up (unset the unread number)
                 threads.resetThreadsNumber(indices);
 
@@ -1318,6 +1233,7 @@ public class Service {
                     Contents contents = new Contents();
 
                     List<Thread> threadList = threads.getThreadsByIdx(indices);
+
                     contents.add(threadList);
 
                     String data = gson.toJson(contents);
@@ -1339,6 +1255,8 @@ public class Service {
                     for (User user : users) {
                         futures.add(executorService.submit(() ->
                                 sharePeer(context, user, cid, start)));
+
+
                     }
 
 
@@ -1359,7 +1277,7 @@ public class Service {
     private void init(@NonNull Context context) {
         checkNotNull(context);
 
-        LoadNotificationsWorker.notifications(context);
+        LoadNotificationsWorker.notifications(context, 10);
         JobServiceDownloader.downloader(context);
         JobServicePublisher.publish(context);
         JobServicePeers.peers(context);
@@ -1380,111 +1298,103 @@ public class Service {
 
     private void attachHandler(@NonNull Context context) {
         checkNotNull(context);
+
+        final PEERS peers = PEERS.getInstance(context);
+        final EVENTS events = EVENTS.getInstance(context);
+
         try {
 
-            final PEERS peers = PEERS.getInstance(context);
-            final EVENTS events = EVENTS.getInstance(context);
+            final PID host = IPFS.getPID(context);
+            IPFS.setPubSubHandler((message) -> {
+                try {
 
-            try {
+                    String sender = message.getSenderPid();
 
-                final PID host = IPFS.getPID(context);
-                IPFS.setPubSubHandler((message) -> {
-                    try {
-
-                        String sender = message.getSenderPid();
-
-                        PID senderPid = PID.create(sender);
+                    PID senderPid = PID.create(sender);
 
 
-                        if (!senderPid.equals(host) && !peers.isUserBlocked(senderPid)) {
+                    if (!senderPid.equals(host) && !peers.isUserBlocked(senderPid)) {
 
-                            String code = message.getMessage().trim();
+                        String code = message.getMessage().trim();
 
-                            CodecDecider result = CodecDecider.evaluate(code);
+                        CodecDecider result = CodecDecider.evaluate(code);
 
-                            if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
-                                JobServiceContents.contents(context,
-                                        senderPid, CID.create(result.getMultihash()));
-                            } else if (result.getCodex() == CodecDecider.Codec.URI) {
-                                JobServiceDownload.download(context,
-                                        senderPid, CID.create(result.getMultihash()));
+                        if (result.getCodex() == CodecDecider.Codec.MULTIHASH) {
+                            JobServiceContents.contents(context,
+                                    senderPid, CID.create(result.getMultihash()));
+                        } else if (result.getCodex() == CodecDecider.Codec.URI) {
+                            JobServiceDownload.download(context,
+                                    senderPid, CID.create(result.getMultihash()));
 
-                            } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {
-                                Content content = result.getContent();
-                                checkNotNull(content);
-                                if (content.containsKey(Content.EST)) {
-                                    String est = content.get(Content.EST);
-                                    if ("CONNECT".equals(est)) {
-                                        if (content.containsKey(Content.ALIAS)) {
-                                            String alias = content.get(Content.ALIAS);
-                                            checkNotNull(alias);
-                                            String pubKey = content.get(Content.PKEY);
-                                            if (pubKey == null) {
-                                                pubKey = "";
-                                            }
-                                            createUser(context, senderPid, alias, pubKey);
+                        } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {
+                            Content content = result.getContent();
+                            checkNotNull(content);
+                            if (content.containsKey(Content.EST)) {
+                                String est = content.get(Content.EST);
+                                if ("CONNECT".equals(est)) {
+                                    if (content.containsKey(Content.ALIAS)) {
+                                        String alias = content.get(Content.ALIAS);
+                                        checkNotNull(alias);
+                                        String pubKey = content.get(Content.PKEY);
+                                        if (pubKey == null) {
+                                            pubKey = "";
                                         }
-                                    } else if ("CONNECT_REPLY".equals(est)) {
-                                        if (content.containsKey(Content.ALIAS)) {
-                                            String alias = content.get(Content.ALIAS);
-                                            checkNotNull(alias);
-                                            String pubKey = content.get(Content.PKEY);
-                                            if (pubKey == null) {
-                                                pubKey = "";
-                                            }
-                                            adaptUser(context, senderPid, alias, pubKey);
-                                        }
-                                    } else if ("REPLY".equals(est)) {
-
-                                        if (content.containsKey(Content.CID)) {
-                                            String cid = content.get(Content.CID);
-                                            checkNotNull(cid);
-                                            Service.receiveReply(context, senderPid, cid);
-                                        }
-                                    } else if ("RECEIVED".equals(est)) {
-                                        if (content.containsKey(Content.ALIAS)) {
-                                            String alias = content.get(Content.ALIAS);
-                                            checkNotNull(alias);
-
-                                            events.error(context.getString(
-                                                    R.string.notification_received, alias));
-                                        }
-                                    } else if ("SHARE".equals(est)) {
-                                        ScheduledExecutorService executorService =
-                                                Executors.newSingleThreadScheduledExecutor();
-                                        executorService.schedule(() ->
-                                                        Service.notifications(context),
-                                                3, TimeUnit.SECONDS);
+                                        createUser(context, senderPid, alias, pubKey);
                                     }
-                                } else {
-                                    events.error(context.getString(
-                                            R.string.unsupported_pubsub_message,
-                                            senderPid.getPid()));
-                                }
-                            } else if (result.getCodex() == CodecDecider.Codec.UNKNOWN) {
+                                } else if ("CONNECT_REPLY".equals(est)) {
+                                    if (content.containsKey(Content.ALIAS)) {
+                                        String alias = content.get(Content.ALIAS);
+                                        checkNotNull(alias);
+                                        String pubKey = content.get(Content.PKEY);
+                                        if (pubKey == null) {
+                                            pubKey = "";
+                                        }
+                                        adaptUser(context, senderPid, alias, pubKey);
+                                    }
+                                } else if ("REPLY".equals(est)) {
 
+                                    if (content.containsKey(Content.CID)) {
+                                        String cid = content.get(Content.CID);
+                                        checkNotNull(cid);
+                                        Service.receiveReply(context, senderPid, cid);
+                                    }
+                                } else if ("RECEIVED".equals(est)) {
+                                    if (content.containsKey(Content.ALIAS)) {
+                                        String alias = content.get(Content.ALIAS);
+                                        checkNotNull(alias);
+
+                                        events.error(context.getString(
+                                                R.string.notification_received, alias));
+                                    }
+                                } else if ("SHARE".equals(est)) {
+                                    LoadNotificationsWorker.notifications(context, 3);
+                                }
+                            } else {
                                 events.error(context.getString(
                                         R.string.unsupported_pubsub_message,
                                         senderPid.getPid()));
                             }
+                        } else if (result.getCodex() == CodecDecider.Codec.UNKNOWN) {
 
+                            events.error(context.getString(
+                                    R.string.unsupported_pubsub_message,
+                                    senderPid.getPid()));
                         }
-                    } catch (Throwable e) {
-                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    } finally {
-                        Log.e(TAG, "Receive : " + message.getMessage());
+
                     }
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                } finally {
+                    Log.e(TAG, "Receive : " + message.getMessage());
+                }
 
 
-                });
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-
+            });
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
+
     }
+
 }

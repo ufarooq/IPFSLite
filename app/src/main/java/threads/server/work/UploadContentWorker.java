@@ -130,7 +130,11 @@ public class UploadContentWorker extends Worker {
 
             if (success) {
                 threads.setThreadSeeding(idx);
-                // Now check if MIME TYPE of thread can be re-evaluated
+
+                if (size != file.length()) {
+                    threads.setThreadSize(idx, file.length());
+                }
+
                 if (thread.getMimeType().isEmpty()) {
                     ContentInfo contentInfo = ipfs.getContentInfo(file);
                     if (contentInfo != null) {
@@ -140,23 +144,28 @@ public class UploadContentWorker extends Worker {
                         } else {
                             threads.setThreadMimeType(idx, MimeType.OCTET_MIME_TYPE);
                         }
+                        String name = thread.getName();
+                        if (!name.contains(".")) {
+                            String[] extensions = contentInfo.getFileExtensions();
+                            if (extensions != null) {
+                                String ext = extensions[0];
+                                threads.setThreadName(idx, name + "." + ext);
+                            }
+                        }
                     } else {
                         threads.setThreadMimeType(idx, MimeType.OCTET_MIME_TYPE);
                     }
                 }
 
-                // check if image was not imported
-                try {
-                    if (thread.getThumbnail() == null) {
-                        ThumbnailService.Result res = ThumbnailService.getThumbnail(
-                                getApplicationContext(), file, filename);
-                        CID image = res.getCid();
+                if (thread.getThumbnail() == null) {
+                    String mimeType = threads.getThreadMimeType(idx);
+                    if (mimeType != null) {
+                        CID image = ThumbnailService.getThumbnail(getApplicationContext(),
+                                file, mimeType);
                         if (image != null) {
                             threads.setThreadImage(idx, image);
                         }
                     }
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
             }
 

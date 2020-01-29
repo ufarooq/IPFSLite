@@ -18,7 +18,6 @@ import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.server.core.peers.Content;
 import threads.server.services.GatewayService;
-import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -59,9 +58,7 @@ public class JobServicePublish extends JobService {
         final String cid = bundle.getString(Content.CID);
         checkNotNull(cid);
         final boolean connectPeers = bundle.getBoolean(Content.PEERS);
-        if (!Network.isConnected(getApplicationContext())) {
-            return false;
-        }
+
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
