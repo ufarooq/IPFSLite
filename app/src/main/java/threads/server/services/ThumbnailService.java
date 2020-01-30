@@ -14,7 +14,6 @@ import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.provider.DocumentsContract;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.util.Size;
 
@@ -109,93 +108,6 @@ public class ThumbnailService {
         return stream.toByteArray();
     }
 
-    @Nullable
-    private static Bitmap getPreview(@NonNull Context context, @NonNull Uri uri, @NonNull String mimeType) throws Exception {
-        checkNotNull(context);
-        checkNotNull(uri);
-        checkNotNull(mimeType);
-
-        if (mimeType.startsWith("video")) {
-
-
-            MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-            mediaMetadataRetriever.setDataSource(context, uri);
-
-            Bitmap bitmap = null;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-
-                try {
-                    bitmap = mediaMetadataRetriever.getPrimaryImage();
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage());
-                }
-            }
-            try {
-                if (bitmap == null) {
-                    final WeakReference<Bitmap> weakBmp = new WeakReference<>(mediaMetadataRetriever.getFrameAtTime());
-                    bitmap = weakBmp.get();
-                }
-            } catch (Throwable e) {
-                bitmap = mediaMetadataRetriever.getFrameAtTime();
-            }
-            mediaMetadataRetriever.release();
-            return bitmap;
-
-        } else if (mimeType.startsWith("application/pdf")) {
-            return getPDFBitmap(context, uri);
-        } else if (mimeType.startsWith("image")) {
-
-            Bitmap bitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), uri);
-            return ThumbnailUtils.extractThumbnail(bitmap, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
-        }
-        return null;
-    }
-
-    @Nullable
-    private static Bitmap getPreview(@NonNull Context context, @NonNull Uri uri) throws Exception {
-        checkNotNull(context);
-        checkNotNull(uri);
-
-        FileDetails fileDetails = getFileDetails(context, uri);
-        checkNotNull(fileDetails);
-        String mimeType = fileDetails.getMimeType();
-
-        if (mimeType.startsWith("video")) {
-
-
-            MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-            mediaMetadataRetriever.setDataSource(context, uri);
-
-            Bitmap bitmap = null;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-
-                try {
-                    bitmap = mediaMetadataRetriever.getPrimaryImage();
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage());
-                }
-            }
-            try {
-                if (bitmap == null) {
-                    final WeakReference<Bitmap> weakBmp = new WeakReference<>(
-                            mediaMetadataRetriever.getFrameAtTime());
-                    bitmap = weakBmp.get();
-                }
-            } catch (Throwable e) {
-                bitmap = mediaMetadataRetriever.getFrameAtTime();
-            }
-            mediaMetadataRetriever.release();
-            return bitmap;
-
-        } else if (mimeType.startsWith("application/pdf")) {
-            return getPDFBitmap(context, uri);
-        } else if (mimeType.startsWith("image")) {
-
-            Bitmap bitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), uri);
-            return ThumbnailUtils.extractThumbnail(bitmap, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
-        }
-        return null;
-    }
 
     @NonNull
     private static Bitmap getPDFBitmap(@NonNull Context context, @NonNull Uri uri) throws Exception {
@@ -225,26 +137,6 @@ public class ThumbnailService {
         pdfRenderer.close();
         fileDescriptor.close();
         return bitmap;
-    }
-
-
-    @Nullable
-    private static byte[] getPreviewImage(@NonNull Context context,
-                                          @NonNull Uri uri,
-                                          @NonNull String mimeType) throws Exception {
-        checkNotNull(context);
-        checkNotNull(uri);
-        checkNotNull(mimeType);
-
-        Bitmap bitmap = getPreview(context, uri, mimeType);
-        if (bitmap != null) {
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.WEBP, 100, stream);
-            byte[] image = stream.toByteArray();
-            bitmap.recycle();
-            return image;
-        }
-        return null;
     }
 
 
@@ -280,36 +172,6 @@ public class ThumbnailService {
 
 
         return null;
-    }
-
-
-    @Nullable
-    public static CID getThumbnail(@NonNull Context context,
-                                   @NonNull Uri uri,
-                                   @NonNull String mimeType) {
-        checkNotNull(context);
-        checkNotNull(uri);
-        checkNotNull(mimeType);
-
-        CID cid = null;
-        byte[] bytes = null;
-
-
-        try {
-            bytes = getPreviewImage(context, uri, mimeType);
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage());
-        }
-
-        if (bytes != null) {
-            try {
-                cid = IPFS.getInstance(context).storeData(bytes);
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        }
-
-        return cid;
     }
 
 
@@ -364,24 +226,28 @@ public class ThumbnailService {
 
         try {
             if (mimeType.startsWith("video")) {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-                    return ThumbnailUtils.createVideoThumbnail(file, new Size(THUMBNAIL_SIZE, THUMBNAIL_SIZE), null);
-                } else {
-                    MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-                    mediaMetadataRetriever.setDataSource(context, Uri.fromFile(file));
-                    Bitmap bitmap;
-                    try {
-                        String time = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-                        Long timeUs = Long.decode(time);
-                        long timeFrame = (timeUs / 100) * 5;
+                MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+                mediaMetadataRetriever.setDataSource(context, Uri.fromFile(file));
 
-                        bitmap = mediaMetadataRetriever.getFrameAtTime(timeFrame);
+                Bitmap bitmap = null;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+
+                    try {
+                        bitmap = mediaMetadataRetriever.getPrimaryImage();
                     } catch (Throwable e) {
-                        bitmap = mediaMetadataRetriever.getFrameAtTime();
+                        Log.e(TAG, "" + e.getLocalizedMessage());
                     }
-                    mediaMetadataRetriever.release();
-                    return bitmap;
                 }
+                try {
+                    if (bitmap == null) {
+                        final WeakReference<Bitmap> weakBmp = new WeakReference<>(mediaMetadataRetriever.getFrameAtTime());
+                        bitmap = weakBmp.get();
+                    }
+                } catch (Throwable e) {
+                    bitmap = mediaMetadataRetriever.getFrameAtTime();
+                }
+                mediaMetadataRetriever.release();
+                return bitmap;
             } else if (mimeType.startsWith("application/pdf")) {
                 return getPDFBitmap(context, Uri.fromFile(file));
             } else if (mimeType.startsWith("image")) {

@@ -43,7 +43,7 @@ public class Thread {
     @ColumnInfo(name = "number")
     private int number = 0;  // checked
     @ColumnInfo(name = "progress")
-    private int progress = 0;  // checked
+    private int progress;  // checked
     @Nullable
     @TypeConverters(Converter.class)
     @ColumnInfo(name = "content")
@@ -81,6 +81,7 @@ public class Thread {
         this.leaching = false;
         this.seeding = false;
         this.deleting = false;
+        this.progress = 0;
     }
 
     static Thread createThread(@NonNull PID senderPid, @NonNull String senderAlias, long parent) {

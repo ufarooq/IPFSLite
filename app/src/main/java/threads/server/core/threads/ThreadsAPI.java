@@ -60,17 +60,6 @@ public class ThreadsAPI {
     }
 
 
-    public void setImage(@NonNull Thread thread, @NonNull CID image) {
-        checkNotNull(thread);
-        checkNotNull(image);
-        getThreadsDatabase().threadDao().setThumbnail(thread.getIdx(), image);
-    }
-
-    public void setThreadImage(long idx, @NonNull CID image) {
-        checkNotNull(image);
-        getThreadsDatabase().threadDao().setThumbnail(idx, image);
-    }
-
     @Nullable
     public String getMimeType(@NonNull Thread thread) {
         checkNotNull(thread);
@@ -307,15 +296,15 @@ public class ThreadsAPI {
 
 
     @NonNull
-    public List<Thread> getThreadsByCIDAndParent(@NonNull CID cid, long thread) {
+    public List<Thread> getThreadsByCcontentAndParent(@NonNull CID cid, long thread) {
         checkNotNull(cid);
-        return getThreadsDatabase().threadDao().getThreadsByCidAndParent(cid, thread);
+        return getThreadsDatabase().threadDao().getThreadsByContentAndParent(cid, thread);
     }
 
     @NonNull
-    public List<Thread> getThreadsByCID(@NonNull CID cid) {
+    public List<Thread> getThreadsByContent(@NonNull CID cid) {
         checkNotNull(cid);
-        return getThreadsDatabase().threadDao().getThreadsByCid(cid);
+        return getThreadsDatabase().threadDao().getThreadsByContent(cid);
     }
 
     public List<Thread> getSeedingThreadsByQuery(String query) {

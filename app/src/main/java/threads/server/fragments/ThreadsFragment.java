@@ -153,9 +153,9 @@ public class ThreadsFragment extends Fragment implements
         mSearchView.setSearchableInfo(searchManager.getSearchableInfo(mActivity.getComponentName()));
         mSearchView.setOnCloseListener(() -> {
             removeKeyboards();
-                mListener.showBottomNavigation(true);
-                mListener.setPagingEnabled(true);
-                mListener.showMainFab(true);
+            mListener.showBottomNavigation(true);
+            mListener.setPagingEnabled(true);
+            mListener.showMainFab(true);
 
             return false;
 
@@ -170,9 +170,6 @@ public class ThreadsFragment extends Fragment implements
         checkNotNull(query);
         mSearchView.setQuery(query, true);
         mSearchView.setIconified(query.isEmpty());
-
-
-
 
 
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -563,7 +560,7 @@ public class ThreadsFragment extends Fragment implements
 
                 boolean stillSearchView = true;
                 if (mSearchView != null) {
-                    stillSearchView = !mSearchView.isShown();
+                    stillSearchView = mSearchView.isIconified();
                 }
                 mListener.showBottomNavigation(stillSearchView);
                 mListener.setPagingEnabled(stillSearchView);
@@ -667,13 +664,13 @@ public class ThreadsFragment extends Fragment implements
             if (!Network.isConnected(mContext)) {
 
                 java.lang.Thread threadError = new java.lang.Thread(()
-                        -> EVENTS.getInstance(mContext).error(getString(R.string.offline_mode)));
+                        -> EVENTS.getInstance(mContext).warning(getString(R.string.offline_mode)));
                 threadError.start();
 
             }
 
 
-            Service.retryDownloadThread(mContext, thread);
+            Service.retryDownloadThread(mContext, thread);// todo worker
 
 
         } catch (Throwable e) {

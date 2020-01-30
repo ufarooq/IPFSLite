@@ -81,13 +81,13 @@ public interface ThreadDao {
     @TypeConverters(Converter.class)
     void setSenderAlias(PID pid, String alias);
 
-    @Query("SELECT * FROM Thread WHERE content = :cid")
+    @Query("SELECT * FROM Thread WHERE content = :content")
     @TypeConverters({Converter.class})
-    List<Thread> getThreadsByCid(CID cid);
+    List<Thread> getThreadsByContent(CID content);
 
     @Query("SELECT * FROM Thread WHERE content = :cid AND parent = :parent")
     @TypeConverters({Converter.class})
-    List<Thread> getThreadsByCidAndParent(CID cid, long parent);
+    List<Thread> getThreadsByContentAndParent(CID cid, long parent);
 
     @Delete
     void removeThreads(Thread... threads);
@@ -155,7 +155,6 @@ public interface ThreadDao {
 
     @Query("SELECT * FROM Thread WHERE seeding = 1 ORDER BY lastModified DESC LIMIT :limit")
     List<Thread> getNewestSeedingThreads(int limit);
-
 
     @Query("SELECT * FROM Thread WHERE seeding = 1 AND name LIKE :query")
     List<Thread> getSeedingThreadsByQuery(String query);

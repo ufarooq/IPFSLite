@@ -23,14 +23,11 @@ import java.util.concurrent.TimeUnit;
 import threads.iota.EntityService;
 import threads.iota.HashDatabase;
 import threads.ipfs.CID;
-import threads.ipfs.ConnMgrConfig;
 import threads.ipfs.Encryption;
 import threads.ipfs.IPFS;
 import threads.ipfs.LinkInfo;
 import threads.ipfs.PID;
 import threads.ipfs.PeerInfo;
-import threads.ipfs.PubSubConfig;
-import threads.ipfs.RoutingConfig;
 import threads.server.R;
 import threads.server.core.contents.CDS;
 import threads.server.core.contents.ContentDatabase;
@@ -55,9 +52,8 @@ import threads.server.jobs.JobServicePublish;
 import threads.server.jobs.JobServicePublisher;
 import threads.server.utils.CodecDecider;
 import threads.server.utils.Preferences;
-import threads.server.utils.ProgressChannel;
+import threads.server.work.DownloadContentWorker;
 import threads.server.work.LoadNotificationsWorker;
-import threads.server.work.UploadContentWorker;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -73,7 +69,6 @@ public class Service {
     private static final String PIN_SERVICE_TIME_KEY = "pinServiceTimeKey";
     private static final String GATEWAY_KEY = "gatewayKey";
     private static final String AUTO_DOWNLOAD_KEY = "autoDownloadKey";
-    private static final String UPDATE = "UPDATE";
     private static final String SEND_NOTIFICATIONS_ENABLED_KEY = "sendNotificationKey";
     private static final String RECEIVE_NOTIFICATIONS_ENABLED_KEY = "receiveNotificationKey";
     private static final String SUPPORT_PEER_DISCOVERY_KEY = "supportPeerDiscoveryKey";
@@ -148,25 +143,6 @@ public class Service {
         editor.apply();
     }
 
-    public static boolean getDontShowAgain(@NonNull Context context, @NonNull String key) {
-        checkNotNull(context);
-        checkNotNull(key);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                APP_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(key, false);
-    }
-
-    public static void setDontShowAgain(@NonNull Context context, @NonNull String key, boolean value) {
-        checkNotNull(context);
-        checkNotNull(key);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                APP_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(key, value);
-        editor.apply();
-
-    }
-
 
     public static boolean isSendNotificationsEnabled(@NonNull Context context) {
         checkNotNull(context);
@@ -205,9 +181,7 @@ public class Service {
             synchronized (Service.class) {
 
                 if (INSTANCE == null) {
-                    runUpdatesIfNecessary(context); // todo not the right location anymore
 
-                    ProgressChannel.createProgressChannel(context);
 
                     long time = System.currentTimeMillis();
 
@@ -497,59 +471,6 @@ public class Service {
     }
 
 
-    private static void runUpdatesIfNecessary(@NonNull Context context) {
-        try {
-            int versionCode = context.getPackageManager().getPackageInfo(
-                    context.getPackageName(), 0).versionCode;
-            SharedPreferences prefs = context.getSharedPreferences(
-                    APP_KEY, Context.MODE_PRIVATE);
-            if (prefs.getInt(UPDATE, 0) != versionCode) {
-
-                IPFS.deleteConfigFile(context); // TODO remove later
-
-
-                // Experimental Features
-                IPFS.setQUICEnabled(context, true);
-                IPFS.setPreferTLS(context, true);
-
-
-                IPFS.setSwarmPort(context, 4001);
-                IPFS.setRoutingType(context, RoutingConfig.TypeEnum.dhtclient);
-
-
-                IPFS.setAutoNATServiceEnabled(context, false);
-                IPFS.setRelayHopEnabled(context, false);
-                IPFS.setAutoRelayEnabled(context, true);
-
-                IPFS.setPubSubEnabled(context, true);
-                IPFS.setPubSubRouter(context, PubSubConfig.RouterEnum.gossipsub);
-
-                IPFS.setConnMgrConfigType(context, ConnMgrConfig.TypeEnum.basic);
-                IPFS.setLowWater(context, 50);
-                IPFS.setHighWater(context, 200);
-                IPFS.setGracePeriod(context, "10s");
-
-
-                Preferences.setConnectionTimeout(context, 15);
-                EntityService.setTangleTimeout(context, 45);
-
-                IPFS.setMDNSEnabled(context, true);
-
-                IPFS.setRandomSwarmPort(context, true);
-
-
-                setDontShowAgain(context, Service.PIN_SERVICE_KEY, false);
-
-                SharedPreferences.Editor editor = prefs.edit();
-                editor.putInt(UPDATE, versionCode);
-                editor.apply();
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
-
-
     private static void adaptUser(@NonNull Context context,
                                   @NonNull PID senderPid,
                                   @NonNull String alias,
@@ -594,7 +515,7 @@ public class Service {
         executor.submit(() -> {
             try {
                 CID cid = CID.create(multihash);
-                List<Thread> entries = threads.getThreadsByCID(cid);
+                List<Thread> entries = threads.getThreadsByContent(cid);
                 for (Thread thread : entries) {
                     threads.incrementThreadNumber(thread);
                 }
@@ -813,7 +734,7 @@ public class Service {
         checkNotNull(cid);
 
         THREADS.getInstance(context).setThreadLeaching(thread.getIdx(), true);
-        UploadContentWorker.downloadContent(context, cid,
+        DownloadContentWorker.download(context, cid,
                 thread.getIdx(), thread.getName(), thread.getSize());
 
     }
@@ -891,7 +812,7 @@ public class Service {
                 downloadLinks(context, thread, links);
             } else {
                 THREADS.getInstance(context).setThreadLeaching(thread.getIdx(), true);
-                UploadContentWorker.downloadContent(context, link.getCid(),
+                DownloadContentWorker.download(context, link.getCid(),
                         thread.getIdx(), link.getName(), link.getSize());
             }
         });
@@ -900,7 +821,7 @@ public class Service {
     private static Thread getDirectoryThread(@NonNull THREADS threads,
                                              @NonNull Thread thread,
                                              @NonNull CID cid) {
-        List<Thread> entries = threads.getThreadsByCID(cid);
+        List<Thread> entries = threads.getThreadsByContent(cid);
         if (!entries.isEmpty()) {
             for (Thread entry : entries) {
                 if (entry.getParent() == thread.getIdx()) {
@@ -945,7 +866,7 @@ public class Service {
         checkNotNull(context);
         checkNotNull(cid);
         IPFS ipfs = IPFS.getInstance(context);
-        int timeout = Preferences.getConnectionTimeout(context);
+        int timeout = Preferences.getConnectionTimeout(context);//todo
         List<LinkInfo> links = ipfs.ls(cid, timeout, false);
         if (links == null) {
             Log.e(TAG, "no links");

@@ -33,25 +33,22 @@ import threads.server.utils.ProgressChannel;
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class UploadContentWorker extends Worker {
-    private static final String TAG = UploadContentWorker.class.getSimpleName();
+public class DownloadContentWorker extends Worker {
+    private static final String TAG = DownloadContentWorker.class.getSimpleName();
     private static final String ID = "ID";
     private static final String FN = "FN";
     private static final String FS = "FS";
     private static final String IDX = "IDX";
 
-    public UploadContentWorker(
+    public DownloadContentWorker(
             @NonNull Context context,
             @NonNull WorkerParameters params) {
         super(context, params);
 
     }
 
-    public static void downloadContent(@NonNull Context context,
-                                       @NonNull CID cid,
-                                       long threadIdx,
-                                       @NonNull String filename,
-                                       long size) {
+    public static void download(@NonNull Context context, @NonNull CID cid,
+                                long threadIdx, @NonNull String filename, long size) {
 
         checkNotNull(context);
         checkNotNull(cid);
@@ -68,8 +65,8 @@ public class UploadContentWorker extends Worker {
         data.putLong(IDX, threadIdx);
 
         OneTimeWorkRequest syncWorkRequest =
-                new OneTimeWorkRequest.Builder(UploadContentWorker.class)
-                        .addTag("UploadContentWorker")
+                new OneTimeWorkRequest.Builder(DownloadContentWorker.class)
+                        .addTag("DownloadContentWorker")
                         .setInputData(data.build())
                         .setConstraints(builder.build())
                         .build();
@@ -126,7 +123,7 @@ public class UploadContentWorker extends Worker {
                         }
 
 
-                    }, 1000, size);
+                    }, 1000, size);//todo set right timeout
 
             if (success) {
                 threads.setThreadSeeding(idx);
@@ -157,13 +154,13 @@ public class UploadContentWorker extends Worker {
                     }
                 }
 
-                if (thread.getThumbnail() == null) {
+                if (threads.getThreadThumbnail(idx) == null) {
                     String mimeType = threads.getThreadMimeType(idx);
                     if (mimeType != null) {
                         CID image = ThumbnailService.getThumbnail(getApplicationContext(),
                                 file, mimeType);
                         if (image != null) {
-                            threads.setThreadImage(idx, image);
+                            threads.setThreadThumbnail(idx, image);
                         }
                     }
                 }

@@ -87,7 +87,6 @@ public class WebViewDialogFragment extends DialogFragment {
 
                 switch (type) {
                     case HTML:
-                        // TODO StandardCharsets.UTF_8.displayName()
                         wv.loadData(data, MimeType.HTML_MIME_TYPE, "UTF-8");
                         break;
                     case TEXT:

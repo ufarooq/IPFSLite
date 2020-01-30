@@ -73,7 +73,6 @@ public class JobServiceDeleteThreads extends JobService {
 
                 ipfs.gc();
 
-                ipfs.logBaseDir();
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

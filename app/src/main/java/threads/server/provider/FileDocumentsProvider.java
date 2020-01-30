@@ -39,6 +39,7 @@ import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
 import threads.server.BuildConfig;
+import threads.server.InitApplication;
 import threads.server.R;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
@@ -232,7 +233,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
                 } else {
                     Multihash.fromBase58(docId);
                     CID cid = CID.create(docId);
-                    List<Thread> files = threads.getThreadsByCID(cid);
+                    List<Thread> files = threads.getThreadsByContent(cid);
                     if (files.isEmpty()) {
                         throw new FileNotFoundException("File not found.");
                     }
@@ -277,7 +278,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
                 } else {
                     Multihash.fromBase58(documentId);
                     CID cid = CID.create(documentId);
-                    List<Thread> files = threads.getThreadsByCID(cid);
+                    List<Thread> files = threads.getThreadsByContent(cid);
                     if (files.isEmpty()) {
                         throw new FileNotFoundException("File not found.");
                     }
@@ -366,7 +367,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
                 } else {
                     Multihash.fromBase58(documentId);
                     CID cid = CID.create(documentId);
-                    List<Thread> files = threads.getThreadsByCID(cid);
+                    List<Thread> files = threads.getThreadsByContent(cid);
                     if (files.isEmpty()) {
                         throw new FileNotFoundException("File not found.");
                     }
@@ -415,6 +416,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
         Context context = getContext();
         checkNotNull(context);
         appName = context.getString(R.string.app_name);
+        InitApplication.runUpdatesIfNecessary(context);
         threads = THREADS.getInstance(context);
         ipfs = IPFS.getInstance(getContext());
         return true;

@@ -31,6 +31,7 @@ import threads.server.core.threads.Thread;
 import threads.server.jobs.JobServiceDownload;
 import threads.server.utils.Network;
 import threads.server.utils.Preferences;
+import threads.server.work.DownloadThumbnailWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -166,14 +167,14 @@ public class ContentsService {
                 }
             }
 
-            CID thumbnail = null;
 
-            if (image != null) {
-                thumbnail = downloadImage(context, image);
+            long idx = createThread(context, sender, alias, cid, filename, fileSize, mimeType);
+
+            if (idx > 0) {
+                if (image != null) {
+                    DownloadThumbnailWorker.download(context, image, idx);
+                }
             }
-
-            createThread(context, sender, alias, cid, filename, fileSize, mimeType, thumbnail);
-
 
         } catch (Throwable e) {
             events.exception(e);
@@ -182,57 +183,29 @@ public class ContentsService {
 
     }
 
-    private static synchronized void createThread(
+    private static synchronized long createThread(
             @NonNull Context context,
             @NonNull PID sender,
             @NonNull String alias,
             @NonNull CID cid,
             @Nullable String filename,
             long fileSize,
-            @Nullable String mimeType,
-            @Nullable CID thumbnail) {
+            @Nullable String mimeType) {
 
         final THREADS threads = THREADS.getInstance(context);
         final IPFS ipfs = IPFS.getInstance(context);
         checkNotNull(ipfs, "IPFS not valid");
-        List<Thread> entries = threads.getThreadsByCIDAndParent(cid, 0L);
+        List<Thread> entries = threads.getThreadsByCcontentAndParent(cid, 0L);
 
         if (entries.isEmpty()) {
 
-            Service.createThread(context, sender, alias, cid,
-                    filename, fileSize, mimeType, thumbnail);
+            return Service.createThread(context, sender, alias, cid,
+                    filename, fileSize, mimeType, null);
 
         }
-
+        return -1;
     }
 
-    @Nullable
-    private static CID downloadImage(@NonNull Context context,
-                                     @NonNull String image) {
-
-        final IPFS ipfs = IPFS.getInstance(context);
-        final int timeout = Preferences.getConnectionTimeout(context);// todo
-
-        try {
-            try {
-                Multihash.fromBase58(image);
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                return null;
-            }
-
-            CID cid = CID.create(image);
-            byte[] data = ipfs.loadData(cid, timeout);
-            if (data != null) {
-                return cid;
-            }
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
-        return null;
-    }
 
     private static Contents downloadContents(@NonNull Context context,
                                              @NonNull CID cid) {

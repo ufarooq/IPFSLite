@@ -7,8 +7,13 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.pdf.PdfRenderer;
+import android.media.MediaMetadataRetriever;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.util.Size;
 
@@ -20,6 +25,7 @@ import androidx.core.content.ContextCompat;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -43,6 +49,7 @@ public class UploadService extends Service {
     private static final int NOTIFICATION_ID = 999;
     private static final String TAG = UploadService.class.getSimpleName();
     private static final String URI = "URI";
+    private static final int THUMBNAIL_SIZE = 128;
     private final AtomicInteger counter = new AtomicInteger(0);
 
     public static void invoke(@NonNull Context context, @NonNull Uri uri) {
@@ -77,6 +84,125 @@ public class UploadService extends Service {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
         }
+    }
+
+    @Nullable
+    public static CID getThumbnail(@NonNull Context context,
+                                   @NonNull Uri uri,
+                                   @NonNull String mimeType) {
+        checkNotNull(context);
+        checkNotNull(uri);
+        checkNotNull(mimeType);
+
+        CID cid = null;
+        byte[] bytes = null;
+
+
+        try {
+            bytes = getPreviewImage(context, uri, mimeType);
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage());
+        }
+
+        if (bytes != null) {
+            try {
+                cid = IPFS.getInstance(context).storeData(bytes);
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        }
+
+        return cid;
+    }
+
+    @Nullable
+    private static byte[] getPreviewImage(@NonNull Context context,
+                                          @NonNull Uri uri,
+                                          @NonNull String mimeType) throws Exception {
+        checkNotNull(context);
+        checkNotNull(uri);
+        checkNotNull(mimeType);
+
+        Bitmap bitmap = getPreview(context, uri, mimeType);
+        if (bitmap != null) {
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.WEBP, 100, stream);
+            byte[] image = stream.toByteArray();
+            bitmap.recycle();
+            return image;
+        }
+        return null;
+    }
+
+    @Nullable
+    private static Bitmap getPreview(@NonNull Context context, @NonNull Uri uri, @NonNull String mimeType) throws Exception {
+        checkNotNull(context);
+        checkNotNull(uri);
+        checkNotNull(mimeType);
+
+        if (mimeType.startsWith("video")) {
+
+            MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+            mediaMetadataRetriever.setDataSource(context, uri);
+
+            Bitmap bitmap = null;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+
+                try {
+                    bitmap = mediaMetadataRetriever.getPrimaryImage();
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage());
+                }
+            }
+            try {
+                if (bitmap == null) {
+                    final WeakReference<Bitmap> weakBmp = new WeakReference<>(mediaMetadataRetriever.getFrameAtTime());
+                    bitmap = weakBmp.get();
+                }
+            } catch (Throwable e) {
+                bitmap = mediaMetadataRetriever.getFrameAtTime();
+            }
+            mediaMetadataRetriever.release();
+            return bitmap;
+
+        } else if (mimeType.startsWith("application/pdf")) {
+            return getPDFBitmap(context, uri);
+        } else if (mimeType.startsWith("image")) {
+
+            Bitmap bitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), uri);
+            return ThumbnailUtils.extractThumbnail(bitmap, THUMBNAIL_SIZE, THUMBNAIL_SIZE);
+        }
+        return null;
+    }
+
+    @NonNull
+    private static Bitmap getPDFBitmap(@NonNull Context context, @NonNull Uri uri) throws Exception {
+        checkNotNull(context);
+        checkNotNull(uri);
+
+        ParcelFileDescriptor fileDescriptor = context.getContentResolver().openFileDescriptor(
+                uri, "r");
+        checkNotNull(fileDescriptor);
+        PdfRenderer pdfRenderer = new PdfRenderer(fileDescriptor);
+
+        PdfRenderer.Page rendererPage = pdfRenderer.openPage(0);
+        int rendererPageWidth = rendererPage.getWidth();
+        int rendererPageHeight = rendererPage.getHeight();
+
+
+        Bitmap bitmap = Bitmap.createBitmap(
+                rendererPageWidth,
+                rendererPageHeight,
+                Bitmap.Config.ARGB_8888);
+        rendererPage.render(bitmap, null, null,
+                PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY);
+
+
+        rendererPage.close();
+
+        pdfRenderer.close();
+        fileDescriptor.close();
+        return bitmap;
     }
 
     @Nullable
@@ -136,8 +262,7 @@ public class UploadService extends Service {
                 CID thumbnail;
                 thumbnail = getThumbnail(uri);
                 if (thumbnail == null) {
-                    thumbnail = ThumbnailService.getThumbnail(
-                            getApplicationContext(), uri, mimeType);
+                    thumbnail = getThumbnail(getApplicationContext(), uri, mimeType);
                 }
                 if (thumbnail != null) {
                     thread.setThumbnail(thumbnail);
@@ -152,7 +277,7 @@ public class UploadService extends Service {
                     checkNotNull(cid);
 
                     // cleanup of entries with same CID and hierarchy
-                    List<Thread> sameEntries = threads.getThreadsByCIDAndParent(cid, 0L);
+                    List<Thread> sameEntries = threads.getThreadsByCcontentAndParent(cid, 0L);
                     threads.removeThreads(ipfs, sameEntries);
 
 
@@ -225,7 +350,7 @@ public class UploadService extends Service {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             try {
                 return getContentResolver().loadThumbnail(
-                        uri, new Size(144, 144), null);
+                        uri, new Size(THUMBNAIL_SIZE, THUMBNAIL_SIZE), null);
 
 
             } catch (Throwable e) {
@@ -244,7 +369,6 @@ public class UploadService extends Service {
         }
         super.onCreate();
     }
-
 
     private Notification buildNotification() {
 
@@ -297,6 +421,5 @@ public class UploadService extends Service {
             notificationManager.notify(NOTIFICATION_ID, notification);
         }
     }
-
 
 }

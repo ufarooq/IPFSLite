@@ -38,9 +38,9 @@ public class GatewayService {
         int size = peers.size();
         for (threads.ipfs.Peer peer : peers) {
 
-            long lat = peer.getLatency(); // TODO remove cast
-            if (lat < Long.MAX_VALUE) {
-                latencies.add(lat);
+            long latency = peer.getLatency();
+            if (latency < Long.MAX_VALUE) {
+                latencies.add(latency);
             }
             // do not store circuit addresses
             if (!peer.getMultiAddress().endsWith("/p2p-circuit")) {
@@ -88,7 +88,7 @@ public class GatewayService {
         return size;
     }
 
-    public synchronized static List<Peer> getRelayPeers(
+    synchronized static List<Peer> getRelayPeers(
             @NonNull Context context, @NonNull String tag, int numRelays, int timeout) {
 
         checkNotNull(context);
@@ -143,7 +143,7 @@ public class GatewayService {
         return result;
     }
 
-    public static List<Peer> getConnectedPeers(
+    static List<Peer> getConnectedPeers(
             @NonNull Context context, @NonNull String tag, int numPeers) {
 
         checkNotNull(context);

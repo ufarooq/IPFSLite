@@ -405,7 +405,6 @@ public class MainActivity extends AppCompatActivity implements
 
         try {
             Intent intent = ShareCompat.IntentBuilder.from(this).getIntent();
-            intent.setAction(Intent.ACTION_CREATE_DOCUMENT);
             intent.setType("*/*");
 
             String[] mimeTypes = {"*/*"};
@@ -490,7 +489,7 @@ public class MainActivity extends AppCompatActivity implements
 
         if (!Network.isConnected(getApplicationContext())) {
             java.lang.Thread threadError = new java.lang.Thread(()
-                    -> EVENTS.getInstance(getApplicationContext()).error(getString(R.string.offline_mode)));
+                    -> EVENTS.getInstance(getApplicationContext()).warning(getString(R.string.offline_mode)));
             threadError.start();
         }
 
@@ -1057,7 +1056,7 @@ public class MainActivity extends AppCompatActivity implements
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
             java.lang.Thread threadError = new java.lang.Thread(()
-                    -> EVENTS.getInstance(getApplicationContext()).error(getString(R.string.offline_mode)));
+                    -> EVENTS.getInstance(getApplicationContext()).warning(getString(R.string.offline_mode)));
             threadError.start();
         }
 
@@ -1156,7 +1155,7 @@ public class MainActivity extends AppCompatActivity implements
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
             java.lang.Thread threadError = new java.lang.Thread(()
-                    -> EVENTS.getInstance(getApplicationContext()).error(
+                    -> EVENTS.getInstance(getApplicationContext()).warning(
                     getString(R.string.offline_mode)));
             threadError.start();
         }
@@ -1216,7 +1215,7 @@ public class MainActivity extends AppCompatActivity implements
         if (!Network.isConnected(getApplicationContext())) {
 
             java.lang.Thread threadError = new java.lang.Thread(()
-                    -> EVENTS.getInstance(getApplicationContext()).error(
+                    -> EVENTS.getInstance(getApplicationContext()).warning(
                     getString(R.string.offline_mode)));
             threadError.start();
         }
@@ -1349,7 +1348,7 @@ public class MainActivity extends AppCompatActivity implements
 
 
                     // cleanup of entries with same CID and hierarchy
-                    List<Thread> sameEntries = threads.getThreadsByCIDAndParent(cid, 0L);
+                    List<Thread> sameEntries = threads.getThreadsByCcontentAndParent(cid, 0L);
                     threads.removeThreads(ipfs, sameEntries);
 
                     threads.setThreadName(idx, cid.getCid());
@@ -1373,6 +1372,7 @@ public class MainActivity extends AppCompatActivity implements
         setIntent(intent);
         handleIntents(intent);
     }
+
     private void handleIntents(Intent intent) {
 
         final String action = intent.getAction();
@@ -1533,14 +1533,14 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void dontShowAgain(@NonNull String key, boolean notShowAgain) {
-        Service.setDontShowAgain(this, key, notShowAgain);
+        InitApplication.setDontShowAgain(this, key, notShowAgain);
     }
 
     @Override
     public void clickThreadPublish(long idx, boolean pinned) {
 
         if (pinned) {
-            if (!Service.getDontShowAgain(this, Service.PIN_SERVICE_KEY)) {
+            if (!InitApplication.getDontShowAgain(this, Service.PIN_SERVICE_KEY)) {
                 try {
                     DontShowAgainFragmentDialog.newInstance(
                             getString(R.string.pin_service_notice), Service.PIN_SERVICE_KEY).show(
