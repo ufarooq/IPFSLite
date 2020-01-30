@@ -32,7 +32,8 @@ public class InitApplication extends Application {
             if (prefs.getInt(UPDATE, 0) != versionCode) {
 
                 IPFS.deleteConfigFile(context); // TODO remove later
-                //IPFS.clearBaseDir(); // TODO remove later
+                IPFS.cleanBaseDir(context); // TODO remove later
+                IPFS.cleanCacheDir(context); // TODO remove later
 
 
                 // Experimental Features
