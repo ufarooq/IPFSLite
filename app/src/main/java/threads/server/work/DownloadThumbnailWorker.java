@@ -18,7 +18,6 @@ import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
 import threads.server.core.threads.THREADS;
-import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -65,8 +64,6 @@ public class DownloadThumbnailWorker extends Worker {
 
         IPFS ipfs = IPFS.getInstance(getApplicationContext());
         THREADS threads = THREADS.getInstance(getApplicationContext());
-        int timeout = Preferences.getConnectionTimeout(getApplicationContext());// todo
-
 
         try {
             String multihash = getInputData().getString(ID);
@@ -79,7 +76,7 @@ public class DownloadThumbnailWorker extends Worker {
 
 
             CID cid = CID.create(multihash);
-            byte[] data = ipfs.loadData(cid, timeout);
+            byte[] data = ipfs.loadData(cid);
             if (data != null) {
                 threads.setThreadThumbnail(idx, cid);
             }

@@ -123,7 +123,7 @@ public class DownloadContentWorker extends Worker {
                         }
 
 
-                    }, 1000, size);//todo set right timeout
+                    });
 
             if (success) {
                 threads.setThreadSeeding(idx);

@@ -866,8 +866,8 @@ public class Service {
         checkNotNull(context);
         checkNotNull(cid);
         IPFS ipfs = IPFS.getInstance(context);
-        int timeout = Preferences.getConnectionTimeout(context);//todo
-        List<LinkInfo> links = ipfs.ls(cid, timeout, false);
+        int timeout = Preferences.getConnectionTimeout(context);
+        List<LinkInfo> links = ipfs.ls(cid, timeout);
         if (links == null) {
             Log.e(TAG, "no links");
             return null;

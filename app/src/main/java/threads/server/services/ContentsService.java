@@ -30,7 +30,6 @@ import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.jobs.JobServiceDownload;
 import threads.server.utils.Network;
-import threads.server.utils.Preferences;
 import threads.server.work.DownloadThumbnailWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -211,11 +210,11 @@ public class ContentsService {
                                              @NonNull CID cid) {
         final Gson gson = new Gson();
         final IPFS ipfs = IPFS.getInstance(context);
-        final int timeout = Preferences.getConnectionTimeout(context);//todo
 
+        // TODO convert to worker
         try {
 
-            String content = ipfs.loadText(cid, timeout);
+            String content = ipfs.loadText(cid);
 
             if (content != null) {
 
