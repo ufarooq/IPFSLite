@@ -18,6 +18,7 @@ import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.server.core.peers.Content;
 import threads.server.services.GatewayService;
+import threads.server.work.BootstrapWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -53,6 +54,8 @@ public class JobServicePublish extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
+
+        BootstrapWorker.bootstrap(getApplicationContext());
 
         PersistableBundle bundle = jobParameters.getExtras();
         final String cid = bundle.getString(Content.CID);

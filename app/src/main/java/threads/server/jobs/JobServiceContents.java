@@ -92,8 +92,8 @@ public class JobServiceContents extends JobService {
                                     PID.create(pid), timestamp, false);
 
                     for (threads.server.core.contents.Content entry : contents) {
-                        ContentsService.download(
-                                getApplicationContext(), entry.getPid(), entry.getCID());
+                        ContentsService.download(getApplicationContext(),
+                                entry.getPid(), entry.getCID());
                     }
                 }
             } catch (Throwable e) {

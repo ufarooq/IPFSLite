@@ -43,8 +43,7 @@ public class LoadNotificationsWorker extends Worker {
 
     }
 
-    public static void notifications(@NonNull Context context,
-                                     int secondsDelay) {
+    public static void notifications(@NonNull Context context, int secondsDelay) {
         checkNotNull(context);
 
         if (!Service.isReceiveNotificationsEnabled(context)) {
@@ -94,7 +93,7 @@ public class LoadNotificationsWorker extends Worker {
                 }
                 if (data != null) {
 
-                    final IPFS ipfs = IPFS.getInstance(getApplicationContext());
+                    IPFS ipfs = IPFS.getInstance(getApplicationContext());
                     checkNotNull(ipfs, "IPFS not valid");
                     if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
                         try {

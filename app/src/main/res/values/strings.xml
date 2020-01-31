@@ -96,7 +96,6 @@
     <string name="support_automatic_download">Automatic Download</string>
     <string name="pubsub_support">Pubsub Support</string>
     <string name="success_notification">Sending notification to Peer \"%1$s\" took \"%2$s\"[s]</string>
-    <string name="failed_notification">Failed sending notification to Peer \"%1$s\"</string>
     <string name="enable_random_swarm_port">Random Swarm Port</string>
     <string name="swarm">Swarm</string>
     <string name="quality_measurement">Note: Quality measurement based on a simple algorithm.</string>
@@ -120,7 +119,7 @@
 
     <string name="action_details">Details</string>
     <string name="action_peer_add">Add Peer</string>
-    <string name="upload_to_ipfs">Upload to IPFS</string>
+    <string name="upload_ipfs_lite">IPFS Lite Upload</string>
     <string name="upload_channel_name">Upload Channel</string>
     <string name="upload_channel_description">Upload notifications during upload of files to IPFS</string>
     <string name="upload_failed">Upload failed for \"%1$s\"</string>

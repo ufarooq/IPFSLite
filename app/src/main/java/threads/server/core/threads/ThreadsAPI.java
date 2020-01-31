@@ -296,7 +296,7 @@ public class ThreadsAPI {
 
 
     @NonNull
-    public List<Thread> getThreadsByCcontentAndParent(@NonNull CID cid, long thread) {
+    public List<Thread> getThreadsByContentAndParent(@NonNull CID cid, long thread) {
         checkNotNull(cid);
         return getThreadsDatabase().threadDao().getThreadsByContentAndParent(cid, thread);
     }

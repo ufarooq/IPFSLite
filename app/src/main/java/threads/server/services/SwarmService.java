@@ -101,7 +101,7 @@ public class SwarmService {
             this.peerInfo = peerInfo;
         }
 
-        boolean isConnected() {
+        public boolean isConnected() {
             return connected;
         }
 

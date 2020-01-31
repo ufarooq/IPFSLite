@@ -1,4 +1,4 @@
-package threads.server.mdl;
+package threads.server.model;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.MutableLiveData;

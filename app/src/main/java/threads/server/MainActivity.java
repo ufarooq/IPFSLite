@@ -81,8 +81,8 @@ import threads.server.jobs.JobServiceDeleteThreads;
 import threads.server.jobs.JobServiceDownload;
 import threads.server.jobs.JobServiceIdentity;
 import threads.server.jobs.JobServicePublish;
-import threads.server.mdl.EventViewModel;
-import threads.server.mdl.SelectionViewModel;
+import threads.server.model.EventViewModel;
+import threads.server.model.SelectionViewModel;
 import threads.server.provider.FileDocumentsProvider;
 import threads.server.services.DaemonService;
 import threads.server.services.GatewayService;
@@ -1348,7 +1348,7 @@ public class MainActivity extends AppCompatActivity implements
 
 
                     // cleanup of entries with same CID and hierarchy
-                    List<Thread> sameEntries = threads.getThreadsByCcontentAndParent(cid, 0L);
+                    List<Thread> sameEntries = threads.getThreadsByContentAndParent(cid, 0L);
                     threads.removeThreads(ipfs, sameEntries);
 
                     threads.setThreadName(idx, cid.getCid());

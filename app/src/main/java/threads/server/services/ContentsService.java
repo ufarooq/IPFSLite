@@ -10,9 +10,6 @@ import com.google.gson.Gson;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
@@ -20,7 +17,6 @@ import threads.ipfs.Multihash;
 import threads.ipfs.PID;
 import threads.server.R;
 import threads.server.core.contents.CDS;
-import threads.server.core.contents.Content;
 import threads.server.core.contents.ContentEntry;
 import threads.server.core.contents.Contents;
 import threads.server.core.events.EVENTS;
@@ -29,7 +25,6 @@ import threads.server.core.peers.User;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.jobs.JobServiceDownload;
-import threads.server.utils.Network;
 import threads.server.work.DownloadThumbnailWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -38,71 +33,6 @@ public class ContentsService {
 
     private static final String TAG = ContentsService.class.getSimpleName();
 
-
-    public static void contents(@NonNull Context context) {
-        checkNotNull(context);
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                Service.getInstance(context);
-
-                if (Network.isConnected(context)) {
-                    Log.e(TAG, "Run contents service");
-
-                    downloadContents(context);
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-
-        });
-    }
-
-
-    private static void downloadContents(@NonNull Context context) {
-        checkNotNull(context);
-
-        final CDS contentService = CDS.getInstance(context);
-        final PEERS threads = PEERS.getInstance(context);
-
-        final IPFS ipfs = IPFS.getInstance(context);
-        final PID host = IPFS.getPID(context);
-
-        try {
-            checkNotNull(ipfs, "IPFS not valid");
-            for (PID user : threads.getUsersPIDs()) {
-
-                if (user.equals(host)) {
-                    continue;
-                }
-
-                if (!threads.isUserBlocked(user)) {
-
-                    long timestamp = System.currentTimeMillis() -
-                            TimeUnit.MINUTES.toMillis(10);
-
-
-                    List<Content> contents = contentService.getContentDatabase().
-                            contentDao().getContents(user, timestamp, false);
-
-                    if (!contents.isEmpty()) {
-
-                        SwarmService.ConnectInfo info = SwarmService.connect(context, user);
-
-                        if (info.isConnected()) {
-                            for (Content entry : contents) {
-                                ContentsService.download(context, entry.getPid(), entry.getCID());
-                            }
-                        }
-
-                        SwarmService.disconnect(context, info);
-                    }
-                }
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
 
     private static void downloadContents(@NonNull Context context,
                                          @NonNull PID pid,
@@ -194,7 +124,7 @@ public class ContentsService {
         final THREADS threads = THREADS.getInstance(context);
         final IPFS ipfs = IPFS.getInstance(context);
         checkNotNull(ipfs, "IPFS not valid");
-        List<Thread> entries = threads.getThreadsByCcontentAndParent(cid, 0L);
+        List<Thread> entries = threads.getThreadsByContentAndParent(cid, 0L);
 
         if (entries.isEmpty()) {
 
@@ -206,12 +136,12 @@ public class ContentsService {
     }
 
 
-    private static Contents downloadContents(@NonNull Context context,
-                                             @NonNull CID cid) {
+    private static Contents downloadContents(@NonNull Context context, @NonNull CID cid) {
+
+
         final Gson gson = new Gson();
         final IPFS ipfs = IPFS.getInstance(context);
 
-        // TODO convert to worker
         try {
 
             String content = ipfs.loadText(cid);

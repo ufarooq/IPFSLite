@@ -23,8 +23,9 @@ import java.util.List;
 import threads.server.R;
 import threads.server.core.peers.IPeer;
 import threads.server.core.peers.Peer;
-import threads.server.mdl.PeersViewModel;
+import threads.server.model.PeersViewModel;
 import threads.server.utils.PeersViewAdapter;
+import threads.server.work.BootstrapWorker;
 import threads.server.work.LoadPeersWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -70,6 +71,7 @@ public class SwarmFragment extends Fragment implements
 
 
         try {
+            BootstrapWorker.bootstrap(mContext);
             LoadPeersWorker.loadPeers(mContext);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);

@@ -62,7 +62,7 @@ public class EVENTS extends EventsAPI {
         error("" + throwable.getLocalizedMessage());
     }
 
-    public static class Builder {
+    static class Builder {
         EventsDatabase eventsDatabase = null;
 
         EVENTS build() {

@@ -89,7 +89,7 @@ public class JobServiceDownload extends JobService {
                     alias = user.getAlias();
                 }
             }
-            List<Thread> entries = threads.getThreadsByCcontentAndParent(cid, 0L);
+            List<Thread> entries = threads.getThreadsByContentAndParent(cid, 0L);
 
             if (!entries.isEmpty()) {
                 Thread entry = entries.get(0);

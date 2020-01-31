@@ -7,14 +7,12 @@ import androidx.annotation.NonNull;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import threads.iota.EntityService;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
-import threads.ipfs.PeerInfo;
 import threads.server.core.peers.Additional;
 import threads.server.core.peers.Additions;
 import threads.server.core.peers.PEERS;
@@ -74,17 +72,6 @@ public class IdentityService {
 
     }
 
-    private static List<String> getMultiAddresses(@NonNull PeerInfo info) {
-        checkNotNull(info);
-        List<String> addresses = new ArrayList<>();
-        for (String address : info.getMultiAddresses()) {
-            if (!address.startsWith("/ip6/::1/") && !address.startsWith("/ip4/127.0.0.1/")) {
-                addresses.add(address);
-            }
-        }
-        return addresses;
-    }
-
     private static ResultInfo createPeerInfo(@NonNull Context context,
                                              @NonNull List<Peer> storedRelays,
                                              @NonNull PID user,
@@ -131,9 +118,8 @@ public class IdentityService {
     }
 
 
-    public static threads.server.core.peers.PeerInfo getPeerInfo(@NonNull Context context,
-                                                                 @NonNull PID pid,
-                                                                 boolean updateUser) {
+    static threads.server.core.peers.PeerInfo getPeerInfo(
+            @NonNull Context context, @NonNull PID pid, boolean updateUser) {
         checkNotNull(context);
         checkNotNull(pid);
 

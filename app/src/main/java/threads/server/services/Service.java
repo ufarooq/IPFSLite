@@ -43,7 +43,6 @@ import threads.server.jobs.JobServiceCleanup;
 import threads.server.jobs.JobServiceConnect;
 import threads.server.jobs.JobServiceContents;
 import threads.server.jobs.JobServiceDownload;
-import threads.server.jobs.JobServiceDownloader;
 import threads.server.jobs.JobServiceFindPeers;
 import threads.server.jobs.JobServiceIdentity;
 import threads.server.jobs.JobServiceLoadPublicKey;
@@ -52,7 +51,9 @@ import threads.server.jobs.JobServicePublish;
 import threads.server.jobs.JobServicePublisher;
 import threads.server.utils.CodecDecider;
 import threads.server.utils.Preferences;
+import threads.server.work.BootstrapWorker;
 import threads.server.work.DownloadContentWorker;
+import threads.server.work.DownloadContentsWorker;
 import threads.server.work.LoadNotificationsWorker;
 
 import static androidx.core.util.Preconditions.checkArgument;
@@ -181,13 +182,8 @@ public class Service {
             synchronized (Service.class) {
 
                 if (INSTANCE == null) {
-
-
-                    long time = System.currentTimeMillis();
-
                     INSTANCE = new Service();
                     INSTANCE.attachHandler(context);
-                    Log.e(TAG, "Time Daemon : " + (System.currentTimeMillis() - time));
                     INSTANCE.init(context);
                 }
             }
@@ -740,8 +736,7 @@ public class Service {
     }
 
 
-    public static void connectUser(@NonNull Context context,
-                                   @NonNull String pid,
+    public static void connectUser(@NonNull Context context, @NonNull String pid,
                                    boolean issueWarning) {
         checkNotNull(context);
         checkNotNull(pid);
@@ -1094,6 +1089,7 @@ public class Service {
 
         final IPFS ipfs = IPFS.getInstance(context);
 
+        BootstrapWorker.bootstrap(context);
         JobServiceConnect.connect(context, user.getPID());
 
         try {
@@ -1198,13 +1194,16 @@ public class Service {
     private void init(@NonNull Context context) {
         checkNotNull(context);
 
+
+        BootstrapWorker.bootstrap(context);
         LoadNotificationsWorker.notifications(context, 10);
-        JobServiceDownloader.downloader(context);
+        DownloadContentsWorker.download(context);
+        DownloadContentsWorker.periodic(context);
+
         JobServicePublisher.publish(context);
         JobServicePeers.peers(context);
         JobServiceFindPeers.findPeers(context);
         JobServiceCleanup.cleanup(context);
-        ContentsService.contents(context);
 
         new java.lang.Thread(() -> {
             try {

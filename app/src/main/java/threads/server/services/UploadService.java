@@ -277,7 +277,7 @@ public class UploadService extends Service {
                     checkNotNull(cid);
 
                     // cleanup of entries with same CID and hierarchy
-                    List<Thread> sameEntries = threads.getThreadsByCcontentAndParent(cid, 0L);
+                    List<Thread> sameEntries = threads.getThreadsByContentAndParent(cid, 0L);
                     threads.removeThreads(ipfs, sameEntries);
 
 
@@ -375,7 +375,7 @@ public class UploadService extends Service {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(),
                 HIGH_CHANNEL_ID);
 
-        builder.setContentTitle(getString(R.string.upload_to_ipfs));
+        builder.setContentTitle(getString(R.string.upload_ipfs_lite));
         builder.setSmallIcon(R.drawable.action_upload);
         builder.setPriority(NotificationManager.IMPORTANCE_MAX);
 
@@ -393,7 +393,8 @@ public class UploadService extends Service {
         NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(this, HIGH_CHANNEL_ID)
                         .setSmallIcon(R.drawable.action_upload)
-                        .setContentTitle(getString(R.string.upload) + " : " + name)
+                        .setContentTitle(getString(R.string.upload_ipfs_lite))
+                        .setContentText(name)
                         .setPriority(NotificationCompat.PRIORITY_MAX);
 
         Notification notification = builder.build();

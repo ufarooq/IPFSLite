@@ -24,10 +24,10 @@ class ConnectService {
                                boolean supportDiscovery, int timeout) {
 
         checkNotNull(context);
-
         checkNotNull(pid);
-
         checkArgument(timeout > 0);
+
+
         if (!Network.isConnected(context)) {
             return false;
         }

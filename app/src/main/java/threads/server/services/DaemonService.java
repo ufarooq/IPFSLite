@@ -22,6 +22,7 @@ import threads.server.MainActivity;
 import threads.server.R;
 import threads.server.jobs.JobServicePeers;
 import threads.server.work.AutoConnectWorker;
+import threads.server.work.BootstrapWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -37,6 +38,7 @@ public class DaemonService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
+                BootstrapWorker.bootstrap(getApplicationContext());
                 JobServicePeers.peers(getApplicationContext());
                 AutoConnectWorker.autoConnect(getApplicationContext(), false, 30);
             } catch (Throwable e) {
@@ -94,6 +96,8 @@ public class DaemonService extends Service {
             IntentFilter intentFilter = new IntentFilter();
             intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
             registerReceiver(broadcastReceiver, intentFilter);
+
+
         } else {
             try {
                 stopForeground(true);

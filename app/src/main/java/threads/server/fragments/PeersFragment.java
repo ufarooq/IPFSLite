@@ -29,7 +29,7 @@ import java.util.Comparator;
 
 import threads.server.R;
 import threads.server.core.peers.User;
-import threads.server.mdl.UsersViewModel;
+import threads.server.model.UsersViewModel;
 import threads.server.services.Service;
 import threads.server.utils.UserItemDetailsLookup;
 import threads.server.utils.UsersItemKeyProvider;

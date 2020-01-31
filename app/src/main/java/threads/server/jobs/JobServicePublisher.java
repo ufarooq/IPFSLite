@@ -22,6 +22,7 @@ import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.GatewayService;
 import threads.server.services.Service;
+import threads.server.work.BootstrapWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -61,6 +62,7 @@ public class JobServicePublisher extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
+        BootstrapWorker.bootstrap(getApplicationContext());
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
