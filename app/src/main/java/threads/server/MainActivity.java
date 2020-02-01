@@ -514,14 +514,17 @@ public class MainActivity extends AppCompatActivity implements
 
         switch (menuItem.getItemId()) {
             case R.id.nav_privacy_policy: {
-                try {
-                    String url = "file:///android_res/raw/privacy_policy.html";
 
+                try {
+
+                    String data;
                     if (Service.isNightNode(getApplicationContext())) {
-                        url = "file:///android_res/raw/privacy_policy_night.html";
+                        data = Service.loadRawData(getApplicationContext(), R.raw.privacy_policy_night);
+                    } else {
+                        data = Service.loadRawData(getApplicationContext(), R.raw.privacy_policy);
                     }
 
-                    WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.URL, url)
+                    WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.HTML, data)
                             .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
 
                 } catch (Throwable e) {
@@ -587,10 +590,10 @@ public class MainActivity extends AppCompatActivity implements
                 try {
                     IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
-                    String data = "<html><h2>Config</h2><pre>" + ipfs.config_show() + "</pre></html>";
+                    String data = "<!doctype html><html><h2>Config</h2><pre>" + ipfs.config_show() + "</pre></html>";
 
                     if (Service.isNightNode(getApplicationContext())) {
-                        data = "<html><head><style>body { background-color: black; color: white; }</style></head><h2>Config</h2><pre>" + ipfs.config_show() + "</pre></html>";
+                        data = "<!doctype html><html><head><style>body { background-color: DarkSlateGray; color: white; }</style></head><h2>Config</h2><pre>" + ipfs.config_show() + "</pre></html>";
                     }
 
                     WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.HTML, data)
@@ -1019,7 +1022,7 @@ public class MainActivity extends AppCompatActivity implements
 
                 String html = "<html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Quality</h3><ul>";
                 if (Service.isNightNode(getApplicationContext())) {
-                    html = "<html><head><style>body {background-color: black; color: white;}</style></head><h3 style=\"text-align:center; color:teal;\">Quality</h3><ul>";
+                    html = "<html><head><style>body {background-color: DarkSlateGray; color: white;}</style></head><h3 style=\"text-align:center; color:teal;\">Quality</h3><ul>";
                 }
 
                 String numPeers = "Number Peers : " + info.getNumPeers();
@@ -1088,7 +1091,7 @@ public class MainActivity extends AppCompatActivity implements
 
                     String html = "<html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
                     if (Service.isNightNode(getApplicationContext())) {
-                        html = "<html><head><style>body { background-color: black; color: white;}</style></head><body><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
+                        html = "<html><head><style>body { background-color: DarkSlateGray; color: white;}</style></head><body><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
                     }
 
                     html = html.concat("<div style=\"width: 80%;" +

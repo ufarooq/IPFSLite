@@ -9,9 +9,14 @@ import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RawRes;
 
 import com.google.gson.Gson;
 
+import org.apache.commons.io.IOUtils;
+
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -994,6 +999,23 @@ public class Service {
                 return false;
         }
         return false;
+    }
+
+    @NonNull
+    public static String loadRawData(@NonNull Context context, @RawRes int id) {
+        checkNotNull(context);
+
+        try (InputStream inputStream = context.getResources().openRawResource(id)) {
+            try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+                IOUtils.copy(inputStream, outputStream);
+                return new String(outputStream.toByteArray());
+
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            return "";
+        }
     }
 
     public static void deleteUser(@NonNull Context context, @NonNull String pid) {
