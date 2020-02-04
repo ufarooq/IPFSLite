@@ -216,13 +216,13 @@ public class DownloadContentWorker extends Worker {
             }
 
             boolean finished = allSeeding == list.size();
-            if (finished) {
-                threads.setThreadSeeding(parent);
-            }
+
             int progress = (int) (((double) allSeeding * 100) / (double) list.size());
             threads.setThreadProgress(parent, progress);
 
             if (finished) {
+                threads.setThreadSeeding(parent);
+
                 Thread thread = threads.getThreadByIdx(parent);
                 checkNotNull(thread);
                 checkParentComplete(thread.getParent());
