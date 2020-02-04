@@ -95,6 +95,7 @@ import threads.server.utils.MimeType;
 import threads.server.utils.Network;
 import threads.server.utils.PermissionAction;
 import threads.server.utils.Preferences;
+import threads.server.work.BootstrapWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -266,7 +267,7 @@ public class MainActivity extends AppCompatActivity implements
                 PID host = IPFS.getPID(getApplicationContext());
                 checkNotNull(host);
                 String multihash = codecDecider.getMultihash();
-
+                BootstrapWorker.bootstrap(getApplicationContext());
                 JobServiceDownload.download(getApplicationContext(),
                         host, CID.create(multihash));
             } else {
@@ -1145,6 +1146,7 @@ public class MainActivity extends AppCompatActivity implements
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
+                    BootstrapWorker.bootstrap(getApplicationContext());
                     Service.connectPeer(getApplicationContext(), user, false);
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
