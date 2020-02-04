@@ -9,7 +9,6 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class EVENTS extends EventsAPI {
 
-    public static final String DAEMON = "DAEMON";
     public static final String ERROR = "ERROR";
     public static final String WARNING = "WARNING";
     public static final String INFO = "INFO";

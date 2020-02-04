@@ -106,7 +106,8 @@ public class DownloadContentsWorker extends Worker {
 
                     if (!contents.isEmpty()) {
 
-                        SwarmService.ConnectInfo info = SwarmService.connect(getApplicationContext(), user);
+                        SwarmService.ConnectInfo info = SwarmService.connect(
+                                getApplicationContext(), user);
 
                         if (info.isConnected()) {
                             for (Content entry : contents) {

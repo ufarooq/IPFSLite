@@ -9,6 +9,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.os.IBinder;
 import android.util.Log;
@@ -33,6 +34,8 @@ public class DaemonService extends Service {
     private static final int NOTIFICATION_ID = 998;
     private static final String TAG = DaemonService.class.getSimpleName();
     private static final String START_DAEMON = "START_DAEMON";
+    private static final String APP_KEY = "AppKey";
+    private static final String DAEMON_KEY = "daemonKey";
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
 
         @Override
@@ -46,6 +49,23 @@ public class DaemonService extends Service {
             }
         }
     };
+
+    public static void setDaemonRunning(@NonNull Context context, boolean daemon) {
+        checkNotNull(context);
+
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                APP_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean(DAEMON_KEY, daemon);
+        editor.apply();
+    }
+
+    public static boolean isDaemonRunning(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                APP_KEY, Context.MODE_PRIVATE);
+        return sharedPref.getBoolean(DAEMON_KEY, false);
+    }
 
     public static void invoke(@NonNull Context context, boolean startDaemon) {
         checkNotNull(context);

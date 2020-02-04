@@ -103,7 +103,6 @@
     <string name="file_not_found">File could not be downloaded</string>
 
     <string name="action_copy_to">Copy to</string>
-    <string name="upload">Upload</string>
     <string name="action_connect">Connect</string>
     <string name="action_block">Block peer communication</string>
     <string name="action_view">View</string>

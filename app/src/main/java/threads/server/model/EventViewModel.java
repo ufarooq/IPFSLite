@@ -35,9 +35,6 @@ public class EventViewModel extends AndroidViewModel {
         return eventsDatabase.eventDao().getEvent(EVENTS.INFO);
     }
 
-    public LiveData<Event> getDaemon() {
-        return eventsDatabase.eventDao().getEvent(EVENTS.DAEMON);
-    }
 
     public LiveData<Event> getEvent(@NonNull String event) {
         checkNotNull(event);

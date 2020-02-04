@@ -112,7 +112,7 @@ public class ContentsService {
 
     }
 
-    private static synchronized long createThread(
+    private static long createThread(
             @NonNull Context context,
             @NonNull PID sender,
             @NonNull String alias,
@@ -129,7 +129,7 @@ public class ContentsService {
         if (entries.isEmpty()) {
 
             return Service.createThread(context, sender, alias, cid,
-                    filename, fileSize, mimeType, null);
+                    filename, fileSize, mimeType);
 
         }
         return -1;

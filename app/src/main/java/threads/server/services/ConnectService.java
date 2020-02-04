@@ -9,7 +9,6 @@ import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.server.core.peers.Addresses;
 import threads.server.core.peers.PeerInfo;
-import threads.server.utils.Network;
 import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkArgument;
@@ -26,11 +25,6 @@ class ConnectService {
         checkNotNull(context);
         checkNotNull(pid);
         checkArgument(timeout > 0);
-
-
-        if (!Network.isConnected(context)) {
-            return false;
-        }
 
 
         if (supportDiscovery) {

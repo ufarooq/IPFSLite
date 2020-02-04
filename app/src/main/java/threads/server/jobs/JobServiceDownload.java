@@ -26,6 +26,7 @@ import threads.server.core.peers.User;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.Service;
+import threads.server.work.DownloadThreadWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -98,16 +99,17 @@ public class JobServiceDownload extends JobService {
                     Service.replySender(context, sender, entry);
                     return;
                 } else {
-                    Service.downloadThread(context, entry, sender);
+                    threads.setThreadLeaching(entry.getIdx(), true);
+                    DownloadThreadWorker.download(context, entry.getIdx(), true);
                     return;
                 }
             }
             long idx = Service.createThread(context, sender, alias, cid,
-                    null, -1, null, null);
+                    null, -1, null);
 
-            Thread thread = threads.getThreadByIdx(idx);
-            checkNotNull(thread);
-            Service.downloadThread(context, thread, sender);
+            threads.setThreadLeaching(idx, true);
+
+            DownloadThreadWorker.download(context, idx, true);
 
 
         } catch (Throwable e) {

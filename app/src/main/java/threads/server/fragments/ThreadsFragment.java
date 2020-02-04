@@ -41,6 +41,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 import threads.ipfs.CID;
+import threads.ipfs.IPFS;
+import threads.ipfs.PID;
 import threads.server.R;
 import threads.server.core.events.EVENTS;
 import threads.server.core.threads.THREADS;
@@ -49,11 +51,15 @@ import threads.server.jobs.JobServiceDeleteThreads;
 import threads.server.model.SelectionViewModel;
 import threads.server.model.ThreadViewModel;
 import threads.server.provider.FileDocumentsProvider;
+import threads.server.services.CancelWorkerService;
 import threads.server.services.Service;
+import threads.server.services.SwarmService;
 import threads.server.utils.Network;
 import threads.server.utils.ThreadItemDetailsLookup;
 import threads.server.utils.ThreadsItemKeyProvider;
 import threads.server.utils.ThreadsViewAdapter;
+import threads.server.work.BootstrapWorker;
+import threads.server.work.DownloadThreadWorker;
 import threads.server.work.LoadNotificationsWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -99,13 +105,11 @@ public class ThreadsFragment extends Fragment implements
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
-        mSelectionTracker.onSaveInstanceState(outState);
         super.onSaveInstanceState(outState);
-    }
+        if (mSelectionTracker != null) {
+            mSelectionTracker.onSaveInstanceState(outState);
+        }
 
-    @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
     }
 
     @Override
@@ -262,6 +266,7 @@ public class ThreadsFragment extends Fragment implements
 
             }
         });
+
         mSelectionTracker = new SelectionTracker.Builder<>(
                 "threads-selection",//unique id
                 mRecyclerView,
@@ -337,13 +342,10 @@ public class ThreadsFragment extends Fragment implements
 
                     threads.sort(Comparator.comparing(Thread::getLastModified).reversed());
 
-                    boolean scrollToTop = false;
 
-                    if (!threads.isEmpty()) {
-                        int pos = mThreadsViewAdapter.getPosition(
-                                threads.get(0).getIdx());
-                        scrollToTop = pos != 0;
-                    }
+                    int size = mThreadsViewAdapter.getItemCount();
+                    boolean scrollToTop = size != threads.size();
+
 
                     mThreadsViewAdapter.updateData(threads);
 
@@ -446,16 +448,6 @@ public class ThreadsFragment extends Fragment implements
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
-    }
-
-
-    @Override
-    public boolean generalActionSupport(@NonNull Thread thread) {
-        checkNotNull(thread);
-        if (thread.isPublishing()) {
-            return false;
-        }
-        return thread.isSeeding();
     }
 
     @Override
@@ -669,13 +661,39 @@ public class ThreadsFragment extends Fragment implements
 
             }
 
+            BootstrapWorker.bootstrap(mContext);
+            THREADS.getInstance(mContext).setThreadLeaching(thread.getIdx(), true);
 
-            Service.retryDownloadThread(mContext, thread);// todo worker
+            PID host = IPFS.getPID(mContext);
+            checkNotNull(host);
+            PID sender = thread.getSender();
 
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+
+                if (!host.equals(sender)) {
+
+                    SwarmService.ConnectInfo info = SwarmService.connect(mContext, sender);
+
+                    DownloadThreadWorker.download(mContext, thread.getIdx(), false);
+
+                    SwarmService.disconnect(mContext, info);
+
+                } else {
+                    DownloadThreadWorker.download(mContext, thread.getIdx(), false);
+                }
+            });
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
+    }
+
+    @Override
+    public void invokePauseAction(@NonNull Thread thread) {
+        checkNotNull(thread);
+
+        CancelWorkerService.cancelThreadDownload(mContext, thread.getIdx());
     }
 
 

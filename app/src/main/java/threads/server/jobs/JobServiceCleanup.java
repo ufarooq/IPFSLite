@@ -9,12 +9,20 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.Preconditions;
 
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import threads.server.services.Service;
+import threads.iota.EntityService;
+import threads.iota.HashDatabase;
+import threads.ipfs.CID;
+import threads.ipfs.IPFS;
+import threads.server.core.contents.CDS;
+import threads.server.core.contents.Content;
+import threads.server.core.contents.ContentDatabase;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -42,6 +50,9 @@ public class JobServiceCleanup extends JobService {
         }
     }
 
+    private static long getDaysAgo(int days) {
+        return System.currentTimeMillis() - TimeUnit.DAYS.toMillis(days);
+    }
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
@@ -52,7 +63,35 @@ public class JobServiceCleanup extends JobService {
 
             try {
 
-                Service.cleanup(getApplicationContext());
+                final CDS contentService = CDS.getInstance(getApplicationContext());
+                final EntityService entityService = EntityService.getInstance(getApplicationContext());
+                final IPFS ipfs = IPFS.getInstance(getApplicationContext());
+
+                // remove all old hashes from hash database
+                HashDatabase hashDatabase = entityService.getHashDatabase();
+                long timestamp = getDaysAgo(28);
+                hashDatabase.hashDao().removeAllHashesWithSmallerTimestamp(timestamp);
+
+
+                // remove all content
+                timestamp = getDaysAgo(14);
+                ContentDatabase contentDatabase = contentService.getContentDatabase();
+                List<Content> entries = contentDatabase.contentDao().
+                        getContentWithSmallerTimestamp(timestamp);
+
+                Preconditions.checkNotNull(ipfs, "IPFS not valid");
+
+                try {
+                    for (threads.server.core.contents.Content content : entries) {
+
+                        contentDatabase.contentDao().removeContent(content);
+
+                        CID cid = content.getCID();
+                        ipfs.rm(cid);
+                    }
+                } finally {
+                    ipfs.gc();
+                }
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -69,4 +108,5 @@ public class JobServiceCleanup extends JobService {
     public boolean onStopJob(JobParameters jobParameters) {
         return false;
     }
+
 }

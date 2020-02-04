@@ -3,7 +3,6 @@ package threads.server.services;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
-import android.provider.DocumentsContract;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
@@ -23,19 +22,15 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import threads.iota.EntityService;
-import threads.iota.HashDatabase;
 import threads.ipfs.CID;
 import threads.ipfs.Encryption;
 import threads.ipfs.IPFS;
-import threads.ipfs.LinkInfo;
 import threads.ipfs.PID;
 import threads.ipfs.PeerInfo;
 import threads.server.R;
 import threads.server.core.contents.CDS;
-import threads.server.core.contents.ContentDatabase;
 import threads.server.core.contents.Contents;
 import threads.server.core.events.EVENTS;
 import threads.server.core.peers.AddressType;
@@ -57,7 +52,6 @@ import threads.server.jobs.JobServicePublisher;
 import threads.server.utils.CodecDecider;
 import threads.server.utils.Preferences;
 import threads.server.work.BootstrapWorker;
-import threads.server.work.DownloadContentWorker;
 import threads.server.work.DownloadContentsWorker;
 import threads.server.work.LoadNotificationsWorker;
 
@@ -198,11 +192,6 @@ public class Service {
     }
 
 
-    private static long getDaysAgo(int days) {
-        return System.currentTimeMillis() - TimeUnit.DAYS.toMillis(days);
-    }
-
-
     private static boolean notify(@NonNull Context context,
                                   @NonNull String pid,
                                   @NonNull String cid,
@@ -276,45 +265,6 @@ public class Service {
         return success;
     }
 
-    public static void cleanup(@NonNull Context context) {
-
-
-        try {
-            final CDS contentService = CDS.getInstance(context);
-            final EntityService entityService = EntityService.getInstance(context);
-            final IPFS ipfs = IPFS.getInstance(context);
-
-            // remove all old hashes from hash database
-            HashDatabase hashDatabase = entityService.getHashDatabase();
-            long timestamp = getDaysAgo(28);
-            hashDatabase.hashDao().removeAllHashesWithSmallerTimestamp(timestamp);
-
-
-            // remove all content
-            timestamp = getDaysAgo(14);
-            ContentDatabase contentDatabase = contentService.getContentDatabase();
-            List<threads.server.core.contents.Content> entries = contentDatabase.contentDao().
-                    getContentWithSmallerTimestamp(timestamp);
-
-            checkNotNull(ipfs, "IPFS not valid");
-
-            try {
-                for (threads.server.core.contents.Content content : entries) {
-
-                    contentDatabase.contentDao().removeContent(content);
-
-                    CID cid = content.getCID();
-                    ipfs.rm(cid);
-                }
-            } finally {
-                ipfs.gc();
-            }
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
-    }
 
     public static void createUnknownUser(@NonNull Context context, @NonNull PID pid) throws Exception {
         checkNotNull(context);
@@ -457,15 +407,18 @@ public class Service {
         }
     }
 
-    private static void sendShareMessage(@NonNull Context context, @NonNull String topic) {
+    private static void sendShareMessage(@NonNull Context context,
+                                         @NonNull String topic,
+                                         @NonNull CID cid) {
         checkNotNull(context);
         checkNotNull(topic);
+        checkNotNull(cid);
         Gson gson = new Gson();
         IPFS ipfs = IPFS.getInstance(context);
         if (IPFS.isPubSubEnabled(context)) {
             Content map = new Content();
             map.put(Content.EST, "SHARE");
-
+            map.put(Content.CID, cid.getCid());
             checkNotNull(ipfs, "IPFS not valid");
             ipfs.pubSubPub(topic, gson.toJson(map), 50);
         }
@@ -645,52 +598,13 @@ public class Service {
         return null;
     }
 
-    private static long createThread(@NonNull Context context,
-                                     @NonNull IPFS ipfs,
-                                     @NonNull PID sender,
-                                     @NonNull String alias,
-                                     @NonNull CID cid,
-                                     @NonNull LinkInfo link,
-                                     long parent) {
-
-        checkNotNull(context);
-        checkNotNull(ipfs);
-        checkNotNull(sender);
-        checkNotNull(alias);
-        checkNotNull(cid);
-        checkNotNull(link);
-
-
-        final THREADS threads = THREADS.getInstance(context);
-
-        Thread thread = threads.createThread(sender, alias, parent);
-        thread.setContent(cid);
-        String filename = link.getName();
-        thread.setName(filename);
-
-        long size = link.getSize();
-        thread.setSize(size);
-
-        if (link.isDirectory()) {
-            thread.setMimeType(DocumentsContract.Document.MIME_TYPE_DIR);
-        } else {
-            String mimeType = evaluateMimeType(filename);
-            if (mimeType != null) {
-                thread.setMimeType(mimeType);
-            }
-        }
-
-        return threads.storeThread(thread);
-    }
-
     public static long createThread(@NonNull Context context,
                                     @NonNull PID sender,
                                     @NonNull String alias,
                                     @NonNull CID cid,
                                     @Nullable String filename,
                                     long fileSize,
-                                    @Nullable String mimeType,
-                                    @Nullable CID image) {
+                                    @Nullable String mimeType) {
 
         checkNotNull(context);
         checkNotNull(sender);
@@ -721,23 +635,8 @@ public class Service {
             thread.setName(cid.getCid());
         }
         thread.setSize(fileSize);
-        thread.setThumbnail(image);
+
         return threads.storeThread(thread);
-    }
-
-    private static void downloadThread(@NonNull Context context,
-                                       @NonNull Thread thread) {
-
-        checkNotNull(context);
-        checkNotNull(thread);
-
-        CID cid = thread.getContent();
-        checkNotNull(cid);
-
-        THREADS.getInstance(context).setThreadLeaching(thread.getIdx(), true);
-        DownloadContentWorker.download(context, cid,
-                thread.getIdx(), thread.getName(), thread.getSize());
-
     }
 
 
@@ -800,128 +699,6 @@ public class Service {
 
 
     }
-
-    private static void downloadLink(@NonNull Context context,
-                                     @NonNull Thread thread,
-                                     @NonNull LinkInfo link) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            if (link.isDirectory()) {
-                List<LinkInfo> links = getLinks(context, link.getCid());
-                checkNotNull(links);
-                downloadLinks(context, thread, links);
-            } else {
-                THREADS.getInstance(context).setThreadLeaching(thread.getIdx(), true);
-                DownloadContentWorker.download(context, link.getCid(),
-                        thread.getIdx(), link.getName(), link.getSize());
-            }
-        });
-    }
-
-    private static Thread getDirectoryThread(@NonNull THREADS threads,
-                                             @NonNull Thread thread,
-                                             @NonNull CID cid) {
-        List<Thread> entries = threads.getThreadsByContent(cid);
-        if (!entries.isEmpty()) {
-            for (Thread entry : entries) {
-                if (entry.getParent() == thread.getIdx()) {
-                    return entry;
-                }
-            }
-        }
-        return null;
-    }
-
-    private static void downloadLinks(@NonNull Context context,
-                                      @NonNull Thread thread,
-                                      @NonNull List<LinkInfo> links) {
-        THREADS threads = THREADS.getInstance(context);
-        IPFS ipfs = IPFS.getInstance(context);
-        for (LinkInfo link : links) {
-
-            CID cid = link.getCid();
-            Thread entry = getDirectoryThread(threads, thread, cid);
-            if (entry != null) {
-                if (!entry.isSeeding()) {
-                    downloadLink(context, entry, link);
-                }
-            } else {
-
-                long idx = createThread(context, ipfs,
-                        thread.getSender(), thread.getSenderAlias(),
-                        cid, link, thread.getIdx());
-                entry = threads.getThreadByIdx(idx);
-                checkNotNull(entry);
-
-                downloadLink(context, entry, link);
-            }
-
-        }
-
-    }
-
-    @Nullable
-    private static List<LinkInfo> getLinks(@NonNull Context context,
-                                           @NonNull CID cid) {
-        checkNotNull(context);
-        checkNotNull(cid);
-        IPFS ipfs = IPFS.getInstance(context);
-        int timeout = Preferences.getConnectionTimeout(context);
-        List<LinkInfo> links = ipfs.ls(cid, timeout);
-        if (links == null) {
-            Log.e(TAG, "no links");
-            return null;
-        }
-        List<LinkInfo> result = new ArrayList<>();
-        for (LinkInfo link : links) {
-            if (!link.getName().isEmpty()) {
-                result.add(link);
-            }
-        }
-        return result;
-    }
-
-    public static void downloadThread(@NonNull Context context,
-                                      @NonNull Thread thread,
-                                      @Nullable PID sender) {
-        checkNotNull(context);
-        checkNotNull(thread);
-
-        THREADS threads = THREADS.getInstance(context);
-
-        try {
-            threads.setThreadLeaching(thread.getIdx(), true);
-
-            CID cid = thread.getContent();
-            checkNotNull(cid);
-
-            List<LinkInfo> links = getLinks(context, cid);
-
-            if (links != null) {
-                if (links.isEmpty()) {
-
-                    downloadThread(context, thread);
-                    if (sender != null) {
-                        replySender(context, sender, thread);
-                    }
-
-                } else {
-
-                    // thread is directory
-                    threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
-
-                    downloadLinks(context, thread, links);
-                    if (sender != null) {
-                        replySender(context, sender, thread);
-                    }
-
-                }
-            }
-        } finally {
-            threads.setThreadLeaching(thread.getIdx(), false);
-        }
-    }
-
 
     private static void peersOnlineStatus(@NonNull Context context) {
         checkNotNull(context);
@@ -1044,44 +821,6 @@ public class Service {
         }
     }
 
-    public static void retryDownloadThread(@NonNull Context context, @NonNull Thread thread) {
-
-        checkNotNull(context);
-        checkNotNull(thread);
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                THREADS threads = THREADS.getInstance(context);
-                try {
-
-                    threads.setThreadLeaching(thread.getIdx(), true);
-                    PID host = IPFS.getPID(context);
-                    checkNotNull(host);
-                    PID sender = thread.getSender();
-
-
-                    if (!host.equals(sender)) {
-
-                        SwarmService.ConnectInfo info = SwarmService.connect(context, sender);
-
-                        Service.downloadThread(context, thread, sender);
-
-                        SwarmService.disconnect(context, info);
-
-                    } else {
-
-                        Service.downloadThread(context, thread, null);
-                    }
-                } finally {
-                    threads.setThreadLeaching(thread.getIdx(), false);
-                }
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        });
-    }
-
     public ArrayList<String> getEnhancedUserPIDs(@NonNull Context context) {
         checkNotNull(context);
 
@@ -1129,7 +868,7 @@ public class Service {
                     checkNotNull(ipfs, "IPFS not valid");
                     ipfs.pubSubPub(user.getPID().getPid(), cid.getCid(), 50);
                 } else {
-                    sendShareMessage(context, user.getPID().getPid());
+                    sendShareMessage(context, user.getPID().getPid(), cid);
                 }
             }
         } catch (Throwable e) {
@@ -1254,7 +993,6 @@ public class Service {
 
                     PID senderPid = PID.create(sender);
 
-
                     if (!senderPid.equals(host) && !peers.isUserBlocked(senderPid)) {
 
                         String code = message.getMessage().trim();
@@ -1309,7 +1047,15 @@ public class Service {
                                                 R.string.notification_received, alias));
                                     }
                                 } else if ("SHARE".equals(est)) {
-                                    LoadNotificationsWorker.notifications(context, 3);
+                                    if (content.containsKey(Content.CID)) {
+                                        String cid = content.get(Content.CID);
+                                        checkNotNull(cid);
+
+                                        JobServiceContents.contents(context,
+                                                senderPid, CID.create(cid));
+                                    } else {
+                                        LoadNotificationsWorker.notifications(context, 3);
+                                    }
                                 }
                             } else {
                                 events.error(context.getString(
@@ -1327,7 +1073,7 @@ public class Service {
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 } finally {
-                    Log.e(TAG, "Receive : " + message.getMessage());
+                    Log.e(TAG, "Sender : " + message.getSenderPid() + " Message : " + message.getMessage());
                 }
 
 

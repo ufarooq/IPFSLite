@@ -271,7 +271,6 @@ public class UploadService extends Service {
 
 
                 try {
-                    threads.setThreadLeaching(idx, true);
 
                     CID cid = ipfs.storeInputStream(inputStream);
                     checkNotNull(cid);

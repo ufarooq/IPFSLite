@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements
 
 
     private final AtomicBoolean idScan = new AtomicBoolean(false);
-    private final AtomicBoolean mStartDaemon = new AtomicBoolean(false);
+
     private CID threadContent = null;
     private DrawerLayout mDrawerLayout;
     private AppBarLayout mAppBarLayout;
@@ -818,19 +818,6 @@ public class MainActivity extends AppCompatActivity implements
                 new ViewModelProvider(this).get(EventViewModel.class);
 
 
-        eventViewModel.getDaemon().observe(this, (event) -> {
-
-            if (event != null) {
-                try {
-                    mStartDaemon.set(Boolean.parseBoolean(event.getContent()));
-                } catch (Exception e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-                invalidateOptionsMenu();
-            }
-
-
-        });
         eventViewModel.getException().observe(this, (event) -> {
             try {
                 if (event != null) {
@@ -912,8 +899,8 @@ public class MainActivity extends AppCompatActivity implements
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
         MenuItem actionDaemon = menu.findItem(R.id.action_daemon);
-
-        if (!mStartDaemon.get()) {
+        boolean isDaemonRunning = DaemonService.isDaemonRunning(getApplicationContext());
+        if (!isDaemonRunning) {
             actionDaemon.setIcon(R.drawable.play_circle);
         } else {
             actionDaemon.setIcon(R.drawable.stop_circle);
@@ -957,24 +944,14 @@ public class MainActivity extends AppCompatActivity implements
             if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
                 return true;
             }
+
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-
-                try {
-                    boolean startDaemon = mStartDaemon.get();
-                    boolean newStartDaemonValue = !startDaemon;
-                    mStartDaemon.set(newStartDaemonValue);
-
-                    EVENTS events = EVENTS.getInstance(getApplicationContext());
-                    events.invokeEvent(EVENTS.DAEMON, mStartDaemon.toString());
-
-                    DaemonService.invoke(getApplicationContext(), newStartDaemonValue);
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-            });
+            boolean startDaemon = DaemonService.isDaemonRunning(getApplicationContext());
+            boolean newStartDaemonValue = !startDaemon;
+            DaemonService.setDaemonRunning(getApplicationContext(), newStartDaemonValue);
+            DaemonService.invoke(getApplicationContext(), newStartDaemonValue);
+            invalidateOptionsMenu();
             return true;
 
         }
@@ -1339,13 +1316,10 @@ public class MainActivity extends AppCompatActivity implements
                 Thread thread = threads.createThread(pid, alias, 0L);
                 thread.setSize(size);
                 thread.setMimeType(mimeType);
-
                 long idx = threads.storeThread(thread);
 
 
                 try {
-                    threads.setThreadLeaching(idx, true);
-
                     CID cid = ipfs.storeText(text);
                     checkNotNull(cid);
 
@@ -1360,7 +1334,7 @@ public class MainActivity extends AppCompatActivity implements
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 } finally {
-                    threads.setThreadLeaching(idx, false);
+                    threads.removeThreads(ipfs, idx);
                 }
 
             } catch (Throwable e) {

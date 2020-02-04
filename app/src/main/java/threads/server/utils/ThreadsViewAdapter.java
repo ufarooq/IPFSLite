@@ -192,49 +192,36 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                     threadViewHolder.general_action.setImageResource(R.drawable.checkbox_blank_circle_outline);
                 }
                 threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
-            } else if (thread.isPublishing()) {
-                if (mListener.generalActionSupport(thread)) {
-                    threadViewHolder.general_action.setVisibility(View.VISIBLE);
-                    threadViewHolder.general_action.setImageResource(R.drawable.dots);
-                    threadViewHolder.general_action.setOnClickListener((v) ->
-                            mListener.invokeGeneralAction(thread)
-                    );
-                } else {
-                    threadViewHolder.general_action.setVisibility(View.INVISIBLE);
-                }
 
+            } else if (thread.isPublishing()) {
+                threadViewHolder.general_action.setVisibility(View.INVISIBLE);
                 threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
+
+            } else if (thread.isLeaching()) {
+                threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
+
+                threadViewHolder.general_action.setImageResource(R.drawable.pause);
+                threadViewHolder.general_action.setVisibility(View.VISIBLE);
+
+                threadViewHolder.general_action.setOnClickListener((v) ->
+                        mListener.invokePauseAction(thread)
+                );
 
             } else if (thread.isSeeding()) {
                 threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
-                if (mListener.generalActionSupport(thread)) {
-                    threadViewHolder.general_action.setImageResource(R.drawable.dots);
-                    threadViewHolder.general_action.setVisibility(View.VISIBLE);
 
-                    threadViewHolder.general_action.setOnClickListener((v) ->
-                            mListener.invokeGeneralAction(thread)
-                    );
-                } else {
-                    threadViewHolder.general_action.setVisibility(View.INVISIBLE);
-                }
-            } else if (thread.isLeaching()) {
+                threadViewHolder.general_action.setImageResource(R.drawable.dots);
+                threadViewHolder.general_action.setVisibility(View.VISIBLE);
 
-                if (mListener.generalActionSupport(thread)) {
-                    threadViewHolder.general_action.setVisibility(View.VISIBLE);
-                    threadViewHolder.general_action.setImageResource(R.drawable.dots);
-                    threadViewHolder.general_action.setOnClickListener((v) ->
-                            mListener.invokeGeneralAction(thread)
-                    );
-                } else {
-                    threadViewHolder.general_action.setVisibility(View.INVISIBLE);
-                }
-
-                threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
-            } else if (thread.isDeleting()) {
-                threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
-                threadViewHolder.general_action.setVisibility(View.INVISIBLE);
+                threadViewHolder.general_action.setOnClickListener((v) ->
+                        mListener.invokeGeneralAction(thread)
+                );
             } else {
-                threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
+                if (progress > 0 && progress < 101) {
+                    threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
+                } else {
+                    threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
+                }
                 threadViewHolder.general_action.setVisibility(View.VISIBLE);
                 threadViewHolder.general_action.setImageResource(R.drawable.download);
                 threadViewHolder.general_action.setOnClickListener((v) ->
@@ -295,15 +282,13 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
     public interface ThreadsViewAdapterListener {
 
-        boolean generalActionSupport(@NonNull Thread thread);
-
         void invokeGeneralAction(@NonNull Thread thread);
 
         void onClick(@NonNull Thread thread);
 
         void invokeDownload(@NonNull Thread thread);
 
-
+        void invokePauseAction(@NonNull Thread thread);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

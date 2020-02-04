@@ -34,6 +34,7 @@ import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class DownloadContentWorker extends Worker {
+    public static final String WID = "DLW";
     private static final String TAG = DownloadContentWorker.class.getSimpleName();
     private static final String ID = "ID";
     private static final String FN = "FN";
@@ -54,6 +55,7 @@ public class DownloadContentWorker extends Worker {
         checkNotNull(cid);
         checkNotNull(filename);
 
+
         Constraints.Builder builder = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED);
 
@@ -72,7 +74,7 @@ public class DownloadContentWorker extends Worker {
                         .build();
 
         WorkManager.getInstance(context).enqueueUniqueWork(
-                cid.getCid(), ExistingWorkPolicy.KEEP, syncWorkRequest);
+                WID + threadIdx, ExistingWorkPolicy.KEEP, syncWorkRequest);
     }
 
     @NonNull
@@ -115,7 +117,7 @@ public class DownloadContentWorker extends Worker {
             File file = ipfs.getTempCacheFile();
             success = ipfs.loadToFile(file, cid,
                     (percent) -> {
-
+                        // TODO isStopped
                         builder.setProgress(100, percent, false);
                         threads.setThreadProgress(idx, percent);
                         if (notificationManager != null) {

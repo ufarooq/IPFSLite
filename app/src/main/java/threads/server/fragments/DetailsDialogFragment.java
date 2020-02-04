@@ -31,24 +31,6 @@ public class DetailsDialogFragment extends DialogFragment {
 
     private Context mContext;
 
-    public static DetailsDialogFragment newInstance(@NonNull String mimeType,
-                                                    @NonNull String data,
-                                                    @NonNull String encoding) {
-        checkNotNull(data);
-        checkNotNull(mimeType);
-        checkNotNull(encoding);
-        Bundle bundle = new Bundle();
-        bundle.putString(DATA, data);
-        bundle.putString(MIME, mimeType);
-        bundle.putString(ENCODING, encoding);
-
-        DetailsDialogFragment fragment = new DetailsDialogFragment();
-        fragment.setArguments(bundle);
-        return fragment;
-
-
-    }
-
     public static DetailsDialogFragment newInstance(@NonNull Type type, @NonNull String data) {
         checkNotNull(type);
         checkNotNull(data);

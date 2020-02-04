@@ -73,11 +73,11 @@ public class LoadNotificationsWorker extends Worker {
         long start = System.currentTimeMillis();
         try {
             Gson gson = new Gson();
-            final PID host = IPFS.getPID(getApplicationContext());
+            PID host = IPFS.getPID(getApplicationContext());
             checkNotNull(host);
 
-            final EntityService entityService = EntityService.getInstance(getApplicationContext());
-            final CDS contentService = CDS.getInstance(getApplicationContext());
+            EntityService entityService = EntityService.getInstance(getApplicationContext());
+            CDS contentService = CDS.getInstance(getApplicationContext());
 
             String address = AddressType.getAddress(host, AddressType.NOTIFICATION);
             List<Entity> entities = entityService.loadEntities(getApplicationContext(), address);
