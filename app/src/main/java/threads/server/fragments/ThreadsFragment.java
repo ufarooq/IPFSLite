@@ -344,7 +344,7 @@ public class ThreadsFragment extends Fragment implements
 
 
                     int size = mThreadsViewAdapter.getItemCount();
-                    boolean scrollToTop = size != threads.size();
+                    boolean scrollToTop = size < threads.size();
 
 
                     mThreadsViewAdapter.updateData(threads);
