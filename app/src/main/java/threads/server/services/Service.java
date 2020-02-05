@@ -714,10 +714,11 @@ public class Service {
 
     private static void checkPeersOnlineStatus(@NonNull Context context) {
         checkNotNull(context);
-        IPFS ipfs = IPFS.getInstance(context);
+
 
         try {
-            while (ipfs.isDaemonRunning()) {
+            // TODO optimize here
+            while (true) {
                 checkPeers(context);
                 java.lang.Thread.sleep(1000);
             }

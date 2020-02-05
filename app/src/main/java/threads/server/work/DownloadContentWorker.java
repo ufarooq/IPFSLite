@@ -24,6 +24,7 @@ import java.util.List;
 
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
+import threads.ipfs.Progress;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.ThumbnailService;
@@ -114,17 +115,25 @@ public class DownloadContentWorker extends Worker {
             threads.setThreadLeaching(idx, true);
             markLeaching(thread.getParent());
 
+
             File file = ipfs.getTempCacheFile();
             success = ipfs.loadToFile(file, cid,
-                    (percent) -> {
-                        // TODO isStopped
-                        builder.setProgress(100, percent, false);
-                        threads.setThreadProgress(idx, percent);
-                        if (notificationManager != null) {
-                            notificationManager.notify(notifyID, builder.build());
+                    new Progress() {
+
+
+                        @Override
+                        public boolean isClosed() {
+                            return isStopped();
                         }
 
-
+                        @Override
+                        public void setProgress(int percent) {
+                            builder.setProgress(100, percent, false);
+                            threads.setThreadProgress(idx, percent);
+                            if (notificationManager != null) {
+                                notificationManager.notify(notifyID, builder.build());
+                            }
+                        }
                     });
 
             if (success) {
@@ -232,4 +241,5 @@ public class DownloadContentWorker extends Worker {
         }
 
     }
+
 }

@@ -121,9 +121,7 @@ public class DownloadThreadWorker extends Worker {
         checkNotNull(cid);
         IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
-        // TODO check if stopped
-        int timeout = 1000;//Preferences.getConnectionTimeout(context);
-        List<LinkInfo> links = ipfs.ls(cid, timeout);
+        List<LinkInfo> links = ipfs.ls(cid, () -> isStopped());
         if (links == null) {
             Log.e(TAG, "no links");
             return null;

@@ -15,6 +15,7 @@ import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
 import threads.ipfs.PID;
+import threads.ipfs.TimeoutProgress;
 import threads.server.R;
 import threads.server.core.contents.CDS;
 import threads.server.core.contents.ContentEntry;
@@ -144,7 +145,7 @@ public class ContentsService {
 
         try {
 
-            String content = ipfs.loadText(cid);
+            String content = ipfs.loadText(cid, new TimeoutProgress(30));
 
             if (content != null) {
 

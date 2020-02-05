@@ -17,6 +17,7 @@ import androidx.work.WorkerParameters;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
+import threads.ipfs.Progress;
 import threads.server.core.threads.THREADS;
 
 import static androidx.core.util.Preconditions.checkArgument;
@@ -76,7 +77,12 @@ public class DownloadThumbnailWorker extends Worker {
 
 
             CID cid = CID.create(multihash);
-            byte[] data = ipfs.loadData(cid);
+            byte[] data = ipfs.loadData(cid, new Progress() {
+                @Override
+                public boolean isClosed() {
+                    return isStopped();
+                }
+            });
             if (data != null) {
                 threads.setThreadThumbnail(idx, cid);
             }
