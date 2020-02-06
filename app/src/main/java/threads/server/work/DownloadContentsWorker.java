@@ -22,7 +22,6 @@ import threads.ipfs.PID;
 import threads.server.core.contents.CDS;
 import threads.server.core.contents.Content;
 import threads.server.core.peers.PEERS;
-import threads.server.services.ContentsService;
 import threads.server.services.SwarmService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -111,12 +110,11 @@ public class DownloadContentsWorker extends Worker {
 
                         if (info.isConnected()) {
                             for (Content entry : contents) {
-                                ContentsService.download(getApplicationContext(),
-                                        entry.getPid(), entry.getCID());
+                                ContentsWorker.download(getApplicationContext(),
+                                        entry.getCID(), entry.getPid());
                             }
                         }
 
-                        SwarmService.disconnect(getApplicationContext(), info);
                     }
                 }
             }

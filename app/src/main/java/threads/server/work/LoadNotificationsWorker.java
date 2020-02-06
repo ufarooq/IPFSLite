@@ -27,7 +27,6 @@ import threads.ipfs.PID;
 import threads.server.core.contents.CDS;
 import threads.server.core.peers.AddressType;
 import threads.server.core.peers.Content;
-import threads.server.jobs.JobServiceContents;
 import threads.server.services.Service;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -139,8 +138,7 @@ public class LoadNotificationsWorker extends Worker {
                                 contentService.insertContent(pid, cid, false);
                             }
 
-                            JobServiceContents.contents(getApplicationContext(), pid, cid);
-
+                            ContentsWorker.download(getApplicationContext(), cid, pid);
 
                         } catch (Throwable e) {
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);

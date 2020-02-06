@@ -51,6 +51,12 @@ public class EVENTS extends EventsAPI {
     }
 
 
+    public void postWarning(@NonNull String content) {
+        java.lang.Thread threadError = new java.lang.Thread(()
+                -> warning(content));
+        threadError.start();
+    }
+
     public void warning(@NonNull String content) {
         checkNotNull(content);
         storeEvent(createEvent(WARNING, content));

@@ -673,11 +673,9 @@ public class ThreadsFragment extends Fragment implements
 
                 if (!host.equals(sender)) {
 
-                    SwarmService.ConnectInfo info = SwarmService.connect(mContext, sender);
+                    SwarmService.connect(mContext, sender);
 
                     DownloadThreadWorker.download(mContext, thread.getIdx(), false);
-
-                    SwarmService.disconnect(mContext, info);
 
                 } else {
                     DownloadThreadWorker.download(mContext, thread.getIdx(), false);

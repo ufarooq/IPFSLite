@@ -57,7 +57,7 @@ public class CDS {
         getContentDatabase().contentDao().insertContent(content);
     }
 
-    public void finishContent(CID cid) {
+    public void finishContent(@NonNull CID cid) {
         checkNotNull(cid);
         getContentDatabase().contentDao().setFinished(cid.getCid(), true);
     }

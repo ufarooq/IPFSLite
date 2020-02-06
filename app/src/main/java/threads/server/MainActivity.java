@@ -66,7 +66,6 @@ import threads.server.fragments.EditMultihashDialogFragment;
 import threads.server.fragments.EditPeerDialogFragment;
 import threads.server.fragments.InfoDialogFragment;
 import threads.server.fragments.NameDialogFragment;
-import threads.server.fragments.PeerActionDialogFragment;
 import threads.server.fragments.PeersDialogFragment;
 import threads.server.fragments.PeersFragment;
 import threads.server.fragments.SendDialogFragment;
@@ -110,7 +109,6 @@ public class MainActivity extends AppCompatActivity implements
         ThreadsFragment.ActionListener,
         PeersFragment.ActionListener,
         NameDialogFragment.ActionListener,
-        PeerActionDialogFragment.ActionListener,
         InfoDialogFragment.ActionListener,
         SwarmFragment.ActionListener,
         DontShowAgainFragmentDialog.ActionListener {
@@ -489,9 +487,7 @@ public class MainActivity extends AppCompatActivity implements
         checkNotNull(pid);
 
         if (!Network.isConnected(getApplicationContext())) {
-            java.lang.Thread threadError = new java.lang.Thread(()
-                    -> EVENTS.getInstance(getApplicationContext()).warning(getString(R.string.offline_mode)));
-            threadError.start();
+            EVENTS.getInstance(getApplicationContext()).postWarning(getString(R.string.offline_mode));
         }
 
         Service.connectUser(getApplicationContext(), pid, true);
@@ -1589,61 +1585,6 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 
-    @Override
-    public void clickPeerInfo(@NonNull String pid) {
-        clickUserInfo(pid);
-    }
-
-    @Override
-    public void clickPeerDetails(@NonNull String pid) {
-        clickUserDetails(pid);
-    }
-
-    @Override
-    public void clickPeerAdd(@NonNull String pid) {
-        checkNotNull(pid);
-
-        // CHECKED if pid is valid
-        try {
-            Multihash.fromBase58(pid);
-        } catch (Throwable e) {
-            java.lang.Thread threadError = new java.lang.Thread(()
-                    -> EVENTS.getInstance(getApplicationContext()).error(getString(R.string.multihash_not_valid)));
-            threadError.start();
-            return;
-        }
-
-        // CHECKED
-        PID host = IPFS.getPID(getApplicationContext());
-        PID user = PID.create(pid);
-
-        if (user.equals(host)) {
-
-            java.lang.Thread threadError = new java.lang.Thread(()
-                    -> EVENTS.getInstance(getApplicationContext()).error(
-                    getString(R.string.same_pid_like_host)));
-            threadError.start();
-
-            return;
-        }
-
-
-        try {
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    Service.connectPeer(getApplicationContext(),
-                            user, true);
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-            });
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
 
     private class PagerAdapter extends FragmentStatePagerAdapter {
 

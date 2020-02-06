@@ -20,7 +20,8 @@ import threads.ipfs.CID;
 import threads.ipfs.PID;
 import threads.server.core.contents.CDS;
 import threads.server.core.peers.Content;
-import threads.server.services.ContentsService;
+import threads.server.services.SwarmService;
+import threads.server.work.ContentsWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -76,11 +77,14 @@ public class JobServiceContents extends JobService {
                 final CDS contentService =
                         CDS.getInstance(getApplicationContext());
 
-                // work of download is done here
-                boolean connected = ContentsService.download(getApplicationContext(),
-                        PID.create(pid), CID.create(cid));
 
-                if (connected) {
+                ContentsWorker.download(getApplicationContext(),
+                        CID.create(cid), PID.create(pid));
+
+                SwarmService.ConnectInfo info = SwarmService.connect(
+                        getApplicationContext(), PID.create(pid));
+
+                if (info.isConnected()) {
                     // notifications old entries when connected
                     long timestamp = System.currentTimeMillis() -
                             TimeUnit.MINUTES.toMillis(30);
@@ -92,8 +96,8 @@ public class JobServiceContents extends JobService {
                                     PID.create(pid), timestamp, false);
 
                     for (threads.server.core.contents.Content entry : contents) {
-                        ContentsService.download(getApplicationContext(),
-                                entry.getPid(), entry.getCID());
+                        ContentsWorker.download(getApplicationContext(),
+                                entry.getCID(), entry.getPid());
                     }
                 }
             } catch (Throwable e) {

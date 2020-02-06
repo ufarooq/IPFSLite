@@ -72,13 +72,13 @@ public class IdentityService {
 
     }
 
-    private static ResultInfo createPeerInfo(@NonNull Context context,
-                                             @NonNull List<Peer> storedRelays,
-                                             @NonNull PID user,
-                                             @NonNull Map<String, String> params,
-                                             @NonNull String tag,
-                                             int timeout,
-                                             int numPeers) {
+    private static void createPeerInfo(@NonNull Context context,
+                                       @NonNull List<Peer> storedRelays,
+                                       @NonNull PID user,
+                                       @NonNull Map<String, String> params,
+                                       @NonNull String tag,
+                                       int timeout,
+                                       int numPeers) {
 
         final PEERS threads = PEERS.getInstance(context);
 
@@ -88,14 +88,11 @@ public class IdentityService {
         updatesPeerInfo(context, peerInfo, storedRelays, params, tag, timeout, numPeers);
 
         threads.storePeerInfo(peerInfo);
-
-        return new ResultInfo(peerInfo, tag, insertPeer(context, peerInfo));
-
-
+        insertPeer(context, peerInfo);
     }
 
-    private static boolean insertPeer(@NonNull Context context,
-                                      @NonNull threads.server.core.peers.PeerInfo peer) {
+    private static void insertPeer(@NonNull Context context,
+                                   @NonNull threads.server.core.peers.PeerInfo peer) {
 
         PEERS threads = PEERS.getInstance(context);
 
@@ -114,7 +111,6 @@ public class IdentityService {
             Log.w(TAG,
                     "Failed store peer discovery information: " + time + " [s]");
         }
-        return success;
     }
 
 
@@ -190,7 +186,7 @@ public class IdentityService {
 
     }
 
-    private static ResultInfo updatePeerInfo(
+    private static void updatePeerInfo(
             @NonNull Context context,
             @NonNull threads.server.core.peers.PeerInfo peerInfo,
             @NonNull List<Peer> storedRelays,
@@ -206,41 +202,7 @@ public class IdentityService {
 
 
         peers.updatePeerInfo(peerInfo);
-        return new ResultInfo(peerInfo, tag, insertPeer(context, peerInfo));
-    }
-
-
-    public static class ResultInfo {
-
-        @NonNull
-        private final String tag;
-        private final boolean insert;
-        @NonNull
-        private final threads.server.core.peers.PeerInfo peerInfo;
-
-        ResultInfo(@NonNull threads.server.core.peers.PeerInfo peerInfo,
-                   @NonNull String tag, boolean insert) {
-
-            this.peerInfo = peerInfo;
-            this.tag = tag;
-            this.insert = insert;
-        }
-
-        @NonNull
-        public String getTag() {
-            return tag;
-        }
-
-        @NonNull
-        public threads.server.core.peers.PeerInfo getPeerInfo() {
-            return peerInfo;
-        }
-
-        public boolean isInsert() {
-            return insert;
-        }
-
+        insertPeer(context, peerInfo);
 
     }
-
 }

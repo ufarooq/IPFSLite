@@ -121,7 +121,7 @@ public class DownloadThreadWorker extends Worker {
         checkNotNull(cid);
         IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
-        List<LinkInfo> links = ipfs.ls(cid, () -> isStopped());
+        List<LinkInfo> links = ipfs.ls(cid, this::isStopped);
         if (links == null) {
             Log.e(TAG, "no links");
             return null;

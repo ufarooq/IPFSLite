@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 import threads.ipfs.IPFS;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
-import threads.server.utils.Preferences;
+import threads.server.services.SwarmService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -64,7 +64,7 @@ public class AutoConnectWorker extends Worker {
     @Override
     public Result doWork() {
         final PEERS peers = PEERS.getInstance(getApplicationContext());
-        final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
+
         boolean dialing = getInputData().getBoolean(DIALING, true);
 
         long start = System.currentTimeMillis();
@@ -77,7 +77,6 @@ public class AutoConnectWorker extends Worker {
 
             for (User user : users) {
 
-                // TODO compare this with Service.connectUser
                 if (!user.isBlocked()) {
                     if (dialing) {
                         peers.setUserDialing(user.getPID(), true);
@@ -87,11 +86,10 @@ public class AutoConnectWorker extends Worker {
                             getApplicationContext(), user.getPID().getPid());
 
 
-                    boolean result = ipfs.swarmConnect(user.getPID(), timeout);
-                    if (result) {
-                        ipfs.protectPeer(user.getPID(), TAG);
-                    }
-                    peers.setUserConnected(user.getPID(), result);
+                    SwarmService.ConnectInfo info = SwarmService.connect(
+                            getApplicationContext(), user.getPID());
+
+                    peers.setUserConnected(user.getPID(), info.isConnected());
                     if (dialing) {
                         peers.setUserDialing(user.getPID(), false);
                     }

@@ -155,8 +155,8 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
             }
 
 
-            String message = thread.getSenderAlias();
-            threadViewHolder.content_subtitle.setText(message);
+            String info = getInfo(mContext, thread);
+            threadViewHolder.content_subtitle.setText(info);
 
             int number = thread.getNumber();
 
@@ -194,9 +194,13 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                 threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
 
             } else if (thread.isPublishing()) {
-                threadViewHolder.general_action.setVisibility(View.INVISIBLE);
                 threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
+                threadViewHolder.general_action.setImageResource(R.drawable.dots);
+                threadViewHolder.general_action.setVisibility(View.VISIBLE);
 
+                threadViewHolder.general_action.setOnClickListener((v) ->
+                        mListener.invokeGeneralAction(thread)
+                );
             } else if (thread.isLeaching()) {
                 threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
 
@@ -234,6 +238,25 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
         }
 
 
+    }
+
+
+    private String getInfo(Context context, Thread thread) {
+        String senderAlias = thread.getSenderAlias();
+
+        String fileSize;
+        long size = thread.getSize();
+
+        if (size < 1024) {
+            fileSize = String.valueOf(size);
+            return context.getString(R.string.link_format, senderAlias, fileSize);
+        } else if (size < 1024 * 1024) {
+            fileSize = String.valueOf((double) (size / 1024));
+            return context.getString(R.string.link_format_kb, senderAlias, fileSize);
+        } else {
+            fileSize = String.valueOf((double) (size / (1024 * 1024)));
+            return context.getString(R.string.link_format_mb, senderAlias, fileSize);
+        }
     }
 
     private int dpToPx() {
@@ -310,14 +333,12 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
     static class ThreadViewHolder extends ViewHolder {
         final ImageView main_image;
-        final TextView session_date;
         final ImageView general_action;
         final ProgressBar progress_bar;
         final ThreadItemDetails threadItemDetails;
 
         ThreadViewHolder(ThreadItemPosition pos, View v) {
             super(v);
-            session_date = v.findViewById(R.id.session_date);
             general_action = v.findViewById(R.id.general_action);
             progress_bar = v.findViewById(R.id.progress_bar);
             main_image = v.findViewById(R.id.main_image);

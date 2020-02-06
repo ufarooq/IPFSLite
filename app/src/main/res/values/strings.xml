@@ -39,7 +39,7 @@
     <string name="peers">Peers</string>
     <string name="files">Files</string>
     <string name="offline_mode">Offline Mode</string>
-    <string name="peer_exists_with_pid">Peer with the PID exists already</string>
+    <string name="peer_exists_with_pid">Peer with the PID already exists</string>
     <string name="same_pid_like_host">Invalid: Peer ID is your Host Peer ID</string>
     <string name="peer_name">New Peer Name</string>
     <string name="peer_is_blocked">Peer is blocked. Unblock first.</string>
@@ -104,7 +104,7 @@
 
     <string name="action_copy_to">Copy to</string>
     <string name="action_connect">Connect</string>
-    <string name="action_block">Block peer communication</string>
+    <string name="action_block">Block Peer</string>
     <string name="action_view">View</string>
     <string name="name">Name</string>
     <string name="name_not_valid">Name not valid</string>
@@ -127,4 +127,9 @@
     <string name="added_pid_to_peers">Added \"%1$s\" to your peers</string>
     <string name="search_hint">Search for files</string>
     <string name="search">Search</string>
+
+
+    <string name="link_format">[%2$s B] \"%1$s\"</string>
+    <string name="link_format_kb">[%2$s kB] \"%1$s\"</string>
+    <string name="link_format_mb">[%2$s MB] \"%1$s\"</string>
 </resources>

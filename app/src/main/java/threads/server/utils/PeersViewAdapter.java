@@ -66,7 +66,7 @@ public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.View
                 if (listener.generalActionSupport(peer)) {
                     peerViewHolder.user_action.setVisibility(View.VISIBLE);
                     peerViewHolder.user_action.setOnClickListener((v) ->
-                            listener.invokeGeneralAction(peer)
+                            listener.invokeGeneralAction(peer, v)
                     );
                 } else {
                     peerViewHolder.user_action.setVisibility(View.GONE);
@@ -124,7 +124,7 @@ public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.View
 
     public interface PeersViewAdapterListener {
 
-        void invokeGeneralAction(@NonNull IPeer peer);
+        void invokeGeneralAction(@NonNull IPeer peer, @NonNull View view);
 
         boolean generalActionSupport(@NonNull IPeer peer);
 

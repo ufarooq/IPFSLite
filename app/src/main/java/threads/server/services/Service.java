@@ -340,13 +340,10 @@ public class Service {
         try {
             peers.setUserDialing(user, true);
 
-            final int timeout = Preferences.getConnectionTimeout(context);
-            final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
-            boolean value = ConnectService.connectPeer(context, user,
-                    peerDiscovery, timeout);
-            peers.setUserConnected(user, value);
+            SwarmService.ConnectInfo info = SwarmService.connect(context, user);
+            peers.setUserConnected(user, info.isConnected());
 
-            if (value) {
+            if (info.isConnected()) {
 
                 if (IPFS.isPubSubEnabled(context)) {
 
@@ -386,7 +383,7 @@ public class Service {
         }
     }
 
-    static void sendReceiveMessage(@NonNull Context context, @NonNull String topic) {
+    public static void sendReceiveMessage(@NonNull Context context, @NonNull String topic) {
         checkNotNull(context);
         checkNotNull(topic);
         Gson gson = new Gson();
@@ -645,7 +642,6 @@ public class Service {
         checkNotNull(context);
         checkNotNull(pid);
         try {
-            // TODO big compare with AutoConnectWorker
 
             final PEERS peers = PEERS.getInstance(context);
             final EVENTS events = EVENTS.getInstance(context);
@@ -665,14 +661,12 @@ public class Service {
                         try {
                             peers.setUserDialing(user, true);
 
-                            boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
-                            int timeout = Preferences.getConnectionTimeout(context);
-                            boolean value = ConnectService.connectPeer(context,
-                                    user, peerDiscovery, timeout);
 
-                            peers.setUserConnected(user, value);
+                            SwarmService.ConnectInfo info = SwarmService.connect(context, user);
 
-                            if (value) {
+                            peers.setUserConnected(user, info.isConnected());
+
+                            if (info.isConnected()) {
                                 String publicKey = peers.getUserPublicKey(pid);
                                 checkNotNull(publicKey);
                                 if (publicKey.isEmpty()) {
