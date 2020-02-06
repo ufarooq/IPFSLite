@@ -116,7 +116,7 @@ public class DownloadContentWorker extends Worker {
             markLeaching(thread.getParent());
 
 
-            File file = ipfs.getTempCacheFile();
+            File file = ipfs.createCacheFile(cid);
             success = ipfs.loadToFile(file, cid,
                     new Progress() {
 
@@ -175,10 +175,10 @@ public class DownloadContentWorker extends Worker {
                         }
                     }
                 }
-            }
-
-            if (file.exists()) {
-                checkArgument(file.delete());
+            } else {
+                if (file.exists()) {
+                    checkArgument(file.delete());
+                }
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
