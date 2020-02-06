@@ -78,7 +78,7 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
     // Android (LICENSE done)
-    implementation "androidx.work:work-runtime:2.3.0"
+    implementation "androidx.work:work-runtime:2.3.1"
 
     // Android (LICENSE done)
     implementation 'com.google.android.material:material:1.2.0-alpha04'
@@ -114,10 +114,10 @@ dependencies {
     implementation 'threads.core:iota:0.1.1'
 
     // API (LICENSE done)
-    implementation 'threads.mobile:ipfs:0.4.4'
+    implementation 'threads.mobile:ipfs:0.4.5'
 
     // API (LICENSE done)
-    implementation 'threads.core:ipfs:0.5.2'
+    implementation 'threads.core:ipfs:0.5.3'
 
     // API (LICENSE done)
     implementation 'com.google.code.gson:gson:2.8.6'
