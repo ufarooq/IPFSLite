@@ -207,10 +207,10 @@ public class ThreadsFragment extends Fragment implements
         actionUpload.setVisible(isTablet);
 
         MenuItem actionEditCode = menu.findItem(R.id.action_edit_cid);
-        actionEditCode.setVisible(isTablet);
+        actionEditCode.setVisible(true);
 
         MenuItem actionScanCid = menu.findItem(R.id.action_scan_cid);
-        actionScanCid.setVisible(isTablet && hasCamera);
+        actionScanCid.setVisible(hasCamera);
 
         SearchManager searchManager = (SearchManager)
                 mActivity.getSystemService(Context.SEARCH_SERVICE);

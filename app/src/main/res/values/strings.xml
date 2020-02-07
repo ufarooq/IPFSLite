@@ -10,6 +10,7 @@
     <string name="action_info">Info</string>
     <string name="content_id">Content ID (CID)</string>
     <string name="peer_id">Peer ID (PID)</string>
+    <string name="your_peer_id">Your Peer ID (PID)</string>
     <string name="peer_access">The QR code (Peer ID \"%1$s\") contains all necessary information to access the IPFS node.</string>
     <string name="action_delete">Delete</string>
     <string name="licences">Licences</string>
@@ -52,8 +53,8 @@
     <string name="application_settings">Application Settings</string>
     <string name="general_settings">General Settings</string>
     <string name="no_activity_found_to_handle_uri">No application found which support this kind of file.</string>
-    <string name="action_scan_cid">Scan CID</string>
-    <string name="action_edit_cid">Edit CID</string>
+    <string name="action_scan_cid">Scan Content (CID)</string>
+    <string name="action_edit_cid">Edit Content (CID)</string>
     <string name="action_upload">Upload</string>
     <string name="connection_timeout">Connection Timeout %1$s[s]</string>
     <string name="publisher_service_time">Publisher Service Interval %1$s[h]</string>
@@ -116,8 +117,6 @@
     <string name="upload_channel_name">Upload Channel</string>
     <string name="upload_channel_description">Upload notifications during upload of files to IPFS</string>
     <string name="upload_failed">Upload failed for \"%1$s\"</string>
-    <string name="adding_content">Adding Content</string>
-    <string name="peer_actions">Peer Actions</string>
     <string name="added_pid_to_peers">Added \"%1$s\" to your peers</string>
     <string name="search_hint">Search for files</string>
     <string name="search">Search</string>

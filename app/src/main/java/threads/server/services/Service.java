@@ -648,70 +648,6 @@ public class Service {
 
     }
 
-    private static void peersOnlineStatus(@NonNull Context context) {
-        checkNotNull(context);
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                checkPeersOnlineStatus(context);
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        });
-    }
-
-    private static void checkPeersOnlineStatus(@NonNull Context context) {
-        checkNotNull(context);
-
-
-        try {
-            // TODO optimize here
-            while (true) {
-                checkPeers(context);
-                java.lang.Thread.sleep(1000);
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
-    }
-
-    private static void checkPeers(@NonNull Context context) {
-        checkNotNull(context);
-
-        try {
-
-            final PEERS peers = PEERS.getInstance(context);
-
-            final IPFS ipfs = IPFS.getInstance(context);
-
-            List<PID> users = peers.getUsersPIDs();
-
-
-            for (PID user : users) {
-                if (!peers.isUserBlocked(user) && !peers.getUserDialing(user)) {
-
-                    try {
-                        boolean value = ipfs.isConnected(user);
-
-                        boolean preValue = peers.isUserConnected(user);
-
-                        if (preValue != value) {
-                            peers.setUserConnected(user, value);
-                        }
-
-                    } catch (Throwable e) {
-                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                        peers.setUserConnected(user, false);
-                    }
-                }
-            }
-
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
 
     public static boolean isNightNode(@NonNull Context context) {
         int nightModeFlags =
@@ -954,7 +890,6 @@ public class Service {
         new java.lang.Thread(() -> {
             try {
                 Service.cleanStates(context);
-                Service.peersOnlineStatus(context);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }

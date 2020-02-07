@@ -32,9 +32,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.server.R;
 import threads.server.core.events.EVENTS;
@@ -57,6 +60,7 @@ public class PeersFragment extends Fragment implements
     private static final int CLICK_OFFSET = 500;
     @NonNull
     private final Handler mHandler = new Handler(Looper.getMainLooper());
+    private final AtomicBoolean run = new AtomicBoolean(false);
     private long mLastClickTime = 0;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private UsersViewAdapter mUsersViewAdapter;
@@ -74,6 +78,7 @@ public class PeersFragment extends Fragment implements
         mContext = null;
         mListener = null;
         mActivity = null;
+        run.set(false);
     }
 
     @Override
@@ -85,6 +90,8 @@ public class PeersFragment extends Fragment implements
         isTablet = getResources().getBoolean(R.bool.isTablet);
         PackageManager pm = mContext.getPackageManager();
         hasCamera = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA);
+        run.set(true);
+        peersOnlineStatus();
     }
 
     @Override
@@ -108,10 +115,10 @@ public class PeersFragment extends Fragment implements
         actionScanPid.setVisible(isTablet && hasCamera);
 
         MenuItem actionYourPid = menu.findItem(R.id.action_your_pid);
-        actionYourPid.setVisible(isTablet);
+        actionYourPid.setVisible(true);
 
         MenuItem actionEditPid = menu.findItem(R.id.action_edit_pid);
-        actionEditPid.setVisible(isTablet);
+        actionEditPid.setVisible(true);
 
 
     }
@@ -126,7 +133,7 @@ public class PeersFragment extends Fragment implements
 
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            mListener.clickConnectPeer();
+            mListener.clickScanPeer();
             return true;
 
         } else if (item.getItemId() == R.id.action_your_pid) {
@@ -425,7 +432,6 @@ public class PeersFragment extends Fragment implements
         return !user.isDialing();
     }
 
-
     @Override
     public void onRefresh() {
         mSwipeRefreshLayout.setRefreshing(true);
@@ -532,6 +538,57 @@ public class PeersFragment extends Fragment implements
 
     }
 
+    private void peersOnlineStatus() {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                while (run.get()) {
+                    checkPeers();
+                    java.lang.Thread.sleep(1000);
+                }
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        });
+    }
+
+
+    private void checkPeers() {
+
+        try {
+
+            final PEERS peers = PEERS.getInstance(mContext);
+
+            final IPFS ipfs = IPFS.getInstance(mContext);
+
+            List<PID> users = peers.getUsersPIDs();
+
+
+            for (PID user : users) {
+                if (!peers.isUserBlocked(user) && !peers.getUserDialing(user)) {
+
+                    try {
+                        boolean value = ipfs.isConnected(user);
+
+                        boolean preValue = peers.isUserConnected(user);
+
+                        if (preValue != value) {
+                            peers.setUserConnected(user, value);
+                        }
+
+                    } catch (Throwable e) {
+                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                        peers.setUserConnected(user, false);
+                    }
+                }
+            }
+
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
     public interface ActionListener {
 
         void showBottomNavigation(boolean visible);
@@ -540,7 +597,7 @@ public class PeersFragment extends Fragment implements
 
         void setPagingEnabled(boolean enabled);
 
-        void clickConnectPeer();
+        void clickScanPeer();
 
         void clickEditPeer();
 

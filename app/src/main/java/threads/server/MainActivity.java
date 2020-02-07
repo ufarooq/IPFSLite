@@ -61,11 +61,9 @@ import threads.server.fragments.EditMultihashDialogFragment;
 import threads.server.fragments.EditPeerDialogFragment;
 import threads.server.fragments.InfoDialogFragment;
 import threads.server.fragments.NameDialogFragment;
-import threads.server.fragments.PeersDialogFragment;
 import threads.server.fragments.PeersFragment;
 import threads.server.fragments.SettingsDialogFragment;
 import threads.server.fragments.SwarmFragment;
-import threads.server.fragments.ThreadsDialogFragment;
 import threads.server.fragments.ThreadsFragment;
 import threads.server.fragments.WebViewDialogFragment;
 import threads.server.jobs.JobServiceDownload;
@@ -88,8 +86,6 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class MainActivity extends AppCompatActivity implements
         NavigationView.OnNavigationItemSelectedListener,
-        PeersDialogFragment.ActionListener,
-        ThreadsDialogFragment.ActionListener,
         EditMultihashDialogFragment.ActionListener,
         EditPeerDialogFragment.ActionListener,
         ThreadsFragment.ActionListener,
@@ -249,7 +245,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void clickConnectPeer() {
+    public void clickScanPeer() {
 
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.CAMERA)
@@ -702,11 +698,9 @@ public class MainActivity extends AppCompatActivity implements
                     threadsFabAction();
                     break;
                 case R.id.navigation_peers:
-                    PeersDialogFragment.newInstance()
-                            .show(getSupportFragmentManager(), PeersDialogFragment.TAG);
+                    clickScanPeer();
                     break;
                 case R.id.navigation_swarm:
-
                     break;
             }
 
@@ -792,7 +786,7 @@ public class MainActivity extends AppCompatActivity implements
             switch (id) {
                 case R.id.navigation_files:
                     if (mSelectionViewModel.isTopLevel()) {
-                        mMainFab.setImageResource(R.drawable.plus_thick);
+                        mMainFab.setImageResource(R.drawable.upload);
                     } else {
                         mMainFab.setImageResource(R.drawable.arrow_left_bold);
                     }
@@ -802,7 +796,7 @@ public class MainActivity extends AppCompatActivity implements
 
                     break;
                 case R.id.navigation_peers:
-                    mMainFab.setImageResource(R.drawable.account_plus);
+                    mMainFab.setImageResource(R.drawable.scan_code);
                     mMainFab.setBackgroundTintList(
                             ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
                     break;
@@ -840,8 +834,7 @@ public class MainActivity extends AppCompatActivity implements
 
         if (mSelectionViewModel.isTopLevel()) {
 
-            ThreadsDialogFragment.newInstance()
-                    .show(getSupportFragmentManager(), ThreadsDialogFragment.TAG);
+            clickUpload();
 
 
         } else {
@@ -1122,7 +1115,7 @@ public class MainActivity extends AppCompatActivity implements
             checkNotNull(pid);
             try {
                 InfoDialogFragment.newInstance(pid.getPid(),
-                        getString(R.string.peer_id),
+                        getString(R.string.your_peer_id),
                         getString(R.string.peer_access, pid.getPid()))
                         .show(getSupportFragmentManager(), InfoDialogFragment.TAG);
 
