@@ -8,7 +8,6 @@ import androidx.room.Room;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class PEERS extends PeersAPI {
-    public static final String TAG = PEERS.class.getSimpleName();
 
     private static PEERS INSTANCE = null;
 
@@ -58,14 +57,14 @@ public class PEERS extends PeersAPI {
         }
 
 
-        public Builder peersInfoDatabase(@NonNull PeersInfoDatabase peersDatabase) {
+        Builder peersInfoDatabase(@NonNull PeersInfoDatabase peersDatabase) {
             checkNotNull(peersDatabase);
             this.peersInfoDatabase = peersDatabase;
             return this;
         }
 
 
-        public Builder peersDatabase(@NonNull PeersDatabase peersDatabase) {
+        Builder peersDatabase(@NonNull PeersDatabase peersDatabase) {
             checkNotNull(peersDatabase);
             this.peersDatabase = peersDatabase;
             return this;
