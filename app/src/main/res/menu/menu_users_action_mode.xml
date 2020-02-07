@@ -8,7 +8,7 @@
         android:orderInCategory="5"
         android:title="@string/action_delete"
         android:visible="true"
-        app:iconTint="@color/colorAccent"
+        app:iconTint="?android:textColorSecondary"
         app:showAsAction="ifRoom" />
 
     <item
@@ -17,7 +17,7 @@
         android:orderInCategory="3"
         android:title="@string/action_connect"
         android:visible="true"
-        app:iconTint="@color/colorAccent"
+        app:iconTint="?android:textColorSecondary"
         app:showAsAction="ifRoom" />
 
     <item
@@ -26,6 +26,6 @@
         android:orderInCategory="55"
         android:title="@string/action_select_all"
         android:visible="true"
-        app:iconTint="@color/colorAccent"
+        app:iconTint="?android:textColorSecondary"
         app:showAsAction="ifRoom" />
 </menu>

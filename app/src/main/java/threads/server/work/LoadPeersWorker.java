@@ -11,8 +11,6 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import threads.ipfs.IPFS;
-import threads.server.core.events.EVENTS;
-import threads.server.fragments.SwarmFragment;
 import threads.server.services.GatewayService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -46,26 +44,10 @@ public class LoadPeersWorker extends Worker {
     @Override
     public Result doWork() {
 
-
         IPFS ipfs = IPFS.getInstance(getApplicationContext());
-        EVENTS events = EVENTS.getInstance(getApplicationContext());
         try {
             checkNotNull(ipfs, "IPFS not valid");
-            GatewayService.PeerSummary info =
-                    GatewayService.evaluateAllPeers(getApplicationContext());
-
-            String content = SwarmFragment.NONE;
-            if (info.getLatency() < 150) {
-                content = SwarmFragment.HIGH;
-            } else if (info.getLatency() < 500) {
-                content = SwarmFragment.MEDIUM;
-            } else if (info.getNumPeers() > 0) {
-                content = SwarmFragment.LOW;
-            }
-            events.invokeEvent(SwarmFragment.TAG, content);
-
-
-            events.invokeEvent(SwarmFragment.TAG, SwarmFragment.NONE);
+            GatewayService.evaluateAllPeers(getApplicationContext());
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }

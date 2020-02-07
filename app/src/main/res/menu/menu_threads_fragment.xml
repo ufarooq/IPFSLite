@@ -8,7 +8,31 @@
         android:orderInCategory="1"
         android:title="@string/search"
         app:actionViewClass="android.widget.SearchView"
+        app:iconTint="?android:textColorSecondary"
         app:showAsAction="ifRoom" />
 
+    <item
+        android:id="@+id/action_upload"
+        android:icon="@drawable/upload"
+        android:orderInCategory="2"
+        android:title="@string/action_upload"
+        app:iconTint="?android:textColorSecondary"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_scan_cid"
+        android:icon="@drawable/scan_code"
+        android:orderInCategory="30"
+        android:title="@string/action_scan_cid"
+        app:iconTint="?android:textColorSecondary"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_edit_cid"
+        android:icon="@drawable/edit_code"
+        android:orderInCategory="31"
+        android:title="@string/action_edit_cid"
+        app:iconTint="?android:textColorSecondary"
+        app:showAsAction="ifRoom" />
 
 </menu>

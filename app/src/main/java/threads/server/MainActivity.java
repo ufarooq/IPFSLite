@@ -71,10 +71,8 @@ import threads.server.fragments.PeersFragment;
 import threads.server.fragments.SendDialogFragment;
 import threads.server.fragments.SettingsDialogFragment;
 import threads.server.fragments.SwarmFragment;
-import threads.server.fragments.ThreadActionDialogFragment;
 import threads.server.fragments.ThreadsDialogFragment;
 import threads.server.fragments.ThreadsFragment;
-import threads.server.fragments.UserActionDialogFragment;
 import threads.server.fragments.WebViewDialogFragment;
 import threads.server.jobs.JobServiceDeleteThreads;
 import threads.server.jobs.JobServiceDownload;
@@ -84,7 +82,6 @@ import threads.server.model.EventViewModel;
 import threads.server.model.SelectionViewModel;
 import threads.server.provider.FileDocumentsProvider;
 import threads.server.services.DaemonService;
-import threads.server.services.GatewayService;
 import threads.server.services.Service;
 import threads.server.services.ThumbnailService;
 import threads.server.services.UploadService;
@@ -102,8 +99,6 @@ public class MainActivity extends AppCompatActivity implements
         NavigationView.OnNavigationItemSelectedListener,
         PeersDialogFragment.ActionListener,
         ThreadsDialogFragment.ActionListener,
-        UserActionDialogFragment.ActionListener,
-        ThreadActionDialogFragment.ActionListener,
         EditMultihashDialogFragment.ActionListener,
         EditPeerDialogFragment.ActionListener,
         ThreadsFragment.ActionListener,
@@ -132,8 +127,8 @@ public class MainActivity extends AppCompatActivity implements
     private BottomNavigationView mNavigation;
     private FloatingActionButton mMainFab;
     private SelectionViewModel mSelectionViewModel;
-    private int mTrafficColorId = android.R.color.holo_red_dark;
     private Toolbar mToolbar;
+    private boolean isTablet;
 
     @Override
     public void onRequestPermissionsResult
@@ -475,12 +470,7 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    @Override
-    public void clickUserDelete(@NonNull String pid) {
-        checkNotNull(pid);
 
-        Service.deleteUser(getApplicationContext(), pid);
-    }
 
     @Override
     public void clickUserConnect(@NonNull String pid) {
@@ -687,6 +677,7 @@ public class MainActivity extends AppCompatActivity implements
 
         setDefaultKeyMode(DEFAULT_KEYS_SEARCH_LOCAL);
 
+        isTablet = getResources().getBoolean(R.bool.isTablet);
         mToolbar = findViewById(R.id.toolbar);
         mAppBarLayout = findViewById(R.id.app_bar_layout);
 
@@ -696,6 +687,9 @@ public class MainActivity extends AppCompatActivity implements
         Service.getInstance(getApplicationContext());
 
         mMainFab = findViewById(R.id.fab_main);
+        if (isTablet) {
+            mMainFab.setVisibility(View.GONE);
+        }
 
         mSelectionViewModel = new ViewModelProvider(this).get(SelectionViewModel.class);
 
@@ -804,7 +798,7 @@ public class MainActivity extends AppCompatActivity implements
                             .show(getSupportFragmentManager(), PeersDialogFragment.TAG);
                     break;
                 case R.id.navigation_swarm:
-                    swarmFabAction();
+
                     break;
             }
 
@@ -864,29 +858,7 @@ public class MainActivity extends AppCompatActivity implements
             }
 
         });
-        eventViewModel.getEvent(SwarmFragment.TAG).observe(this, (event) -> {
-            try {
-                if (event != null) {
-                    String content = event.getContent();
-                    switch (content) {
-                        case SwarmFragment.HIGH:
-                            mTrafficColorId = android.R.color.holo_green_light;
-                            break;
-                        case SwarmFragment.MEDIUM:
-                            mTrafficColorId = android.R.color.holo_orange_light;
-                            break;
-                        case SwarmFragment.LOW:
-                            mTrafficColorId = android.R.color.holo_red_light;
-                            break;
-                        default:
-                            mTrafficColorId = android.R.color.holo_red_dark;
-                    }
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
 
-        });
         Intent intent = getIntent();
         handleIntents(intent);
     }
@@ -908,28 +880,28 @@ public class MainActivity extends AppCompatActivity implements
 
 
     private void redrawFab(int id) {
-        switch (id) {
-            case R.id.navigation_files:
-                if (mSelectionViewModel.isTopLevel()) {
-                    mMainFab.setImageResource(R.drawable.plus_thick);
-                } else {
-                    mMainFab.setImageResource(R.drawable.arrow_left_bold);
-                }
+        if (!isTablet) {
+            switch (id) {
+                case R.id.navigation_files:
+                    if (mSelectionViewModel.isTopLevel()) {
+                        mMainFab.setImageResource(R.drawable.plus_thick);
+                    } else {
+                        mMainFab.setImageResource(R.drawable.arrow_left_bold);
+                    }
 
-                mMainFab.setBackgroundTintList(
-                        ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
+                    mMainFab.setBackgroundTintList(
+                            ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
 
-                break;
-            case R.id.navigation_peers:
-                mMainFab.setImageResource(R.drawable.account_plus);
-                mMainFab.setBackgroundTintList(
-                        ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
-                break;
-            case R.id.navigation_swarm:
-                mMainFab.setImageResource(R.drawable.traffic_light);
-                mMainFab.setBackgroundTintList(
-                        ContextCompat.getColorStateList(getApplicationContext(), mTrafficColorId));
-                break;
+                    break;
+                case R.id.navigation_peers:
+                    mMainFab.setImageResource(R.drawable.account_plus);
+                    mMainFab.setBackgroundTintList(
+                            ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
+                    break;
+                case R.id.navigation_swarm:
+                    mMainFab.hide();
+                    break;
+            }
         }
     }
 
@@ -987,45 +959,6 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    private void swarmFabAction() {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                GatewayService.PeerSummary info = GatewayService.evaluateAllPeers(getApplicationContext());
-
-
-                String html = "<html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Quality</h3><ul>";
-                if (Service.isNightNode(getApplicationContext())) {
-                    html = "<html><head><style>body {background-color: DarkSlateGray; color: white;}</style></head><h3 style=\"text-align:center; color:teal;\">Quality</h3><ul>";
-                }
-
-                String numPeers = "Number Peers : " + info.getNumPeers();
-                html = html.concat("<li><div style=\"width: 80%;" +
-                        "  word-wrap:break-word;\">").concat(numPeers).concat("</div></li>");
-
-
-                String latency = "Average Latency : n.a.";
-                if (info.getLatency() < Long.MAX_VALUE) {
-                    latency = "Average Latency : " + info.getLatency() + " [ms]";
-                }
-
-
-                html = html.concat("<li><div style=\"width: 80%;" +
-                        "  word-wrap:break-word;\">").concat(latency).concat("</div></li>");
-                html = html.concat("</ul></body><footer style=\"color:tomato;\">"
-                        + getString(R.string.quality_measurement) + "</footer></html>");
-
-
-                DetailsDialogFragment.newInstance(
-                        DetailsDialogFragment.Type.HTML, html).show(
-                        getSupportFragmentManager(),
-                        DetailsDialogFragment.TAG);
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        });
-    }
 
     @Override
     public void clickUserDetails(@NonNull String pid) {
@@ -1191,11 +1124,8 @@ public class MainActivity extends AppCompatActivity implements
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-
-            java.lang.Thread threadError = new java.lang.Thread(()
-                    -> EVENTS.getInstance(getApplicationContext()).warning(
-                    getString(R.string.offline_mode)));
-            threadError.start();
+            EVENTS.getInstance(getApplicationContext()).postWarning(
+                    getString(R.string.offline_mode));
         }
 
 
@@ -1243,13 +1173,13 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void showMainFab(boolean visible) {
-
-        if (visible) {
-            mMainFab.show();
-        } else {
-            mMainFab.hide();
+        if (!isTablet) {
+            if (visible) {
+                mMainFab.show();
+            } else {
+                mMainFab.hide();
+            }
         }
-
     }
 
     @Override

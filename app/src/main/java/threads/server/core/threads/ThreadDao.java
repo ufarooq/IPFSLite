@@ -95,20 +95,11 @@ public interface ThreadDao {
     @Update(onConflict = OnConflictStrategy.REPLACE)
     void updateThreads(Thread... threads);
 
-    @Query("UPDATE Thread SET number = 0 WHERE idx IN (:idxs)")
-    void resetThreadsNumber(long... idxs);
-
-    @Query("UPDATE Thread SET number = 0")
-    void resetThreadsNumber();
-
     @Query("UPDATE Thread SET publishing = 0")
     void resetThreadsPublishing();
 
     @Query("UPDATE Thread SET leaching = 0")
     void resetThreadsLeaching();
-
-    @Query("UPDATE Thread SET number = 0 WHERE parent =:thread")
-    void resetParentThreadsNumber(long thread);
 
     @Query("SELECT COUNT(idx) FROM Thread WHERE content =:cid OR thumbnail =:cid")
     @TypeConverters({Converter.class})
@@ -132,9 +123,6 @@ public interface ThreadDao {
 
     @Query("SELECT * FROM Thread WHERE parent =:parent AND deleting = 0 AND name LIKE :query")
     LiveData<List<Thread>> getLiveDataVisibleChildrenByQuery(long parent, String query);
-
-    @Query("UPDATE Thread SET number = number + 1  WHERE idx IN(:idxs)")
-    void incrementNumber(long... idxs);
 
     @Query("UPDATE Thread SET content =:cid  WHERE idx = :idx")
     @TypeConverters({Converter.class})

@@ -54,7 +54,7 @@
     <string name="no_activity_found_to_handle_uri">No application found which support this kind of file.</string>
     <string name="action_scan_cid">Scan CID</string>
     <string name="action_edit_cid">Edit CID</string>
-    <string name="action_file_cid">Upload</string>
+    <string name="action_upload">Upload</string>
     <string name="connection_timeout">Connection Timeout %1$s[s]</string>
     <string name="publisher_service_time">Publisher Service Interval %1$s[h]</string>
     <string name="unknown_peer_sends_data">An unknown peerInfo sends data.</string>
@@ -99,21 +99,16 @@
     <string name="enable_random_swarm_port">Random Swarm Port</string>
     <string name="swarm">Swarm</string>
     <string name="quality_measurement">Note: Quality measurement based on a simple algorithm.</string>
-    <string name="notification_received">Peer \"%1$s\" has received notification</string>
     <string name="file_not_found">File could not be downloaded</string>
 
-    <string name="action_copy_to">Copy to</string>
     <string name="action_connect">Connect</string>
-    <string name="action_block">Block Peer</string>
-    <string name="action_view">View</string>
+    <string name="action_block">Block</string>
     <string name="name">Name</string>
     <string name="name_not_valid">Name not valid</string>
     <string name="action_edit">Edit</string>
-    <string name="action_share">Share</string>
 
     <string name="action_send">Send</string>
     <string name="dont_show_again">Don\'t show again</string>
-    <string name="action_publish">Publish via a gateway</string>
 
 
     <string name="action_details">Details</string>
@@ -132,4 +127,9 @@
     <string name="link_format">[%2$s B] \"%1$s\"</string>
     <string name="link_format_kb">[%2$s kB] \"%1$s\"</string>
     <string name="link_format_mb">[%2$s MB] \"%1$s\"</string>
+    <string name="unblock_user">Unblock</string>
+    <string name="pin">Pin</string>
+    <string name="unping">Unpin</string>
+    <string name="view">View</string>
+    <string name="copy_to">Copy to</string>
 </resources>

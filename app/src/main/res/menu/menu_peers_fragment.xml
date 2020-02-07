@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_scan_pid"
+        android:icon="@drawable/scan_code"
+        android:orderInCategory="3"
+        android:title="@string/action_scan_peer"
+        app:iconTint="?android:textColorSecondary"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_your_pid"
+        android:icon="@drawable/peer_info"
+        android:orderInCategory="4"
+        android:title="@string/action_your_peer"
+        app:iconTint="?android:textColorSecondary"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_edit_pid"
+        android:icon="@drawable/edit_code"
+        android:orderInCategory="40"
+        android:title="@string/action_edit_peer"
+        app:iconTint="?android:textColorSecondary"
+        app:showAsAction="ifRoom" />
+
+</menu>

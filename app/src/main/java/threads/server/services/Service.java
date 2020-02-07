@@ -383,26 +383,6 @@ public class Service {
         }
     }
 
-    public static void sendReceiveMessage(@NonNull Context context, @NonNull String topic) {
-        checkNotNull(context);
-        checkNotNull(topic);
-        Gson gson = new Gson();
-        IPFS ipfs = IPFS.getInstance(context);
-
-        if (IPFS.isPubSubEnabled(context)) {
-            PID host = IPFS.getPID(context);
-            checkNotNull(host);
-            String alias = IPFS.getDeviceName();
-            checkNotNull(alias);
-
-            Content map = new Content();
-            map.put(Content.EST, "RECEIVED");
-            map.put(Content.ALIAS, alias);
-
-            checkNotNull(ipfs, "IPFS not valid");
-            ipfs.pubSubPub(topic, gson.toJson(map), 50);
-        }
-    }
 
     private static void sendShareMessage(@NonNull Context context,
                                          @NonNull String topic,
@@ -450,32 +430,6 @@ public class Service {
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-    }
-
-    private static void receiveReply(@NonNull Context context,
-                                     @NonNull PID sender,
-                                     @NonNull String multihash) {
-        checkNotNull(context);
-        checkNotNull(sender);
-        checkNotNull(multihash);
-
-
-        final THREADS threads = THREADS.getInstance(context);
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                CID cid = CID.create(multihash);
-                List<Thread> entries = threads.getThreadsByContent(cid);
-                for (Thread thread : entries) {
-                    threads.incrementThreadNumber(thread);
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        });
-
-
     }
 
 
@@ -565,7 +519,7 @@ public class Service {
         final THREADS threads = THREADS.getInstance(context);
         final PEERS peers = PEERS.getInstance(context);
         try {
-            threads.resetThreadsNumber();
+
             threads.resetThreadsPublishing();
             threads.resetThreadsLeaching();
             peers.resetUsersDialing();
@@ -890,8 +844,6 @@ public class Service {
         executor.submit(() -> {
             try {
                 checkNotNull(ipfs, "IPFS not valid");
-                // clean-up (unset the unread number)
-                threads.resetThreadsNumber(indices);
 
                 if (users.isEmpty()) {
                     events.error(context.getString(R.string.no_sharing_peers));
@@ -1025,21 +977,6 @@ public class Service {
                                             pubKey = "";
                                         }
                                         adaptUser(context, senderPid, alias, pubKey);
-                                    }
-                                } else if ("REPLY".equals(est)) {
-
-                                    if (content.containsKey(Content.CID)) {
-                                        String cid = content.get(Content.CID);
-                                        checkNotNull(cid);
-                                        Service.receiveReply(context, senderPid, cid);
-                                    }
-                                } else if ("RECEIVED".equals(est)) {
-                                    if (content.containsKey(Content.ALIAS)) {
-                                        String alias = content.get(Content.ALIAS);
-                                        checkNotNull(alias);
-
-                                        events.error(context.getString(
-                                                R.string.notification_received, alias));
                                     }
                                 } else if ("SHARE".equals(est)) {
                                     if (content.containsKey(Content.CID)) {

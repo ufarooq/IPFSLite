@@ -106,7 +106,7 @@ public class UsersViewAdapter extends
                         userViewHolder.user_action.setImageResource(R.drawable.dots);
                         userViewHolder.user_action.setVisibility(View.VISIBLE);
                         userViewHolder.user_action.setOnClickListener((v) ->
-                                listener.invokeGeneralAction(user)
+                                listener.invokeGeneralAction(user, v)
                         );
                     } else {
                         userViewHolder.user_action.setVisibility(View.INVISIBLE);
@@ -197,7 +197,7 @@ public class UsersViewAdapter extends
 
     public interface UsersViewAdapterListener {
 
-        void invokeGeneralAction(@NonNull User user);
+        void invokeGeneralAction(@NonNull User user, @NonNull View view);
 
         boolean generalActionSupport(@NonNull User user);
 

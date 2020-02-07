@@ -24,7 +24,7 @@ public class GatewayService {
     public static final String TAG = GatewayService.class.getSimpleName();
 
 
-    public static PeerSummary evaluateAllPeers(@NonNull Context context) {
+    public static void evaluateAllPeers(@NonNull Context context) {
         IPFS ipfs = IPFS.getInstance(context);
         PEERS peersInstance = PEERS.getInstance(context);
 
@@ -63,7 +63,7 @@ public class GatewayService {
         long latency = (long)
                 latencies.stream().mapToLong(val -> val).average().orElse(Long.MAX_VALUE);
 
-        return new PeerSummary(size, latency);
+
     }
 
     public static int evaluatePeers(@NonNull Context context, boolean pubsubs) {
@@ -487,21 +487,4 @@ public class GatewayService {
         return connected;
     }
 
-    public static class PeerSummary {
-        private final int numPeers;
-        private final long latency;
-
-        PeerSummary(int numPeers, long latency) {
-            this.numPeers = numPeers;
-            this.latency = latency;
-        }
-
-        public int getNumPeers() {
-            return numPeers;
-        }
-
-        public long getLatency() {
-            return latency;
-        }
-    }
 }

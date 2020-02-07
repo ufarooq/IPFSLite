@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/popup_info"
+        android:icon="@drawable/information_variant"
+        android:title="@string/action_info"
+        app:iconTint="?android:textColorSecondary" />
+
+    <item
+        android:id="@+id/popup_view"
+        android:icon="@drawable/view"
+        android:title="@string/view"
+        app:iconTint="?android:textColorSecondary" />
+
+
+    <item
+        android:id="@+id/popup_share"
+        android:icon="@drawable/share"
+        android:title="@string/share"
+        app:iconTint="?android:textColorSecondary" />
+
+    <item
+        android:id="@+id/popup_send"
+        android:icon="@drawable/send"
+        android:title="@string/action_send"
+        app:iconTint="?android:textColorSecondary" />
+
+    <item
+        android:id="@+id/popup_copy_to"
+        android:icon="@drawable/copy_to"
+        android:title="@string/copy_to"
+        app:iconTint="?android:textColorSecondary" />
+
+    <item
+        android:id="@+id/popup_delete"
+        android:icon="@drawable/delete"
+        android:title="@string/action_delete"
+        app:iconTint="?android:textColorSecondary" />
+
+    <item
+        android:id="@+id/popup_pin"
+        android:icon="@drawable/pin"
+        android:title="@string/pin"
+        app:iconTint="@android:color/holo_purple" />
+
+    <item
+        android:id="@+id/popup_unpin"
+        android:icon="@drawable/pin_off_outline"
+        android:title="@string/unping"
+        app:iconTint="?android:textColorSecondary" />
+
+</menu>

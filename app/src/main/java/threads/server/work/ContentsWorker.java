@@ -202,18 +202,9 @@ public class ContentsWorker extends Worker {
                     Contents contents = downloadContents(cid);
 
                     if (contents != null) {
-
-                        // Send a message that the notification is downloaded
-                        Service.sendReceiveMessage(
-                                getApplicationContext(), pid.getPid());
-
-
                         contentService.finishContent(cid);
-
                         downloadContents(pid, contents);
                     }
-
-
                 }
             } else {
                 // create a new unknown user

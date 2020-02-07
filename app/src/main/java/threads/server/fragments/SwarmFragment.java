@@ -42,10 +42,6 @@ public class SwarmFragment extends Fragment implements
         SwipeRefreshLayout.OnRefreshListener, PeersViewAdapter.PeersViewAdapterListener {
 
     public static final String TAG = SwarmFragment.class.getSimpleName();
-    public static final String LOW = "LOW";
-    public static final String HIGH = "HIGH";
-    public static final String MEDIUM = "MEDIUM";
-    public static final String NONE = "NONE";
     private PeersViewAdapter peersViewAdapter;
     private Context mContext;
     private SwipeRefreshLayout mSwipeRefreshLayout;

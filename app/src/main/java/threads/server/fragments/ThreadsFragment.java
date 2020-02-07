@@ -3,6 +3,7 @@ package threads.server.fragments;
 import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -22,6 +23,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
+import androidx.appcompat.view.menu.MenuBuilder;
+import androidx.appcompat.view.menu.MenuPopupHelper;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.core.app.ShareCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -86,6 +90,8 @@ public class ThreadsFragment extends Fragment implements
     private ActionMode mActionMode;
     private SelectionTracker<Long> mSelectionTracker;
     private SearchView mSearchView;
+    private boolean isTablet;
+    private boolean hasCamera;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -93,6 +99,9 @@ public class ThreadsFragment extends Fragment implements
         mContext = context;
         mActivity = getActivity();
         mListener = (ThreadsFragment.ActionListener) mActivity;
+        isTablet = getResources().getBoolean(R.bool.isTablet);
+        PackageManager pm = mContext.getPackageManager();
+        hasCamera = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA);
     }
 
     @Override
@@ -145,6 +154,14 @@ public class ThreadsFragment extends Fragment implements
         super.onCreateOptionsMenu(menu, menuInflater);
         menuInflater.inflate(R.menu.menu_threads_fragment, menu);
 
+        MenuItem actionUpload = menu.findItem(R.id.action_upload);
+        actionUpload.setVisible(isTablet);
+
+        MenuItem actionEditCode = menu.findItem(R.id.action_edit_cid);
+        actionEditCode.setVisible(isTablet);
+
+        MenuItem actionScanCid = menu.findItem(R.id.action_scan_cid);
+        actionScanCid.setVisible(isTablet && hasCamera);
 
         SearchManager searchManager = (SearchManager)
                 mActivity.getSystemService(Context.SEARCH_SERVICE);
@@ -218,6 +235,39 @@ public class ThreadsFragment extends Fragment implements
             mSearchView.setQuery("", false);
             mActivity.onSearchRequested();
 
+            return true;
+
+        } else if (item.getItemId() == R.id.action_upload) {
+
+            if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                return true;
+            }
+
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            mListener.clickUpload();
+            return true;
+
+        } else if (item.getItemId() == R.id.action_scan_cid) {
+
+            if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                return true;
+            }
+
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            mListener.clickMultihash();
+            return true;
+
+        } else if (item.getItemId() == R.id.action_edit_cid) {
+
+            if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                return true;
+            }
+
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            mListener.clickEditMultihash();
             return true;
 
         }
@@ -389,22 +439,6 @@ public class ThreadsFragment extends Fragment implements
     }
 
 
-    private void clearUnreadNotes() {
-        final THREADS threadsAPI = THREADS.getInstance(mContext);
-        final EVENTS events = EVENTS.getInstance(mContext);
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                Long idx = mSelectionViewModel.getParentThread().getValue();
-                checkNotNull(idx);
-                threadsAPI.resetParentThreadsNumber(idx);
-            } catch (Throwable e) {
-                events.exception(e);
-            }
-        });
-    }
-
-
     private long[] convert(Selection<Long> entries) {
         int i = 0;
 
@@ -451,26 +485,66 @@ public class ThreadsFragment extends Fragment implements
     }
 
     @Override
-    public void invokeGeneralAction(@NonNull Thread thread) {
-        try {
-            // mis-clicking prevention, using threshold of 1000 ms
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                return;
-            }
-            mLastClickTime = SystemClock.elapsedRealtime();
+    public void invokeGeneralAction(@NonNull Thread thread, @NonNull View view) {
+        checkNotNull(thread);
+        checkNotNull(view);
 
+
+        try {
             boolean sendActive = Service.isSendNotificationsEnabled(mContext);
             boolean copyActive = !thread.isDir();
+            boolean isPinned = thread.isPinned();
+            boolean deleteActive = mSelectionViewModel.isTopLevel();
 
-            ThreadActionDialogFragment.newInstance(
-                    thread.getIdx(), true, true,
-                    mSelectionViewModel.isTopLevel(), true, sendActive,
-                    copyActive, true, thread.isPinned())
-                    .show(getChildFragmentManager(), ThreadActionDialogFragment.TAG);
+            PopupMenu menu = new PopupMenu(mContext, view);
+            menu.inflate(R.menu.popup_threads_menu);
+            menu.getMenu().findItem(R.id.popup_pin).setVisible(!isPinned);
+            menu.getMenu().findItem(R.id.popup_unpin).setVisible(isPinned);
+            menu.getMenu().findItem(R.id.popup_share).setVisible(sendActive);
+            menu.getMenu().findItem(R.id.popup_delete).setVisible(deleteActive);
+            menu.getMenu().findItem(R.id.popup_copy_to).setVisible(copyActive);
+            menu.setOnMenuItemClickListener((item) -> {
+
+                if (item.getItemId() == R.id.popup_info) {
+                    mListener.clickThreadInfo(thread.getIdx());
+                    return true;
+                } else if (item.getItemId() == R.id.popup_view) {
+                    mListener.clickThreadView(thread.getIdx());
+                    return true;
+                } else if (item.getItemId() == R.id.popup_delete) {
+                    mListener.clickThreadDelete(thread.getIdx());
+                    return true;
+                } else if (item.getItemId() == R.id.popup_share) {
+                    mListener.clickThreadShare(thread.getIdx());
+                    return true;
+                } else if (item.getItemId() == R.id.popup_send) {
+                    mListener.clickThreadSend(thread.getIdx());
+                    return true;
+                } else if (item.getItemId() == R.id.popup_copy_to) {
+                    mListener.clickThreadCopy(thread.getIdx());
+                    return true;
+                } else if (item.getItemId() == R.id.popup_unpin) {
+                    mListener.clickThreadPublish(thread.getIdx(), false);
+                    return true;
+                } else if (item.getItemId() == R.id.popup_pin) {
+                    mListener.clickThreadPublish(thread.getIdx(), true);
+                    return true;
+                }
+                return false;
+
+            });
+
+            MenuPopupHelper menuHelper = new MenuPopupHelper(
+                    mContext, (MenuBuilder) menu.getMenu(), view);
+            menuHelper.setForceShowIcon(true);
+            menuHelper.show();
+
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
+
+
     }
 
 
@@ -548,7 +622,6 @@ public class ThreadsFragment extends Fragment implements
             public void onDestroyActionMode(ActionMode mode) {
 
                 mSelectionTracker.clearSelection();
-                clearUnreadNotes(); // todo check if this is nice solution
 
                 boolean stillSearchView = true;
                 if (mSearchView != null) {
@@ -719,5 +792,25 @@ public class ThreadsFragment extends Fragment implements
         void showMainFab(boolean visible);
 
         void setPagingEnabled(boolean enabled);
+
+        void clickThreadInfo(long idx);
+
+        void clickThreadDelete(long idx);
+
+        void clickThreadView(long idx);
+
+        void clickThreadShare(long idx);
+
+        void clickThreadSend(long idx);
+
+        void clickThreadCopy(long idx);
+
+        void clickThreadPublish(long idx, boolean value);
+
+        void clickUpload();
+
+        void clickMultihash();
+
+        void clickEditMultihash();
     }
 }

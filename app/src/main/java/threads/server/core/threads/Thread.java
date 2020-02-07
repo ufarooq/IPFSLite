@@ -40,8 +40,6 @@ public class Thread {
     @ColumnInfo(name = "thumbnail")
     @TypeConverters(Converter.class)
     private CID thumbnail;  // checked
-    @ColumnInfo(name = "number")
-    private int number = 0;  // checked
     @ColumnInfo(name = "progress")
     private int progress;  // checked
     @Nullable
@@ -151,8 +149,7 @@ public class Thread {
     public boolean sameContent(@NonNull Thread o) {
         checkNotNull(o);
         if (this == o) return true;
-        return number == o.getNumber() &&
-                pinned == o.isPinned() &&
+        return pinned == o.isPinned() &&
                 progress == o.getProgress() &&
                 publishing == o.isPublishing() &&
                 leaching == o.isLeaching() &&
@@ -210,15 +207,6 @@ public class Thread {
     public void setSenderAlias(@NonNull String senderAlias) {
         checkNotNull(senderAlias);
         this.senderAlias = senderAlias;
-    }
-
-
-    public int getNumber() {
-        return number;
-    }
-
-    public void setNumber(int number) {
-        this.number = number;
     }
 
     public long getParent() {

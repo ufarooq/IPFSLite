@@ -173,30 +173,6 @@ public class ThreadsAPI {
         return getThreadsDatabase().threadDao().getThreads();
     }
 
-
-    public void incrementThreadNumber(@NonNull Thread thread) {
-        checkNotNull(thread);
-        incrementThreadsNumber(thread.getIdx());
-    }
-
-    public void incrementThreadsNumber(long... idxs) {
-        getThreadsDatabase().threadDao().incrementNumber(idxs);
-    }
-
-
-    public void resetThreadsNumber(long... idxs) {
-        getThreadsDatabase().threadDao().resetThreadsNumber(idxs);
-    }
-
-    public void resetParentThreadsNumber(long parent) {
-        getThreadsDatabase().threadDao().resetParentThreadsNumber(parent);
-    }
-
-    public void resetThreadsNumber() {
-        getThreadsDatabase().threadDao().resetThreadsNumber();
-    }
-
-
     public long storeThread(@NonNull Thread thread) {
         checkNotNull(thread);
         return getThreadsDatabase().threadDao().insertThread(thread);

@@ -1,6 +1,7 @@
 package threads.server.fragments;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -8,13 +9,18 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.view.ActionMode;
+import androidx.appcompat.view.menu.MenuBuilder;
+import androidx.appcompat.view.menu.MenuPopupHelper;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -53,7 +59,8 @@ public class PeersFragment extends Fragment implements
     private ActionMode mActionMode;
     private FragmentActivity mActivity;
     private PeersFragment.ActionListener mListener;
-
+    private boolean isTablet;
+    private boolean hasCamera;
 
     @Override
     public void onDetach() {
@@ -69,6 +76,9 @@ public class PeersFragment extends Fragment implements
         mContext = context;
         mActivity = getActivity();
         mListener = (PeersFragment.ActionListener) mActivity;
+        isTablet = getResources().getBoolean(R.bool.isTablet);
+        PackageManager pm = mContext.getPackageManager();
+        hasCamera = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA);
     }
 
     @Override
@@ -78,9 +88,75 @@ public class PeersFragment extends Fragment implements
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.peers_view, container, false);
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        this.setHasOptionsMenu(true);
+    }
 
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+        super.onCreateOptionsMenu(menu, menuInflater);
+        menuInflater.inflate(R.menu.menu_peers_fragment, menu);
+
+        MenuItem actionScanPid = menu.findItem(R.id.action_scan_pid);
+        actionScanPid.setVisible(isTablet && hasCamera);
+
+        MenuItem actionYourPid = menu.findItem(R.id.action_your_pid);
+        actionYourPid.setVisible(isTablet);
+
+        MenuItem actionEditPid = menu.findItem(R.id.action_edit_pid);
+        actionEditPid.setVisible(isTablet);
+
+
+    }
+
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+
+        if (item.getItemId() == R.id.action_scan_pid) {
+
+            if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                return true;
+            }
+
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            mListener.clickConnectPeer();
+            return true;
+
+        } else if (item.getItemId() == R.id.action_your_pid) {
+
+            if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                return true;
+            }
+
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            mListener.clickInfoPeer();
+            return true;
+
+        } else if (item.getItemId() == R.id.action_edit_pid) {
+
+            if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                return true;
+            }
+
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            mListener.clickEditPeer();
+            return true;
+
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.peers_view, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
         RecyclerView mRecyclerView = view.findViewById(R.id.recycler_users);
         mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
@@ -187,7 +263,6 @@ public class PeersFragment extends Fragment implements
 
         });
 
-        return view;
     }
 
     private ActionMode.Callback createActionModeCallback() {
@@ -287,25 +362,56 @@ public class PeersFragment extends Fragment implements
     }
 
     @Override
-    public void invokeGeneralAction(@NonNull User user) {
+    public void invokeGeneralAction(@NonNull User user, @NonNull View view) {
         checkNotNull(user);
+        checkNotNull(view);
+
         try {
+            boolean senderBlocked = user.isBlocked();
+            boolean isConnected = user.isConnected();
+            PopupMenu menu = new PopupMenu(mContext, view);
+            menu.inflate(R.menu.popup_peers_menu);
+            menu.getMenu().findItem(R.id.popup_block).setVisible(!senderBlocked);
+            menu.getMenu().findItem(R.id.popup_unblock).setVisible(senderBlocked);
+            menu.getMenu().findItem(R.id.popup_connect).setVisible(!isConnected);
+            menu.getMenu().findItem(R.id.popup_details).setVisible(isConnected);
+            menu.setOnMenuItemClickListener((item) -> {
 
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                return;
-            }
-            mLastClickTime = SystemClock.elapsedRealtime();
+                if (item.getItemId() == R.id.popup_connect) {
+                    mListener.clickUserConnect(user.getPid());
+                    return true;
+                } else if (item.getItemId() == R.id.popup_delete) {
+                    clickUserDelete(user.getPid());
+                    return true;
+                } else if (item.getItemId() == R.id.popup_info) {
+                    mListener.clickUserInfo(user.getPid());
+                    return true;
+                } else if (item.getItemId() == R.id.popup_details) {
+                    mListener.clickUserDetails(user.getPid());
+                    return true;
+                } else if (item.getItemId() == R.id.popup_edit) {
+                    mListener.clickUserEdit(user.getPid());
+                    return true;
+                } else if (item.getItemId() == R.id.popup_block) {
+                    mListener.clickUserBlock(user.getPid(), true);
+                    return true;
+                } else if (item.getItemId() == R.id.popup_unblock) {
+                    mListener.clickUserBlock(user.getPid(), false);
+                    return true;
+                }
+                return false;
 
-            UserActionDialogFragment.newInstance(
-                    user.getPID().getPid(), true, user.isConnected(), true,
-                    true, true, user.isBlocked(),
-                    true)
-                    .show(getChildFragmentManager(), UserActionDialogFragment.TAG);
+            });
+
+            MenuPopupHelper menuHelper = new MenuPopupHelper(
+                    mContext, (MenuBuilder) menu.getMenu(), view);
+            menuHelper.setForceShowIcon(true);
+            menuHelper.show();
+
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-
     }
 
     @Override
@@ -328,6 +434,11 @@ public class PeersFragment extends Fragment implements
 
     }
 
+    private void clickUserDelete(@NonNull String pid) {
+        checkNotNull(pid);
+
+        Service.deleteUser(mContext, pid);
+    }
 
     public interface ActionListener {
 
@@ -336,5 +447,21 @@ public class PeersFragment extends Fragment implements
         void showMainFab(boolean visible);
 
         void setPagingEnabled(boolean enabled);
+
+        void clickUserBlock(@NonNull String pid, boolean value);
+
+        void clickUserInfo(@NonNull String pid);
+
+        void clickUserConnect(@NonNull String pid);
+
+        void clickUserEdit(@NonNull String pid);
+
+        void clickUserDetails(@NonNull String pid);
+
+        void clickConnectPeer();
+
+        void clickEditPeer();
+
+        void clickInfoPeer();
     }
 }

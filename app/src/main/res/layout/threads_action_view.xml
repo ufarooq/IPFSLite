@@ -20,7 +20,7 @@
         tools:ignore="UselessParent">
 
         <TextView
-            android:id="@+id/menu_file_cid"
+            android:id="@+id/menu_upload"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
@@ -30,7 +30,7 @@
             android:drawableTint="?android:textColorSecondary"
             android:gravity="center"
             android:singleLine="true"
-            android:text="@string/action_file_cid"
+            android:text="@string/action_upload"
             android:textAlignment="center" />
 
         <TextView

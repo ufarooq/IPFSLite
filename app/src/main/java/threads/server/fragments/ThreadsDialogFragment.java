@@ -82,7 +82,7 @@ public class ThreadsDialogFragment extends DialogFragment {
         view.setBackgroundColor(mBackgroundColor);
 
 
-        TextView menu_file_cid = view.findViewById(R.id.menu_file_cid);
+        TextView menu_file_cid = view.findViewById(R.id.menu_upload);
 
         menu_file_cid.setOnClickListener((v) -> {
 
