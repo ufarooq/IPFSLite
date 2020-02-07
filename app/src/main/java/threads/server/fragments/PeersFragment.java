@@ -32,11 +32,17 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.util.Comparator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
+import threads.ipfs.PID;
 import threads.server.R;
+import threads.server.core.events.EVENTS;
+import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
 import threads.server.model.UsersViewModel;
 import threads.server.services.Service;
+import threads.server.utils.Network;
 import threads.server.utils.UserItemDetailsLookup;
 import threads.server.utils.UsersItemKeyProvider;
 import threads.server.utils.UsersViewAdapter;
@@ -378,25 +384,25 @@ public class PeersFragment extends Fragment implements
             menu.setOnMenuItemClickListener((item) -> {
 
                 if (item.getItemId() == R.id.popup_connect) {
-                    mListener.clickUserConnect(user.getPid());
+                    clickUserConnect(user.getPid());
                     return true;
                 } else if (item.getItemId() == R.id.popup_delete) {
                     clickUserDelete(user.getPid());
                     return true;
                 } else if (item.getItemId() == R.id.popup_info) {
-                    mListener.clickUserInfo(user.getPid());
+                    clickUserInfo(user.getPid());
                     return true;
                 } else if (item.getItemId() == R.id.popup_details) {
-                    mListener.clickUserDetails(user.getPid());
+                    clickUserDetails(user.getPid());
                     return true;
                 } else if (item.getItemId() == R.id.popup_edit) {
-                    mListener.clickUserEdit(user.getPid());
+                    clickUserEdit(user.getPid());
                     return true;
                 } else if (item.getItemId() == R.id.popup_block) {
-                    mListener.clickUserBlock(user.getPid(), true);
+                    clickUserBlock(user.getPid(), true);
                     return true;
                 } else if (item.getItemId() == R.id.popup_unblock) {
-                    mListener.clickUserBlock(user.getPid(), false);
+                    clickUserBlock(user.getPid(), false);
                     return true;
                 }
                 return false;
@@ -440,6 +446,92 @@ public class PeersFragment extends Fragment implements
         Service.deleteUser(mContext, pid);
     }
 
+    private void clickUserBlock(@NonNull String pid, boolean value) {
+        checkNotNull(pid);
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                PEERS peers = PEERS.getInstance(mContext);
+                if (!value) {
+                    peers.unblockUser(PID.create(pid));
+                } else {
+                    peers.blockUser(PID.create(pid));
+                }
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        });
+
+    }
+
+    private void clickUserInfo(@NonNull String pid) {
+        checkNotNull(pid);
+        try {
+            InfoDialogFragment.newInstance(pid,
+                    getString(R.string.peer_id),
+                    getString(R.string.peer_access, pid))
+                    .show(getChildFragmentManager(), InfoDialogFragment.TAG);
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
+    private void clickUserConnect(@NonNull String pid) {
+        checkNotNull(pid);
+
+        if (!Network.isConnected(mContext)) {
+            EVENTS.getInstance(mContext).postWarning(getString(R.string.offline_mode));
+        }
+
+        Service.connectUser(mContext, pid, true);
+
+    }
+
+    private void clickUserEdit(@NonNull String pid) {
+
+        try {
+            NameDialogFragment.newInstance(pid, getString(R.string.peer_name))
+                    .show(getChildFragmentManager(), NameDialogFragment.TAG);
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
+    private void clickUserDetails(@NonNull String pid) {
+
+        // CHECKED
+        if (!Network.isConnected(mContext)) {
+            EVENTS.getInstance(mContext).postWarning(getString(R.string.offline_mode));
+        }
+
+
+        try {
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                PID peer = PID.create(pid);
+                try {
+                    String html = Service.getDetailsReport(mContext, peer);
+
+
+                    DetailsDialogFragment.newInstance(
+                            DetailsDialogFragment.Type.HTML, html).show(
+                            getChildFragmentManager(),
+                            DetailsDialogFragment.TAG);
+                } catch (Throwable e) {
+                    EVENTS.getInstance(mContext).exception(e);
+                }
+            });
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+
+    }
+
     public interface ActionListener {
 
         void showBottomNavigation(boolean visible);
@@ -447,16 +539,6 @@ public class PeersFragment extends Fragment implements
         void showMainFab(boolean visible);
 
         void setPagingEnabled(boolean enabled);
-
-        void clickUserBlock(@NonNull String pid, boolean value);
-
-        void clickUserInfo(@NonNull String pid);
-
-        void clickUserConnect(@NonNull String pid);
-
-        void clickUserEdit(@NonNull String pid);
-
-        void clickUserDetails(@NonNull String pid);
 
         void clickConnectPeer();
 

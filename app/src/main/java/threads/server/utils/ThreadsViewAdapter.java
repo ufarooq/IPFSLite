@@ -175,12 +175,18 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
             } else if (thread.isPublishing()) {
                 threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
-                threadViewHolder.general_action.setImageResource(R.drawable.dots);
-                threadViewHolder.general_action.setVisibility(View.VISIBLE);
 
-                threadViewHolder.general_action.setOnClickListener((v) ->
-                        mListener.invokeGeneralAction(thread, v)
-                );
+                if (thread.isSeeding()) {
+                    threadViewHolder.general_action.setImageResource(R.drawable.dots);
+                    threadViewHolder.general_action.setVisibility(View.VISIBLE);
+
+                    threadViewHolder.general_action.setOnClickListener((v) ->
+                            mListener.invokeGeneralAction(thread, v)
+                    );
+                } else {
+                    threadViewHolder.general_action.setImageResource(R.drawable.upload);
+                    threadViewHolder.general_action.setClickable(false);
+                }
             } else if (thread.isLeaching()) {
                 threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
 

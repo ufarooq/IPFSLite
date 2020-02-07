@@ -770,6 +770,44 @@ public class Service {
         }
     }
 
+    public static String getDetailsReport(@NonNull Context context, @NonNull PID peer) {
+        String protocolVersion = "n.a.";
+        String agentVersion = "n.a.";
+        List<String> addresses = new ArrayList<>();
+        final int timeout = Preferences.getConnectionTimeout(context);
+        final IPFS ipfs = IPFS.getInstance(context);
+
+        PeerInfo info = ipfs.id(peer, timeout);
+
+        if (info != null) {
+            agentVersion = info.getAgentVersion();
+            protocolVersion = info.getProtocolVersion();
+            addresses = info.getMultiAddresses();
+        }
+
+        String html = "<html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
+        if (Service.isNightNode(context)) {
+            html = "<html><head><style>body { background-color: DarkSlateGray; color: white;}</style></head><body><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
+        }
+
+        html = html.concat("<div style=\"width: 80%;" +
+                "  word-wrap:break-word;\">").concat(peer.getPid()).concat("</div><br/>");
+
+        html = html.concat("<div style=\"width: 80%;" +
+                "  word-wrap:break-word;\">").concat("Protocol Version : ").concat(protocolVersion).concat("</div><br/>");
+
+        html = html.concat("<ul>");
+
+        for (String address : addresses) {
+            html = html.concat("<li><div style=\"width: 80%;" +
+                    "  word-wrap:break-word;\">").concat(address).concat("</div></li>");
+        }
+
+
+        return html.concat("</ul><br/></body><footer>Agent : <strong style=\"color:teal;\">" + agentVersion + "</strong></footer></html>");
+
+    }
+
     public ArrayList<String> getEnhancedUserPIDs(@NonNull Context context) {
         checkNotNull(context);
 

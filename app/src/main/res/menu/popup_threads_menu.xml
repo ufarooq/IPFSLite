@@ -48,7 +48,7 @@
     <item
         android:id="@+id/popup_unpin"
         android:icon="@drawable/pin_off_outline"
-        android:title="@string/unping"
+        android:title="@string/unpin"
         app:iconTint="?android:textColorSecondary" />
 
 </menu>

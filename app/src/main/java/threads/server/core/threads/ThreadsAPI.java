@@ -47,13 +47,6 @@ public class ThreadsAPI {
         getThreadsDatabase().threadDao().setSeeding(idx);
     }
 
-    public void setThreadPublishing(long idx, boolean publish) {
-        getThreadsDatabase().threadDao().setPublishing(idx, publish);
-    }
-
-    public void setThreadsLeaching(boolean leaching, long... idxs) {
-        getThreadsDatabase().threadDao().setThreadsLeaching(leaching, idxs);
-    }
 
     public void setThreadsPublishing(boolean publish, long... idxs) {
         getThreadsDatabase().threadDao().setThreadsPublishing(publish, idxs);
@@ -183,10 +176,6 @@ public class ThreadsAPI {
 
     }
 
-    public boolean isThreadPinned(long idx) {
-        return getThreadsDatabase().threadDao().isPinned(idx);
-    }
-
     public void setThreadName(long idx, @NonNull String name) {
         checkNotNull(name);
         getThreadsDatabase().threadDao().setName(idx, name);
@@ -216,23 +205,6 @@ public class ThreadsAPI {
     @NonNull
     public List<Thread> getPinnedThreads() {
         return getThreadsDatabase().threadDao().getThreadsByPinned(true);
-    }
-
-    @NonNull
-    public List<Thread> getThreadsByDate(long date) {
-        return getThreadsDatabase().threadDao().getThreadsByLastModified(date);
-    }
-
-
-    public void storeThreads(@NonNull List<Thread> threads) {
-        checkNotNull(threads);
-        getThreadsDatabase().threadDao().insertThreads(Iterables.toArray(threads, Thread.class));
-    }
-
-
-    public void updateThread(@NonNull Thread thread) {
-        checkNotNull(thread);
-        getThreadsDatabase().threadDao().updateThreads((Thread) thread);
     }
 
     @NonNull

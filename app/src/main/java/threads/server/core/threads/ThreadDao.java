@@ -7,7 +7,6 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.TypeConverters;
-import androidx.room.Update;
 
 import java.util.List;
 
@@ -21,9 +20,6 @@ public interface ThreadDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     long insertThread(Thread thread);
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insertThreads(Thread... threads);
-
     @Query("SELECT * FROM Thread")
     List<Thread> getThreads();
 
@@ -32,9 +28,6 @@ public interface ThreadDao {
 
     @Query("DELETE FROM Thread")
     void clear();
-
-    @Query("SELECT * FROM Thread WHERE lastModified =:lastModified")
-    List<Thread> getThreadsByLastModified(long lastModified);
 
     @Query("SELECT * FROM Thread WHERE pinned = :pinned")
     List<Thread> getThreadsByPinned(boolean pinned);
@@ -50,14 +43,8 @@ public interface ThreadDao {
     @TypeConverters({Converter.class})
     CID getThumbnail(long idx);
 
-    @Query("UPDATE Thread SET publishing = :publish  WHERE idx = :idx")
-    void setPublishing(long idx, boolean publish);
-
     @Query("UPDATE Thread SET leaching = :leaching  WHERE idx = :idx")
     void setLeaching(long idx, boolean leaching);
-
-    @Query("UPDATE Thread SET lastModified = :lastModified  WHERE idx = :idx")
-    void setThreadLastModified(long idx, long lastModified);
 
     @Query("UPDATE Thread SET seeding = 0, deleting = 1 WHERE idx IN (:idxs)")
     void setThreadsDeleting(long... idxs);
@@ -65,17 +52,8 @@ public interface ThreadDao {
     @Query("UPDATE Thread SET publishing = :publish  WHERE idx IN (:idxs)")
     void setThreadsPublishing(boolean publish, long... idxs);
 
-    @Query("UPDATE Thread SET leaching = :leaching  WHERE idx IN (:idxs)")
-    void setThreadsLeaching(boolean leaching, long... idxs);
-
-    @Query("UPDATE Thread SET senderAlias = :alias  WHERE idx = :idx")
-    void setSenderAlias(long idx, String alias);
-
     @Query("UPDATE Thread SET pinned = :pinned  WHERE idx = :idx")
     void setPinned(long idx, boolean pinned);
-
-    @Query("SELECT pinned FROM Thread WHERE idx = :idx")
-    boolean isPinned(long idx);
 
     @Query("UPDATE Thread SET senderAlias = :alias  WHERE sender = :pid")
     @TypeConverters(Converter.class)
@@ -91,9 +69,6 @@ public interface ThreadDao {
 
     @Delete
     void removeThreads(Thread... threads);
-
-    @Update(onConflict = OnConflictStrategy.REPLACE)
-    void updateThreads(Thread... threads);
 
     @Query("UPDATE Thread SET publishing = 0")
     void resetThreadsPublishing();
@@ -116,10 +91,6 @@ public interface ThreadDao {
 
     @Query("SELECT * FROM Thread WHERE idx IN(:idxs)")
     List<Thread> getThreadsByIdx(long... idxs);
-
-    @Query("SELECT * FROM Thread WHERE sender =:senderPid")
-    @TypeConverters({Converter.class})
-    List<Thread> getThreadsBySenderPid(PID senderPid);
 
     @Query("SELECT * FROM Thread WHERE parent =:parent AND deleting = 0 AND name LIKE :query")
     LiveData<List<Thread>> getLiveDataVisibleChildrenByQuery(long parent, String query);
@@ -150,7 +121,7 @@ public interface ThreadDao {
     @Query("UPDATE Thread SET progress = :progress WHERE idx = :idx")
     void setProgress(long idx, int progress);
 
-    @Query("UPDATE Thread SET seeding = 1, leaching = 0, progress = 0 WHERE idx = :idx")
+    @Query("UPDATE Thread SET seeding = 1, leaching = 0, publishing = 0, progress = 0 WHERE idx = :idx")
     void setSeeding(long idx);
 
     @Query("UPDATE Thread SET size = :size WHERE idx = :idx")

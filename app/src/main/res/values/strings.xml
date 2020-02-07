@@ -98,7 +98,6 @@
     <string name="success_notification">Sending notification to Peer \"%1$s\" took \"%2$s\"[s]</string>
     <string name="enable_random_swarm_port">Random Swarm Port</string>
     <string name="swarm">Swarm</string>
-    <string name="quality_measurement">Note: Quality measurement based on a simple algorithm.</string>
     <string name="file_not_found">File could not be downloaded</string>
 
     <string name="action_connect">Connect</string>
@@ -129,7 +128,7 @@
     <string name="link_format_mb">[%2$s MB] \"%1$s\"</string>
     <string name="unblock_user">Unblock</string>
     <string name="pin">Pin</string>
-    <string name="unping">Unpin</string>
+    <string name="unpin">Unpin</string>
     <string name="view">View</string>
     <string name="copy_to">Copy to</string>
 </resources>

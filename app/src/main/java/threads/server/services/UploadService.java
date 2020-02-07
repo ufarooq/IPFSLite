@@ -255,7 +255,7 @@ public class UploadService extends Service {
                 buildNotification(name);
 
                 Thread thread = threads.createThread(pid, alias, 0L);
-
+                thread.setPublishing(true);
                 thread.setName(name);
                 thread.setSize(size);
                 thread.setMimeType(mimeType);

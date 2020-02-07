@@ -32,6 +32,7 @@ import threads.server.core.peers.IPeer;
 import threads.server.core.peers.Peer;
 import threads.server.model.PeersViewModel;
 import threads.server.services.Service;
+import threads.server.utils.Network;
 import threads.server.utils.PeersViewAdapter;
 import threads.server.work.BootstrapWorker;
 import threads.server.work.LoadPeersWorker;
@@ -216,7 +217,34 @@ public class SwarmFragment extends Fragment implements
 
 
     private void clickPeerDetails(@NonNull String pid) {
-        mListener.clickUserDetails(pid);
+
+        // CHECKED
+        if (!Network.isConnected(mContext)) {
+            EVENTS.getInstance(mContext).postWarning(getString(R.string.offline_mode));
+        }
+
+        try {
+
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                PID peer = PID.create(pid);
+                try {
+                    String html = Service.getDetailsReport(mContext, peer);
+
+
+                    DetailsDialogFragment.newInstance(
+                            DetailsDialogFragment.Type.HTML, html).show(
+                            getChildFragmentManager(),
+                            DetailsDialogFragment.TAG);
+                } catch (Throwable e) {
+                    EVENTS.getInstance(mContext).exception(e);
+                }
+            });
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+
     }
 
 
@@ -267,8 +295,6 @@ public class SwarmFragment extends Fragment implements
     public interface ActionListener {
 
         void showMainFab(boolean visible);
-
-        void clickUserDetails(String pid);
 
     }
 }

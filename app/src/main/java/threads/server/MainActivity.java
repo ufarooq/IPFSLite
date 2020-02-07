@@ -41,8 +41,6 @@ import com.google.android.material.snackbar.Snackbar;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
-import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,14 +51,11 @@ import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
 import threads.ipfs.PID;
-import threads.ipfs.PeerInfo;
 import threads.server.core.events.EVENTS;
 import threads.server.core.peers.AddressType;
 import threads.server.core.peers.PEERS;
-import threads.server.core.peers.User;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
-import threads.server.fragments.DetailsDialogFragment;
 import threads.server.fragments.DontShowAgainFragmentDialog;
 import threads.server.fragments.EditMultihashDialogFragment;
 import threads.server.fragments.EditPeerDialogFragment;
@@ -68,16 +63,13 @@ import threads.server.fragments.InfoDialogFragment;
 import threads.server.fragments.NameDialogFragment;
 import threads.server.fragments.PeersDialogFragment;
 import threads.server.fragments.PeersFragment;
-import threads.server.fragments.SendDialogFragment;
 import threads.server.fragments.SettingsDialogFragment;
 import threads.server.fragments.SwarmFragment;
 import threads.server.fragments.ThreadsDialogFragment;
 import threads.server.fragments.ThreadsFragment;
 import threads.server.fragments.WebViewDialogFragment;
-import threads.server.jobs.JobServiceDeleteThreads;
 import threads.server.jobs.JobServiceDownload;
 import threads.server.jobs.JobServiceIdentity;
-import threads.server.jobs.JobServicePublish;
 import threads.server.model.EventViewModel;
 import threads.server.model.SelectionViewModel;
 import threads.server.provider.FileDocumentsProvider;
@@ -90,7 +82,6 @@ import threads.server.utils.CustomViewPager;
 import threads.server.utils.MimeType;
 import threads.server.utils.Network;
 import threads.server.utils.PermissionAction;
-import threads.server.utils.Preferences;
 import threads.server.work.BootstrapWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -111,7 +102,7 @@ public class MainActivity extends AppCompatActivity implements
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private static final int REQUEST_SELECT_FILES = 1;
-    private static final int FILE_EXPORT_REQUEST_CODE = 2;
+
     private static final int CONTENT_REQUEST_VIDEO_CAPTURE = 3;
     private static final int PEER_REQUEST_VIDEO_CAPTURE = 4;
     private static final int CLICK_OFFSET = 500;
@@ -119,7 +110,6 @@ public class MainActivity extends AppCompatActivity implements
 
     private final AtomicBoolean idScan = new AtomicBoolean(false);
 
-    private CID threadContent = null;
     private DrawerLayout mDrawerLayout;
     private AppBarLayout mAppBarLayout;
     private long mLastClickTime = 0;
@@ -182,43 +172,21 @@ public class MainActivity extends AppCompatActivity implements
 
         try {
 
-            switch (requestCode) {
-                case FILE_EXPORT_REQUEST_CODE: {
-                    if (data != null) {
-                        Uri uri = data.getData();
-                        if (uri != null) {
-                            IPFS ipfs = IPFS.getInstance(getApplicationContext());
-                            //ParcelFileDescriptor desc = getContentResolver().openFileDescriptor(
-                            //        uri, "w");
-                            OutputStream os = getContentResolver().openOutputStream(uri);
-                            if (os != null) {
-                                try {
-                                    ipfs.storeToOutputStream(os, threadContent);
-                                } catch (Throwable e) {
-                                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                                } finally {
-                                    os.close();
-                                }
-                            }
-                        }
-                    }
-                    return;
-                }
-                case REQUEST_SELECT_FILES: {
+            if (requestCode == REQUEST_SELECT_FILES) {
 
-                    if (data.getClipData() != null) {
-                        ClipData mClipData = data.getClipData();
-                        for (int i = 0; i < mClipData.getItemCount(); i++) {
-                            ClipData.Item item = mClipData.getItemAt(i);
-                            Uri uri = item.getUri();
-                            UploadService.invoke(getApplicationContext(), uri);
-                        }
-                    } else if (data.getData() != null) {
-                        Uri uri = data.getData();
+                if (data.getClipData() != null) {
+                    ClipData mClipData = data.getClipData();
+                    for (int i = 0; i < mClipData.getItemCount(); i++) {
+                        ClipData.Item item = mClipData.getItemAt(i);
+                        Uri uri = item.getUri();
                         UploadService.invoke(getApplicationContext(), uri);
                     }
-                    return;
+                } else if (data.getData() != null) {
+                    Uri uri = data.getData();
+                    UploadService.invoke(getApplicationContext(), uri);
                 }
+                return;
+
             }
 
 
@@ -435,66 +403,6 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    @Override
-    public void clickUserBlock(@NonNull String pid, boolean value) {
-        checkNotNull(pid);
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                PEERS peers = PEERS.getInstance(getApplicationContext());
-                if (!value) {
-                    peers.unblockUser(PID.create(pid));
-                } else {
-                    peers.blockUser(PID.create(pid));
-                }
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        });
-
-    }
-
-    @Override
-    public void clickUserInfo(@NonNull String pid) {
-        checkNotNull(pid);
-        try {
-            InfoDialogFragment.newInstance(pid,
-                    getString(R.string.peer_id),
-                    getString(R.string.peer_access, pid))
-                    .show(getSupportFragmentManager(), InfoDialogFragment.TAG);
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
-
-
-
-    @Override
-    public void clickUserConnect(@NonNull String pid) {
-        checkNotNull(pid);
-
-        if (!Network.isConnected(getApplicationContext())) {
-            EVENTS.getInstance(getApplicationContext()).postWarning(getString(R.string.offline_mode));
-        }
-
-        Service.connectUser(getApplicationContext(), pid, true);
-
-    }
-
-    @Override
-    public void clickUserEdit(@NonNull String pid) {
-
-        try {
-            FragmentManager fm = getSupportFragmentManager();
-            NameDialogFragment.newInstance(pid, getString(R.string.peer_name))
-                    .show(fm, NameDialogFragment.TAG);
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
@@ -961,80 +869,6 @@ public class MainActivity extends AppCompatActivity implements
 
 
     @Override
-    public void clickUserDetails(@NonNull String pid) {
-
-        // CHECKED
-        if (!Network.isConnected(getApplicationContext())) {
-            java.lang.Thread threadError = new java.lang.Thread(()
-                    -> EVENTS.getInstance(getApplicationContext()).warning(getString(R.string.offline_mode)));
-            threadError.start();
-        }
-
-
-        try {
-            final int timeout = Preferences.getConnectionTimeout(getApplicationContext());
-            final IPFS ipfs = IPFS.getInstance(getApplicationContext());
-            final EVENTS events = EVENTS.getInstance(getApplicationContext());
-            final PID host = IPFS.getPID(getApplicationContext());
-            checkNotNull(host);
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                PID peer = PID.create(pid);
-                try {
-
-                    String protocolVersion = "n.a.";
-                    String agentVersion = "n.a.";
-                    List<String> addresses = new ArrayList<>();
-
-
-                    PeerInfo info = ipfs.id(peer, timeout);
-
-                    if (info != null) {
-                        agentVersion = info.getAgentVersion();
-                        protocolVersion = info.getProtocolVersion();
-                        addresses = info.getMultiAddresses();
-                    }
-
-                    String html = "<html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
-                    if (Service.isNightNode(getApplicationContext())) {
-                        html = "<html><head><style>body { background-color: DarkSlateGray; color: white;}</style></head><body><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
-                    }
-
-                    html = html.concat("<div style=\"width: 80%;" +
-                            "  word-wrap:break-word;\">").concat(pid).concat("</div><br/>");
-
-                    html = html.concat("<div style=\"width: 80%;" +
-                            "  word-wrap:break-word;\">").concat("Protocol Version : ").concat(protocolVersion).concat("</div><br/>");
-
-                    html = html.concat("<ul>");
-
-                    for (String address : addresses) {
-                        html = html.concat("<li><div style=\"width: 80%;" +
-                                "  word-wrap:break-word;\">").concat(address).concat("</div></li>");
-                    }
-
-
-                    html = html.concat("</ul><br/></body><footer>Agent : <strong style=\"color:teal;\">" + agentVersion + "</strong></footer></html>");
-
-
-                    DetailsDialogFragment.newInstance(
-                            DetailsDialogFragment.Type.HTML, html).show(
-                            getSupportFragmentManager(),
-                            DetailsDialogFragment.TAG);
-                } catch (Throwable e) {
-                    events.exception(e);
-                }
-            });
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
-    }
-
-
-    @Override
     public void clickConnectPeer(@NonNull String pid) {
         checkNotNull(pid);
 
@@ -1087,80 +921,6 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    @Override
-    public void clickThreadInfo(long idx) {
-        try {
-            final EVENTS events = EVENTS.getInstance(getApplicationContext());
-            final THREADS threads = THREADS.getInstance(getApplicationContext());
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    CID cid = threads.getThreadContent(idx);
-                    checkNotNull(cid);
-                    String multihash = cid.getCid();
-
-                    InfoDialogFragment.newInstance(multihash,
-                            getString(R.string.content_id),
-                            getString(R.string.multi_hash_access, multihash))
-                            .show(getSupportFragmentManager(), InfoDialogFragment.TAG);
-
-
-                } catch (Throwable e) {
-                    events.exception(e);
-                }
-            });
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
-    }
-
-
-    @Override
-    public void clickThreadsSend(final long[] indices) {
-
-
-        // CHECKED
-        if (!Network.isConnected(getApplicationContext())) {
-            EVENTS.getInstance(getApplicationContext()).postWarning(
-                    getString(R.string.offline_mode));
-        }
-
-
-        final PEERS peers = PEERS.getInstance(getApplicationContext());
-        final EVENTS events = EVENTS.getInstance(getApplicationContext());
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                ArrayList<String> pids = Service.getInstance(getApplicationContext()).
-                        getEnhancedUserPIDs(getApplicationContext());
-
-                if (pids.isEmpty()) {
-                    events.error(getString(R.string.no_sharing_peers));
-                } else if (pids.size() == 1) {
-                    List<User> users = new ArrayList<>();
-                    users.add(peers.getUserByPID(PID.create(pids.get(0))));
-                    Service.getInstance(getApplicationContext()).sendThreads(
-                            getApplicationContext(), users, indices);
-                } else {
-                    FragmentManager fm = getSupportFragmentManager();
-                    SendDialogFragment dialogFragment = new SendDialogFragment();
-                    Bundle bundle = new Bundle();
-                    bundle.putLongArray(SendDialogFragment.IDXS, indices);
-                    bundle.putStringArrayList(SendDialogFragment.PIDS, pids);
-                    dialogFragment.setArguments(bundle);
-                    dialogFragment.show(fm, SendDialogFragment.TAG);
-                }
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        });
-
-
-    }
 
     @Override
     public void showBottomNavigation(boolean visible) {
@@ -1187,39 +947,6 @@ public class MainActivity extends AppCompatActivity implements
         mCustomViewPager.setPagingEnabled(enabled);
     }
 
-    @Override
-    public void clickThreadDelete(long idx) {
-        JobServiceDeleteThreads.removeThreads(getApplicationContext(), idx);
-    }
-
-    @Override
-    public void clickThreadView(long idx) {
-
-        final THREADS threads = THREADS.getInstance(getApplicationContext());
-        final EVENTS events = EVENTS.getInstance(getApplicationContext());
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-
-                CID cid = threads.getThreadContent(idx);
-                checkNotNull(cid);
-
-                JobServicePublish.publish(getApplicationContext(), cid, true);
-
-                String gateway = Service.getGateway(getApplicationContext());
-                Uri uri = Uri.parse(gateway + "/ipfs/" + cid.getCid());
-
-                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-
-            } catch (Throwable e) {
-                events.exception(e);
-            }
-        });
-
-    }
 
     public void storeText(@NonNull String text) {
         checkNotNull(text);
@@ -1347,127 +1074,12 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 
-    @Override
-    public void clickThreadShare(long idx) {
-        final EVENTS events = EVENTS.getInstance(getApplicationContext());
-        final THREADS threads = THREADS.getInstance(getApplicationContext());
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                Thread thread = threads.getThreadByIdx(idx);
-                checkNotNull(thread);
-                ComponentName[] names = {new ComponentName(
-                        getApplicationContext(), MainActivity.class)};
-                CID cid = thread.getContent();
-                checkNotNull(cid);
-                Uri uri = FileDocumentsProvider.getUriForBitmap(cid.getCid());
-                Intent intent = ShareCompat.IntentBuilder.from(this)
-                        .setStream(uri)
-                        .setType(thread.getMimeType())
-                        .getIntent();
-                intent.setAction(Intent.ACTION_SEND);
-                intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.content_id));
-                intent.putExtra(Intent.EXTRA_TEXT, getString(R.string.content_file_access,
-                        cid.getCid(), thread.getName()));
-                intent.setData(uri);
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                intent.putExtra(Intent.EXTRA_TITLE, thread.getName());
-
-
-                if (intent.resolveActivity(getPackageManager()) != null) {
-                    Intent chooser = Intent.createChooser(intent, getText(R.string.share));
-                    chooser.putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, names);
-                    startActivity(chooser);
-                } else {
-                    events.error(getString(R.string.no_activity_found_to_handle_uri));
-                }
-
-            } catch (Throwable e) {
-                events.exception(e);
-            }
-        });
-
-
-    }
-
-    @Override
-    public void clickThreadSend(long idx) {
-        long[] indices = {idx};
-        clickThreadsSend(indices);
-    }
-
-    @Override
-    public void clickThreadCopy(long idx) {
-
-        try {
-            final THREADS threadsAPI = THREADS.getInstance(getApplicationContext());
-            final EVENTS events = EVENTS.getInstance(getApplicationContext());
-
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-
-                Thread thread = threadsAPI.getThreadByIdx(idx);
-                checkNotNull(thread);
-
-                threadContent = thread.getContent();
-
-                Intent intent = ShareCompat.IntentBuilder.from(this).getIntent();
-                intent.setType(thread.getMimeType());
-                intent.setAction(Intent.ACTION_CREATE_DOCUMENT);
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                intent.putExtra(Intent.EXTRA_TITLE, thread.getName());
-                intent.putExtra(DocumentsContract.EXTRA_EXCLUDE_SELF, true);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-
-
-                if (intent.resolveActivity(getPackageManager()) != null) {
-                    startActivityForResult(intent, FILE_EXPORT_REQUEST_CODE);
-                } else {
-                    events.error(getString(R.string.no_activity_found_to_handle_uri));
-                }
-            });
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
-
-    }
-
 
     @Override
     public void dontShowAgain(@NonNull String key, boolean notShowAgain) {
         InitApplication.setDontShowAgain(this, key, notShowAgain);
     }
 
-    @Override
-    public void clickThreadPublish(long idx, boolean pinned) {
-
-        if (pinned) {
-            if (!InitApplication.getDontShowAgain(this, Service.PIN_SERVICE_KEY)) {
-                try {
-                    DontShowAgainFragmentDialog.newInstance(
-                            getString(R.string.pin_service_notice), Service.PIN_SERVICE_KEY).show(
-                            getSupportFragmentManager(), DontShowAgainFragmentDialog.TAG);
-
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-            }
-        }
-        final THREADS threads = THREADS.getInstance(getApplicationContext());
-        final EVENTS events = EVENTS.getInstance(getApplicationContext());
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                threads.setThreadPinned(idx, pinned);
-            } catch (Throwable e) {
-                events.exception(e);
-            }
-        });
-
-    }
 
     @Override
     public void name(@NonNull String pid, @NonNull String name) {
@@ -1508,7 +1120,15 @@ public class MainActivity extends AppCompatActivity implements
             JobServiceIdentity.identity(getApplicationContext());
             PID pid = IPFS.getPID(getApplicationContext());
             checkNotNull(pid);
-            clickUserInfo(pid.getPid());
+            try {
+                InfoDialogFragment.newInstance(pid.getPid(),
+                        getString(R.string.peer_id),
+                        getString(R.string.peer_access, pid.getPid()))
+                        .show(getSupportFragmentManager(), InfoDialogFragment.TAG);
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
