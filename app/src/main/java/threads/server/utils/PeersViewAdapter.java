@@ -65,22 +65,18 @@ public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.View
                         listener.invokeGeneralAction(peer, v)
                 );
 
+                int res = R.drawable.server_network;
 
                 if (peer.isRelay()) {
-                    peerViewHolder.user_alias.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            R.drawable.access_point, 0, 0, 0);
+                    res = R.drawable.access_point;
                 } else if (peer.isPubsub()) {
-                    peerViewHolder.user_alias.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            R.drawable.hubspot, 0, 0, 0);
-                } else {
-                    peerViewHolder.user_alias.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                            R.drawable.network_storage, 0, 0, 0);
+                    res = R.drawable.hubspot;
                 }
 
 
                 String name = peer.getAlias();
                 int color = ColorGenerator.MATERIAL.getColor(name);
-                peerViewHolder.user_image.setImageResource(R.drawable.server_network);
+                peerViewHolder.user_image.setImageResource(res);
                 peerViewHolder.user_image.setColorFilter(color);
 
 
