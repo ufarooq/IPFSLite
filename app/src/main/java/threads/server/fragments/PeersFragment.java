@@ -448,9 +448,9 @@ public class PeersFragment extends Fragment implements
         checkNotNull(user);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            PEERS.getInstance(mContext).setUserDialing(user.getPid(), false);
-        });
+        executor.submit(() ->
+                PEERS.getInstance(mContext).setUserDialing(user.getPid(), false)
+        );
         WorkManager.getInstance(mContext).cancelUniqueWork(
                 ConnectPeerWorker.WID + user.getPid());
 
