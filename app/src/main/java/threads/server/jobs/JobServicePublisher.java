@@ -21,7 +21,7 @@ import threads.ipfs.IPFS;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.GatewayService;
-import threads.server.services.Service;
+import threads.server.services.LiteService;
 import threads.server.work.BootstrapWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -33,7 +33,7 @@ public class JobServicePublisher extends JobService {
     public static void publish(@NonNull Context context) {
         checkNotNull(context);
 
-        int time = Service.getPublishServiceTime(context);
+        int time = LiteService.getPublishServiceTime(context);
 
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);

@@ -2,6 +2,7 @@ package threads.server.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,15 +24,13 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.ipfs.IPFS;
-import threads.ipfs.Multihash;
 import threads.ipfs.PID;
 import threads.server.R;
 import threads.server.core.events.EVENTS;
 import threads.server.core.peers.IPeer;
 import threads.server.core.peers.Peer;
 import threads.server.model.PeersViewModel;
-import threads.server.services.Service;
+import threads.server.services.LiteService;
 import threads.server.utils.Network;
 import threads.server.utils.PeersViewAdapter;
 import threads.server.work.BootstrapWorker;
@@ -43,10 +42,12 @@ public class SwarmFragment extends Fragment implements
         SwipeRefreshLayout.OnRefreshListener, PeersViewAdapter.PeersViewAdapterListener {
 
     public static final String TAG = SwarmFragment.class.getSimpleName();
+    private static final int CLICK_OFFSET = 500;
     private PeersViewAdapter peersViewAdapter;
     private Context mContext;
     private SwipeRefreshLayout mSwipeRefreshLayout;
     private SwarmFragment.ActionListener mListener;
+    private long mLastClickTime = 0;
 
     @Override
     public void onDetach() {
@@ -106,7 +107,7 @@ public class SwarmFragment extends Fragment implements
 
         LinearLayoutManager linearLayout = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(linearLayout);
-        peersViewAdapter = new PeersViewAdapter(mContext, this);
+        peersViewAdapter = new PeersViewAdapter(this);
         mRecyclerView.setAdapter(peersViewAdapter);
 
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -170,6 +171,12 @@ public class SwarmFragment extends Fragment implements
 
             menu.setOnMenuItemClickListener((item) -> {
 
+
+                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                    return true;
+                }
+
+                mLastClickTime = SystemClock.elapsedRealtime();
                 if (item.getItemId() == R.id.popup_info) {
                     clickPeerInfo(peer.getPID().getPid());
                     return true;
@@ -194,11 +201,6 @@ public class SwarmFragment extends Fragment implements
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
 
-    }
-
-    @Override
-    public boolean generalActionSupport(@NonNull IPeer peer) {
-        return !peer.isDialing();
     }
 
 
@@ -229,7 +231,7 @@ public class SwarmFragment extends Fragment implements
             executor.submit(() -> {
                 PID peer = PID.create(pid);
                 try {
-                    String html = Service.getDetailsReport(mContext, peer);
+                    String html = LiteService.getDetailsReport(mContext, peer);
 
 
                     DetailsDialogFragment.newInstance(
@@ -251,37 +253,13 @@ public class SwarmFragment extends Fragment implements
     private void clickPeerAdd(@NonNull String pid) {
         checkNotNull(pid);
 
-        // CHECKED if pid is valid
-        try {
-            Multihash.fromBase58(pid);
-        } catch (Throwable e) {
-            java.lang.Thread threadError = new java.lang.Thread(()
-                    -> EVENTS.getInstance(mContext).error(getString(R.string.multihash_not_valid)));
-            threadError.start();
-            return;
-        }
-
-        // CHECKED
-        PID host = IPFS.getPID(mContext);
-        PID user = PID.create(pid);
-
-        if (user.equals(host)) {
-
-            java.lang.Thread threadError = new java.lang.Thread(()
-                    -> EVENTS.getInstance(mContext).error(
-                    getString(R.string.same_pid_like_host)));
-            threadError.start();
-
-            return;
-        }
-
 
         try {
 
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    Service.connectPeer(mContext, user, true);
+                    LiteService.connectPeer(mContext, PID.create(pid), true);
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }

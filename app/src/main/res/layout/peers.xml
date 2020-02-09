@@ -13,12 +13,11 @@
 
     <ImageView
         android:id="@+id/user_image"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_gravity="center"
         android:layout_weight="0"
         android:background="@android:color/transparent"
-        android:padding="@dimen/threads_image_padding"
         tools:ignore="ContentDescription" />
 
     <TextView
@@ -32,14 +31,13 @@
 
     <ImageView
         android:id="@+id/user_action"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_gravity="center"
         android:background="@android:color/transparent"
         android:clickable="true"
         android:focusable="true"
-        android:padding="8dp"
-        android:scaleType="centerCrop"
+        android:scaleType="center"
         android:src="@drawable/dots"
         app:tint="?android:textColorSecondary"
         tools:ignore="ContentDescription" />

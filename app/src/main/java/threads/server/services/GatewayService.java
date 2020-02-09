@@ -35,7 +35,7 @@ public class GatewayService {
         List<threads.ipfs.Peer> peers = ipfs.swarmPeers();
 
         List<Long> latencies = new ArrayList<>();
-        int size = peers.size();
+
         for (threads.ipfs.Peer peer : peers) {
 
             long latency = peer.getLatency();
@@ -55,15 +55,10 @@ public class GatewayService {
                         !peer.isRelay() &&
                         !peer.isAutonat() &&
                         !peer.isPubsub()) {
-                    peersInstance.removePeer(ipfs, peer);
+                    peersInstance.removePeer(peer);
                 }
             }
         }
-
-        long latency = (long)
-                latencies.stream().mapToLong(val -> val).average().orElse(Long.MAX_VALUE);
-
-
     }
 
     public static int evaluatePeers(@NonNull Context context, boolean pubsubs) {
@@ -312,7 +307,7 @@ public class GatewayService {
                 } else {
                     if (Network.isConnected(context)) {
                         if (lifeTimeExpired(autonat)) {
-                            peersInstance.removePeer(ipfs, autonat);
+                            peersInstance.removePeer(autonat);
                         }
                     }
                 }
@@ -373,7 +368,7 @@ public class GatewayService {
                     if (Network.isConnected(context)) {
 
                         if (lifeTimeExpired(pubsub)) {
-                            peers1.removePeer(ipfs, pubsub);
+                            peers1.removePeer(pubsub);
                         }
                     }
                 }
@@ -436,7 +431,7 @@ public class GatewayService {
 
                     if (Network.isConnected(context)) {
                         if (lifeTimeExpired(relay)) {
-                            peers1.removePeer(ipfs, relay);
+                            peers1.removePeer(relay);
                         }
                     }
                 }
@@ -474,7 +469,7 @@ public class GatewayService {
 
                 if (!ipfs.swarmConnect(ma, timeout)) {
                     if (Network.isConnected(context)) {
-                        peers1.removePeer(ipfs, peer);
+                        peers1.removePeer(peer);
                     }
                 } else {
                     connected.add(peer);

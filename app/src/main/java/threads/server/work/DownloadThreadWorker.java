@@ -16,8 +16,6 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.google.gson.Gson;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,8 +23,6 @@ import java.util.Optional;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.LinkInfo;
-import threads.ipfs.PID;
-import threads.server.core.peers.Content;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 
@@ -37,15 +33,13 @@ public class DownloadThreadWorker extends Worker {
     public static final String WID = "DTW";
     private static final String TAG = DownloadThreadWorker.class.getSimpleName();
     private static final String IDX = "IDX";
-    private static final String REPLY = "REPLY";
-    private static final Gson gson = new Gson();
 
     public DownloadThreadWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
 
     }
 
-    public static void download(@NonNull Context context, long idx, boolean reply) {
+    public static void download(@NonNull Context context, long idx) {
         checkNotNull(context);
 
 
@@ -54,7 +48,6 @@ public class DownloadThreadWorker extends Worker {
 
 
         Data.Builder data = new Data.Builder();
-        data.putBoolean(REPLY, reply);
         data.putLong(IDX, idx);
 
         OneTimeWorkRequest syncWorkRequest =
@@ -74,7 +67,6 @@ public class DownloadThreadWorker extends Worker {
 
         THREADS threads = THREADS.getInstance(getApplicationContext());
 
-        boolean reply = getInputData().getBoolean(REPLY, false);
         long idx = getInputData().getLong(IDX, -1);
         checkArgument(idx >= 0);
 
@@ -92,9 +84,6 @@ public class DownloadThreadWorker extends Worker {
                 DownloadContentWorker.download(getApplicationContext(), cid,
                         thread.getIdx(), thread.getName(), thread.getSize());
 
-                if (reply) {
-                    replySender(thread.getSender(), thread);
-                }
 
             } else {
 
@@ -103,9 +92,6 @@ public class DownloadThreadWorker extends Worker {
                     threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
                 }
                 downloadLinks(thread, links);
-                if (reply) {
-                    replySender(thread.getSender(), thread);
-                }
 
             }
         }
@@ -163,8 +149,7 @@ public class DownloadThreadWorker extends Worker {
                 }
             } else {
 
-                long idx = createThread(thread.getSender(), thread.getSenderAlias(), cid,
-                        link, thread.getIdx());
+                long idx = createThread(cid, link, thread.getIdx());
                 entry = THREADS.getInstance(getApplicationContext()).getThreadByIdx(idx);
                 checkNotNull(entry);
 
@@ -177,7 +162,7 @@ public class DownloadThreadWorker extends Worker {
     private void downloadLink(@NonNull Thread thread, @NonNull LinkInfo link) {
 
         if (link.isDirectory()) {
-            DownloadThreadWorker.download(getApplicationContext(), thread.getIdx(), false);
+            DownloadThreadWorker.download(getApplicationContext(), thread.getIdx());
         } else {
             DownloadContentWorker.download(getApplicationContext(), link.getCid(),
                     thread.getIdx(), link.getName(), link.getSize());
@@ -185,18 +170,16 @@ public class DownloadThreadWorker extends Worker {
 
     }
 
-    private long createThread(@NonNull PID sender, @NonNull String alias,
-                              @NonNull CID cid, @NonNull LinkInfo link, long parent) {
+    private long createThread(@NonNull CID cid, @NonNull LinkInfo link, long parent) {
 
-        checkNotNull(sender);
-        checkNotNull(alias);
+
         checkNotNull(cid);
         checkNotNull(link);
 
 
         THREADS threads = THREADS.getInstance(getApplicationContext());
 
-        Thread thread = threads.createThread(sender, alias, parent);
+        Thread thread = threads.createThread(parent);
         thread.setContent(cid);
         String filename = link.getName();
         thread.setName(filename);
@@ -239,25 +222,5 @@ public class DownloadThreadWorker extends Worker {
         return null;
     }
 
-    private void replySender(@NonNull PID sender, @NonNull Thread thread) {
-        try {
-            IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
-            if (IPFS.isPubSubEnabled(getApplicationContext())) {
-                CID cid = thread.getContent();
-                checkNotNull(cid);
-
-                Content map = new Content();
-                map.put(Content.EST, "REPLY");
-                map.put(Content.CID, cid.getCid());
-
-
-                Log.w(TAG, "Send Pubsub Notification to PID :" + sender);
-
-                ipfs.pubSubPub(sender.getPid(), gson.toJson(map), 50);
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
 }

@@ -20,6 +20,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import threads.ipfs.IPFS;
@@ -226,22 +228,45 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
     }
 
+    @NonNull
+    public String getDate(@NonNull Date date) {
+        Calendar c = Calendar.getInstance();
+        c.set(Calendar.HOUR_OF_DAY, 0);
+        c.set(Calendar.MINUTE, 0);
+        c.set(Calendar.SECOND, 0);
+        c.set(Calendar.MILLISECOND, 0);
+        Date today = c.getTime();
+        c.set(Calendar.MONTH, 0);
+        c.set(Calendar.DAY_OF_MONTH, 0);
+        Date lastYear = c.getTime();
+
+        if (date.before(today)) {
+            if (date.before(lastYear)) {
+                return android.text.format.DateFormat.format("dd.MM.yyyy", date).toString();
+            } else {
+                return android.text.format.DateFormat.format("dd.MMMM", date).toString();
+            }
+        } else {
+            return "today " + android.text.format.DateFormat.format("HH:mm", date).toString();
+        }
+    }
 
     private String getInfo(Context context, Thread thread) {
-        String senderAlias = thread.getSenderAlias();
+        Date date = new Date(thread.getLastModified());
+        String dateInfo = getDate(date);
 
         String fileSize;
         long size = thread.getSize();
 
         if (size < 1024) {
             fileSize = String.valueOf(size);
-            return context.getString(R.string.link_format, senderAlias, fileSize);
+            return context.getString(R.string.link_format, dateInfo, fileSize);
         } else if (size < 1024 * 1024) {
             fileSize = String.valueOf((double) (size / 1024));
-            return context.getString(R.string.link_format_kb, senderAlias, fileSize);
+            return context.getString(R.string.link_format_kb, dateInfo, fileSize);
         } else {
             fileSize = String.valueOf((double) (size / (1024 * 1024)));
-            return context.getString(R.string.link_format_mb, senderAlias, fileSize);
+            return context.getString(R.string.link_format_mb, dateInfo, fileSize);
         }
     }
 

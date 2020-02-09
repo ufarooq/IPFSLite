@@ -25,7 +25,7 @@ public class SwarmService {
         final String tag = RandomStringUtils.randomAlphabetic(10);
         final int timeout = Preferences.getConnectionTimeout(context);
         final IPFS ipfs = IPFS.getInstance(context);
-        final boolean peerDiscovery = Service.isSupportPeerDiscovery(context);
+        final boolean peerDiscovery = LiteService.isSupportPeerDiscovery(context);
 
         ConnectInfo info = new ConnectInfo();
 

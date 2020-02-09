@@ -11,7 +11,6 @@ import androidx.room.TypeConverters;
 import java.util.Objects;
 
 import threads.ipfs.CID;
-import threads.ipfs.PID;
 import threads.server.core.Converter;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -22,35 +21,33 @@ public class Thread {
 
     @ColumnInfo(name = "parent")
     private final long parent; // checked
-
-    @NonNull
-    @TypeConverters(Converter.class)
-    @ColumnInfo(name = "sender")
-    private final PID sender; // checked
-
+    @PrimaryKey(autoGenerate = true)
+    private long idx; // checked
     @ColumnInfo(name = "lastModified")
     private long lastModified; // checked
 
-    @NonNull
-    @ColumnInfo(name = "senderAlias")
-    private String senderAlias; // checked
-    @PrimaryKey(autoGenerate = true)
-    private long idx; // checked
     @Nullable
     @ColumnInfo(name = "thumbnail")
     @TypeConverters(Converter.class)
     private CID thumbnail;  // checked
+
     @ColumnInfo(name = "progress")
     private int progress;  // checked
     @Nullable
     @TypeConverters(Converter.class)
     @ColumnInfo(name = "content")
     private CID content;  // checked
+
     @ColumnInfo(name = "size")
     private long size;  // checked
     @NonNull
     @ColumnInfo(name = "mimeType")
     private String mimeType;  // checked
+    @NonNull
+    @ColumnInfo(name = "name")
+    private String name = "";
+
+
     @ColumnInfo(name = "pinned")
     private boolean pinned; // checked
     @ColumnInfo(name = "publishing")
@@ -61,17 +58,10 @@ public class Thread {
     private boolean seeding; // checked
     @ColumnInfo(name = "deleting")
     private boolean deleting; // checked
-    @NonNull
-    @ColumnInfo(name = "name")
-    private String name = "";
 
 
-    Thread(@NonNull PID sender,
-           @NonNull String senderAlias,
-           long parent) {
+    Thread(long parent) {
         this.parent = parent;
-        this.sender = sender;
-        this.senderAlias = senderAlias;
         this.lastModified = System.currentTimeMillis();
         this.mimeType = "";
         this.pinned = false;
@@ -82,10 +72,8 @@ public class Thread {
         this.progress = 0;
     }
 
-    static Thread createThread(@NonNull PID senderPid, @NonNull String senderAlias, long parent) {
-        checkNotNull(senderPid);
-        checkNotNull(senderAlias);
-        return new Thread(senderPid, senderAlias, parent);
+    static Thread createThread(long parent) {
+        return new Thread(parent);
     }
 
     public boolean isLeaching() {
@@ -140,12 +128,6 @@ public class Thread {
         this.mimeType = mimeType;
     }
 
-    @NonNull
-    public PID getSender() {
-        return sender;
-    }
-
-
     public boolean sameContent(@NonNull Thread o) {
         checkNotNull(o);
         if (this == o) return true;
@@ -157,7 +139,6 @@ public class Thread {
                 deleting == o.isDeleting() &&
                 Objects.equals(mimeType, o.getMimeType()) &&
                 Objects.equals(content, o.getContent()) &&
-                Objects.equals(senderAlias, o.getSenderAlias()) &&
                 Objects.equals(thumbnail, o.getThumbnail()) &&
                 Objects.equals(lastModified, o.getLastModified());
     }
@@ -197,16 +178,6 @@ public class Thread {
 
     public void setContent(@Nullable CID content) {
         this.content = content;
-    }
-
-    @NonNull
-    public String getSenderAlias() {
-        return senderAlias;
-    }
-
-    public void setSenderAlias(@NonNull String senderAlias) {
-        checkNotNull(senderAlias);
-        this.senderAlias = senderAlias;
     }
 
     public long getParent() {

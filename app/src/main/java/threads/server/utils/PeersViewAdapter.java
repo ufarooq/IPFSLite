@@ -1,6 +1,5 @@
 package threads.server.utils;
 
-import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,12 +11,11 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
+import com.amulyakhare.textdrawable.util.ColorGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import threads.ipfs.IPFS;
 import threads.server.R;
 import threads.server.core.peers.IPeer;
 import threads.server.core.peers.Peer;
@@ -26,13 +24,11 @@ public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.View
 
     private static final String TAG = PeersViewAdapter.class.getSimpleName();
     private final List<Peer> peers = new ArrayList<>();
-    private final Context context;
+
     private final PeersViewAdapterListener listener;
 
 
-    public PeersViewAdapter(@NonNull Context context,
-                            @NonNull PeersViewAdapterListener listener) {
-        this.context = context;
+    public PeersViewAdapter(@NonNull PeersViewAdapterListener listener) {
         this.listener = listener;
     }
 
@@ -63,14 +59,11 @@ public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.View
 
             try {
 
-                if (listener.generalActionSupport(peer)) {
-                    peerViewHolder.user_action.setVisibility(View.VISIBLE);
-                    peerViewHolder.user_action.setOnClickListener((v) ->
-                            listener.invokeGeneralAction(peer, v)
-                    );
-                } else {
-                    peerViewHolder.user_action.setVisibility(View.GONE);
-                }
+
+                peerViewHolder.user_action.setVisibility(View.VISIBLE);
+                peerViewHolder.user_action.setOnClickListener((v) ->
+                        listener.invokeGeneralAction(peer, v)
+                );
 
 
                 if (peer.isRelay()) {
@@ -85,14 +78,11 @@ public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.View
                 }
 
 
-                if (peer.getImage() != null) {
-                    peerViewHolder.user_image.setVisibility(View.VISIBLE);
-                    IPFS ipfs = IPFS.getInstance(context);
-                    IPFSData data = IPFSData.create(ipfs, peer.getImage());
-                    Glide.with(context).load(data).into(peerViewHolder.user_image);
-                } else {
-                    peerViewHolder.user_image.setVisibility(View.GONE);
-                }
+                String name = peer.getAlias();
+                int color = ColorGenerator.MATERIAL.getColor(name);
+                peerViewHolder.user_image.setImageResource(R.drawable.server_network);
+                peerViewHolder.user_image.setColorFilter(color);
+
 
                 peerViewHolder.user_alias.setText(peer.getAlias());
 
@@ -125,8 +115,6 @@ public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.View
     public interface PeersViewAdapterListener {
 
         void invokeGeneralAction(@NonNull IPeer peer, @NonNull View view);
-
-        boolean generalActionSupport(@NonNull IPeer peer);
 
 
     }

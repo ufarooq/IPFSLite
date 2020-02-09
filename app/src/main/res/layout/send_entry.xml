@@ -9,10 +9,10 @@
 
     <ImageView
         android:id="@+id/account_icon"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:scaleType="center"
         android:layout_weight="0"
-        android:padding="8dp"
         tools:ignore="ContentDescription" />
 
     <TextView

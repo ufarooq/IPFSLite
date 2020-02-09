@@ -11,7 +11,6 @@ import androidx.room.TypeConverters;
 import java.util.List;
 
 import threads.ipfs.CID;
-import threads.ipfs.PID;
 import threads.server.core.Converter;
 
 @Dao
@@ -54,10 +53,6 @@ public interface ThreadDao {
 
     @Query("UPDATE Thread SET pinned = :pinned  WHERE idx = :idx")
     void setPinned(long idx, boolean pinned);
-
-    @Query("UPDATE Thread SET senderAlias = :alias  WHERE sender = :pid")
-    @TypeConverters(Converter.class)
-    void setSenderAlias(PID pid, String alias);
 
     @Query("SELECT * FROM Thread WHERE content = :content")
     @TypeConverters({Converter.class})

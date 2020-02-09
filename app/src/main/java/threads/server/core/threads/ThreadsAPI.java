@@ -12,7 +12,6 @@ import java.util.List;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
-import threads.ipfs.PID;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -66,13 +65,6 @@ public class ThreadsAPI {
     }
 
 
-    public void setThreadSenderAlias(@NonNull PID pid, @NonNull String alias) {
-        checkNotNull(pid);
-        checkNotNull(alias);
-        getThreadsDatabase().threadDao().setSenderAlias(pid, alias);
-    }
-
-
     public void setMimeType(@NonNull Thread thread, @NonNull String mimeType) {
         checkNotNull(thread);
         checkNotNull(mimeType);
@@ -85,14 +77,9 @@ public class ThreadsAPI {
     }
 
     @NonNull
-    public Thread createThread(@NonNull PID creatorPid,
-                               @NonNull String alias,
-                               long parent) {
-
-        checkNotNull(creatorPid);
-        checkNotNull(alias);
+    public Thread createThread(long parent) {
         checkArgument(parent >= 0);
-        return Thread.createThread(creatorPid, alias, parent);
+        return Thread.createThread(parent);
 
     }
 

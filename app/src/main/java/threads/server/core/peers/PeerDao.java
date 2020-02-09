@@ -7,13 +7,9 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
-import androidx.room.TypeConverters;
 import androidx.room.Update;
 
 import java.util.List;
-
-import threads.ipfs.CID;
-import threads.server.core.Converter;
 
 @Dao
 public interface PeerDao {
@@ -43,10 +39,6 @@ public interface PeerDao {
 
     @Query("SELECT * FROM Peer")
     LiveData<List<Peer>> getLiveDataPeers();
-
-    @Query("SELECT COUNT(pid) FROM Peer WHERE image =:cid")
-    @TypeConverters({Converter.class})
-    int references(CID cid);
 
     @Query("UPDATE Peer SET connected = 0")
     void resetPeersConnected();

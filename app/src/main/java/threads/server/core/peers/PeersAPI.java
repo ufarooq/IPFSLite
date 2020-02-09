@@ -55,13 +55,6 @@ public class PeersAPI {
     }
 
 
-    public void setImage(@NonNull User user, @NonNull CID image) {
-        checkNotNull(user);
-        checkNotNull(image);
-        getPeersDatabase().userDao().setImage(user.getPid(), image);
-    }
-
-
     public boolean isUserBlocked(@NonNull PID user) {
         checkNotNull(user);
         return isUserBlocked(user.getPid());
@@ -157,14 +150,13 @@ public class PeersAPI {
     @NonNull
     public User createUser(@NonNull PID pid,
                            @NonNull String publicKey,
-                           @NonNull String name,
-                           @Nullable CID image) {
+                           @NonNull String name) {
         checkNotNull(pid);
         checkNotNull(publicKey);
         checkNotNull(name);
         checkArgument(!pid.getPid().isEmpty());
 
-        return User.createUser(name, publicKey, pid, image);
+        return User.createUser(name, publicKey, pid);
     }
 
 
@@ -179,26 +171,6 @@ public class PeersAPI {
         checkNotNull(update);
         update.addAdditional(key, value, internal);
         updateUser(update);
-    }
-
-
-    public boolean isReferenced(@NonNull CID cid) {
-        checkNotNull(cid);
-        int counter = getPeersDatabase().peersDao().references(cid);
-        return counter > 0;
-    }
-
-
-    public void unpin(@NonNull IPFS ipfs, @Nullable CID cid) {
-        try {
-            if (cid != null) {
-                if (!isReferenced(cid)) {
-                    rm(ipfs, cid);
-                }
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
     }
 
 
@@ -295,12 +267,9 @@ public class PeersAPI {
     }
 
 
-    public void removeUser(@NonNull IPFS ipfs, @NonNull User user) {
+    public void removeUser(@NonNull User user) {
         checkNotNull(user);
         getPeersDatabase().userDao().removeUsers(user);
-
-        unpin(ipfs, user.getImage());
-
     }
 
 
@@ -381,9 +350,9 @@ public class PeersAPI {
     }
 
 
-    public void setUserDialing(@NonNull PID user, boolean dialing) {
-        checkNotNull(user);
-        getPeersDatabase().userDao().setUserDialing(user.getPid(), dialing);
+    public void setUserDialing(@NonNull String pid, boolean dialing) {
+        checkNotNull(pid);
+        getPeersDatabase().userDao().setUserDialing(pid, dialing);
     }
 
 
@@ -486,19 +455,6 @@ public class PeersAPI {
     }
 
 
-    public void setUserImage(@NonNull PID user, @NonNull CID image) {
-        checkNotNull(user);
-        checkNotNull(image);
-        setUserImage(user.getPid(), image);
-    }
-
-    public void setUserImage(@NonNull String pid, @NonNull CID image) {
-        checkNotNull(pid);
-        checkNotNull(image);
-        getPeersDatabase().userDao().setImage(pid, image);
-    }
-
-
     public void blockUser(@NonNull PID user) {
         checkNotNull(user);
         getPeersDatabase().userDao().setBlocked(user.getPid(), true);
@@ -570,11 +526,9 @@ public class PeersAPI {
         getPeersInfoDatabase().peersInfoDao().deletePeerInfo(peer);
     }
 
-    public void removePeer(@NonNull IPFS ipfs, @NonNull Peer peer) {
+    public void removePeer(@NonNull Peer peer) {
         checkNotNull(peer);
         getPeersDatabase().peersDao().deletePeer(peer);
-        unpin(ipfs, peer.getImage());
     }
-
 
 }

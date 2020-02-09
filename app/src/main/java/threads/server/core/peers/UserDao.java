@@ -6,13 +6,9 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
-import androidx.room.TypeConverters;
 import androidx.room.Update;
 
 import java.util.List;
-
-import threads.ipfs.CID;
-import threads.server.core.Converter;
 
 @Dao
 public interface UserDao {
@@ -42,10 +38,6 @@ public interface UserDao {
 
     @Query("UPDATE User SET publicKey = :publicKey WHERE pid = :pid")
     void setPublicKey(String pid, String publicKey);
-
-    @Query("UPDATE User SET image = :image WHERE pid = :pid")
-    @TypeConverters(Converter.class)
-    void setImage(String pid, CID image);
 
     @Query("SELECT publicKey FROM User WHERE pid = :pid ")
     String getPublicKey(String pid);

@@ -2,16 +2,12 @@ package threads.server.core.peers;
 
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.PrimaryKey;
-import androidx.room.TypeConverters;
 
 import java.util.Objects;
 
-import threads.ipfs.CID;
 import threads.ipfs.PID;
-import threads.server.core.Converter;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -34,13 +30,6 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
     private boolean isPubsub;
     @ColumnInfo(name = "rating")
     private int rating;
-    @NonNull
-    @ColumnInfo(name = "alias")
-    private String alias;
-    @Nullable
-    @ColumnInfo(name = "image")
-    @TypeConverters(Converter.class)
-    private CID image;
     @ColumnInfo(name = "connected")
     private boolean connected;
 
@@ -52,8 +41,6 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
         this.isAutonat = false;
         this.isPubsub = false;
         this.rating = 0;
-        this.alias = pid;
-        this.image = null;
         this.connected = false;
     }
 
@@ -80,20 +67,7 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
 
     @NonNull
     public String getAlias() {
-        return alias;
-    }
-
-    public void setAlias(@NonNull String alias) {
-        this.alias = alias;
-    }
-
-    @Nullable
-    public CID getImage() {
-        return image;
-    }
-
-    public void setImage(@Nullable CID image) {
-        this.image = image;
+        return pid;
     }
 
     public boolean isPubsub() {
@@ -193,10 +167,7 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
     public boolean sameContent(@NonNull Peer peer) {
         checkNotNull(peer);
         if (this == peer) return true;
-        return Objects.equals(connected, peer.isConnected()) &&
-                Objects.equals(alias, peer.getAlias()) &&
-                Objects.equals(true, peer.isBlocked()) &&
-                Objects.equals(image, peer.getImage());
+        return Objects.equals(connected, peer.isConnected());
     }
 
 

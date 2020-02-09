@@ -17,7 +17,7 @@
 
     <item
         android:id="@+id/popup_add"
-        android:icon="@drawable/peer_add"
+        android:icon="@drawable/account_plus"
         android:title="@string/action_peer_add"
         app:iconTint="?android:textColorSecondary" />
 

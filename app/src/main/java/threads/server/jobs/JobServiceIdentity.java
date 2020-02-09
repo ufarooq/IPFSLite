@@ -19,7 +19,7 @@ import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.server.core.peers.Content;
 import threads.server.services.IdentityService;
-import threads.server.services.Service;
+import threads.server.services.LiteService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -50,7 +50,7 @@ public class JobServiceIdentity extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
         boolean peerDiscovery =
-                Service.isSupportPeerDiscovery(getApplicationContext());
+                LiteService.isSupportPeerDiscovery(getApplicationContext());
         if (!peerDiscovery) {
             return false;
         }
@@ -71,7 +71,7 @@ public class JobServiceIdentity extends JobService {
                 params.put(Content.ALIAS, alias);
 
 
-                IdentityService.publishIdentity(getApplicationContext(), params, Service.RELAYS);
+                IdentityService.publishIdentity(getApplicationContext(), params, LiteService.RELAYS);
 
 
             } catch (Throwable e) {

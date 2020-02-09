@@ -5,7 +5,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.Constraints;
-import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
@@ -23,38 +22,31 @@ import threads.server.services.SwarmService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class AutoConnectWorker extends Worker {
+public class ConnectPeersWorker extends Worker {
 
 
-    private static final String TAG = AutoConnectWorker.class.getSimpleName();
-    private static final String DIALING = "DIALING";
+    private static final String TAG = ConnectPeersWorker.class.getSimpleName();
 
 
-    public AutoConnectWorker(@NonNull Context context, @NonNull WorkerParameters params) {
+    public ConnectPeersWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
     }
 
-    public static void autoConnect(@NonNull Context context,
-                                   boolean showDialing,
-                                   int secondsDelay) {
+    public static void connect(@NonNull Context context, int secondsDelay) {
         checkNotNull(context);
         Constraints.Builder builder = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED);
 
 
-        Data.Builder data = new Data.Builder();
-        data.putBoolean(DIALING, showDialing);
-
         OneTimeWorkRequest syncWorkRequest =
-                new OneTimeWorkRequest.Builder(AutoConnectWorker.class)
+                new OneTimeWorkRequest.Builder(ConnectPeersWorker.class)
                         .setInitialDelay(secondsDelay, TimeUnit.SECONDS)
-                        .setInputData(data.build())
-                        .addTag("AutoConnectTag")
+                        .addTag(TAG)
                         .setConstraints(builder.build())
                         .build();
 
         WorkManager.getInstance(context).enqueueUniqueWork(
-                "AutoConnect", ExistingWorkPolicy.KEEP, syncWorkRequest);
+                TAG, ExistingWorkPolicy.KEEP, syncWorkRequest);
 
 
     }
@@ -63,13 +55,11 @@ public class AutoConnectWorker extends Worker {
     @NonNull
     @Override
     public Result doWork() {
-        final PEERS peers = PEERS.getInstance(getApplicationContext());
-
-        boolean dialing = getInputData().getBoolean(DIALING, true);
 
         long start = System.currentTimeMillis();
 
         try {
+            PEERS peers = PEERS.getInstance(getApplicationContext());
             IPFS ipfs = IPFS.getInstance(getApplicationContext());
             checkNotNull(ipfs, "IPFS not defined");
 
@@ -78,9 +68,6 @@ public class AutoConnectWorker extends Worker {
             for (User user : users) {
 
                 if (!user.isBlocked()) {
-                    if (dialing) {
-                        peers.setUserDialing(user.getPID(), true);
-                    }
 
                     ipfs.addPubSubTopic(
                             getApplicationContext(), user.getPID().getPid());
@@ -90,9 +77,7 @@ public class AutoConnectWorker extends Worker {
                             getApplicationContext(), user.getPID());
 
                     peers.setUserConnected(user.getPID(), info.isConnected());
-                    if (dialing) {
-                        peers.setUserDialing(user.getPID(), false);
-                    }
+
                 }
             }
 

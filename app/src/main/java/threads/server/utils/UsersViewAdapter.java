@@ -16,12 +16,11 @@ import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
+import com.amulyakhare.textdrawable.util.ColorGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import threads.ipfs.IPFS;
 import threads.server.R;
 import threads.server.core.peers.User;
 
@@ -100,21 +99,25 @@ public class UsersViewAdapter extends
                         userViewHolder.user_action.setVisibility(View.VISIBLE);
                         userViewHolder.user_action.setImageResource(R.drawable.checkbox_blank_circle_outline);
                     }
-                    userViewHolder.progress_bar.setVisibility(View.GONE);
+                    userViewHolder.progress_bar.setVisibility(View.INVISIBLE);
                 } else {
-                    if (listener.generalActionSupport(user)) {
+                    if (user.isDialing()) {
+                        userViewHolder.user_action.setImageResource(R.drawable.pause);
+                        userViewHolder.user_action.setVisibility(View.VISIBLE);
+                        userViewHolder.user_action.setOnClickListener((v) ->
+                                listener.invokeAbortDialing(user)
+                        );
+                    } else {
                         userViewHolder.user_action.setImageResource(R.drawable.dots);
                         userViewHolder.user_action.setVisibility(View.VISIBLE);
                         userViewHolder.user_action.setOnClickListener((v) ->
                                 listener.invokeGeneralAction(user, v)
                         );
-                    } else {
-                        userViewHolder.user_action.setVisibility(View.INVISIBLE);
                     }
                 }
 
                 if (user.isBlocked()) {
-                    userViewHolder.progress_bar.setVisibility(View.GONE);
+                    userViewHolder.progress_bar.setVisibility(View.INVISIBLE);
                     userViewHolder.user_alias.setCompoundDrawablesRelativeWithIntrinsicBounds(
                             R.drawable.blocked, 0, 0, 0);
                 } else if (user.isDialing()) {
@@ -122,24 +125,19 @@ public class UsersViewAdapter extends
                     userViewHolder.user_alias.setCompoundDrawablesRelativeWithIntrinsicBounds(
                             R.drawable.text_lan_pending, 0, 0, 0);
                 } else if (user.isConnected()) {
-                    userViewHolder.progress_bar.setVisibility(View.GONE);
+                    userViewHolder.progress_bar.setVisibility(View.INVISIBLE);
                     userViewHolder.user_alias.setCompoundDrawablesRelativeWithIntrinsicBounds(
                             R.drawable.green_bubble, 0, 0, 0);
                 } else {
-                    userViewHolder.progress_bar.setVisibility(View.GONE);
+                    userViewHolder.progress_bar.setVisibility(View.INVISIBLE);
                     userViewHolder.user_alias.setCompoundDrawablesRelativeWithIntrinsicBounds(
                             R.drawable.record, 0, 0, 0);
                 }
 
-
-                if (user.getImage() != null) {
-                    userViewHolder.user_image.setVisibility(View.VISIBLE);
-                    IPFS ipfs = IPFS.getInstance(context);
-                    IPFSData data = IPFSData.create(ipfs, user.getImage());
-                    Glide.with(context).load(data).into(userViewHolder.user_image);
-                } else {
-                    userViewHolder.user_image.setVisibility(View.GONE);
-                }
+                String name = user.getAlias();
+                int color = ColorGenerator.MATERIAL.getColor(name);
+                userViewHolder.user_image.setImageResource(R.drawable.server_network);
+                userViewHolder.user_image.setColorFilter(color);
 
                 userViewHolder.user_alias.setText(user.getAlias());
 
@@ -199,9 +197,7 @@ public class UsersViewAdapter extends
 
         void invokeGeneralAction(@NonNull User user, @NonNull View view);
 
-        boolean generalActionSupport(@NonNull User user);
-
-
+        void invokeAbortDialing(@NonNull User user);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

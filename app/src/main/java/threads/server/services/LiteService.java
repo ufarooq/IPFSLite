@@ -59,11 +59,11 @@ import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 
-public class Service {
+public class LiteService {
 
     public static final int RELAYS = 5;
     public static final String PIN_SERVICE_KEY = "pinServiceKey";
-    private static final String TAG = Service.class.getSimpleName();
+    private static final String TAG = LiteService.class.getSimpleName();
     private static final Gson gson = new Gson();
     private static final String APP_KEY = "AppKey";
     private static final String PIN_SERVICE_TIME_KEY = "pinServiceTimeKey";
@@ -72,9 +72,9 @@ public class Service {
     private static final String SEND_NOTIFICATIONS_ENABLED_KEY = "sendNotificationKey";
     private static final String RECEIVE_NOTIFICATIONS_ENABLED_KEY = "receiveNotificationKey";
     private static final String SUPPORT_PEER_DISCOVERY_KEY = "supportPeerDiscoveryKey";
-    private static Service INSTANCE = null;
+    private static LiteService INSTANCE = null;
 
-    private Service() {
+    private LiteService() {
     }
 
     public static boolean isSupportPeerDiscovery(@NonNull Context context) {
@@ -174,14 +174,14 @@ public class Service {
     }
 
     @NonNull
-    public static Service getInstance(@NonNull Context context) {
+    public static LiteService getInstance(@NonNull Context context) {
         checkNotNull(context);
         if (INSTANCE == null) {
 
-            synchronized (Service.class) {
+            synchronized (LiteService.class) {
 
                 if (INSTANCE == null) {
-                    INSTANCE = new Service();
+                    INSTANCE = new LiteService();
                     INSTANCE.attachHandler(context);
                     INSTANCE.init(context);
                 }
@@ -266,7 +266,7 @@ public class Service {
     }
 
 
-    public static void createUnknownUser(@NonNull Context context, @NonNull PID pid) throws Exception {
+    public static void createUnknownUser(@NonNull Context context, @NonNull PID pid) {
         checkNotNull(context);
         checkNotNull(pid);
 
@@ -287,12 +287,7 @@ public class Service {
                         if (peerInfo != null) {
                             String alias = peerInfo.getAdditionalValue(Content.ALIAS);
                             if (!alias.isEmpty()) {
-                                CID image = ThumbnailService.getImage(
-                                        context,
-                                        alias,
-                                        R.drawable.server_network);
-
-                                User user = peers.createUser(pid, pubKey, alias, image);
+                                User user = peers.createUser(pid, pubKey, alias);
                                 user.setBlocked(true);
                                 peers.storeUser(user);
                             }
@@ -303,9 +298,8 @@ public class Service {
         }
     }
 
-    public static void connectPeer(@NonNull Context context,
-                                   @NonNull PID user,
-                                   boolean addMessage) throws Exception {
+    // todo check if optimize
+    public static void connectPeer(@NonNull Context context, @NonNull PID user, boolean addMessage) {
         checkNotNull(context);
         checkNotNull(user);
 
@@ -319,10 +313,8 @@ public class Service {
             String alias = user.getPid();
 
             checkNotNull(ipfs, "IPFS is not valid");
-            CID image = ThumbnailService.getImage(
-                    context, alias, R.drawable.server_network);
-
-            User newUser = peers.createUser(user, "", alias, image);
+            // todo public key
+            User newUser = peers.createUser(user, "", alias);
             peers.storeUser(newUser);
 
             if (addMessage) {
@@ -338,7 +330,7 @@ public class Service {
 
 
         try {
-            peers.setUserDialing(user, true);
+            peers.setUserDialing(user.getPid(), true);
 
             SwarmService.ConnectInfo info = SwarmService.connect(context, user);
             peers.setUserConnected(user, info.isConnected());
@@ -379,7 +371,7 @@ public class Service {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
             peers.setUserConnected(user, false);
         } finally {
-            peers.setUserDialing(user, false);
+            peers.setUserDialing(user.getPid(), false);
         }
     }
 
@@ -417,12 +409,8 @@ public class Service {
             checkNotNull(sender);
 
 
-            CID image = ThumbnailService.getImage(
-                    context, alias, R.drawable.server_network);
-
             sender.setPublicKey(pubKey);
             sender.setAlias(alias);
-            sender.setImage(image);
 
             peers.storeUser(sender);
 
@@ -454,11 +442,7 @@ public class Service {
             User sender = peers.getUserByPID(senderPid);
             if (sender == null) {
 
-                // create a new user which is blocked (User has to unblock and verified the user)
-                CID image = ThumbnailService.getImage(
-                        context, alias, R.drawable.server_network);
-
-                sender = peers.createUser(senderPid, pubKey, alias, image);
+                sender = peers.createUser(senderPid, pubKey, alias);
                 sender.setBlocked(true);
 
                 peers.storeUser(sender);
@@ -483,30 +467,6 @@ public class Service {
             }
 
 
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
-
-    public static void replySender(@NonNull Context context,
-                                   @NonNull PID sender,
-                                   @NonNull Thread thread) {
-        try {
-            IPFS ipfs = IPFS.getInstance(context);
-
-            if (IPFS.isPubSubEnabled(context)) {
-                CID cid = thread.getContent();
-                checkNotNull(cid);
-
-                Content map = new Content();
-                map.put(Content.EST, "REPLY");
-                map.put(Content.CID, cid.getCid());
-
-
-                Log.w(TAG, "Send Pubsub Notification to PID :" + sender);
-
-                ipfs.pubSubPub(sender.getPid(), gson.toJson(map), 50);
-            }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -550,21 +510,18 @@ public class Service {
     }
 
     public static long createThread(@NonNull Context context,
-                                    @NonNull PID sender,
-                                    @NonNull String alias,
                                     @NonNull CID cid,
                                     @Nullable String filename,
                                     long fileSize,
                                     @Nullable String mimeType) {
 
         checkNotNull(context);
-        checkNotNull(sender);
         checkNotNull(cid);
 
 
         final THREADS threads = THREADS.getInstance(context);
 
-        Thread thread = threads.createThread(sender, alias, 0L);
+        Thread thread = threads.createThread(0L);
         thread.setContent(cid);
 
 
@@ -588,64 +545,6 @@ public class Service {
         thread.setSize(fileSize);
 
         return threads.storeThread(thread);
-    }
-
-
-    public static void connectUser(@NonNull Context context, @NonNull String pid,
-                                   boolean issueWarning) {
-        checkNotNull(context);
-        checkNotNull(pid);
-        try {
-
-            final PEERS peers = PEERS.getInstance(context);
-            final EVENTS events = EVENTS.getInstance(context);
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-
-                    PID user = PID.create(pid);
-
-                    if (peers.isUserBlocked(user)) {
-                        if (issueWarning) {
-                            events.invokeEvent(EVENTS.WARNING,
-                                    context.getString(R.string.peer_is_blocked));
-                        }
-                    } else {
-
-                        try {
-                            peers.setUserDialing(user, true);
-
-
-                            SwarmService.ConnectInfo info = SwarmService.connect(context, user);
-
-                            peers.setUserConnected(user, info.isConnected());
-
-                            if (info.isConnected()) {
-                                String publicKey = peers.getUserPublicKey(pid);
-                                checkNotNull(publicKey);
-                                if (publicKey.isEmpty()) {
-                                    JobServiceLoadPublicKey.publicKey(context, pid);
-                                }
-                            }
-
-
-                        } catch (Throwable e) {
-                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                            peers.setUserConnected(user, false);
-                        } finally {
-                            peers.setUserDialing(user, false);
-                        }
-                    }
-                } catch (Throwable e) {
-                    events.exception(e);
-                }
-            });
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
-
     }
 
 
@@ -684,21 +583,19 @@ public class Service {
         checkNotNull(context);
         checkNotNull(pid);
         try {
-            final IPFS ipfs = IPFS.getInstance(context);
             final PEERS peers = PEERS.getInstance(context);
-            final EVENTS events = EVENTS.getInstance(context);
 
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
-                    checkNotNull(ipfs, "IPFS is not valid");
+                    // todo make faster
                     User user = peers.getUserByPID(PID.create(pid));
                     if (user != null) {
-                        peers.removeUser(ipfs, user);
+                        peers.removeUser(user);
                     }
 
                 } catch (Throwable e) {
-                    events.exception(e);
+                    EVENTS.getInstance(context).exception(e);
                 }
             });
         } catch (Throwable e) {
@@ -722,7 +619,7 @@ public class Service {
         }
 
         String html = "<html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
-        if (Service.isNightNode(context)) {
+        if (LiteService.isNightNode(context)) {
             html = "<html><head><style>body { background-color: DarkSlateGray; color: white;}</style></head><body><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
         }
 
@@ -780,7 +677,7 @@ public class Service {
             boolean success = false;
             if (!user.isBlocked()) {
 
-                success = Service.notify(
+                success = LiteService.notify(
                         context, user.getPID().getPid(), cid.getCid(), start);
             }
             // just backup
@@ -889,7 +786,7 @@ public class Service {
 
         new java.lang.Thread(() -> {
             try {
-                Service.cleanStates(context);
+                LiteService.cleanStates(context);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
@@ -924,7 +821,7 @@ public class Service {
                                     senderPid, CID.create(result.getMultihash()));
                         } else if (result.getCodex() == CodecDecider.Codec.URI) {
                             JobServiceDownload.download(context,
-                                    senderPid, CID.create(result.getMultihash()));
+                                    CID.create(result.getMultihash()));
 
                         } else if (result.getCodex() == CodecDecider.Codec.CONTENT) {
                             Content content = result.getContent();

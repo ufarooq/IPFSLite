@@ -1,16 +1,12 @@
 package threads.server.core.peers;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.PrimaryKey;
-import androidx.room.TypeConverters;
 
 import java.util.Objects;
 
-import threads.ipfs.CID;
 import threads.ipfs.PID;
-import threads.server.core.Converter;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -30,10 +26,6 @@ public class User extends Basis implements IPeer {
 
     @ColumnInfo(name = "connected")
     private boolean connected;
-    @Nullable
-    @ColumnInfo(name = "image")
-    @TypeConverters(Converter.class)
-    private CID image;
     @ColumnInfo(name = "blocked")
     private boolean blocked;
     @ColumnInfo(name = "dialing")
@@ -41,12 +33,10 @@ public class User extends Basis implements IPeer {
 
     User(@NonNull String alias,
          @NonNull String publicKey,
-         @NonNull String pid,
-         @Nullable CID image) {
+         @NonNull String pid) {
         this.alias = alias;
         this.publicKey = publicKey;
         this.pid = pid;
-        this.image = image;
         this.blocked = false;
         this.dialing = false;
         this.connected = false;
@@ -55,12 +45,11 @@ public class User extends Basis implements IPeer {
     @NonNull
     public static User createUser(@NonNull String alias,
                                   @NonNull String publicKey,
-                                  @NonNull PID pid,
-                                  @Nullable CID image) {
+                                  @NonNull PID pid) {
         checkNotNull(alias);
         checkNotNull(publicKey);
         checkNotNull(pid);
-        return new User(alias, publicKey, pid.getPid(), image);
+        return new User(alias, publicKey, pid.getPid());
     }
 
     @Override
@@ -113,17 +102,6 @@ public class User extends Basis implements IPeer {
         this.publicKey = publicKey;
     }
 
-    @Nullable
-    public CID getImage() {
-        return image;
-    }
-
-
-    public void setImage(@Nullable CID image) {
-        this.image = image;
-    }
-
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -150,7 +128,6 @@ public class User extends Basis implements IPeer {
                 Objects.equals(dialing, user.isDialing()) &&
                 Objects.equals(alias, user.getAlias()) &&
                 Objects.equals(blocked, user.isBlocked()) &&
-                Objects.equals(image, user.getImage()) &&
                 Objects.equals(publicKey, user.getPublicKey());
     }
 

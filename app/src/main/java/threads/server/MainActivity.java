@@ -72,8 +72,7 @@ import threads.server.model.EventViewModel;
 import threads.server.model.SelectionViewModel;
 import threads.server.provider.FileDocumentsProvider;
 import threads.server.services.DaemonService;
-import threads.server.services.Service;
-import threads.server.services.ThumbnailService;
+import threads.server.services.LiteService;
 import threads.server.services.UploadService;
 import threads.server.utils.CodecDecider;
 import threads.server.utils.CustomViewPager;
@@ -221,18 +220,11 @@ public class MainActivity extends AppCompatActivity implements
             if (codecDecider.getCodex() == CodecDecider.Codec.MULTIHASH ||
                     codecDecider.getCodex() == CodecDecider.Codec.URI) {
 
-                PID host = IPFS.getPID(getApplicationContext());
-                checkNotNull(host);
                 String multihash = codecDecider.getMultihash();
                 BootstrapWorker.bootstrap(getApplicationContext());
-                JobServiceDownload.download(getApplicationContext(),
-                        host, CID.create(multihash));
+                JobServiceDownload.download(getApplicationContext(), CID.create(multihash));
             } else {
-                java.lang.Thread threadError = new java.lang.Thread(()
-                        -> EVENTS.getInstance(getApplicationContext()).error(
-                        getString(R.string.codec_not_supported)));
-                threadError.start();
-
+                EVENTS.getInstance(getApplicationContext()).postError(getString(R.string.codec_not_supported));
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -409,10 +401,10 @@ public class MainActivity extends AppCompatActivity implements
                 try {
 
                     String data;
-                    if (Service.isNightNode(getApplicationContext())) {
-                        data = Service.loadRawData(getApplicationContext(), R.raw.privacy_policy_night);
+                    if (LiteService.isNightNode(getApplicationContext())) {
+                        data = LiteService.loadRawData(getApplicationContext(), R.raw.privacy_policy_night);
                     } else {
-                        data = Service.loadRawData(getApplicationContext(), R.raw.privacy_policy);
+                        data = LiteService.loadRawData(getApplicationContext(), R.raw.privacy_policy);
                     }
 
                     WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.HTML, data)
@@ -483,7 +475,7 @@ public class MainActivity extends AppCompatActivity implements
 
                     String data = "<!doctype html><html><h2>Config</h2><pre>" + ipfs.config_show() + "</pre></html>";
 
-                    if (Service.isNightNode(getApplicationContext())) {
+                    if (LiteService.isNightNode(getApplicationContext())) {
                         data = "<!doctype html><html><head><style>body { background-color: DarkSlateGray; color: white; }</style></head><h2>Config</h2><pre>" + ipfs.config_show() + "</pre></html>";
                     }
 
@@ -501,7 +493,7 @@ public class MainActivity extends AppCompatActivity implements
                     PID pid = IPFS.getPID(this);
                     checkNotNull(pid);
                     String address = AddressType.getAddress(pid, AddressType.NOTIFICATION);
-                    Uri uri = Uri.parse(Service.getAddressLink(address));
+                    Uri uri = Uri.parse(LiteService.getAddressLink(address));
 
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -519,7 +511,7 @@ public class MainActivity extends AppCompatActivity implements
                     PID pid = IPFS.getPID(this);
                     checkNotNull(pid);
                     String address = AddressType.getAddress(pid, AddressType.PEER);
-                    Uri uri = Uri.parse(Service.getAddressLink(address));
+                    Uri uri = Uri.parse(LiteService.getAddressLink(address));
 
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -588,7 +580,7 @@ public class MainActivity extends AppCompatActivity implements
         setSupportActionBar(mToolbar);
         mToolbar.setSubtitle(R.string.files);
 
-        Service.getInstance(getApplicationContext());
+        LiteService.getInstance(getApplicationContext());
 
         mMainFab = findViewById(R.id.fab_main);
         if (isTablet) {
@@ -786,7 +778,7 @@ public class MainActivity extends AppCompatActivity implements
             switch (id) {
                 case R.id.navigation_files:
                     if (mSelectionViewModel.isTopLevel()) {
-                        mMainFab.setImageResource(R.drawable.upload);
+                        mMainFab.setImageResource(R.drawable.plus_thick);
                     } else {
                         mMainFab.setImageResource(R.drawable.arrow_left_bold);
                     }
@@ -796,7 +788,7 @@ public class MainActivity extends AppCompatActivity implements
 
                     break;
                 case R.id.navigation_peers:
-                    mMainFab.setImageResource(R.drawable.scan_code);
+                    mMainFab.setImageResource(R.drawable.account_plus);
                     mMainFab.setBackgroundTintList(
                             ContextCompat.getColorStateList(getApplicationContext(), R.color.colorAccent));
                     break;
@@ -903,7 +895,7 @@ public class MainActivity extends AppCompatActivity implements
             executor.submit(() -> {
                 try {
                     BootstrapWorker.bootstrap(getApplicationContext());
-                    Service.connectPeer(getApplicationContext(), user, false);
+                    LiteService.connectPeer(getApplicationContext(), user, false);
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
@@ -954,14 +946,12 @@ public class MainActivity extends AppCompatActivity implements
 
                 PID pid = IPFS.getPID(getApplicationContext());
                 checkNotNull(pid);
-                String alias = IPFS.getDeviceName();
-                checkNotNull(alias);
 
                 String mimeType = MimeType.PLAIN_MIME_TYPE;
 
                 long size = text.length();
 
-                Thread thread = threads.createThread(pid, alias, 0L);
+                Thread thread = threads.createThread(0L);
                 thread.setSize(size);
                 thread.setMimeType(mimeType);
                 long idx = threads.storeThread(thread);
@@ -1037,14 +1027,12 @@ public class MainActivity extends AppCompatActivity implements
                 if ("text/plain".equals(type)) {
                     String text = intentReader.getText().toString();
                     if (!text.isEmpty()) {
-                        PID host = IPFS.getPID(getApplicationContext());
-                        checkNotNull(host);
                         CodecDecider result = CodecDecider.evaluate(text);
 
                         if (result.getCodex() == CodecDecider.Codec.MULTIHASH ||
                                 result.getCodex() == CodecDecider.Codec.URI) {
                             JobServiceDownload.download(getApplicationContext(),
-                                    host, CID.create(result.getMultihash()));
+                                    CID.create(result.getMultihash()));
 
                         } else {
                             storeText(text);
@@ -1079,27 +1067,12 @@ public class MainActivity extends AppCompatActivity implements
         checkNotNull(pid);
         checkNotNull(name);
 
-        final THREADS threads = THREADS.getInstance(getApplicationContext());
-        final PEERS peers = PEERS.getInstance(getApplicationContext());
-        final EVENTS events = EVENTS.getInstance(getApplicationContext());
-
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-
-                PID user = PID.create(pid);
-
-                CID image = ThumbnailService.getImage(getApplicationContext(),
-                        name, R.drawable.server_network);
-                peers.setUserImage(user, image);
-
-                peers.setUserAlias(user, name);
-
-
-                threads.setThreadSenderAlias(user, name);
-
+                PEERS.getInstance(getApplicationContext()).setUserAlias(pid, name);
             } catch (Throwable e) {
-                events.exception(e);
+                EVENTS.getInstance(getApplicationContext()).exception(e);
             }
         });
 

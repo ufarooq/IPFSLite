@@ -4,7 +4,7 @@
 
     <item
         android:id="@+id/action_scan_pid"
-        android:icon="@drawable/scan_code"
+        android:icon="@drawable/account_plus"
         android:orderInCategory="3"
         android:title="@string/action_scan_peer"
         app:iconTint="?android:textColorSecondary"

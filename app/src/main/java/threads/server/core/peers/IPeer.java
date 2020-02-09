@@ -1,9 +1,7 @@
 package threads.server.core.peers;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import threads.ipfs.CID;
 import threads.ipfs.PID;
 
 public interface IPeer {
@@ -15,9 +13,6 @@ public interface IPeer {
 
     @NonNull
     String getAlias();
-
-    @Nullable
-    CID getImage();
 
     boolean isConnected();
 

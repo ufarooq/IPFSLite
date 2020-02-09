@@ -33,7 +33,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
-import threads.ipfs.PID;
 import threads.server.R;
 import threads.server.core.events.EVENTS;
 import threads.server.core.threads.THREADS;
@@ -239,11 +238,6 @@ public class UploadService extends Service {
                         getContentResolver().openInputStream(uri);
                 checkNotNull(inputStream);
 
-                PID pid = IPFS.getPID(getApplicationContext());
-                checkNotNull(pid);
-                String alias = IPFS.getDeviceName();
-                checkNotNull(alias);
-
                 ThumbnailService.FileDetails fileDetails =
                         ThumbnailService.getFileDetails(getApplicationContext(), uri);
                 checkNotNull(fileDetails);
@@ -254,7 +248,7 @@ public class UploadService extends Service {
 
                 buildNotification(name);
 
-                Thread thread = threads.createThread(pid, alias, 0L);
+                Thread thread = threads.createThread(0L);
                 thread.setPublishing(true);
                 thread.setName(name);
                 thread.setSize(size);

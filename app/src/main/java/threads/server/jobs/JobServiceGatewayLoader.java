@@ -23,7 +23,7 @@ import threads.ipfs.CID;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.GatewayService;
-import threads.server.services.Service;
+import threads.server.services.LiteService;
 import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -89,7 +89,7 @@ public class JobServiceGatewayLoader extends JobService {
         executor.submit(() -> {
             long start = System.currentTimeMillis();
             try {
-                String gateway = Service.getGateway(getApplicationContext());
+                String gateway = LiteService.getGateway(getApplicationContext());
 
 
                 THREADS threads = THREADS.getInstance(getApplicationContext());

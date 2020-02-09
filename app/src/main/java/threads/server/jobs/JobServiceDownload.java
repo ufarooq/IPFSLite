@@ -16,16 +16,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.ipfs.CID;
-import threads.ipfs.IPFS;
-import threads.ipfs.PID;
-import threads.server.R;
 import threads.server.core.events.EVENTS;
 import threads.server.core.peers.Content;
-import threads.server.core.peers.PEERS;
-import threads.server.core.peers.User;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
-import threads.server.services.Service;
+import threads.server.services.LiteService;
 import threads.server.work.DownloadThreadWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -35,9 +30,9 @@ public class JobServiceDownload extends JobService {
     private static final String TAG = JobServiceDownload.class.getSimpleName();
 
 
-    public static void download(@NonNull Context context, @NonNull PID pid, @NonNull CID cid) {
+    public static void download(@NonNull Context context, @NonNull CID cid) {
         checkNotNull(context);
-        checkNotNull(pid);
+
         checkNotNull(cid);
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
@@ -45,7 +40,6 @@ public class JobServiceDownload extends JobService {
             ComponentName componentName = new ComponentName(context, JobServiceDownload.class);
 
             PersistableBundle bundle = new PersistableBundle();
-            bundle.putString(Content.PID, pid.getPid());
             bundle.putString(Content.CID, cid.getCid());
 
             JobInfo jobInfo = new JobInfo.Builder(cid.hashCode(), componentName)
@@ -61,55 +55,35 @@ public class JobServiceDownload extends JobService {
         }
     }
 
-    public static void downloadContentID(@NonNull Context context,
-                                         @NonNull PID sender,
-                                         @NonNull CID cid) {
+    public static void downloadContentID(@NonNull Context context, @NonNull CID cid) {
 
         checkNotNull(context);
-        checkNotNull(sender);
         checkNotNull(cid);
 
         final THREADS threads = THREADS.getInstance(context);
-        final PEERS peers = PEERS.getInstance(context);
         final EVENTS events = EVENTS.getInstance(context);
-        final PID host = IPFS.getPID(context);
 
         try {
 
-            String alias;
-
-            if (sender.equals(host)) {
-                alias = IPFS.getDeviceName();
-            } else {
-                User user = peers.getUserByPID(sender);
-
-                if (user == null) {
-                    events.error(context.getString(R.string.unknown_peer_sends_data));
-                    return;
-                } else {
-                    alias = user.getAlias();
-                }
-            }
             List<Thread> entries = threads.getThreadsByContentAndParent(cid, 0L);
 
             if (!entries.isEmpty()) {
                 Thread entry = entries.get(0);
 
                 if (entry.isDeleting() || entry.isSeeding()) {
-                    Service.replySender(context, sender, entry);
                     return;
                 } else {
                     threads.setThreadLeaching(entry.getIdx(), true);
-                    DownloadThreadWorker.download(context, entry.getIdx(), true);
+                    DownloadThreadWorker.download(context, entry.getIdx());
                     return;
                 }
             }
-            long idx = Service.createThread(context, sender, alias, cid,
-                    null, -1, null);
+            long idx = LiteService.createThread(context, cid,
+                    null, 0L, null);
 
             threads.setThreadLeaching(idx, true);
 
-            DownloadThreadWorker.download(context, idx, true);
+            DownloadThreadWorker.download(context, idx);
 
 
         } catch (Throwable e) {
@@ -123,8 +97,6 @@ public class JobServiceDownload extends JobService {
     public boolean onStartJob(JobParameters jobParameters) {
 
         PersistableBundle bundle = jobParameters.getExtras();
-        final String pid = bundle.getString(Content.PID);
-        checkNotNull(pid);
         final String cid = bundle.getString(Content.CID);
         checkNotNull(cid);
 
@@ -135,7 +107,7 @@ public class JobServiceDownload extends JobService {
 
             try {
 
-                downloadContentID(getApplicationContext(), PID.create(pid), CID.create(cid));
+                downloadContentID(getApplicationContext(), CID.create(cid));
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {

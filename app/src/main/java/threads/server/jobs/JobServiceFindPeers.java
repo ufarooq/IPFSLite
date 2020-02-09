@@ -17,7 +17,7 @@ import java.util.concurrent.Executors;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.ipfs.Peer;
-import threads.server.services.Service;
+import threads.server.services.LiteService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -52,7 +52,7 @@ public class JobServiceFindPeers extends JobService {
     public boolean onStartJob(JobParameters jobParameters) {
 
         boolean peerDiscovery =
-                Service.isSupportPeerDiscovery(getApplicationContext());
+                LiteService.isSupportPeerDiscovery(getApplicationContext());
         if (!peerDiscovery) {
             return false;
         }
@@ -70,7 +70,7 @@ public class JobServiceFindPeers extends JobService {
 
                 for (Peer peer : peers) {
                     PID pid = peer.getPid();
-                    Service.createUnknownUser(getApplicationContext(), pid);
+                    LiteService.createUnknownUser(getApplicationContext(), pid);
                 }
 
             } catch (Throwable e) {

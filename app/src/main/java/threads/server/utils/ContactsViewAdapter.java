@@ -1,6 +1,5 @@
 package threads.server.utils;
 
-import android.content.Context;
 import android.graphics.Color;
 import android.util.Log;
 import android.util.Pair;
@@ -14,13 +13,12 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.amulyakhare.textdrawable.TextDrawable;
-import com.bumptech.glide.Glide;
+import com.amulyakhare.textdrawable.util.ColorGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import threads.ipfs.IPFS;
 import threads.server.R;
 import threads.server.core.peers.User;
 
@@ -29,10 +27,8 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
     private static final String TAG = ContactsViewAdapter.class.getSimpleName();
     private final ValidateListener listener;
     private final List<Pair<User, AtomicBoolean>> accounts = new ArrayList<>();
-    private final Context context;
 
-    public ContactsViewAdapter(@NonNull Context context, @NonNull ValidateListener listener) {
-        this.context = context;
+    public ContactsViewAdapter(@NonNull ValidateListener listener) {
         this.listener = listener;
     }
 
@@ -87,15 +83,10 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
 
             holder.account_name.setText(account.getAlias());
 
-
-            if (account.getImage() != null) {
-                IPFS ipfs = IPFS.getInstance(context);
-                IPFSData data = IPFSData.create(ipfs,
-                        account.getImage());
-                Glide.with(context).load(data).into(holder.account_icon);
-            } else {
-                holder.account_icon.setVisibility(View.GONE);
-            }
+            String name = account.getAlias();
+            int color = ColorGenerator.MATERIAL.getColor(name);
+            holder.account_icon.setImageResource(R.drawable.server_network);
+            holder.account_icon.setColorFilter(color);
 
             holder.view.setClickable(true);
 
@@ -104,14 +95,8 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
                 if (selected.get()) {
                     v.setBackgroundColor(android.R.drawable.list_selector_background);
 
-                    if (account.getImage() != null) {
-                        IPFS ipfs = IPFS.getInstance(context);
-                        IPFSData data = IPFSData.create(ipfs,
-                                account.getImage());
-                        Glide.with(context).load(data).into(holder.account_icon);
-                    } else {
-                        holder.account_icon.setVisibility(View.GONE);
-                    }
+                    holder.account_icon.setImageResource(R.drawable.server_network);
+                    holder.account_icon.setColorFilter(color);
                 } else {
                     v.setBackgroundColor(Color.GRAY);
                     TextDrawable drawable = TextDrawable.builder()

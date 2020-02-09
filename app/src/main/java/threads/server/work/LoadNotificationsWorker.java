@@ -27,7 +27,7 @@ import threads.ipfs.PID;
 import threads.server.core.contents.CDS;
 import threads.server.core.peers.AddressType;
 import threads.server.core.peers.Content;
-import threads.server.services.Service;
+import threads.server.services.LiteService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -45,7 +45,7 @@ public class LoadNotificationsWorker extends Worker {
     public static void notifications(@NonNull Context context, int secondsDelay) {
         checkNotNull(context);
 
-        if (!Service.isReceiveNotificationsEnabled(context)) {
+        if (!LiteService.isReceiveNotificationsEnabled(context)) {
             return;
         }
 

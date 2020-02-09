@@ -22,8 +22,8 @@ import androidx.core.content.ContextCompat;
 import threads.server.MainActivity;
 import threads.server.R;
 import threads.server.jobs.JobServicePeers;
-import threads.server.work.AutoConnectWorker;
 import threads.server.work.BootstrapWorker;
+import threads.server.work.ConnectPeersWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -43,7 +43,7 @@ public class DaemonService extends Service {
             try {
                 BootstrapWorker.bootstrap(getApplicationContext());
                 JobServicePeers.peers(getApplicationContext());
-                AutoConnectWorker.autoConnect(getApplicationContext(), false, 30);
+                ConnectPeersWorker.connect(getApplicationContext(), 30);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }

@@ -66,13 +66,13 @@ import threads.server.model.SelectionViewModel;
 import threads.server.model.ThreadViewModel;
 import threads.server.provider.FileDocumentsProvider;
 import threads.server.services.CancelWorkerService;
-import threads.server.services.Service;
-import threads.server.services.SwarmService;
+import threads.server.services.LiteService;
 import threads.server.utils.Network;
 import threads.server.utils.ThreadItemDetailsLookup;
 import threads.server.utils.ThreadsItemKeyProvider;
 import threads.server.utils.ThreadsViewAdapter;
 import threads.server.work.BootstrapWorker;
+import threads.server.work.ConnectPeersWorker;
 import threads.server.work.DownloadThreadWorker;
 import threads.server.work.LoadNotificationsWorker;
 
@@ -477,7 +477,7 @@ public class ThreadsFragment extends Fragment implements
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                ArrayList<String> pids = Service.getInstance(mContext).
+                ArrayList<String> pids = LiteService.getInstance(mContext).
                         getEnhancedUserPIDs(mContext);
 
                 if (pids.isEmpty()) {
@@ -485,7 +485,7 @@ public class ThreadsFragment extends Fragment implements
                 } else if (pids.size() == 1) {
                     List<User> users = new ArrayList<>();
                     users.add(peers.getUserByPID(PID.create(pids.get(0))));
-                    Service.getInstance(mContext).sendThreads(
+                    LiteService.getInstance(mContext).sendThreads(
                             mContext, users, indices);
                 } else {
 
@@ -581,7 +581,7 @@ public class ThreadsFragment extends Fragment implements
 
 
         try {
-            boolean sendActive = Service.isSendNotificationsEnabled(mContext);
+            boolean sendActive = LiteService.isSendNotificationsEnabled(mContext);
             boolean copyActive = !thread.isDir();
             boolean isPinned = thread.isPinned();
             boolean deleteActive = mSelectionViewModel.isTopLevel();
@@ -595,6 +595,11 @@ public class ThreadsFragment extends Fragment implements
             menu.getMenu().findItem(R.id.popup_copy_to).setVisible(copyActive);
             menu.setOnMenuItemClickListener((item) -> {
 
+                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                    return true;
+                }
+
+                mLastClickTime = SystemClock.elapsedRealtime();
                 if (item.getItemId() == R.id.popup_info) {
                     clickThreadInfo(thread.getIdx());
                     return true;
@@ -721,10 +726,10 @@ public class ThreadsFragment extends Fragment implements
     private void clickThreadPublish(long idx, boolean pinned) {
 
         if (pinned) {
-            if (!InitApplication.getDontShowAgain(mContext, Service.PIN_SERVICE_KEY)) {
+            if (!InitApplication.getDontShowAgain(mContext, LiteService.PIN_SERVICE_KEY)) {
                 try {
                     DontShowAgainFragmentDialog.newInstance(
-                            getString(R.string.pin_service_notice), Service.PIN_SERVICE_KEY).show(
+                            getString(R.string.pin_service_notice), LiteService.PIN_SERVICE_KEY).show(
                             getChildFragmentManager(), DontShowAgainFragmentDialog.TAG);
 
                 } catch (Throwable e) {
@@ -751,7 +756,7 @@ public class ThreadsFragment extends Fragment implements
             public boolean onCreateActionMode(ActionMode mode, Menu menu) {
                 mode.getMenuInflater().inflate(R.menu.menu_threads_action_mode, menu);
                 MenuItem action_send = menu.findItem(R.id.action_mode_send);
-                boolean active = Service.isSendNotificationsEnabled(mContext);
+                boolean active = LiteService.isSendNotificationsEnabled(mContext);
                 action_send.setVisible(active);
 
                 MenuItem action_delete = menu.findItem(R.id.action_mode_delete);
@@ -954,33 +959,15 @@ public class ThreadsFragment extends Fragment implements
         try {
 
             if (!Network.isConnected(mContext)) {
-
-                java.lang.Thread threadError = new java.lang.Thread(()
-                        -> EVENTS.getInstance(mContext).warning(getString(R.string.offline_mode)));
-                threadError.start();
-
+                EVENTS.getInstance(mContext).postWarning(getString(R.string.offline_mode));
             }
 
             BootstrapWorker.bootstrap(mContext);
+            ConnectPeersWorker.connect(mContext, 5);
+
+
             THREADS.getInstance(mContext).setThreadLeaching(thread.getIdx(), true);
-
-            PID host = IPFS.getPID(mContext);
-            checkNotNull(host);
-            PID sender = thread.getSender();
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-
-                if (!host.equals(sender)) {
-
-                    SwarmService.connect(mContext, sender);
-
-                    DownloadThreadWorker.download(mContext, thread.getIdx(), false);
-
-                } else {
-                    DownloadThreadWorker.download(mContext, thread.getIdx(), false);
-                }
-            });
+            DownloadThreadWorker.download(mContext, thread.getIdx());
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -1022,7 +1009,7 @@ public class ThreadsFragment extends Fragment implements
 
                 JobServicePublish.publish(mContext, cid, true);
 
-                String gateway = Service.getGateway(mContext);
+                String gateway = LiteService.getGateway(mContext);
                 Uri uri = Uri.parse(gateway + "/ipfs/" + cid.getCid());
 
                 Intent intent = new Intent(Intent.ACTION_VIEW, uri);

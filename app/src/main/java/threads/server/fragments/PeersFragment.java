@@ -30,6 +30,7 @@ import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.work.WorkManager;
 
 import java.util.Comparator;
 import java.util.List;
@@ -44,12 +45,13 @@ import threads.server.core.events.EVENTS;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
 import threads.server.model.UsersViewModel;
-import threads.server.services.Service;
+import threads.server.services.LiteService;
 import threads.server.utils.Network;
 import threads.server.utils.UserItemDetailsLookup;
 import threads.server.utils.UsersItemKeyProvider;
 import threads.server.utils.UsersViewAdapter;
-import threads.server.work.AutoConnectWorker;
+import threads.server.work.BootstrapWorker;
+import threads.server.work.ConnectPeerWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -172,8 +174,6 @@ public class PeersFragment extends Fragment implements
         super.onViewCreated(view, savedInstanceState);
 
         RecyclerView mRecyclerView = view.findViewById(R.id.recycler_users);
-        mRecyclerView.setItemAnimator(null); // no animation of the item when something changed
-
 
         mSwipeRefreshLayout = view.findViewById(R.id.swipe_container);
         mSwipeRefreshLayout.setOnRefreshListener(this);
@@ -317,10 +317,15 @@ public class PeersFragment extends Fragment implements
                             break;
                         }
                         mLastClickTime = SystemClock.elapsedRealtime();
+
+                        if (!Network.isConnected(mContext)) {
+                            EVENTS.getInstance(mContext).postWarning(getString(R.string.offline_mode));
+                        }
+
                         try {
                             Selection<String> entries = mSelectionTracker.getSelection();
                             for (String pid : entries) {
-                                Service.connectUser(mContext, pid, false);
+                                connectUser(pid);
                             }
                             mSelectionTracker.clearSelection();
 
@@ -339,7 +344,7 @@ public class PeersFragment extends Fragment implements
                             Selection<String> entries = mSelectionTracker.getSelection();
 
                             for (String pid : entries) {
-                                Service.deleteUser(mContext, pid);
+                                LiteService.deleteUser(mContext, pid);
                             }
 
                             mSelectionTracker.clearSelection();
@@ -390,8 +395,19 @@ public class PeersFragment extends Fragment implements
             menu.getMenu().findItem(R.id.popup_details).setVisible(isConnected);
             menu.setOnMenuItemClickListener((item) -> {
 
+
+                if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                    return true;
+                }
+
+                mLastClickTime = SystemClock.elapsedRealtime();
+
+
                 if (item.getItemId() == R.id.popup_connect) {
-                    clickUserConnect(user.getPid());
+                    if (!Network.isConnected(mContext)) {
+                        EVENTS.getInstance(mContext).postWarning(getString(R.string.offline_mode));
+                    }
+                    connectUser(user.getPid());
                     return true;
                 } else if (item.getItemId() == R.id.popup_delete) {
                     clickUserDelete(user.getPid());
@@ -428,16 +444,41 @@ public class PeersFragment extends Fragment implements
     }
 
     @Override
-    public boolean generalActionSupport(@NonNull User user) {
-        return !user.isDialing();
+    public void invokeAbortDialing(@NonNull User user) {
+        checkNotNull(user);
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            PEERS.getInstance(mContext).setUserDialing(user.getPid(), false);
+        });
+        WorkManager.getInstance(mContext).cancelUniqueWork(
+                ConnectPeerWorker.WID + user.getPid());
+
     }
 
     @Override
     public void onRefresh() {
         mSwipeRefreshLayout.setRefreshing(true);
 
+
         try {
-            AutoConnectWorker.autoConnect(mContext, true, 0);
+            BootstrapWorker.bootstrap(mContext);
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                PEERS peers = PEERS.getInstance(mContext);
+                List<User> users = peers.getUsers();
+                for (User user : users) {
+                    if (!user.isBlocked()) {
+
+                        peers.setUserDialing(user.getPid(), true);
+
+                        ConnectPeerWorker.connect(mContext, user.getPid());
+                    }
+                }
+
+            });
+
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {
@@ -449,7 +490,7 @@ public class PeersFragment extends Fragment implements
     private void clickUserDelete(@NonNull String pid) {
         checkNotNull(pid);
 
-        Service.deleteUser(mContext, pid);
+        LiteService.deleteUser(mContext, pid);
     }
 
     private void clickUserBlock(@NonNull String pid, boolean value) {
@@ -485,14 +526,23 @@ public class PeersFragment extends Fragment implements
         }
     }
 
-    private void clickUserConnect(@NonNull String pid) {
+    private void connectUser(@NonNull String pid) {
         checkNotNull(pid);
 
-        if (!Network.isConnected(mContext)) {
-            EVENTS.getInstance(mContext).postWarning(getString(R.string.offline_mode));
-        }
 
-        Service.connectUser(mContext, pid, true);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+
+            if (PEERS.getInstance(mContext).isUserBlocked(pid)) {
+                EVENTS.getInstance(mContext).invokeEvent(EVENTS.WARNING,
+                        mContext.getString(R.string.peer_is_blocked));
+
+            } else {
+                PEERS.getInstance(mContext).setUserDialing(pid, true);
+            }
+        });
+
+        ConnectPeerWorker.connect(mContext, pid);
 
     }
 
@@ -520,7 +570,7 @@ public class PeersFragment extends Fragment implements
             executor.submit(() -> {
                 PID peer = PID.create(pid);
                 try {
-                    String html = Service.getDetailsReport(mContext, peer);
+                    String html = LiteService.getDetailsReport(mContext, peer);
 
 
                     DetailsDialogFragment.newInstance(

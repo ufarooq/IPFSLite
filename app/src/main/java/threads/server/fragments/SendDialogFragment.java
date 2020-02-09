@@ -27,15 +27,15 @@ import java.util.concurrent.Executors;
 import threads.server.R;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
-import threads.server.services.Service;
+import threads.server.services.LiteService;
 import threads.server.utils.ContactsViewAdapter;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class SendDialogFragment extends DialogFragment implements ContactsViewAdapter.ValidateListener {
     public static final String TAG = SendDialogFragment.class.getSimpleName();
-    public static final String IDXS = "IDXS";
-    public static final String PIDS = "PIDS";
+    static final String IDXS = "IDXS";
+    static final String PIDS = "PIDS";
     private long mLastClickTime = 0;
     private ContactsViewAdapter contactsViewAdapter;
     private Context mContext;
@@ -74,7 +74,7 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
 
         RecyclerView recycler_view_contact_list = view.findViewById(R.id.send_contact_list);
         recycler_view_contact_list.setLayoutManager(new LinearLayoutManager(getContext()));
-        contactsViewAdapter = new ContactsViewAdapter(getActivity(), this);
+        contactsViewAdapter = new ContactsViewAdapter(this);
         recycler_view_contact_list.setAdapter(contactsViewAdapter);
 
         final PEERS peers = PEERS.getInstance(mContext);
@@ -104,7 +104,7 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
 
                     List<User> users = contactsViewAdapter.getSelectedAccounts();
 
-                    Service.getInstance(mContext).sendThreads(mContext, users, indices);
+                    LiteService.getInstance(mContext).sendThreads(mContext, users, indices);
 
 
                     dismiss();

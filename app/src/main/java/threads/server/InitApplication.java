@@ -12,7 +12,7 @@ import threads.ipfs.ConnMgrConfig;
 import threads.ipfs.IPFS;
 import threads.ipfs.PubSubConfig;
 import threads.ipfs.RoutingConfig;
-import threads.server.services.Service;
+import threads.server.services.LiteService;
 import threads.server.utils.Preferences;
 import threads.server.utils.ProgressChannel;
 
@@ -66,7 +66,7 @@ public class InitApplication extends Application {
                 IPFS.setRandomSwarmPort(context, true);
 
 
-                setDontShowAgain(context, Service.PIN_SERVICE_KEY, false);
+                setDontShowAgain(context, LiteService.PIN_SERVICE_KEY, false);
 
                 SharedPreferences.Editor editor = prefs.edit();
                 editor.putInt(UPDATE, versionCode);
