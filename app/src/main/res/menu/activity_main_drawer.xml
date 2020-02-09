@@ -8,22 +8,22 @@
         <menu>
             <item
                 android:id="@+id/nav_settings"
-                android:icon="@android:drawable/ic_menu_preferences"
+                android:icon="@drawable/cogs"
                 android:title="@string/settings"
                 app:iconTint="?android:textColorSecondary" />
             <item
                 android:id="@+id/nav_config"
-                android:icon="@android:drawable/ic_menu_compass"
+                android:icon="@drawable/file_cog_outline"
                 android:title="@string/config"
                 app:iconTint="?android:textColorSecondary" />
             <item
                 android:id="@+id/nav_inbox"
-                android:icon="@drawable/mailbox_outline"
+                android:icon="@drawable/arrow_right_bold_outline"
                 android:title="@string/inbox"
                 app:iconTint="?android:textColorSecondary" />
             <item
                 android:id="@+id/nav_outbox"
-                android:icon="@android:drawable/stat_notify_more"
+                android:icon="@drawable/arrow_left_bold_outline"
                 android:title="@string/outbox"
                 app:iconTint="?android:textColorSecondary" />
         </menu>
