@@ -134,9 +134,13 @@ public class UsersViewAdapter extends
                             R.drawable.record, 0, 0, 0);
                 }
 
+                int res = R.drawable.server_network;
+                if (user.isLite()) {
+                    res = R.drawable.account;
+                }
                 String name = user.getAlias();
                 int color = ColorGenerator.MATERIAL.getColor(name);
-                userViewHolder.user_image.setImageResource(R.drawable.server_network);
+                userViewHolder.user_image.setImageResource(res);
                 userViewHolder.user_image.setColorFilter(color);
 
                 userViewHolder.user_alias.setText(user.getAlias());

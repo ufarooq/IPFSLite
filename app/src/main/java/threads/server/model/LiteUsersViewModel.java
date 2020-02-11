@@ -12,19 +12,19 @@ import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
 import threads.server.core.peers.UsersDatabase;
 
-public class UsersViewModel extends AndroidViewModel {
+public class LiteUsersViewModel extends AndroidViewModel {
 
     @NonNull
     private final UsersDatabase usersDatabase;
 
-    public UsersViewModel(@NonNull Application application) {
+    public LiteUsersViewModel(@NonNull Application application) {
         super(application);
         usersDatabase = PEERS.getInstance(
                 application.getApplicationContext()).getUsersDatabase();
     }
 
     @NonNull
-    public LiveData<List<User>> getUsers() {
-        return usersDatabase.userDao().getLiveDataUsers();
+    public LiveData<List<User>> getLiteUsers() {
+        return usersDatabase.userDao().getLiveDataNonBlockedLiteUsers();
     }
 }

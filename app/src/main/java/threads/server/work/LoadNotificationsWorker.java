@@ -19,7 +19,6 @@ import java.util.concurrent.TimeUnit;
 
 import threads.iota.Entity;
 import threads.iota.EntityService;
-import threads.ipfs.CID;
 import threads.ipfs.Encryption;
 import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
@@ -33,7 +32,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class LoadNotificationsWorker extends Worker {
 
-    private static final String TAG = LoadNotificationsWorker.class.getSimpleName();
+    public static final String TAG = LoadNotificationsWorker.class.getSimpleName();
 
     public LoadNotificationsWorker(
             @NonNull Context context,
@@ -70,6 +69,7 @@ public class LoadNotificationsWorker extends Worker {
     public Result doWork() {
 
         long start = System.currentTimeMillis();
+        Log.e(TAG, " start [" + (System.currentTimeMillis() - start) + "]...");
         try {
             Gson gson = new Gson();
             PID host = IPFS.getPID(getApplicationContext());
@@ -98,19 +98,16 @@ public class LoadNotificationsWorker extends Worker {
                         try {
                             String privateKey = ipfs.getPrivateKey();
                             checkNotNull(privateKey, "Private Key not valid");
-                            String encPid = data.get(Content.PID);
-                            checkNotNull(encPid);
-                            final String pidStr = Encryption.decryptRSA(encPid, privateKey);
-                            checkNotNull(pidStr);
-
+                            String pid = data.get(Content.PID);
+                            checkNotNull(pid);
                             String encCid = data.get(Content.CID);
                             checkNotNull(encCid);
-                            final String cidStr = Encryption.decryptRSA(encCid, privateKey);
-                            checkNotNull(cidStr);
+                            final String cid = Encryption.decryptRSA(encCid, privateKey);
+                            checkNotNull(cid);
 
                             // check if cid is valid
                             try {
-                                Multihash.fromBase58(cidStr);
+                                Multihash.fromBase58(cid);
                             } catch (Throwable e) {
                                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
                                 continue;
@@ -118,27 +115,21 @@ public class LoadNotificationsWorker extends Worker {
 
                             // check if pid is valid
                             try {
-                                Multihash.fromBase58(pidStr);
+                                Multihash.fromBase58(pid);
                             } catch (Throwable e) {
                                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
                                 continue;
                             }
 
-                            PID pid = PID.create(pidStr);
-                            CID cid = CID.create(cidStr);
-
-                            // THIS is a try, it tries to find the pubsub of the PID
-                            // (for sending a message when done)
-                            ipfs.addPubSubTopic(getApplicationContext(), pid.getPid());
-
-
                             threads.server.core.contents.Content content =
                                     contentService.getContent(cid);
                             if (content == null) {
                                 contentService.insertContent(pid, cid, false);
+                            } else {
+                                contentService.updateTimestamp(cid);
                             }
+                            ConnectPeerWorker.connect(getApplicationContext(), pid);
 
-                            ContentsWorker.download(getApplicationContext(), cid, pid);
 
                         } catch (Throwable e) {
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);

@@ -10,24 +10,24 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.google.gson.Gson;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import threads.iota.EntityService;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
+import threads.server.InitApplication;
+import threads.server.core.peers.AddressType;
 import threads.server.core.peers.Content;
-import threads.server.services.IdentityService;
-import threads.server.services.LiteService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class JobServiceIdentity extends JobService {
     private static final String TAG = JobServiceIdentity.class.getSimpleName();
 
-
-    public static void identity(@NonNull Context context) {
+    public static void publish(@NonNull Context context) {
         checkNotNull(context);
 
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
@@ -49,12 +49,11 @@ public class JobServiceIdentity extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
-        boolean peerDiscovery =
-                LiteService.isSupportPeerDiscovery(getApplicationContext());
-        if (!peerDiscovery) {
+
+        boolean done = InitApplication.getLoginFlag(getApplicationContext());
+        if (done) {
             return false;
         }
-
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -66,14 +65,21 @@ public class JobServiceIdentity extends JobService {
                 checkNotNull(host);
                 String alias = IPFS.getDeviceName();
                 checkNotNull(alias);
+                IPFS ipfs = IPFS.getInstance(getApplicationContext());
+                checkNotNull(ipfs);
+                String pkey = ipfs.getPublicKey();
 
-                Map<String, String> params = new HashMap<>();
+                Content params = new Content();
                 params.put(Content.ALIAS, alias);
+                params.put(Content.PKEY, pkey);
+                Gson gson = new Gson();
+                String content = gson.toJson(params);
 
+                EntityService entityService = EntityService.getInstance(getApplicationContext());
+                String address = AddressType.getAddress(host, AddressType.PEER);
+                entityService.insertData(getApplicationContext(), address, content);
 
-                IdentityService.publishIdentity(getApplicationContext(), params, LiteService.RELAYS);
-
-
+                InitApplication.setLoginFlag(getApplicationContext(), true);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {
@@ -89,4 +95,5 @@ public class JobServiceIdentity extends JobService {
     public boolean onStopJob(JobParameters jobParameters) {
         return false;
     }
+
 }

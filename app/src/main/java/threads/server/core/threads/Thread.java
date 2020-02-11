@@ -137,6 +137,7 @@ public class Thread {
                 leaching == o.isLeaching() &&
                 seeding == o.isSeeding() &&
                 deleting == o.isDeleting() &&
+                Objects.equals(size, o.getSize()) &&
                 Objects.equals(mimeType, o.getMimeType()) &&
                 Objects.equals(content, o.getContent()) &&
                 Objects.equals(thumbnail, o.getThumbnail()) &&

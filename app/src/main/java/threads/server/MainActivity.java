@@ -71,6 +71,7 @@ import threads.server.jobs.JobServiceIdentity;
 import threads.server.model.EventViewModel;
 import threads.server.model.SelectionViewModel;
 import threads.server.provider.FileDocumentsProvider;
+import threads.server.services.BootstrapService;
 import threads.server.services.DaemonService;
 import threads.server.services.LiteService;
 import threads.server.services.UploadService;
@@ -79,7 +80,6 @@ import threads.server.utils.CustomViewPager;
 import threads.server.utils.MimeType;
 import threads.server.utils.Network;
 import threads.server.utils.PermissionAction;
-import threads.server.work.BootstrapWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -221,7 +221,7 @@ public class MainActivity extends AppCompatActivity implements
                     codecDecider.getCodex() == CodecDecider.Codec.URI) {
 
                 String multihash = codecDecider.getMultihash();
-                BootstrapWorker.bootstrap(getApplicationContext());
+                BootstrapService.bootstrap(getApplicationContext());
                 JobServiceDownload.download(getApplicationContext(), CID.create(multihash));
             } else {
                 EVENTS.getInstance(getApplicationContext()).postError(getString(R.string.codec_not_supported));
@@ -861,9 +861,8 @@ public class MainActivity extends AppCompatActivity implements
         try {
             Multihash.fromBase58(pid);
         } catch (Throwable e) {
-            java.lang.Thread threadError = new java.lang.Thread(()
-                    -> EVENTS.getInstance(getApplicationContext()).error(getString(R.string.multihash_not_valid)));
-            threadError.start();
+            EVENTS.getInstance(getApplicationContext()).postError(getString(R.string.multihash_not_valid));
+
             return;
         }
 
@@ -872,38 +871,18 @@ public class MainActivity extends AppCompatActivity implements
         PID user = PID.create(pid);
 
         if (user.equals(host)) {
-
-            java.lang.Thread threadError = new java.lang.Thread(()
-                    -> EVENTS.getInstance(getApplicationContext()).error(
-                    getString(R.string.same_pid_like_host)));
-            threadError.start();
-
+            EVENTS.getInstance(getApplicationContext()).postError(
+                    getString(R.string.same_pid_like_host));
             return;
         }
 
         // CHECKED
         if (!Network.isConnected(getApplicationContext())) {
-            java.lang.Thread threadError = new java.lang.Thread(()
-                    -> EVENTS.getInstance(getApplicationContext()).warning(
-                    getString(R.string.offline_mode)));
-            threadError.start();
+            EVENTS.getInstance(getApplicationContext()).postWarning(
+                    getString(R.string.offline_mode));
         }
 
-
-        try {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    BootstrapWorker.bootstrap(getApplicationContext());
-                    LiteService.connectPeer(getApplicationContext(), user, false);
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-            });
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
+        LiteService.connectPeer(getApplicationContext(), user, false);
     }
 
 
@@ -1083,7 +1062,7 @@ public class MainActivity extends AppCompatActivity implements
     public void clickInfoPeer() {
 
         try {
-            JobServiceIdentity.identity(getApplicationContext());
+            JobServiceIdentity.publish(getApplicationContext());
             PID pid = IPFS.getPID(getApplicationContext());
             checkNotNull(pid);
             try {

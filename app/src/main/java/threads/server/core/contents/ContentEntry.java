@@ -1,7 +1,6 @@
 package threads.server.core.contents;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
@@ -11,14 +10,12 @@ public class ContentEntry {
     private final String filename;
     private final long size;
     private final String cid;
-    private final String image;
     private final String mimeType;
 
     ContentEntry(@NonNull String cid,
                  @NonNull String filename,
-                 long size,
                  @NonNull String mimeType,
-                 @Nullable String image) {
+                 long size) {
         checkNotNull(cid);
         checkNotNull(filename);
         checkNotNull(size);
@@ -26,11 +23,6 @@ public class ContentEntry {
         this.filename = filename;
         this.size = size;
         this.mimeType = mimeType;
-        this.image = image;
-    }
-
-    public String getImage() {
-        return image;
     }
 
     public String getMimeType() {
@@ -49,7 +41,6 @@ public class ContentEntry {
                 ", size='" + size + '\'' +
                 ", cid='" + cid + '\'' +
                 ", mimeType='" + mimeType + '\'' +
-                ", image='" + image + '\'' +
                 '}';
     }
 

@@ -13,11 +13,17 @@ import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
+import java.util.List;
+
+import threads.ipfs.IPFS;
 import threads.ipfs.PID;
+import threads.ipfs.PeerInfo;
 import threads.server.core.peers.Content;
 import threads.server.core.peers.PEERS;
-import threads.server.jobs.JobServiceLoadPublicKey;
-import threads.server.services.SwarmService;
+import threads.server.core.peers.User;
+import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -63,27 +69,26 @@ public class ConnectPeerWorker extends Worker {
         checkNotNull(pid);
         long start = System.currentTimeMillis();
 
+
+        boolean isConnected = false;
         try {
             PEERS peers = PEERS.getInstance(getApplicationContext());
 
             PID user = PID.create(pid);
 
             if (!peers.isUserBlocked(user)) {
+
+                if (peers.getUserPublicKey(user.getPid()) == null) {
+                    LoadIdentityWorker.identify(getApplicationContext(), user.getPid());
+                }
+
                 try {
-                    SwarmService.ConnectInfo info =
-                            SwarmService.connect(getApplicationContext(), user);
+                    isConnected = connect(user);
+                    peers.setUserConnected(user, isConnected);
 
-                    peers.setUserConnected(user, info.isConnected());
-
-                    if (info.isConnected()) {
-                        // TODO public key calculation
-                        String publicKey = peers.getUserPublicKey(pid);
-                        checkNotNull(publicKey);
-                        if (publicKey.isEmpty()) {
-                            JobServiceLoadPublicKey.publicKey(getApplicationContext(), pid);
-                        }
+                    if (isConnected) {
+                        id(user.getPid());
                     }
-
                 } finally {
                     peers.setUserDialing(pid, false);
                 }
@@ -95,8 +100,90 @@ public class ConnectPeerWorker extends Worker {
         } finally {
             Log.e(TAG, " finish onStart [" + (System.currentTimeMillis() - start) + "]...");
         }
+        if (isConnected) {
+            DownloadContentsWorker.download(getApplicationContext(), pid);
+            return Result.success();
+        } else {
+            return Result.failure();
+        }
+    }
 
-        return Result.success();
+    private void id(@NonNull String peerID) {
+        int timeout = Preferences.getConnectionTimeout(getApplicationContext());
+        try {
+            IPFS ipfs = IPFS.getInstance(getApplicationContext());
+            checkNotNull(ipfs, "IPFS not valid");
+            PEERS peers = PEERS.getInstance(getApplicationContext());
+            PID pid = PID.create(peerID);
+
+            PeerInfo pInfo = ipfs.id(pid, timeout);
+            if (pInfo != null) {
+                User user = peers.getUserByPID(pid);
+                checkNotNull(user);
+                boolean update = false;
+                if (user.getPublicKey() == null) {
+                    String pKey = pInfo.getPublicKey();
+                    if (pKey != null) {
+                        if (!pKey.isEmpty()) {
+                            update = true;
+                            peers.setUserPublicKey(peerID, pKey);
+                        }
+                    }
+                }
+                if (!user.isLite()) {
+                    if (pInfo.isLiteAgent()) {
+                        update = true;
+                        peers.setUserIsLite(peerID);
+                    }
+                }
+                List<String> list = pInfo.getMultiAddresses();
+                if (!list.isEmpty()) {
+                    update = true;
+                    user.clearAddresses();
+                    for (String address : list) {
+                        user.addAddress(address);
+                    }
+                }
+                if (update) {
+                    peers.updateUser(user);
+                }
+            }
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
+    private boolean connect(@NonNull PID pid) {
+        checkNotNull(pid);
+        String tag = RandomStringUtils.randomAlphabetic(10);
+        int timeout = Preferences.getConnectionTimeout(getApplicationContext());
+        IPFS ipfs = IPFS.getInstance(getApplicationContext());
+
+        if (ipfs.isConnected(pid)) {
+            ipfs.protectPeer(pid, tag);
+            return true;
+        } else {
+
+            if (ipfs.swarmConnect(pid, timeout)) {
+                ipfs.protectPeer(pid, tag);
+                return true;
+            }
+
+            // now check old addresses
+            PEERS peers = PEERS.getInstance(getApplicationContext());
+            User user = peers.getUserByPID(pid);
+            checkNotNull(user);
+            for (String address : user.getAddresses()) {
+                String multiAddress = address.concat("/" + IPFS.Style.p2p + "/" + pid.getPid());
+                Log.e(TAG, "Connect to " + multiAddress);
+                if (ipfs.swarmConnect(multiAddress, timeout)) {
+                    ipfs.protectPeer(pid, tag);
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
 

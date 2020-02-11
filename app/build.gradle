@@ -51,13 +51,18 @@ android {
     }
     buildTypes {
         debug {
+            shrinkResources false
             minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                    'proguard-rules.pro'
             buildConfigField "boolean", "FDroid", "false"
         }
 
         release {
+            shrinkResources false
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android.txt'),
+                    'proguard-rules.pro'
             buildConfigField "boolean", "FDroid", "false"
         }
     }
@@ -118,7 +123,7 @@ dependencies {
     implementation 'threads.mobile:ipfs:0.4.5'
 
     // API (LICENSE done)
-    implementation 'threads.core:ipfs:0.5.4'
+    implementation 'threads.core:ipfs:0.5.5'
 
     // API (LICENSE done)
     implementation 'com.google.code.gson:gson:2.8.6'

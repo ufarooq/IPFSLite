@@ -45,13 +45,14 @@ import threads.server.core.events.EVENTS;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
 import threads.server.model.UsersViewModel;
+import threads.server.services.BootstrapService;
 import threads.server.services.LiteService;
 import threads.server.utils.Network;
 import threads.server.utils.UserItemDetailsLookup;
 import threads.server.utils.UsersItemKeyProvider;
 import threads.server.utils.UsersViewAdapter;
-import threads.server.work.BootstrapWorker;
 import threads.server.work.ConnectPeerWorker;
+import threads.server.work.LoadIdentityWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -453,7 +454,8 @@ public class PeersFragment extends Fragment implements
         );
         WorkManager.getInstance(mContext).cancelUniqueWork(
                 ConnectPeerWorker.WID + user.getPid());
-
+        WorkManager.getInstance(mContext).cancelUniqueWork(
+                LoadIdentityWorker.WID + user.getPid());
     }
 
     @Override
@@ -462,7 +464,7 @@ public class PeersFragment extends Fragment implements
 
 
         try {
-            BootstrapWorker.bootstrap(mContext);
+            BootstrapService.bootstrap(mContext);
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 PEERS peers = PEERS.getInstance(mContext);
@@ -470,7 +472,7 @@ public class PeersFragment extends Fragment implements
                 for (User user : users) {
                     if (!user.isBlocked()) {
 
-                        peers.setUserDialing(user.getPid(), true);
+                        peers.setUserDialing(user.getPid(), Network.isConnected(mContext));
 
                         ConnectPeerWorker.connect(mContext, user.getPid());
                     }
@@ -538,7 +540,7 @@ public class PeersFragment extends Fragment implements
                         mContext.getString(R.string.peer_is_blocked));
 
             } else {
-                PEERS.getInstance(mContext).setUserDialing(pid, true);
+                PEERS.getInstance(mContext).setUserDialing(pid, Network.isConnected(mContext));
             }
         });
 

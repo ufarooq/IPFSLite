@@ -1,8 +1,10 @@
 package threads.server.core.peers;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.PrimaryKey;
+import androidx.room.TypeConverters;
 
 import java.util.Objects;
 
@@ -12,47 +14,74 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 
 @androidx.room.Entity
-public class User extends Basis implements IPeer {
+public class User {
     @PrimaryKey
     @NonNull
     @ColumnInfo(name = "pid")
     private final String pid;
-    @NonNull
+    @Nullable
     @ColumnInfo(name = "publicKey")
     private String publicKey;
     @NonNull
     @ColumnInfo(name = "alias")
     private String alias;
-
     @ColumnInfo(name = "connected")
     private boolean connected;
     @ColumnInfo(name = "blocked")
     private boolean blocked;
     @ColumnInfo(name = "dialing")
     private boolean dialing;
+    @ColumnInfo(name = "lite")
+    private boolean lite;
 
-    User(@NonNull String alias,
-         @NonNull String publicKey,
-         @NonNull String pid) {
+    @NonNull
+    @TypeConverters(Addresses.class)
+    @ColumnInfo(name = "addresses")
+    private Addresses addresses = new Addresses();
+
+    User(@NonNull String alias, @NonNull String pid) {
         this.alias = alias;
-        this.publicKey = publicKey;
         this.pid = pid;
         this.blocked = false;
         this.dialing = false;
         this.connected = false;
+        this.lite = false;
     }
 
     @NonNull
-    public static User createUser(@NonNull String alias,
-                                  @NonNull String publicKey,
-                                  @NonNull PID pid) {
+    static User createUser(@NonNull String alias, @NonNull PID pid) {
         checkNotNull(alias);
-        checkNotNull(publicKey);
         checkNotNull(pid);
-        return new User(alias, publicKey, pid.getPid());
+        return new User(alias, pid.getPid());
     }
 
-    @Override
+    @NonNull
+    public Addresses getAddresses() {
+        return (Addresses) addresses.clone();
+    }
+
+    public void setAddresses(@NonNull Addresses addresses) {
+        this.addresses = addresses;
+    }
+
+    public void addAddress(@NonNull String address) {
+        checkNotNull(address);
+        this.addresses.add(address);
+    }
+
+    public void clearAddresses() {
+        this.addresses.clear();
+    }
+
+    public boolean isLite() {
+        return lite;
+    }
+
+    public void setLite(boolean lite) {
+        this.lite = lite;
+    }
+
+
     public boolean isConnected() {
         return connected;
     }
@@ -65,7 +94,7 @@ public class User extends Basis implements IPeer {
         return dialing;
     }
 
-    public void setDialing(boolean dialing) {
+    void setDialing(boolean dialing) {
         this.dialing = dialing;
     }
 
@@ -92,13 +121,13 @@ public class User extends Basis implements IPeer {
         this.alias = alias;
     }
 
-    @NonNull
+    @Nullable
     public String getPublicKey() {
         return publicKey;
     }
 
-    public void setPublicKey(@NonNull String publicKey) {
-        checkNotNull(publicKey);
+
+    void setPublicKey(@Nullable String publicKey) {
         this.publicKey = publicKey;
     }
 
@@ -127,19 +156,15 @@ public class User extends Basis implements IPeer {
         return Objects.equals(connected, user.isConnected()) &&
                 Objects.equals(dialing, user.isDialing()) &&
                 Objects.equals(alias, user.getAlias()) &&
+                Objects.equals(lite, user.isLite()) &&
                 Objects.equals(blocked, user.isBlocked()) &&
                 Objects.equals(publicKey, user.getPublicKey());
     }
 
-    @Override
     @NonNull
     public PID getPID() {
         return PID.create(pid);
     }
 
-
-    public boolean isValid() {
-        return !publicKey.isEmpty();
-    }
 
 }

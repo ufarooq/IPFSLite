@@ -14,19 +14,16 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.common.collect.Iterables;
-
-import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import threads.server.R;
-import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
+import threads.server.model.LiteUsersViewModel;
 import threads.server.services.LiteService;
 import threads.server.utils.ContactsViewAdapter;
 
@@ -35,7 +32,6 @@ import static androidx.core.util.Preconditions.checkNotNull;
 public class SendDialogFragment extends DialogFragment implements ContactsViewAdapter.ValidateListener {
     public static final String TAG = SendDialogFragment.class.getSimpleName();
     static final String IDXS = "IDXS";
-    static final String PIDS = "PIDS";
     private long mLastClickTime = 0;
     private ContactsViewAdapter contactsViewAdapter;
     private Context mContext;
@@ -65,8 +61,6 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
         Bundle args = getArguments();
         checkNotNull(args);
         final long[] indices = args.getLongArray(IDXS);
-        final ArrayList<String> pids = args.getStringArrayList(PIDS);
-        checkNotNull(pids);
 
         @SuppressLint("InflateParams")
         View view = inflater.inflate(R.layout.send_view, null);
@@ -77,18 +71,26 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
         contactsViewAdapter = new ContactsViewAdapter(this);
         recycler_view_contact_list.setAdapter(contactsViewAdapter);
 
-        final PEERS peers = PEERS.getInstance(mContext);
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
+        LiteUsersViewModel messagesViewModel = new ViewModelProvider(this).
+                get(LiteUsersViewModel.class);
+        messagesViewModel.getLiteUsers().observe(getViewLifecycleOwner(), (peers) -> {
+
             try {
-                List<User> users = peers.getUsersByPID(Iterables.toArray(pids, String.class));
-                contactsViewAdapter.setAccounts(users);
+                if (peers != null) {
+                    try {
+                        peers.sort(Comparator.comparing(User::getAlias));
+
+                        contactsViewAdapter.setAccounts(peers);
+                    } catch (Throwable e) {
+                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    }
+                }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
-        });
 
+        });
 
         builder.setView(view)
                 // Add action buttons
@@ -105,7 +107,6 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
                     List<User> users = contactsViewAdapter.getSelectedAccounts();
 
                     LiteService.getInstance(mContext).sendThreads(mContext, users, indices);
-
 
                     dismiss();
 

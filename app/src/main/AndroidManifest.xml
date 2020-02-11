@@ -83,16 +83,6 @@
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <service
-            android:name=".jobs.JobServicePeers"
-            android:enabled="true"
-            android:exported="false"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-        <service
-            android:name=".jobs.JobServiceContents"
-            android:enabled="true"
-            android:exported="false"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-        <service
             android:name=".jobs.JobServiceDownload"
             android:enabled="true"
             android:exported="false"
@@ -108,12 +98,7 @@
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
         <service
-            android:name=".jobs.JobServiceGatewayLoader"
-            android:enabled="true"
-            android:exported="false"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-        <service
-            android:name=".jobs.JobServiceFindPeers"
+            android:name=".jobs.JobServicePinLoader"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
@@ -124,16 +109,6 @@
             android:permission="android.permission.BIND_JOB_SERVICE" />
         <service
             android:name=".jobs.JobServiceCleanup"
-            android:enabled="true"
-            android:exported="false"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-        <service
-            android:name=".jobs.JobServiceConnect"
-            android:enabled="true"
-            android:exported="false"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-        <service
-            android:name=".jobs.JobServiceLoadPublicKey"
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />

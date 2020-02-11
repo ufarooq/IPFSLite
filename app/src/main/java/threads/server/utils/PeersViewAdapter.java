@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import threads.server.R;
-import threads.server.core.peers.IPeer;
 import threads.server.core.peers.Peer;
 
 public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.ViewHolder> {
@@ -109,10 +108,7 @@ public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.View
 
 
     public interface PeersViewAdapterListener {
-
-        void invokeGeneralAction(@NonNull IPeer peer, @NonNull View view);
-
-
+        void invokeGeneralAction(@NonNull Peer peer, @NonNull View view);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

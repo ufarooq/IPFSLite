@@ -12,7 +12,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.amulyakhare.textdrawable.TextDrawable;
 import com.amulyakhare.textdrawable.util.ColorGenerator;
 
 import java.util.ArrayList;
@@ -76,16 +75,19 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
 
         final Pair<User, AtomicBoolean> pair = accounts.get(position);
         final AtomicBoolean selected = pair.second;
-        final User account = pair.first;
+        final User user = pair.first;
 
 
         try {
+            holder.account_name.setText(user.getAlias());
+            int res = R.drawable.server_network;
+            if (user.isLite()) {
+                res = R.drawable.account;
+            }
 
-            holder.account_name.setText(account.getAlias());
-
-            String name = account.getAlias();
+            String name = user.getAlias();
             int color = ColorGenerator.MATERIAL.getColor(name);
-            holder.account_icon.setImageResource(R.drawable.server_network);
+            holder.account_icon.setImageResource(res);
             holder.account_icon.setColorFilter(color);
 
             holder.view.setClickable(true);
@@ -94,14 +96,8 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
 
                 if (selected.get()) {
                     v.setBackgroundColor(android.R.drawable.list_selector_background);
-
-                    holder.account_icon.setImageResource(R.drawable.server_network);
-                    holder.account_icon.setColorFilter(color);
                 } else {
                     v.setBackgroundColor(Color.GRAY);
-                    TextDrawable drawable = TextDrawable.builder()
-                            .buildRound("\u2713", Color.DKGRAY);
-                    holder.account_icon.setImageDrawable(drawable);
                 }
                 selected.set(!selected.get());
 

@@ -42,7 +42,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -51,7 +50,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
-import threads.ipfs.PID;
 import threads.server.InitApplication;
 import threads.server.MainActivity;
 import threads.server.R;
@@ -65,13 +63,13 @@ import threads.server.jobs.JobServicePublish;
 import threads.server.model.SelectionViewModel;
 import threads.server.model.ThreadViewModel;
 import threads.server.provider.FileDocumentsProvider;
-import threads.server.services.CancelWorkerService;
+import threads.server.services.BootstrapService;
 import threads.server.services.LiteService;
+import threads.server.services.WorkerService;
 import threads.server.utils.Network;
 import threads.server.utils.ThreadItemDetailsLookup;
 import threads.server.utils.ThreadsItemKeyProvider;
 import threads.server.utils.ThreadsViewAdapter;
-import threads.server.work.BootstrapWorker;
 import threads.server.work.ConnectPeersWorker;
 import threads.server.work.DownloadThreadWorker;
 import threads.server.work.LoadNotificationsWorker;
@@ -477,22 +475,17 @@ public class ThreadsFragment extends Fragment implements
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                ArrayList<String> pids = LiteService.getInstance(mContext).
-                        getEnhancedUserPIDs(mContext);
+                List<User> users = peers.getNonBlockedLiteUsers();
 
-                if (pids.isEmpty()) {
+                if (users.isEmpty()) {
                     events.error(getString(R.string.no_sharing_peers));
-                } else if (pids.size() == 1) {
-                    List<User> users = new ArrayList<>();
-                    users.add(peers.getUserByPID(PID.create(pids.get(0))));
-                    LiteService.getInstance(mContext).sendThreads(
-                            mContext, users, indices);
+                } else if (users.size() == 1) {
+                    LiteService.getInstance(mContext).sendThreads(mContext, users, indices);
                 } else {
 
                     SendDialogFragment dialogFragment = new SendDialogFragment();
                     Bundle bundle = new Bundle();
                     bundle.putLongArray(SendDialogFragment.IDXS, indices);
-                    bundle.putStringArrayList(SendDialogFragment.PIDS, pids);
                     dialogFragment.setArguments(bundle);
                     dialogFragment.show(getChildFragmentManager(), SendDialogFragment.TAG);
                 }
@@ -962,13 +955,11 @@ public class ThreadsFragment extends Fragment implements
                 EVENTS.getInstance(mContext).postWarning(getString(R.string.offline_mode));
             }
 
-            BootstrapWorker.bootstrap(mContext);
+            BootstrapService.bootstrap(mContext);
             ConnectPeersWorker.connect(mContext, 5);
 
-
-            THREADS.getInstance(mContext).setThreadLeaching(thread.getIdx(), true);
+            WorkerService.markThreadDownload(mContext, thread.getIdx());
             DownloadThreadWorker.download(mContext, thread.getIdx());
-
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -978,7 +969,7 @@ public class ThreadsFragment extends Fragment implements
     public void invokePauseAction(@NonNull Thread thread) {
         checkNotNull(thread);
 
-        CancelWorkerService.cancelThreadDownload(mContext, thread.getIdx());
+        WorkerService.cancelThreadDownload(mContext, thread.getIdx());
     }
 
 
@@ -1007,7 +998,9 @@ public class ThreadsFragment extends Fragment implements
                 CID cid = threads.getThreadContent(idx);
                 checkNotNull(cid);
 
-                JobServicePublish.publish(mContext, cid, true);
+
+                BootstrapService.bootstrap(mContext);
+                JobServicePublish.publish(mContext, cid);
 
                 String gateway = LiteService.getGateway(mContext);
                 Uri uri = Uri.parse(gateway + "/ipfs/" + cid.getCid());

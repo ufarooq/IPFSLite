@@ -7,7 +7,6 @@ import androidx.annotation.Nullable;
 import androidx.room.Room;
 
 import threads.ipfs.CID;
-import threads.ipfs.PID;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -44,13 +43,17 @@ public class CDS {
 
 
     @Nullable
-    public Content getContent(@NonNull CID cid) {
+    public Content getContent(@NonNull String cid) {
         checkNotNull(cid);
-        return getContentDatabase().contentDao().getContent(cid.getCid());
+        return getContentDatabase().contentDao().getContent(cid);
     }
 
+    public void updateTimestamp(@NonNull String cid) {
+        checkNotNull(cid);
+        getContentDatabase().contentDao().setTimestamp(cid, System.currentTimeMillis());
+    }
 
-    public void insertContent(@NonNull PID pid, @NonNull CID cid, boolean finished) {
+    public void insertContent(@NonNull String pid, @NonNull String cid, boolean finished) {
         checkNotNull(pid);
         checkNotNull(cid);
         Content content = Content.create(pid, cid, finished);

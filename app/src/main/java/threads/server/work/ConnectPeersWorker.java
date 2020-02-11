@@ -18,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 import threads.ipfs.IPFS;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
-import threads.server.services.SwarmService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -68,16 +67,7 @@ public class ConnectPeersWorker extends Worker {
             for (User user : users) {
 
                 if (!user.isBlocked()) {
-
-                    ipfs.addPubSubTopic(
-                            getApplicationContext(), user.getPID().getPid());
-
-
-                    SwarmService.ConnectInfo info = SwarmService.connect(
-                            getApplicationContext(), user.getPID());
-
-                    peers.setUserConnected(user.getPID(), info.isConnected());
-
+                    ConnectPeerWorker.connect(getApplicationContext(), user.getPid());
                 }
             }
 

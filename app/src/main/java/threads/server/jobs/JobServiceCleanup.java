@@ -74,7 +74,7 @@ public class JobServiceCleanup extends JobService {
 
 
                 // remove all content
-                timestamp = getDaysAgo(14);
+                timestamp = getDaysAgo(2);
                 ContentDatabase contentDatabase = contentService.getContentDatabase();
                 List<Content> entries = contentDatabase.contentDao().
                         getContentWithSmallerTimestamp(timestamp);

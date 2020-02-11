@@ -11,7 +11,7 @@
     <string name="content_id">Content ID (CID)</string>
     <string name="peer_id">Peer ID (PID)</string>
     <string name="your_peer_id">Your Peer ID (PID)</string>
-    <string name="peer_access">The QR code contains an ID (PID \"%1$s\") to access the IPFS node with that ID.</string>
+    <string name="peer_access">The QR code contains the peer ID (PID \"%1$s\") to access the node via IPFS.</string>
     <string name="action_delete">Delete</string>
     <string name="licences">Licences</string>
     <string name="application">Application</string>
@@ -40,12 +40,12 @@
     <string name="peers">Peers</string>
     <string name="files">Files</string>
     <string name="offline_mode">Offline Mode</string>
-    <string name="peer_exists_with_pid">Peer with the PID already exists</string>
+    <string name="peer_exists_with_pid">A peer with the ID already exists in your contacts</string>
     <string name="same_pid_like_host">Invalid: Peer ID is your Host Peer ID</string>
     <string name="peer_name">New Peer Name</string>
     <string name="peer_is_blocked">Peer is blocked. Unblock first.</string>
     <string name="user_connect_try">Peer \"%1$s\" connection request.</string>
-    <string name="no_sharing_peers">Currently no peers are available to share data with.</string>
+    <string name="no_sharing_peers">Currently no IPFS Lite peers are available to share data with.</string>
     <string name="select_files">File Chooser</string>
     <string name="action_select_all">Select All</string>
     <string name="auto_relay_support">Enable Auto Relay</string>
@@ -95,7 +95,8 @@
     <string name="gateway">Gateway</string>
     <string name="support_automatic_download">Automatic Download</string>
     <string name="pubsub_support">Pubsub Support</string>
-    <string name="success_notification">Sending notification to Peer \"%1$s\" took \"%2$s\"[s]</string>
+    <string name="success_notification">Sending notification to peer \"%1$s\" [%2$s s]</string>
+    <string name="failed_notification">Failed sending notification to peer \"%1$s\" [%2$s s]</string>
     <string name="enable_random_swarm_port">Random Swarm Port</string>
     <string name="swarm">Swarm</string>
     <string name="file_not_found">File could not be downloaded</string>
@@ -129,4 +130,5 @@
     <string name="unpin">Unpin</string>
     <string name="view">View</string>
     <string name="copy_to">Copy to</string>
+    <string name="send_notifications">Sending Notifications &#8230;</string>
 </resources>

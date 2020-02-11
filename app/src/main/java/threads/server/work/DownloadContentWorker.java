@@ -35,7 +35,7 @@ import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class DownloadContentWorker extends Worker {
-    public static final String WID = "DLW";
+    public static final String WID = "DCW";
     private static final String TAG = DownloadContentWorker.class.getSimpleName();
     private static final String ID = "ID";
     private static final String FN = "FN";
@@ -50,12 +50,13 @@ public class DownloadContentWorker extends Worker {
     }
 
     public static void download(@NonNull Context context, @NonNull CID cid,
-                                long threadIdx, @NonNull String filename, long size) {
+                                long idx, @NonNull String filename, long size) {
 
         checkNotNull(context);
         checkNotNull(cid);
         checkNotNull(filename);
 
+        Log.e(TAG, "DownloadContentWorker mark for running : " + filename);
 
         Constraints.Builder builder = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED);
@@ -65,22 +66,26 @@ public class DownloadContentWorker extends Worker {
         data.putString(FN, filename);
         data.putString(ID, cid.getCid());
         data.putLong(FS, size);
-        data.putLong(IDX, threadIdx);
+        data.putLong(IDX, idx);
 
         OneTimeWorkRequest syncWorkRequest =
                 new OneTimeWorkRequest.Builder(DownloadContentWorker.class)
-                        .addTag("DownloadContentWorker")
+                        .addTag(TAG)
                         .setInputData(data.build())
                         .setConstraints(builder.build())
                         .build();
 
         WorkManager.getInstance(context).enqueueUniqueWork(
-                WID + threadIdx, ExistingWorkPolicy.KEEP, syncWorkRequest);
+                WID + idx, ExistingWorkPolicy.KEEP, syncWorkRequest);
     }
 
     @NonNull
     @Override
     public Result doWork() {
+
+        long start = System.currentTimeMillis();
+
+        Log.e(TAG, " start [" + (System.currentTimeMillis() - start) + "]...");
 
         THREADS threads = THREADS.getInstance(getApplicationContext());
         IPFS ipfs = IPFS.getInstance(getApplicationContext());
@@ -97,6 +102,11 @@ public class DownloadContentWorker extends Worker {
         Thread thread = threads.getThreadByIdx(idx);
         checkNotNull(thread);
 
+        // security check that thread is not already seeding
+        if (thread.isSeeding()) {
+            return Result.success();
+        }
+
 
         NotificationCompat.Builder builder =
                 ProgressChannel.createProgressNotification(
@@ -112,15 +122,11 @@ public class DownloadContentWorker extends Worker {
 
         boolean success;
         try {
-            threads.setThreadLeaching(idx, true);
-            markLeaching(thread.getParent());
 
 
             File file = ipfs.createCacheFile(cid);
             success = ipfs.loadToFile(file, cid,
                     new Progress() {
-
-
                         @Override
                         public boolean isClosed() {
                             return isStopped();
@@ -138,6 +144,8 @@ public class DownloadContentWorker extends Worker {
 
             if (success) {
                 threads.setThreadSeeding(idx);
+
+                checkParentComplete(thread.getParent());
 
                 if (size != file.length()) {
                     threads.setThreadSize(idx, file.length());
@@ -183,28 +191,14 @@ public class DownloadContentWorker extends Worker {
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {
-            threads.setThreadLeaching(idx, false);
             if (notificationManager != null) {
                 notificationManager.cancel(notifyID);
             }
-
-            checkParentComplete(thread.getParent());
+            Log.e(TAG, " finish onStart [" + (System.currentTimeMillis() - start) + "]...");
         }
 
         return Result.success();
 
-    }
-
-    private void markLeaching(long parent) {
-        if (parent == 0L) {
-            return;
-        }
-        THREADS threads = THREADS.getInstance(getApplicationContext());
-        threads.setThreadLeaching(parent, true);
-
-        Thread thread = threads.getThreadByIdx(parent);
-        checkNotNull(thread);
-        markLeaching(thread.getParent());
     }
 
 

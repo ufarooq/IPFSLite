@@ -5,11 +5,10 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.work.Constraints;
-import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.Data;
 import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
-import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
@@ -17,18 +16,15 @@ import androidx.work.WorkerParameters;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import threads.ipfs.IPFS;
-import threads.ipfs.PID;
 import threads.server.core.contents.CDS;
 import threads.server.core.contents.Content;
 import threads.server.core.peers.PEERS;
-import threads.server.services.SwarmService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class DownloadContentsWorker extends Worker {
 
-
+    public static final String WID = "DCW";
     private static final String TAG = DownloadContentsWorker.class.getSimpleName();
 
 
@@ -36,40 +32,24 @@ public class DownloadContentsWorker extends Worker {
         super(context, params);
     }
 
-    public static void download(@NonNull Context context) {
+    public static void download(@NonNull Context context, @NonNull String pid) {
         checkNotNull(context);
         Constraints.Builder builder = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED);
 
+
+        Data.Builder data = new Data.Builder();
+        data.putString(threads.server.core.peers.Content.PID, pid);
 
         OneTimeWorkRequest syncWorkRequest =
                 new OneTimeWorkRequest.Builder(DownloadContentsWorker.class)
                         .addTag(TAG)
                         .setConstraints(builder.build())
+                        .setInputData(data.build())
                         .build();
 
         WorkManager.getInstance(context).enqueueUniqueWork(
-                "DownloadContentsWorker", ExistingWorkPolicy.KEEP, syncWorkRequest);
-
-
-    }
-
-    public static void periodic(@NonNull Context context) {
-        checkNotNull(context);
-        Constraints.Builder builder = new Constraints.Builder()
-                .setRequiredNetworkType(NetworkType.CONNECTED);
-
-
-        PeriodicWorkRequest syncWorkRequest =
-                new PeriodicWorkRequest.Builder(DownloadContentsWorker.class,
-                        12, TimeUnit.HOURS)
-                        .addTag(TAG)
-                        .setConstraints(builder.build())
-                        .build();
-
-        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                "DownloadContentsWorkerPeriodic", ExistingPeriodicWorkPolicy.KEEP,
-                syncWorkRequest);
+                WID + pid, ExistingWorkPolicy.KEEP, syncWorkRequest);
 
 
     }
@@ -80,44 +60,31 @@ public class DownloadContentsWorker extends Worker {
     public Result doWork() {
 
         long start = System.currentTimeMillis();
+        String pid = getInputData().getString(threads.server.core.peers.Content.PID);
+        checkNotNull(pid);
 
         try {
             CDS contentService = CDS.getInstance(getApplicationContext());
             PEERS threads = PEERS.getInstance(getApplicationContext());
 
-            IPFS ipfs = IPFS.getInstance(getApplicationContext());
-            PID host = IPFS.getPID(getApplicationContext());
-            checkNotNull(ipfs, "IPFS not valid");
-            for (PID user : threads.getUsersPIDs()) {
 
-                if (user.equals(host)) {
-                    continue;
-                }
+            if (!threads.isUserBlocked(pid)) {
 
-                if (!threads.isUserBlocked(user)) {
-
-                    long timestamp = System.currentTimeMillis() -
-                            TimeUnit.MINUTES.toMillis(10);
+                long timestamp = System.currentTimeMillis() -
+                        TimeUnit.MINUTES.toMillis(10);
 
 
-                    List<Content> contents = contentService.getContentDatabase().
-                            contentDao().getContents(user, timestamp, false);
+                List<Content> contents = contentService.getContentDatabase().
+                        contentDao().getContents(pid);
 
-                    if (!contents.isEmpty()) {
-
-                        SwarmService.ConnectInfo info = SwarmService.connect(
-                                getApplicationContext(), user);
-
-                        if (info.isConnected()) {
-                            for (Content entry : contents) {
-                                ContentsWorker.download(getApplicationContext(),
-                                        entry.getCID(), entry.getPid());
-                            }
-                        }
-
+                if (!contents.isEmpty()) {
+                    for (Content entry : contents) {
+                        ContentsWorker.download(getApplicationContext(),
+                                entry.getCid(), entry.getPid());
                     }
                 }
             }
+
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);

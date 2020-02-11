@@ -27,14 +27,13 @@ import java.util.concurrent.Executors;
 import threads.ipfs.PID;
 import threads.server.R;
 import threads.server.core.events.EVENTS;
-import threads.server.core.peers.IPeer;
 import threads.server.core.peers.Peer;
 import threads.server.model.PeersViewModel;
+import threads.server.services.BootstrapService;
 import threads.server.services.LiteService;
+import threads.server.services.LoadPeersService;
 import threads.server.utils.Network;
 import threads.server.utils.PeersViewAdapter;
-import threads.server.work.BootstrapWorker;
-import threads.server.work.LoadPeersWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -76,8 +75,8 @@ public class SwarmFragment extends Fragment implements
 
 
         try {
-            BootstrapWorker.bootstrap(mContext);
-            LoadPeersWorker.loadPeers(mContext);
+            BootstrapService.bootstrap(mContext);
+            LoadPeersService.loadPeers(mContext);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {
@@ -135,7 +134,7 @@ public class SwarmFragment extends Fragment implements
                                 connected.add(peer);
                             }
                         }
-                        connected.sort(Comparator.comparing(IPeer::getAlias));
+                        connected.sort(Comparator.comparing(Peer::getAlias));
                         peersViewAdapter.updateData(connected);
                     } catch (Throwable e) {
                         Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -160,7 +159,7 @@ public class SwarmFragment extends Fragment implements
     }
 
     @Override
-    public void invokeGeneralAction(@NonNull IPeer peer, @NonNull View view) {
+    public void invokeGeneralAction(@NonNull Peer peer, @NonNull View view) {
         checkNotNull(peer);
         checkNotNull(view);
 
@@ -252,22 +251,7 @@ public class SwarmFragment extends Fragment implements
 
     private void clickPeerAdd(@NonNull String pid) {
         checkNotNull(pid);
-
-
-        try {
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-                    LiteService.connectPeer(mContext, PID.create(pid), true);
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-            });
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
+        LiteService.connectPeer(mContext, PID.create(pid), true);
     }
 
     public interface ActionListener {

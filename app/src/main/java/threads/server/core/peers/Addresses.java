@@ -7,9 +7,9 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
-import java.util.HashMap;
+import java.util.ArrayList;
 
-public class Addresses extends HashMap<String, String> {
+public class Addresses extends ArrayList<String> {
     @TypeConverter
     @Nullable
     public static Addresses toAddresses(@Nullable String data) {

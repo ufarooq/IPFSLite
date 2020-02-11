@@ -16,6 +16,11 @@ import androidx.work.WorkerParameters;
 
 import com.google.gson.Gson;
 
+import org.apache.commons.io.IOUtils;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,21 +35,23 @@ import threads.server.core.contents.Contents;
 import threads.server.core.events.EVENTS;
 import threads.server.core.peers.Content;
 import threads.server.core.peers.PEERS;
+import threads.server.core.peers.User;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.LiteService;
-import threads.server.services.SwarmService;
 
+import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class ContentsWorker extends Worker {
+    public static final String WID = "CW";
     private static final String TAG = ContentsWorker.class.getSimpleName();
 
     public ContentsWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
     }
 
-    public static void download(@NonNull Context context, @NonNull CID cid, @NonNull PID pid) {
+    public static void download(@NonNull Context context, @NonNull String cid, @NonNull String pid) {
         checkNotNull(context);
         checkNotNull(cid);
         checkNotNull(pid);
@@ -52,8 +59,8 @@ public class ContentsWorker extends Worker {
                 .setRequiredNetworkType(NetworkType.CONNECTED);
 
         Data.Builder data = new Data.Builder();
-        data.putString(Content.CID, cid.getCid());
-        data.putString(Content.PID, pid.getPid());
+        data.putString(Content.CID, cid);
+        data.putString(Content.PID, pid);
 
         OneTimeWorkRequest syncWorkRequest =
                 new OneTimeWorkRequest.Builder(ContentsWorker.class)
@@ -63,7 +70,7 @@ public class ContentsWorker extends Worker {
                         .build();
 
         WorkManager.getInstance(context).enqueueUniqueWork(
-                cid.getCid(), ExistingWorkPolicy.KEEP, syncWorkRequest);
+                WID + cid, ExistingWorkPolicy.KEEP, syncWorkRequest);
 
 
     }
@@ -85,8 +92,7 @@ public class ContentsWorker extends Worker {
 
                 if (!entry.isDeleting() && !entry.isSeeding()) {
                     threads.setThreadLeaching(entry.getIdx(), true);
-                    DownloadThreadWorker.download(getApplicationContext(),
-                            entry.getIdx());
+                    DownloadThreadWorker.download(getApplicationContext(), entry.getIdx());
                 }
             }
 
@@ -97,29 +103,9 @@ public class ContentsWorker extends Worker {
 
     }
 
-    private void createSkeleton(@NonNull CID cid, @Nullable String filename,
-                                long fileSize, @Nullable String mimeType, @Nullable String image) {
-        checkNotNull(cid);
 
-        try {
-
-            long idx = createThread(cid, filename, fileSize, mimeType);
-
-            if (idx > 0) {
-                if (image != null) {
-                    DownloadThumbnailWorker.download(getApplicationContext(), image, idx);
-                }
-            }
-
-        } catch (Throwable e) {
-            EVENTS.getInstance(getApplicationContext()).exception(e);
-        }
-
-
-    }
-
-    private long createThread(@NonNull CID cid,
-                              @Nullable String filename, long fileSize, @Nullable String mimeType) {
+    private void createThread(@NonNull CID cid, @Nullable String filename,
+                              @Nullable String mimeType, long fileSize) {
 
         final THREADS threads = THREADS.getInstance(getApplicationContext());
         final IPFS ipfs = IPFS.getInstance(getApplicationContext());
@@ -128,15 +114,17 @@ public class ContentsWorker extends Worker {
 
         if (entries.isEmpty()) {
 
-            return LiteService.createThread(getApplicationContext(), cid, filename, fileSize, mimeType);
+            LiteService.createThread(getApplicationContext(), cid, filename, fileSize, mimeType);
 
         }
-        return -1;
     }
 
     @NonNull
     @Override
     public Result doWork() {
+
+        long start = System.currentTimeMillis();
+        Log.e(TAG, " start [" + (System.currentTimeMillis() - start) + "]...");
 
         try {
             String cidStr = getInputData().getString(Content.CID);
@@ -159,8 +147,6 @@ public class ContentsWorker extends Worker {
 
                 if (!peers.isUserBlocked(pid)) {
 
-                    SwarmService.connect(getApplicationContext(), pid);
-
                     Contents contents = downloadContents(cid);
 
                     if (contents != null) {
@@ -170,14 +156,34 @@ public class ContentsWorker extends Worker {
                 }
             } else {
                 // create a new unknown user
-                LiteService.createUnknownUser(getApplicationContext(), pid);
-
+                createBlockedUser(pid);
             }
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        } finally {
+            Log.e(TAG, " finish onStart [" + (System.currentTimeMillis() - start) + "]...");
         }
         return Result.success();
+    }
+
+    private void createBlockedUser(@NonNull PID pid) {
+        checkNotNull(pid);
+
+        IPFS ipfs = IPFS.getInstance(getApplicationContext());
+        PEERS peers = PEERS.getInstance(getApplicationContext());
+        checkNotNull(ipfs, "IPFS not defined");
+
+
+        if (peers.getUserByPID(pid) == null) {
+
+            User user = peers.createUser(pid, pid.getPid());
+            user.setLite(false);
+            user.setBlocked(true);
+            peers.storeUser(user);
+
+            ConnectPeerWorker.connect(getApplicationContext(), pid.getPid());
+        }
     }
 
     private void downloadContents(@NonNull Contents files) {
@@ -190,10 +196,8 @@ public class ContentsWorker extends Worker {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 continue;
             }
-
-            createSkeleton(CID.create(cidStr), file.getFilename(),
-                    file.getSize(), file.getMimeType(), file.getImage());
-
+            createThread(CID.create(cidStr), file.getFilename(),
+                    file.getMimeType(), file.getSize());
 
         }
 
@@ -206,27 +210,39 @@ public class ContentsWorker extends Worker {
 
     }
 
-    private Contents downloadContents(@NonNull CID cid) {
+    private Contents downloadContents(@NonNull CID cid) throws IOException {
 
         final Gson gson = new Gson();
         final IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
+        File file = ipfs.createCacheFile(cid);
         try {
 
-            String content = ipfs.loadText(cid, new Progress() {
-                @Override
-                public boolean isClosed() {
-                    return isStopped();
-                }
-            });
+            boolean success = ipfs.loadToFile(file, cid,
+                    new Progress() {
+                        @Override
+                        public boolean isClosed() {
+                            return isStopped();
+                        }
+                    });
 
-            if (content != null) {
+            if (success) {
+                FileReader reader = new FileReader(file);
+                String content = IOUtils.toString(reader);
+                reader.close();
 
                 return gson.fromJson(content, Contents.class);
+            } else {
+                Log.e(TAG, "Content " + cid + " couldn't be downloaded");
             }
+
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        } finally {
+            if (file.exists()) {
+                checkArgument(file.delete());
+            }
         }
 
         return null;

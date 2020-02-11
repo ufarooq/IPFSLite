@@ -20,9 +20,10 @@ import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
-import threads.server.services.GatewayService;
+import threads.server.services.BootstrapService;
 import threads.server.services.LiteService;
-import threads.server.work.BootstrapWorker;
+import threads.server.utils.Preferences;
+import threads.server.work.ConnectPeersWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -62,7 +63,6 @@ public class JobServicePublisher extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
-        BootstrapWorker.bootstrap(getApplicationContext());
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -70,13 +70,7 @@ public class JobServicePublisher extends JobService {
             try {
 
                 IPFS ipfs = IPFS.getInstance(getApplicationContext());
-
-                checkNotNull(ipfs, "IPFS not valid");
-
-
-                // first notifications stored relays
-                GatewayService.connectStoredRelays(
-                        getApplicationContext(), "", 20, 3);
+                int timeout = Preferences.getConnectionTimeout(getApplicationContext());
 
 
                 THREADS threads = THREADS.getInstance(getApplicationContext());
@@ -90,15 +84,19 @@ public class JobServicePublisher extends JobService {
                     }
                 }
 
+                if (!list.isEmpty()) {
+                    BootstrapService.bootstrap(getApplicationContext());
+                    ConnectPeersWorker.connect(getApplicationContext(), 10);
+                }
 
                 for (CID content : contents) {
                     Executors.newSingleThreadExecutor().submit(
-                            () -> ipfs.dhtPublish(content, true, 1000));
+                            () -> ipfs.dhtPublish(content, true, timeout));
                 }
 
 
                 for (Thread thread : list) {
-                    JobServiceGatewayLoader.loader(getApplicationContext(), thread.getIdx());
+                    JobServicePinLoader.loader(getApplicationContext(), thread.getIdx());
                 }
 
             } catch (Throwable e) {

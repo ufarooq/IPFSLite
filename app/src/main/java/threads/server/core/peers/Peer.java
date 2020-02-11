@@ -12,7 +12,7 @@ import threads.ipfs.PID;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 @androidx.room.Entity
-public class Peer extends Basis implements IPeer, Comparable<Peer> {
+public class Peer implements Comparable<Peer> {
 
 
     @PrimaryKey
@@ -22,26 +22,27 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
     @NonNull
     @ColumnInfo(name = "multiAddress")
     private String multiAddress;
-    @ColumnInfo(name = "isRelay")
-    private boolean isRelay;
-    @ColumnInfo(name = "isAutonat")
-    private boolean isAutonat;
-    @ColumnInfo(name = "isPubsub")
-    private boolean isPubsub;
-    @ColumnInfo(name = "rating")
-    private int rating;
+    @ColumnInfo(name = "relay")
+    private boolean relay;
+    @ColumnInfo(name = "autonat")
+    private boolean autonat;
+    @ColumnInfo(name = "pubsub")
+    private boolean pubsub;
+    @ColumnInfo(name = "latency")
+    private long latency;
     @ColumnInfo(name = "connected")
     private boolean connected;
 
+
     Peer(@NonNull String pid, @NonNull String multiAddress) {
-        super();
         this.pid = pid;
         this.multiAddress = multiAddress;
-        this.isRelay = false;
-        this.isAutonat = false;
-        this.isPubsub = false;
-        this.rating = 0;
+        this.relay = false;
+        this.autonat = false;
+        this.pubsub = false;
+        this.latency = 0;
         this.connected = false;
+
     }
 
     static Peer createPeer(@NonNull PID pid, @NonNull String multiAddress) {
@@ -50,8 +51,6 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
         return new Peer(pid.getPid(), multiAddress);
     }
 
-
-    @Override
     public boolean isConnected() {
         return connected;
     }
@@ -60,7 +59,6 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
         this.connected = connected;
     }
 
-    @Override
     public boolean isDialing() {
         return false;
     }
@@ -71,27 +69,27 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
     }
 
     public boolean isPubsub() {
-        return isPubsub;
+        return pubsub;
     }
 
     public void setPubsub(boolean pubsub) {
-        isPubsub = pubsub;
+        this.pubsub = pubsub;
     }
 
     public boolean isAutonat() {
-        return isAutonat;
+        return autonat;
     }
 
     public void setAutonat(boolean autonat) {
-        isAutonat = autonat;
+        this.autonat = autonat;
     }
 
-    int getRating() {
-        return rating;
+    long getLatency() {
+        return latency;
     }
 
-    public void setRating(int rating) {
-        this.rating = rating;
+    public void setLatency(long latency) {
+        this.latency = latency;
     }
 
     @Override
@@ -108,10 +106,10 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
         return "Peer{" +
                 "pid='" + pid + '\'' +
                 ", multiAddress='" + multiAddress + '\'' +
-                ", isRelay=" + isRelay +
-                ", isAutonat=" + isAutonat +
-                ", isPubsub=" + isPubsub +
-                ", rating=" + rating +
+                ", relay=" + relay +
+                ", autonat=" + autonat +
+                ", pubsub=" + pubsub +
+                ", latency=" + latency +
                 '}';
     }
 
@@ -126,11 +124,11 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
     }
 
     public boolean isRelay() {
-        return isRelay;
+        return relay;
     }
 
     public void setRelay(boolean relay) {
-        isRelay = relay;
+        this.relay = relay;
     }
 
     @NonNull
@@ -145,10 +143,9 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
 
     @Override
     public int compareTo(@NonNull Peer peer) {
-        return Double.compare(peer.rating, this.rating);
+        return Double.compare(peer.latency, this.latency);
     }
 
-    @Override
     @NonNull
     public PID getPID() {
         return PID.create(getPid());
@@ -167,7 +164,10 @@ public class Peer extends Basis implements IPeer, Comparable<Peer> {
     public boolean sameContent(@NonNull Peer peer) {
         checkNotNull(peer);
         if (this == peer) return true;
-        return Objects.equals(connected, peer.isConnected());
+        return Objects.equals(connected, peer.isConnected()) &&
+                Objects.equals(autonat, peer.isAutonat()) &&
+                Objects.equals(relay, peer.isRelay()) &&
+                Objects.equals(pubsub, peer.isPubsub());
     }
 
 

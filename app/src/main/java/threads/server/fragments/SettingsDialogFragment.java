@@ -22,10 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import threads.ipfs.IPFS;
-import threads.ipfs.PubSubConfig;
 import threads.ipfs.RoutingConfig;
 import threads.server.R;
-import threads.server.jobs.JobServicePublisher;
 import threads.server.services.LiteService;
 import threads.server.utils.Preferences;
 
@@ -119,36 +117,6 @@ public class SettingsDialogFragment extends DialogFragment {
         });
 
 
-        Switch pubsub_support = view.findViewById(R.id.pubsub_support);
-        pubsub_support.setChecked(IPFS.isPubSubEnabled(activity));
-        pubsub_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            IPFS.setPubSubEnabled(activity, isChecked);
-
-            Toast.makeText(getContext(),
-                    R.string.daemon_restart_config_changed,
-                    Toast.LENGTH_LONG).show();
-
-
-        });
-
-        Switch pubsub_router = view.findViewById(R.id.pubsub_router);
-        pubsub_router.setChecked(IPFS.getPubSubRouter(activity)
-                == PubSubConfig.RouterEnum.gossipsub);
-        pubsub_router.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                IPFS.setPubSubRouter(activity, PubSubConfig.RouterEnum.gossipsub);
-            } else {
-                IPFS.setPubSubRouter(activity, PubSubConfig.RouterEnum.floodsub);
-            }
-
-            Toast.makeText(getContext(),
-                    R.string.daemon_restart_config_changed,
-                    Toast.LENGTH_LONG).show();
-
-
-        });
-
-
         Switch auto_relay_support = view.findViewById(R.id.auto_relay_support);
         auto_relay_support.setChecked(IPFS.isAutoRelayEnabled(activity));
         auto_relay_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -232,9 +200,6 @@ public class SettingsDialogFragment extends DialogFragment {
                 publisher_service_time_text.setText(
                         getString(R.string.publisher_service_time,
                                 String.valueOf(progress)));
-
-                JobServicePublisher.publish(mContext);
-
             }
 
             public void onStartTrackingTouch(SeekBar seekBar) {
@@ -257,13 +222,6 @@ public class SettingsDialogFragment extends DialogFragment {
                     Toast.LENGTH_LONG).show();
         });
 
-        Switch support_peer_discovery = view.findViewById(R.id.support_peer_discovery);
-        support_peer_discovery.setChecked(LiteService.isSupportPeerDiscovery(activity));
-        support_peer_discovery.setOnCheckedChangeListener((buttonView, isChecked) ->
-                LiteService.setSupportPeerDiscovery(activity, isChecked)
-        );
-
-
         Switch send_notifications_enabled = view.findViewById(R.id.send_notifications_enabled);
         send_notifications_enabled.setChecked(LiteService.isSendNotificationsEnabled(activity));
         send_notifications_enabled.setOnCheckedChangeListener((buttonView, isChecked) ->
@@ -280,7 +238,7 @@ public class SettingsDialogFragment extends DialogFragment {
         SeekBar connection_timeout = view.findViewById(R.id.connection_timeout);
 
 
-        connection_timeout.setMax(60);
+        connection_timeout.setMax(120);
 
         int connectionTimeout = Preferences.getConnectionTimeout(activity);
 

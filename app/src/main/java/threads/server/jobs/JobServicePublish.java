@@ -17,8 +17,7 @@ import java.util.concurrent.Executors;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.server.core.peers.Content;
-import threads.server.services.GatewayService;
-import threads.server.work.BootstrapWorker;
+import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -26,7 +25,7 @@ public class JobServicePublish extends JobService {
 
     private static final String TAG = JobServicePublish.class.getSimpleName();
 
-    public static void publish(@NonNull Context context, @NonNull CID cid, boolean connectStoredRelays) {
+    public static void publish(@NonNull Context context, @NonNull CID cid) {
         checkNotNull(context);
         checkNotNull(cid);
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
@@ -36,7 +35,6 @@ public class JobServicePublish extends JobService {
 
             PersistableBundle bundle = new PersistableBundle();
             bundle.putString(Content.CID, cid.getCid());
-            bundle.putBoolean(Content.PEERS, connectStoredRelays);
 
             JobInfo jobInfo = new JobInfo.Builder(cid.hashCode(), componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
@@ -55,32 +53,21 @@ public class JobServicePublish extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
-        BootstrapWorker.bootstrap(getApplicationContext());
 
         PersistableBundle bundle = jobParameters.getExtras();
         final String cid = bundle.getString(Content.CID);
         checkNotNull(cid);
-        final boolean connectPeers = bundle.getBoolean(Content.PEERS);
 
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             long start = System.currentTimeMillis();
             try {
-                final IPFS ipfs = IPFS.getInstance(getApplicationContext());
+                int timeout = Preferences.getConnectionTimeout(getApplicationContext());
+                IPFS ipfs = IPFS.getInstance(getApplicationContext());
                 checkNotNull(ipfs, "IPFS not valid");
 
-                // first notifications stored relays
-
-                if (connectPeers) {
-                    GatewayService.connectStoredRelays(getApplicationContext(), "",
-                            20, 3);
-                }
-
-                ipfs.dhtPublish(CID.create(cid), true, 1000);
-
-
-                GatewayService.evaluatePeers(getApplicationContext(), false);
+                ipfs.dhtPublish(CID.create(cid), true, timeout);
 
 
             } catch (Throwable e) {

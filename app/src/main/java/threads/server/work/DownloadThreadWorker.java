@@ -65,37 +65,51 @@ public class DownloadThreadWorker extends Worker {
     @Override
     public Result doWork() {
 
-        THREADS threads = THREADS.getInstance(getApplicationContext());
+        long start = System.currentTimeMillis();
 
-        long idx = getInputData().getLong(IDX, -1);
-        checkArgument(idx >= 0);
+        Log.e(TAG, " start [" + (System.currentTimeMillis() - start) + "]...");
 
-        Thread thread = threads.getThreadByIdx(idx);
-        checkNotNull(thread);
+        try {
+            THREADS threads = THREADS.getInstance(getApplicationContext());
 
-        CID cid = thread.getContent();
-        checkNotNull(cid);
+            long idx = getInputData().getLong(IDX, -1);
+            checkArgument(idx >= 0);
 
-        List<LinkInfo> links = getLinks(cid);
+            Thread thread = threads.getThreadByIdx(idx);
+            checkNotNull(thread);
 
-        if (links != null) {
-            if (links.isEmpty()) {
+            CID cid = thread.getContent();
+            checkNotNull(cid);
 
-                DownloadContentWorker.download(getApplicationContext(), cid,
-                        thread.getIdx(), thread.getName(), thread.getSize());
+            List<LinkInfo> links = getLinks(cid);
 
+            if (links != null) {
+                if (links.isEmpty()) {
+                    if (!isStopped()) {
+                        DownloadContentWorker.download(getApplicationContext(), cid,
+                                thread.getIdx(), thread.getName(), thread.getSize());
+                    }
 
-            } else {
+                } else {
 
-                // thread is directory
-                if (!thread.isDir()) {
-                    threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
+                    // thread is directory
+                    if (!thread.isDir()) {
+                        threads.setMimeType(thread, DocumentsContract.Document.MIME_TYPE_DIR);
+                    }
+
+                    List<Thread> threadList = evalLinks(thread, links);
+
+                    for (Thread child : threadList) {
+                        downloadThread(child);
+                    }
+
                 }
-                downloadLinks(thread, links);
-
             }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        } finally {
+            Log.e(TAG, " finish onStart [" + (System.currentTimeMillis() - start) + "]...");
         }
-
 
         return Result.success();
     }
@@ -137,15 +151,15 @@ public class DownloadThreadWorker extends Worker {
         return null;
     }
 
-    private void downloadLinks(@NonNull Thread thread, @NonNull List<LinkInfo> links) {
-
+    private List<Thread> evalLinks(@NonNull Thread thread, @NonNull List<LinkInfo> links) {
+        List<Thread> threadList = new ArrayList<>();
         for (LinkInfo link : links) {
 
             CID cid = link.getCid();
             Thread entry = getDirectoryThread(thread, cid);
             if (entry != null) {
                 if (!entry.isSeeding()) {
-                    downloadLink(entry, link);
+                    threadList.add(entry);
                 }
             } else {
 
@@ -153,21 +167,23 @@ public class DownloadThreadWorker extends Worker {
                 entry = THREADS.getInstance(getApplicationContext()).getThreadByIdx(idx);
                 checkNotNull(entry);
 
-                downloadLink(entry, link);
+                threadList.add(entry);
             }
-
         }
+        return threadList;
     }
 
-    private void downloadLink(@NonNull Thread thread, @NonNull LinkInfo link) {
-
-        if (link.isDirectory()) {
-            DownloadThreadWorker.download(getApplicationContext(), thread.getIdx());
-        } else {
-            DownloadContentWorker.download(getApplicationContext(), link.getCid(),
-                    thread.getIdx(), link.getName(), link.getSize());
+    private void downloadThread(@NonNull Thread thread) {
+        if (!isStopped()) {
+            if (thread.isDir()) {
+                DownloadThreadWorker.download(getApplicationContext(), thread.getIdx());
+            } else {
+                CID content = thread.getContent();
+                checkNotNull(content);
+                DownloadContentWorker.download(getApplicationContext(), content,
+                        thread.getIdx(), thread.getName(), thread.getSize());
+            }
         }
-
     }
 
     private long createThread(@NonNull CID cid, @NonNull LinkInfo link, long parent) {

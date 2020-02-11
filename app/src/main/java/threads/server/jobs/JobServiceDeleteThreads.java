@@ -16,7 +16,7 @@ import java.util.concurrent.Executors;
 
 import threads.ipfs.IPFS;
 import threads.server.core.threads.THREADS;
-import threads.server.services.CancelWorkerService;
+import threads.server.services.WorkerService;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -72,7 +72,7 @@ public class JobServiceDeleteThreads extends JobService {
 
                 if (indices != null) {
                     for (long idx : indices) {
-                        CancelWorkerService.cancelThreadDownload(getApplicationContext(), idx);
+                        WorkerService.cancelThreadDownload(getApplicationContext(), idx);
                     }
                 }
 

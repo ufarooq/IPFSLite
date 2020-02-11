@@ -38,7 +38,7 @@ public interface ThreadDao {
     @TypeConverters({Converter.class})
     CID getContent(long idx);
 
-    @Query("SELECT content FROM Thread WHERE idx = :idx")
+    @Query("SELECT thumbnail FROM Thread WHERE idx = :idx")
     @TypeConverters({Converter.class})
     CID getThumbnail(long idx);
 
@@ -97,9 +97,9 @@ public interface ThreadDao {
     @Query("UPDATE Thread SET mimeType =:mimeType  WHERE idx = :idx")
     void setMimeType(long idx, String mimeType);
 
-    @Query("UPDATE Thread SET thumbnail = :image WHERE idx = :idx")
+    @Query("UPDATE Thread SET thumbnail = :thumbnail WHERE idx = :idx")
     @TypeConverters({Converter.class})
-    void setThumbnail(long idx, CID image);
+    void setThumbnail(long idx, CID thumbnail);
 
     @Query("UPDATE Thread SET name = :name WHERE idx = :idx")
     void setName(long idx, String name);

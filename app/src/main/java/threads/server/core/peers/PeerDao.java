@@ -28,13 +28,13 @@ public interface PeerDao {
     @Query("SELECT * FROM Peer WHERE pid = :pid")
     Peer getPeerByPid(String pid);
 
-    @Query("SELECT * FROM Peer WHERE isRelay = 1")
+    @Query("SELECT * FROM Peer WHERE relay = 1")
     List<Peer> getRelayPeers();
 
-    @Query("SELECT * FROM Peer WHERE isAutonat = 1")
+    @Query("SELECT * FROM Peer WHERE autonat = 1")
     List<Peer> getAutonatPeers();
 
-    @Query("SELECT * FROM Peer WHERE isPubsub = 1")
+    @Query("SELECT * FROM Peer WHERE pubsub = 1")
     List<Peer> getPubsubPeers();
 
     @Query("SELECT * FROM Peer")
@@ -52,6 +52,4 @@ public interface PeerDao {
     @Query("SELECT * FROM Peer")
     List<Peer> getPeers();
 
-    @Query("UPDATE Peer SET timestamp = :timestamp WHERE pid = :pid")
-    void setTimestamp(String pid, long timestamp);
 }

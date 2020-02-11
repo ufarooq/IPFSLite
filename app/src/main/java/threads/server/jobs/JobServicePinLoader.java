@@ -22,15 +22,14 @@ import java.util.concurrent.Executors;
 import threads.ipfs.CID;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
-import threads.server.services.GatewayService;
 import threads.server.services.LiteService;
 import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class JobServiceGatewayLoader extends JobService {
+public class JobServicePinLoader extends JobService {
 
-    private static final String TAG = JobServiceGatewayLoader.class.getSimpleName();
+    private static final String TAG = JobServicePinLoader.class.getSimpleName();
     private static final String IDX = "IDX";
 
     public static void loader(@NonNull Context context, long idx) {
@@ -38,7 +37,7 @@ public class JobServiceGatewayLoader extends JobService {
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {
-            ComponentName componentName = new ComponentName(context, JobServiceGatewayLoader.class);
+            ComponentName componentName = new ComponentName(context, JobServicePinLoader.class);
 
             PersistableBundle bundle = new PersistableBundle();
             bundle.putLong(IDX, idx);
@@ -117,8 +116,6 @@ public class JobServiceGatewayLoader extends JobService {
                         Log.e(TAG, "Failed publish : " + url.toString() + " " + time + " [s]");
                     }
                 }
-
-                GatewayService.evaluatePeers(getApplicationContext(), false);
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

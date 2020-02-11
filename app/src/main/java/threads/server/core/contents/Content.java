@@ -3,11 +3,8 @@ package threads.server.core.contents;
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.PrimaryKey;
-import androidx.room.TypeConverters;
 
 import threads.ipfs.CID;
-import threads.ipfs.PID;
-import threads.server.core.Converter;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -20,26 +17,26 @@ public class Content {
     @ColumnInfo(name = "cid")
     private final String cid;
     @NonNull
-    @TypeConverters(Converter.class)
     @ColumnInfo(name = "pid")
-    private final PID pid;
+    private final String pid;
+
     @ColumnInfo(name = "timestamp")
     private long timestamp;
 
     @ColumnInfo(name = "finished")
     private boolean finished;
 
-    Content(@NonNull PID pid, @NonNull String cid, long timestamp, boolean finished) {
+    Content(@NonNull String pid, @NonNull String cid, long timestamp, boolean finished) {
         this.pid = pid;
         this.cid = cid;
         this.timestamp = timestamp;
         this.finished = finished;
     }
 
-    public static Content create(@NonNull PID pid, @NonNull CID cid, boolean finished) {
+    public static Content create(@NonNull String pid, @NonNull String cid, boolean finished) {
         checkNotNull(pid);
         checkNotNull(cid);
-        return new Content(pid, cid.getCid(), System.currentTimeMillis(), finished);
+        return new Content(pid, cid, System.currentTimeMillis(), finished);
     }
 
     boolean isFinished() {
@@ -47,7 +44,7 @@ public class Content {
     }
 
     @NonNull
-    public PID getPid() {
+    public String getPid() {
         return pid;
     }
 

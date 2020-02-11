@@ -16,7 +16,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.ipfs.CID;
-import threads.server.core.events.EVENTS;
 import threads.server.core.peers.Content;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
@@ -55,59 +54,41 @@ public class JobServiceDownload extends JobService {
         }
     }
 
-    public static void downloadContentID(@NonNull Context context, @NonNull CID cid) {
-
-        checkNotNull(context);
-        checkNotNull(cid);
-
-        final THREADS threads = THREADS.getInstance(context);
-        final EVENTS events = EVENTS.getInstance(context);
-
-        try {
-
-            List<Thread> entries = threads.getThreadsByContentAndParent(cid, 0L);
-
-            if (!entries.isEmpty()) {
-                Thread entry = entries.get(0);
-
-                if (entry.isDeleting() || entry.isSeeding()) {
-                    return;
-                } else {
-                    threads.setThreadLeaching(entry.getIdx(), true);
-                    DownloadThreadWorker.download(context, entry.getIdx());
-                    return;
-                }
-            }
-            long idx = LiteService.createThread(context, cid,
-                    null, 0L, null);
-
-            threads.setThreadLeaching(idx, true);
-
-            DownloadThreadWorker.download(context, idx);
-
-
-        } catch (Throwable e) {
-            events.exception(e);
-        }
-
-    }
-
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
         PersistableBundle bundle = jobParameters.getExtras();
-        final String cid = bundle.getString(Content.CID);
-        checkNotNull(cid);
+        final String cidStr = bundle.getString(Content.CID);
+        checkNotNull(cidStr);
 
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             long start = System.currentTimeMillis();
-
             try {
 
-                downloadContentID(getApplicationContext(), CID.create(cid));
+                CID cid = CID.create(cidStr);
+
+                THREADS threads = THREADS.getInstance(getApplicationContext());
+
+
+                List<Thread> entries = threads.getThreadsByContentAndParent(cid, 0L);
+
+                if (!entries.isEmpty()) {
+                    Thread entry = entries.get(0);
+                    if (!entry.isDeleting() && !entry.isSeeding()) {
+                        threads.setThreadLeaching(entry.getIdx(), true);
+                        DownloadThreadWorker.download(getApplicationContext(), entry.getIdx());
+                    }
+                } else {
+                    long idx = LiteService.createThread(getApplicationContext(), cid,
+                            null, 0L, null);
+
+                    threads.setThreadLeaching(idx, true);
+                    DownloadThreadWorker.download(getApplicationContext(), idx);
+                }
+
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             } finally {
