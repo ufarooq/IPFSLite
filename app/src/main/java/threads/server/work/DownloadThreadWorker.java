@@ -163,7 +163,7 @@ public class DownloadThreadWorker extends Worker {
                 }
             } else {
 
-                long idx = createThread(cid, link, thread.getIdx());
+                long idx = createThread(cid, link, thread);
                 entry = THREADS.getInstance(getApplicationContext()).getThreadByIdx(idx);
                 checkNotNull(entry);
 
@@ -186,16 +186,16 @@ public class DownloadThreadWorker extends Worker {
         }
     }
 
-    private long createThread(@NonNull CID cid, @NonNull LinkInfo link, long parent) {
-
-
+    private long createThread(@NonNull CID cid, @NonNull LinkInfo link, @NonNull Thread parent) {
         checkNotNull(cid);
         checkNotNull(link);
+        checkNotNull(parent);
 
 
         THREADS threads = THREADS.getInstance(getApplicationContext());
 
-        Thread thread = threads.createThread(parent);
+        Thread thread = threads.createThread(parent.getIdx());
+        thread.setLeaching(parent.isLeaching());
         thread.setContent(cid);
         String filename = link.getName();
         thread.setName(filename);
