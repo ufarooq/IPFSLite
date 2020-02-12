@@ -9,17 +9,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
-import threads.server.MainActivity;
 import threads.server.R;
 import threads.server.work.ConnectPeersWorker;
 
@@ -32,8 +31,6 @@ public class DaemonService extends Service {
     private static final int NOTIFICATION_ID = 998;
     private static final String TAG = DaemonService.class.getSimpleName();
     private static final String START_DAEMON = "START_DAEMON";
-    private static final String APP_KEY = "AppKey";
-    private static final String DAEMON_KEY = "daemonKey";
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
 
         @Override
@@ -46,23 +43,6 @@ public class DaemonService extends Service {
             }
         }
     };
-
-    public static void setDaemonRunning(@NonNull Context context, boolean daemon) {
-        checkNotNull(context);
-
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                APP_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(DAEMON_KEY, daemon);
-        editor.apply();
-    }
-
-    public static boolean isDaemonRunning(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                APP_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(DAEMON_KEY, false);
-    }
 
     public static void invoke(@NonNull Context context, boolean startDaemon) {
         checkNotNull(context);
@@ -116,6 +96,8 @@ public class DaemonService extends Service {
 
 
         } else {
+            Toast.makeText(getApplicationContext(), R.string.daemon_shutdown,
+                    Toast.LENGTH_LONG).show();
             try {
                 stopForeground(true);
                 unregisterReceiver(broadcastReceiver);
@@ -148,14 +130,12 @@ public class DaemonService extends Service {
         builder.setSmallIcon(R.drawable.server_network);
         builder.setPriority(NotificationManager.IMPORTANCE_MAX);
 
-        Intent defaultIntent = new Intent(getApplicationContext(), MainActivity.class);
+        Intent defaultIntent = new Intent(getApplicationContext(), DaemonService.class);
+        defaultIntent.putExtra(START_DAEMON, false);
         int requestID = (int) System.currentTimeMillis();
-        defaultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-                Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent defaultPendingIntent = PendingIntent.getActivity(
+        PendingIntent defaultPendingIntent = PendingIntent.getService(
                 getApplicationContext(), requestID, defaultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder.setContentIntent(defaultPendingIntent);
-
 
         Notification notification = builder.build();
 

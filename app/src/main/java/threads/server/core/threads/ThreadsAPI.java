@@ -47,11 +47,6 @@ public class ThreadsAPI {
     }
 
 
-    public void setThreadsPublishing(boolean publish, long... idxs) {
-        getThreadsDatabase().threadDao().setThreadsPublishing(publish, idxs);
-    }
-
-
     @Nullable
     public String getMimeType(@NonNull Thread thread) {
         checkNotNull(thread);

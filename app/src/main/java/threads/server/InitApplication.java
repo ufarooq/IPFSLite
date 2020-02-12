@@ -12,9 +12,9 @@ import threads.ipfs.ConnMgrConfig;
 import threads.ipfs.IPFS;
 import threads.ipfs.RoutingConfig;
 import threads.server.services.LiteService;
-import threads.server.utils.Preferences;
 import threads.server.utils.ProgressChannel;
 
+import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class InitApplication extends Application {
@@ -22,6 +22,23 @@ public class InitApplication extends Application {
     private static final String UPDATE = "UPDATE";
     private static final String TAG = InitApplication.class.getSimpleName();
     private static final String LOGIN_FLAG_KEY = "loginFlagKey";
+    private static final String PREF_KEY = "prefKey";
+    private static final String TIMEOUT_KEY = "timeoutKey";
+
+    public static int getConnectionTimeout(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+        return sharedPref.getInt(TIMEOUT_KEY, 15);
+    }
+
+    public static void setConnectionTimeout(@NonNull Context context, int timeout) {
+        checkNotNull(context);
+        checkArgument(timeout >= 0);
+        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt(TIMEOUT_KEY, timeout);
+        editor.apply();
+    }
 
     public static boolean getLoginFlag(@NonNull Context context) {
         checkNotNull(context);
@@ -72,7 +89,7 @@ public class InitApplication extends Application {
                 IPFS.setGracePeriod(context, "10s");
 
 
-                Preferences.setConnectionTimeout(context, 45);
+                InitApplication.setConnectionTimeout(context, 45);
                 EntityService.setTangleTimeout(context, 60);
 
                 IPFS.setMDNSEnabled(context, true);

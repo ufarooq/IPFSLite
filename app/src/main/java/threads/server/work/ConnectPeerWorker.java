@@ -15,15 +15,15 @@ import androidx.work.WorkerParameters;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
-import java.util.List;
-
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
+import threads.ipfs.Peer;
 import threads.ipfs.PeerInfo;
+import threads.server.InitApplication;
+import threads.server.core.peers.Addresses;
 import threads.server.core.peers.Content;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
-import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -82,16 +82,15 @@ public class ConnectPeerWorker extends Worker {
                     LoadIdentityWorker.identify(getApplicationContext(), user.getPid());
                 }
 
-                try {
-                    isConnected = connect(user);
-                    peers.setUserConnected(user, isConnected);
 
-                    if (isConnected) {
-                        id(user.getPid());
-                    }
-                } finally {
-                    peers.setUserDialing(pid, false);
+                isConnected = connect(user);
+                peers.setUserDialing(pid, false);
+                peers.setUserConnected(user, isConnected);
+
+                if (isConnected) {
+                    id(user.getPid());
                 }
+
             }
 
 
@@ -109,44 +108,53 @@ public class ConnectPeerWorker extends Worker {
     }
 
     private void id(@NonNull String peerID) {
-        int timeout = Preferences.getConnectionTimeout(getApplicationContext());
+        int timeout = InitApplication.getConnectionTimeout(getApplicationContext());
         try {
             IPFS ipfs = IPFS.getInstance(getApplicationContext());
             checkNotNull(ipfs, "IPFS not valid");
             PEERS peers = PEERS.getInstance(getApplicationContext());
             PID pid = PID.create(peerID);
+            boolean update = false;
+            Peer peerInfo = ipfs.swarmPeer(PID.create(peerID));
+            String multiAddress = "";
+            if (peerInfo != null) {
+                multiAddress = peerInfo.getMultiAddress();
+            }
+            User user = peers.getUserByPID(pid);
+            checkNotNull(user);
 
-            PeerInfo pInfo = ipfs.id(pid, timeout);
-            if (pInfo != null) {
-                User user = peers.getUserByPID(pid);
-                checkNotNull(user);
-                boolean update = false;
-                if (user.getPublicKey() == null) {
-                    String pKey = pInfo.getPublicKey();
-                    if (pKey != null) {
-                        if (!pKey.isEmpty()) {
+            if (!multiAddress.isEmpty()) {
+                Addresses addresses = user.getAddresses();
+                if (!addresses.contains(multiAddress)) {
+                    update = true;
+                    user.clearAddresses();
+                    user.addAddress(multiAddress);
+                }
+            }
+
+            if (user.getPublicKey() == null || !user.isLite()) {
+                PeerInfo pInfo = ipfs.id(pid, timeout);
+                if (pInfo != null) {
+
+                    if (user.getPublicKey() == null) {
+                        String pKey = pInfo.getPublicKey();
+                        if (pKey != null) {
+                            if (!pKey.isEmpty()) {
+                                update = true;
+                                user.setPublicKey(pKey);
+                            }
+                        }
+                    }
+                    if (!user.isLite()) {
+                        if (pInfo.isLiteAgent()) {
                             update = true;
-                            peers.setUserPublicKey(peerID, pKey);
+                            user.setLite(true);
                         }
                     }
                 }
-                if (!user.isLite()) {
-                    if (pInfo.isLiteAgent()) {
-                        update = true;
-                        peers.setUserIsLite(peerID);
-                    }
-                }
-                List<String> list = pInfo.getMultiAddresses();
-                if (!list.isEmpty()) {
-                    update = true;
-                    user.clearAddresses();
-                    for (String address : list) {
-                        user.addAddress(address);
-                    }
-                }
-                if (update) {
-                    peers.updateUser(user);
-                }
+            }
+            if (update) {
+                peers.updateUser(user);
             }
 
         } catch (Throwable e) {
@@ -157,7 +165,7 @@ public class ConnectPeerWorker extends Worker {
     private boolean connect(@NonNull PID pid) {
         checkNotNull(pid);
         String tag = RandomStringUtils.randomAlphabetic(10);
-        int timeout = Preferences.getConnectionTimeout(getApplicationContext());
+        int timeout = InitApplication.getConnectionTimeout(getApplicationContext());
         IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
         if (ipfs.isConnected(pid)) {
@@ -165,21 +173,24 @@ public class ConnectPeerWorker extends Worker {
             return true;
         } else {
 
-            if (ipfs.swarmConnect(pid, timeout)) {
-                ipfs.protectPeer(pid, tag);
-                return true;
-            }
-
-            // now check old addresses
-            PEERS peers = PEERS.getInstance(getApplicationContext());
-            User user = peers.getUserByPID(pid);
-            checkNotNull(user);
-            for (String address : user.getAddresses()) {
-                String multiAddress = address.concat("/" + IPFS.Style.p2p + "/" + pid.getPid());
-                Log.e(TAG, "Connect to " + multiAddress);
-                if (ipfs.swarmConnect(multiAddress, timeout)) {
+            if (!isStopped()) {
+                if (ipfs.swarmConnect(pid, timeout)) {
                     ipfs.protectPeer(pid, tag);
                     return true;
+                }
+            }
+            if (!isStopped()) {
+                // now check old addresses
+                PEERS peers = PEERS.getInstance(getApplicationContext());
+                User user = peers.getUserByPID(pid);
+                checkNotNull(user);
+                for (String address : user.getAddresses()) {
+                    String multiAddress = address.concat("/" + IPFS.Style.p2p + "/" + pid.getPid());
+                    Log.e(TAG, "Connect to " + multiAddress);
+                    if (ipfs.swarmConnect(multiAddress, timeout)) {
+                        ipfs.protectPeer(pid, tag);
+                        return true;
+                    }
                 }
             }
         }

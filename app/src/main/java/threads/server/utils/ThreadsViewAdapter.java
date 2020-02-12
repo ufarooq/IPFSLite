@@ -11,7 +11,6 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.selection.ItemDetailsLookup;
 import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.widget.DiffUtil;
@@ -37,7 +36,6 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
     private final Context mContext;
     private final ThreadsViewAdapterListener mListener;
     private final List<Thread> threads = new ArrayList<>();
-    private final int selectedItemColor;
 
     @Nullable
     private SelectionTracker<Long> mSelectionTracker;
@@ -46,12 +44,6 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                               @NonNull ThreadsViewAdapterListener listener) {
         this.mContext = context;
         this.mListener = listener;
-        selectedItemColor = getThemeSelectedItemColor(context);
-    }
-
-
-    private static int getThemeSelectedItemColor(final Context context) {
-        return ContextCompat.getColor(context, R.color.colorSelectedItem);
     }
 
     private static String getCompactString(@NonNull String title) {
@@ -106,7 +98,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
         threadViewHolder.bind(isSelected, thread);
         try {
             if (isSelected) {
-                threadViewHolder.view.setBackgroundColor(selectedItemColor);
+                threadViewHolder.view.setBackgroundResource(R.color.colorSelectedItem);
             } else {
                 threadViewHolder.view.setBackgroundColor(
                         android.R.drawable.list_selector_background);
@@ -146,7 +138,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
             }
 
 
-            String info = getInfo(mContext, thread);
+            String info = getInfo(thread);
             threadViewHolder.content_subtitle.setText(info);
 
 
@@ -183,7 +175,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                     threadViewHolder.general_action.setVisibility(View.VISIBLE);
 
                     threadViewHolder.general_action.setOnClickListener((v) ->
-                            mListener.invokeGeneralAction(thread, v)
+                            mListener.invokeAction(thread, v)
                     );
                 } else {
                     threadViewHolder.general_action.setImageResource(R.drawable.upload);
@@ -206,7 +198,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                 threadViewHolder.general_action.setVisibility(View.VISIBLE);
 
                 threadViewHolder.general_action.setOnClickListener((v) ->
-                        mListener.invokeGeneralAction(thread, v)
+                        mListener.invokeAction(thread, v)
                 );
             } else {
                 if (progress > 0 && progress < 101) {
@@ -228,8 +220,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
     }
 
-    @NonNull
-    public String getDate(@NonNull Date date) {
+    private String getDate(@NonNull Date date) {
         Calendar c = Calendar.getInstance();
         c.set(Calendar.HOUR_OF_DAY, 0);
         c.set(Calendar.MINUTE, 0);
@@ -251,7 +242,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
         }
     }
 
-    private String getInfo(Context context, Thread thread) {
+    private String getInfo(@NonNull Thread thread) {
         Date date = new Date(thread.getLastModified());
         String dateInfo = getDate(date);
 
@@ -260,13 +251,13 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
         if (size < 1024) {
             fileSize = String.valueOf(size);
-            return context.getString(R.string.link_format, dateInfo, fileSize);
+            return mContext.getString(R.string.link_format, dateInfo, fileSize);
         } else if (size < 1024 * 1024) {
             fileSize = String.valueOf((double) (size / 1024));
-            return context.getString(R.string.link_format_kb, dateInfo, fileSize);
+            return mContext.getString(R.string.link_format_kb, dateInfo, fileSize);
         } else {
             fileSize = String.valueOf((double) (size / (1024 * 1024)));
-            return context.getString(R.string.link_format_mb, dateInfo, fileSize);
+            return mContext.getString(R.string.link_format_mb, dateInfo, fileSize);
         }
     }
 
@@ -312,7 +303,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
 
     public interface ThreadsViewAdapterListener {
 
-        void invokeGeneralAction(@NonNull Thread thread, @NonNull View view);
+        void invokeAction(@NonNull Thread thread, @NonNull View view);
 
         void onClick(@NonNull Thread thread);
 

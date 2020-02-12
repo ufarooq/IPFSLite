@@ -28,11 +28,20 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/action_select_all"
+        android:icon="@drawable/select_all"
+        android:orderInCategory="45"
+        android:title="@string/action_select_all"
+        android:visible="true"
+        app:iconTint="?android:textColorSecondary"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_edit_cid"
         android:icon="@drawable/edit_code"
-        android:orderInCategory="31"
+        android:orderInCategory="50"
         android:title="@string/action_edit_cid"
         app:iconTint="?android:textColorSecondary"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 
 </menu>

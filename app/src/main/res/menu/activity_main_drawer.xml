@@ -1,31 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
 
     <item android:title="@string/general">
         <menu>
             <item
+                android:id="@+id/nav_daemon"
+                android:icon="@drawable/play_circle"
+                android:title="@string/start_daemon" />
+            <item
                 android:id="@+id/nav_settings"
                 android:icon="@drawable/cogs"
-                android:title="@string/settings"
-                app:iconTint="?android:textColorSecondary" />
+                android:title="@string/settings" />
             <item
                 android:id="@+id/nav_config"
                 android:icon="@drawable/file_cog_outline"
-                android:title="@string/config"
-                app:iconTint="?android:textColorSecondary" />
+                android:title="@string/config" />
             <item
                 android:id="@+id/nav_inbox"
                 android:icon="@drawable/arrow_right_bold_outline"
-                android:title="@string/inbox"
-                app:iconTint="?android:textColorSecondary" />
-            <item
-                android:id="@+id/nav_outbox"
-                android:icon="@drawable/arrow_left_bold_outline"
-                android:title="@string/outbox"
-                app:iconTint="?android:textColorSecondary" />
+                android:title="@string/inbox" />
         </menu>
     </item>
 
@@ -35,28 +30,23 @@
             <item
                 android:id="@+id/nav_share"
                 android:icon="@drawable/share"
-                android:title="@string/share_app"
-                app:iconTint="?android:textColorSecondary" />
+                android:title="@string/share_app" />
             <item
                 android:id="@+id/nav_documentation"
                 android:icon="@drawable/book_open_outline"
-                android:title="@string/documentation"
-                app:iconTint="?android:textColorSecondary" />
+                android:title="@string/documentation" />
             <item
                 android:id="@+id/nav_issues"
                 android:icon="@drawable/bug_outline"
-                android:title="@string/issues"
-                app:iconTint="?android:textColorSecondary" />
+                android:title="@string/issues" />
             <item
                 android:id="@+id/nav_licences"
                 android:icon="@drawable/information_variant"
-                android:title="@string/licences"
-                app:iconTint="?android:textColorSecondary" />
+                android:title="@string/licences" />
             <item
                 android:id="@+id/nav_privacy_policy"
                 android:icon="@drawable/security"
-                android:title="@string/privacy_policy"
-                app:iconTint="?android:textColorSecondary" />
+                android:title="@string/privacy_policy" />
 
         </menu>
     </item>

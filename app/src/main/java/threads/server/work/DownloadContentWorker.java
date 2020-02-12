@@ -25,6 +25,7 @@ import java.util.List;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.Progress;
+import threads.server.core.peers.Content;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.ThumbnailService;
@@ -37,10 +38,8 @@ import static androidx.core.util.Preconditions.checkNotNull;
 public class DownloadContentWorker extends Worker {
     public static final String WID = "DCW";
     private static final String TAG = DownloadContentWorker.class.getSimpleName();
-    private static final String ID = "ID";
     private static final String FN = "FN";
     private static final String FS = "FS";
-    private static final String IDX = "IDX";
 
     public DownloadContentWorker(
             @NonNull Context context,
@@ -64,9 +63,9 @@ public class DownloadContentWorker extends Worker {
 
         Data.Builder data = new Data.Builder();
         data.putString(FN, filename);
-        data.putString(ID, cid.getCid());
+        data.putString(Content.CID, cid.getCid());
         data.putLong(FS, size);
-        data.putLong(IDX, idx);
+        data.putLong(Content.IDX, idx);
 
         OneTimeWorkRequest syncWorkRequest =
                 new OneTimeWorkRequest.Builder(DownloadContentWorker.class)
@@ -92,9 +91,9 @@ public class DownloadContentWorker extends Worker {
 
         String filename = getInputData().getString(FN);
         checkNotNull(filename);
-        String cidStr = getInputData().getString(ID);
+        String cidStr = getInputData().getString(Content.CID);
         checkNotNull(cidStr);
-        long idx = getInputData().getLong(IDX, -1);
+        long idx = getInputData().getLong(Content.IDX, -1);
         checkArgument(idx >= 0);
         long size = getInputData().getLong(FS, -1);
 
@@ -122,8 +121,6 @@ public class DownloadContentWorker extends Worker {
 
         boolean success;
         try {
-
-
             File file = ipfs.createCacheFile(cid);
             success = ipfs.loadToFile(file, cid,
                     new Progress() {
@@ -184,6 +181,7 @@ public class DownloadContentWorker extends Worker {
                     }
                 }
             } else {
+                threads.setThreadLeaching(idx, false);
                 if (file.exists()) {
                     checkArgument(file.delete());
                 }
@@ -211,10 +209,13 @@ public class DownloadContentWorker extends Worker {
 
         try {
             int allSeeding = 0;
+            boolean isOneLeaching = false;
             List<Thread> list = threads.getChildren(parent);
             for (Thread entry : list) {
                 if (entry.isSeeding()) {
                     allSeeding++;
+                } else if (entry.isLeaching()) {
+                    isOneLeaching = true;
                 }
             }
 
@@ -225,11 +226,14 @@ public class DownloadContentWorker extends Worker {
 
             if (finished) {
                 threads.setThreadSeeding(parent);
-
-                Thread thread = threads.getThreadByIdx(parent);
-                checkNotNull(thread);
-                checkParentComplete(thread.getParent());
+            } else {
+                if (!isOneLeaching) {
+                    threads.setThreadLeaching(parent, false);
+                }
             }
+            Thread thread = threads.getThreadByIdx(parent);
+            checkNotNull(thread);
+            checkParentComplete(thread.getParent());
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }

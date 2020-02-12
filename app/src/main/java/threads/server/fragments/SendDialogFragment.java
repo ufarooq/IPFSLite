@@ -97,7 +97,7 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
                 .setPositiveButton(R.string.send_to, (dialog, id) -> {
 
                     // mis-clicking prevention, using threshold of 1000 ms
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    if (SystemClock.elapsedRealtime() - mLastClickTime < 500) {
                         return;
                     }
 
@@ -115,7 +115,7 @@ public class SendDialogFragment extends DialogFragment implements ContactsViewAd
                 .setNeutralButton(R.string.cancel, (dialog, id) -> {
 
                     // mis-clicking prevention, using threshold of 1000 ms
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    if (SystemClock.elapsedRealtime() - mLastClickTime < 500) {
                         return;
                     }
 

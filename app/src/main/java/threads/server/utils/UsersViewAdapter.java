@@ -1,6 +1,5 @@
 package threads.server.utils;
 
-import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,16 +28,13 @@ public class UsersViewAdapter extends
 
     private static final String TAG = UsersViewAdapter.class.getSimpleName();
     private final List<User> users = new ArrayList<>();
-    private final Context context;
     private final UsersViewAdapterListener listener;
 
     @Nullable
     private SelectionTracker<String> mSelectionTracker;
 
-    public UsersViewAdapter(@NonNull Context context,
-                            @NonNull UsersViewAdapter.UsersViewAdapterListener listener) {
+    public UsersViewAdapter(@NonNull UsersViewAdapter.UsersViewAdapterListener listener) {
 
-        this.context = context;
         this.listener = listener;
     }
 
@@ -88,8 +84,13 @@ public class UsersViewAdapter extends
 
             userViewHolder.bind(isSelected, user);
 
-
             try {
+                if (isSelected) {
+                    userViewHolder.view.setBackgroundResource(R.color.colorSelectedItem);
+                } else {
+                    userViewHolder.view.setBackgroundColor(
+                            android.R.drawable.list_selector_background);
+                }
 
                 if (hasSelection()) {
                     if (isSelected) {
@@ -205,9 +206,11 @@ public class UsersViewAdapter extends
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
+        final View view;
 
         ViewHolder(View v) {
             super(v);
+            view = v;
         }
     }
 

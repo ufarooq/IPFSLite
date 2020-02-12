@@ -1,7 +1,9 @@
 package threads.server.fragments;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.SearchManager;
+import android.content.ClipData;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -30,6 +32,7 @@ import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.appcompat.view.menu.MenuPopupHelper;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.core.app.ShareCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.LiveData;
@@ -40,6 +43,10 @@ import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 import java.io.OutputStream;
 import java.util.Comparator;
@@ -64,8 +71,11 @@ import threads.server.model.SelectionViewModel;
 import threads.server.model.ThreadViewModel;
 import threads.server.provider.FileDocumentsProvider;
 import threads.server.services.BootstrapService;
+import threads.server.services.DownloaderService;
 import threads.server.services.LiteService;
+import threads.server.services.UploadService;
 import threads.server.services.WorkerService;
+import threads.server.utils.CodecDecider;
 import threads.server.utils.Network;
 import threads.server.utils.ThreadItemDetailsLookup;
 import threads.server.utils.ThreadsItemKeyProvider;
@@ -80,7 +90,10 @@ public class ThreadsFragment extends Fragment implements
         SwipeRefreshLayout.OnRefreshListener, ThreadsViewAdapter.ThreadsViewAdapterListener {
 
     private static final String TAG = ThreadsFragment.class.getSimpleName();
-    private static final int FILE_EXPORT_REQUEST_CODE = 2;
+    private static final int REQUEST_CAMERA = 1;
+    private static final int FILE_EXPORT_REQUEST = 2;
+    private static final int REQUEST_SELECT_FILES = 3;
+
     private static final int CLICK_OFFSET = 500;
     @NonNull
     private final AtomicReference<LiveData<List<Thread>>> observer = new AtomicReference<>(null);
@@ -102,6 +115,7 @@ public class ThreadsFragment extends Fragment implements
     private boolean isTablet;
     private boolean hasCamera;
     private CID threadContent = null;
+    private FloatingActionButton mMainFab;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -123,6 +137,24 @@ public class ThreadsFragment extends Fragment implements
     }
 
     @Override
+    public void onRequestPermissionsResult
+            (int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CAMERA) {
+            for (int i = 0, len = permissions.length; i < len; i++) {
+                if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                    EVENTS.getInstance(mContext).postPermission(
+                            getString(R.string.permission_camera_denied));
+
+                }
+                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    clickMultihashWork();
+                }
+            }
+        }
+    }
+
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         if (resultCode != Activity.RESULT_OK) {
@@ -130,8 +162,20 @@ public class ThreadsFragment extends Fragment implements
         }
 
         try {
+            if (requestCode == REQUEST_SELECT_FILES) {
 
-            if (requestCode == FILE_EXPORT_REQUEST_CODE) {
+                if (data.getClipData() != null) {
+                    ClipData mClipData = data.getClipData();
+                    for (int i = 0; i < mClipData.getItemCount(); i++) {
+                        ClipData.Item item = mClipData.getItemAt(i);
+                        Uri uri = item.getUri();
+                        UploadService.invoke(mContext, uri);
+                    }
+                } else if (data.getData() != null) {
+                    Uri uri = data.getData();
+                    UploadService.invoke(mContext, uri);
+                }
+            } else if (requestCode == FILE_EXPORT_REQUEST) {
                 if (data != null) {
                     Uri uri = data.getData();
                     if (uri != null) {
@@ -149,8 +193,16 @@ public class ThreadsFragment extends Fragment implements
                         }
                     }
                 }
-                return;
-
+            } else {
+                IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+                if (result != null) {
+                    if (result.getContents() != null) {
+                        String multihash = result.getContents();
+                        downloadMultihash(multihash);
+                    } else {
+                        EVENTS.getInstance(mContext).postError(getString(R.string.scan_failed));
+                    }
+                }
             }
 
         } catch (Throwable e) {
@@ -223,7 +275,7 @@ public class ThreadsFragment extends Fragment implements
             removeKeyboards();
             mListener.showBottomNavigation(true);
             mListener.setPagingEnabled(true);
-            mListener.showMainFab(true);
+            showMainFab(true);
 
             return false;
 
@@ -231,7 +283,7 @@ public class ThreadsFragment extends Fragment implements
         mSearchView.setOnSearchClickListener((v) -> {
             mListener.showBottomNavigation(false);
             mListener.setPagingEnabled(false);
-            mListener.showMainFab(false);
+            showMainFab(false);
         });
         mSearchView.setIconifiedByDefault(true);
         String query = mSelectionViewModel.getQuery().getValue();
@@ -292,7 +344,19 @@ public class ThreadsFragment extends Fragment implements
 
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            mListener.clickUpload();
+            clickUpload();
+            return true;
+
+        } else if (item.getItemId() == R.id.action_select_all) {
+
+            if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                return true;
+            }
+
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            mThreadsViewAdapter.selectAllThreads();
+
             return true;
 
         } else if (item.getItemId() == R.id.action_scan_cid) {
@@ -303,7 +367,7 @@ public class ThreadsFragment extends Fragment implements
 
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            mListener.clickMultihash();
+            clickMultihash();
             return true;
 
         } else if (item.getItemId() == R.id.action_edit_cid) {
@@ -314,7 +378,7 @@ public class ThreadsFragment extends Fragment implements
 
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            mListener.clickEditMultihash();
+            clickEditMultihash();
             return true;
 
         }
@@ -330,6 +394,22 @@ public class ThreadsFragment extends Fragment implements
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+
+        mMainFab = view.findViewById(R.id.fab_main);
+        if (isTablet) {
+            mMainFab.setVisibility(View.GONE);
+        }
+
+        mMainFab.setOnClickListener((v) -> {
+
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 500) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            threadsFabAction();
+
+        });
 
         mThreadViewModel = new ViewModelProvider(this).get(ThreadViewModel.class);
 
@@ -355,9 +435,9 @@ public class ThreadsFragment extends Fragment implements
                 super.onScrolled(recyclerView, dx, dy);
                 boolean hasSelection = mSelectionTracker.hasSelection();
                 if (dy > 0 && !hasSelection) {
-                    mListener.showMainFab(false);
+                    showMainFab(false);
                 } else if (dy < 0 && !hasSelection) {
-                    mListener.showMainFab(true);
+                    showMainFab(true);
                 }
 
             }
@@ -568,7 +648,7 @@ public class ThreadsFragment extends Fragment implements
     }
 
     @Override
-    public void invokeGeneralAction(@NonNull Thread thread, @NonNull View view) {
+    public void invokeAction(@NonNull Thread thread, @NonNull View view) {
         checkNotNull(thread);
         checkNotNull(view);
 
@@ -704,7 +784,7 @@ public class ThreadsFragment extends Fragment implements
 
 
                 if (intent.resolveActivity(mActivity.getPackageManager()) != null) {
-                    startActivityForResult(intent, FILE_EXPORT_REQUEST_CODE);
+                    startActivityForResult(intent, FILE_EXPORT_REQUEST);
                 } else {
                     events.error(getString(R.string.no_activity_found_to_handle_uri));
                 }
@@ -758,7 +838,7 @@ public class ThreadsFragment extends Fragment implements
 
                 mListener.showBottomNavigation(false);
                 mListener.setPagingEnabled(false);
-                mListener.showMainFab(false);
+                showMainFab(false);
                 removeKeyboards();
                 mHandler.post(() -> mThreadsViewAdapter.notifyDataSetChanged());
 
@@ -824,7 +904,7 @@ public class ThreadsFragment extends Fragment implements
                 }
                 mListener.showBottomNavigation(stillSearchView);
                 mListener.setPagingEnabled(stillSearchView);
-                mListener.showMainFab(stillSearchView);
+                showMainFab(stillSearchView);
                 if (mActionMode != null) {
                     mActionMode = null;
                 }
@@ -870,6 +950,35 @@ public class ThreadsFragment extends Fragment implements
 
     }
 
+
+    private void threadsFabAction() {
+
+        if (mSelectionViewModel.isTopLevel()) {
+
+            clickUpload();
+
+        } else {
+            Long idx = mSelectionViewModel.getParentThread().getValue();
+            checkNotNull(idx);
+            final THREADS threads = THREADS.getInstance(mContext);
+            final EVENTS events = EVENTS.getInstance(mContext);
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> {
+                try {
+
+                    Thread thread = threads.getThreadByIdx(idx);
+                    if (thread != null) {
+                        long parent = thread.getParent();
+                        mSelectionViewModel.setParentThread(parent);
+                    }
+
+                } catch (Throwable e) {
+                    events.exception(e);
+                }
+            });
+
+        }
+    }
 
     private void clickThreadInfo(long idx) {
         try {
@@ -1018,22 +1127,112 @@ public class ThreadsFragment extends Fragment implements
     }
 
 
+    private void showMainFab(boolean visible) {
+        if (!isTablet) {
+            if (visible) {
+                mMainFab.show();
+            } else {
+                mMainFab.hide();
+            }
+        }
+    }
+
     private void clickThreadDelete(long idx) {
         JobServiceDeleteThreads.removeThreads(mContext, idx);
     }
+
+
+    private void clickMultihash() {
+
+        if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA);
+            return;
+        }
+        clickMultihashWork();
+    }
+
+
+    private void downloadMultihash(@NonNull String codec) {
+        checkNotNull(codec);
+
+
+        try {
+            CodecDecider codecDecider = CodecDecider.evaluate(codec);
+            if (codecDecider.getCodex() == CodecDecider.Codec.MULTIHASH ||
+                    codecDecider.getCodex() == CodecDecider.Codec.URI) {
+
+                String multihash = codecDecider.getMultihash();
+                BootstrapService.bootstrap(mContext);
+                DownloaderService.download(mContext, CID.create(multihash));
+            } else {
+                EVENTS.getInstance(mContext).postError(getString(R.string.codec_not_supported));
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
+    private void clickMultihashWork() {
+        PackageManager pm = mContext.getPackageManager();
+        try {
+            if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+                IntentIntegrator integrator = IntentIntegrator.forSupportFragment(this);
+                integrator.setOrientationLocked(false);
+                integrator.initiateScan();
+            } else {
+                EVENTS.getInstance(mContext).postError(getString(R.string.feature_camera_required));
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
+    private void clickEditMultihash() {
+        try {
+            EditMultihashDialogFragment editMultihashDialogFragment =
+                    new EditMultihashDialogFragment();
+            editMultihashDialogFragment.show(getChildFragmentManager(),
+                    EditMultihashDialogFragment.TAG);
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
+
+    private void clickUpload() {
+
+        try {
+            Intent intent = ShareCompat.IntentBuilder.from(mActivity).getIntent();
+            intent.setType("*/*");
+
+            String[] mimeTypes = {"*/*"};
+            intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+            intent.putExtra(DocumentsContract.EXTRA_EXCLUDE_SELF, true);
+            intent.setAction(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+
+            if (intent.resolveActivity(mContext.getPackageManager()) != null) {
+                startActivityForResult(Intent.createChooser(intent,
+                        getString(R.string.select_files)), REQUEST_SELECT_FILES);
+            } else {
+                EVENTS.getInstance(mContext).postError(
+                        getString(R.string.no_activity_found_to_handle_uri));
+            }
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
 
     public interface ActionListener {
 
         void showBottomNavigation(boolean visible);
 
-        void showMainFab(boolean visible);
-
         void setPagingEnabled(boolean enabled);
 
-        void clickUpload();
-
-        void clickMultihash();
-
-        void clickEditMultihash();
     }
 }

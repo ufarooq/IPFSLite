@@ -27,16 +27,22 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import threads.ipfs.CID;
 import threads.ipfs.Multihash;
 import threads.server.R;
+import threads.server.core.events.EVENTS;
+import threads.server.services.BootstrapService;
+import threads.server.services.DownloaderService;
+import threads.server.utils.CodecDecider;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class EditMultihashDialogFragment extends DialogFragment {
     public static final String TAG = EditMultihashDialogFragment.class.getSimpleName();
     private static final int MULTIHASH_SIZE = 128;
+    private static final int CLICK_OFFSET = 500;
     private final AtomicBoolean notPrintErrorMessages = new AtomicBoolean(false);
-    private EditMultihashDialogFragment.ActionListener mListener;
+
     private long mLastClickTime = 0;
     private TextInputLayout edit_multihash_layout;
     private TextInputEditText multihash;
@@ -46,18 +52,12 @@ public class EditMultihashDialogFragment extends DialogFragment {
     public void onDetach() {
         super.onDetach();
         mContext = null;
-        mListener = null;
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
-        try {
-            mListener = (EditMultihashDialogFragment.ActionListener) getActivity();
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
     }
 
 
@@ -107,7 +107,7 @@ public class EditMultihashDialogFragment extends DialogFragment {
                 // Add action buttons
                 .setPositiveButton(android.R.string.ok, (dialog, id) -> {
 
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
                         return;
                     }
 
@@ -119,9 +119,9 @@ public class EditMultihashDialogFragment extends DialogFragment {
                     Editable text = multihash.getText();
                     checkNotNull(text);
                     String hash = text.toString();
-                    dismiss();
-                    mListener.downloadMultihash(hash);
 
+                    downloadMultihash(hash);
+                    dismiss();
 
                 })
                 /*
@@ -209,6 +209,25 @@ public class EditMultihashDialogFragment extends DialogFragment {
 
     }
 
+    private void downloadMultihash(@NonNull String codec) {
+        checkNotNull(codec);
+
+        try {
+            CodecDecider codecDecider = CodecDecider.evaluate(codec);
+            if (codecDecider.getCodex() == CodecDecider.Codec.MULTIHASH ||
+                    codecDecider.getCodex() == CodecDecider.Codec.URI) {
+
+                String multihash = codecDecider.getMultihash();
+                BootstrapService.bootstrap(mContext);
+                DownloaderService.download(mContext, CID.create(multihash));
+            } else {
+                EVENTS.getInstance(mContext).postError(getString(R.string.codec_not_supported));
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
 
     @Override
     public void onDismiss(@NonNull DialogInterface dialog) {
@@ -224,9 +243,4 @@ public class EditMultihashDialogFragment extends DialogFragment {
         notPrintErrorMessages.set(false);
     }
 
-    public interface ActionListener {
-
-        void downloadMultihash(@NonNull String multihash);
-
-    }
 }

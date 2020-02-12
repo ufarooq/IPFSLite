@@ -20,17 +20,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.ipfs.CID;
+import threads.server.InitApplication;
+import threads.server.core.peers.Content;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.LiteService;
-import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class JobServicePinLoader extends JobService {
 
     private static final String TAG = JobServicePinLoader.class.getSimpleName();
-    private static final String IDX = "IDX";
 
     public static void loader(@NonNull Context context, long idx) {
         checkNotNull(context);
@@ -40,7 +40,7 @@ public class JobServicePinLoader extends JobService {
             ComponentName componentName = new ComponentName(context, JobServicePinLoader.class);
 
             PersistableBundle bundle = new PersistableBundle();
-            bundle.putLong(IDX, idx);
+            bundle.putLong(Content.IDX, idx);
 
             JobInfo jobInfo = new JobInfo.Builder((int) idx, componentName)
                     .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
@@ -79,10 +79,10 @@ public class JobServicePinLoader extends JobService {
     public boolean onStartJob(JobParameters jobParameters) {
 
         PersistableBundle bundle = jobParameters.getExtras();
-        final long idx = bundle.getLong(IDX);
+        final long idx = bundle.getLong(Content.IDX);
 
 
-        int timeout = Preferences.getConnectionTimeout(getApplicationContext());
+        int timeout = InitApplication.getConnectionTimeout(getApplicationContext());
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {

@@ -61,7 +61,7 @@ public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.View
 
                 peerViewHolder.user_action.setVisibility(View.VISIBLE);
                 peerViewHolder.user_action.setOnClickListener((v) ->
-                        listener.invokeGeneralAction(peer, v)
+                        listener.invokeAction(peer, v)
                 );
 
                 int res = R.drawable.server_network;
@@ -108,7 +108,7 @@ public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.View
 
 
     public interface PeersViewAdapterListener {
-        void invokeGeneralAction(@NonNull Peer peer, @NonNull View view);
+        void invokeAction(@NonNull Peer peer, @NonNull View view);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

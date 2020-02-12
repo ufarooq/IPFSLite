@@ -4,7 +4,7 @@
     <string name="channel_description">For upload and download notifications</string>
     <string name="daemon_channel_name">Daemon Notifications</string>
     <string name="daemon_channel_description">Notification that the daemon has started</string>
-    <string name="daemon_title">IPFS Lite daemon is running forever &#8230;</string>
+    <string name="daemon_title">IPFS Lite Daemon is running &#8230;</string>
     <string name="navigation_drawer_open">Navigation open</string>
     <string name="navigation_drawer_close">Navigation close</string>
     <string name="action_info">Info</string>
@@ -25,7 +25,6 @@
     <string name="daemon_restart_config_changed">Please restart the application due to the configuration changes.</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="quic_support">QUIC Support</string>
-    <string name="pubsub_router">Enable Gossipsub</string>
     <string name="share_app">Share</string>
     <string name="play_store_url">https://play.google.com/store/apps/details?id=threads.server</string>
     <string name="fdroid_url">https://f-droid.org/packages/threads.server/</string>
@@ -44,12 +43,10 @@
     <string name="same_pid_like_host">Invalid: Peer ID is your Host Peer ID</string>
     <string name="peer_name">New Peer Name</string>
     <string name="peer_is_blocked">Peer is blocked. Unblock first.</string>
-    <string name="user_connect_try">Peer \"%1$s\" connection request.</string>
     <string name="no_sharing_peers">Currently no IPFS Lite peers are available to share data with.</string>
     <string name="select_files">File Chooser</string>
     <string name="action_select_all">Select All</string>
     <string name="auto_relay_support">Enable Auto Relay</string>
-    <string name="support_peer_discovery">Support Peer Discovery</string>
     <string name="application_settings">Application Settings</string>
     <string name="general_settings">General Settings</string>
     <string name="no_activity_found_to_handle_uri">No application found which support this kind of file.</string>
@@ -73,12 +70,10 @@
     <string name="config">Config</string>
     <string name="send_to">Send to</string>
     <string name="action_your_peer">Your Peer</string>
-    <string name="unsupported_pubsub_message">Unsupported pubsub message by peerInfo \"%1$s\"</string>
     <string name="inbox">Inbox</string>
     <string name="send_notifications_enabled">Support Sending Notifications</string>
     <string name="receive_notifications_enabled">Support Receiving Notifications</string>
     <string name="documentation">Documentation</string>
-    <string name="outbox">Outbox</string>
     <string name="deleting_files_within_directory_not_supported">Deleting files within a directory is currently not supported</string>
     <string name="no_marked_file_delete">No files marked for deleting</string>
     <string name="no_marked_file_send">No marked files for sending</string>
@@ -94,7 +89,6 @@
     <string name="publisher_service_settings">Publisher Service</string>
     <string name="gateway">Gateway</string>
     <string name="support_automatic_download">Automatic Download</string>
-    <string name="pubsub_support">Pubsub Support</string>
     <string name="success_notification">Sending notification to peer \"%1$s\" [%2$s s]</string>
     <string name="failed_notification">Failed sending notification to peer \"%1$s\" [%2$s s]</string>
     <string name="enable_random_swarm_port">Random Swarm Port</string>
@@ -131,4 +125,8 @@
     <string name="view">View</string>
     <string name="copy_to">Copy to</string>
     <string name="send_notifications">Sending Notifications &#8230;</string>
+    <string name="start_daemon">Start Daemon</string>
+    <string name="daemon_shutdown">Shutdown IPFS Lite Daemon &#8230;</string>
+    <string name="content_already_exists">Content exists already with CID \"%1$s\"</string>
+    <string name="scan_failed">Failed Scan Results</string>
 </resources>

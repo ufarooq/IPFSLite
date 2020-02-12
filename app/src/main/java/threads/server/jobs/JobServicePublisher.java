@@ -18,11 +18,11 @@ import java.util.concurrent.TimeUnit;
 
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
+import threads.server.InitApplication;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.BootstrapService;
 import threads.server.services.LiteService;
-import threads.server.utils.Preferences;
 import threads.server.work.ConnectPeersWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -70,7 +70,7 @@ public class JobServicePublisher extends JobService {
             try {
 
                 IPFS ipfs = IPFS.getInstance(getApplicationContext());
-                int timeout = Preferences.getConnectionTimeout(getApplicationContext());
+                int timeout = InitApplication.getConnectionTimeout(getApplicationContext());
 
 
                 THREADS threads = THREADS.getInstance(getApplicationContext());

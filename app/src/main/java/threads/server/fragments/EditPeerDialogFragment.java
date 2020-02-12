@@ -27,8 +27,13 @@ import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
+import threads.ipfs.PID;
 import threads.server.R;
+import threads.server.core.events.EVENTS;
+import threads.server.services.LiteService;
+import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -36,7 +41,6 @@ public class EditPeerDialogFragment extends DialogFragment {
     public static final String TAG = EditPeerDialogFragment.class.getSimpleName();
     private static final int MULTIHASH_SIZE = 128;
     private final AtomicBoolean notPrintErrorMessages = new AtomicBoolean(false);
-    private EditPeerDialogFragment.ActionListener mListener;
     private long mLastClickTime = 0;
     private TextInputLayout edit_multihash_layout;
     private TextInputEditText multihash;
@@ -46,12 +50,6 @@ public class EditPeerDialogFragment extends DialogFragment {
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
-        try {
-            mListener = (EditPeerDialogFragment.ActionListener) getActivity();
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
     }
 
 
@@ -136,7 +134,7 @@ public class EditPeerDialogFragment extends DialogFragment {
         builder.setView(view)
                 .setPositiveButton(android.R.string.ok, (dialog, id) -> {
 
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    if (SystemClock.elapsedRealtime() - mLastClickTime < 500) {
                         return;
                     }
 
@@ -148,9 +146,9 @@ public class EditPeerDialogFragment extends DialogFragment {
                     Editable text = multihash.getText();
                     checkNotNull(text);
                     String hash = text.toString();
-                    dismiss();
-                    mListener.clickConnectPeer(hash);
 
+                    clickConnectPeer(hash);
+                    dismiss();
 
                 })
                 .setTitle(getString(R.string.peer_id));
@@ -207,10 +205,34 @@ public class EditPeerDialogFragment extends DialogFragment {
         notPrintErrorMessages.set(false);
     }
 
-    public interface ActionListener {
 
-        void clickConnectPeer(@NonNull String multihash);
+    private void clickConnectPeer(@NonNull String pid) {
+        checkNotNull(pid);
 
+        // CHECKED if pid is valid
+        try {
+            Multihash.fromBase58(pid);
+        } catch (Throwable e) {
+            EVENTS.getInstance(mContext).postError(getString(R.string.multihash_not_valid));
+            return;
+        }
+
+        // CHECKED
+        PID host = IPFS.getPID(mContext);
+        PID user = PID.create(pid);
+
+        if (user.equals(host)) {
+            EVENTS.getInstance(mContext).postError(getString(R.string.same_pid_like_host));
+            return;
+        }
+
+        // CHECKED
+        if (!Network.isConnected(mContext)) {
+            EVENTS.getInstance(mContext).postWarning(getString(R.string.offline_mode));
+        }
+
+        LiteService.connectPeer(mContext, user, false);
     }
+
 }
 

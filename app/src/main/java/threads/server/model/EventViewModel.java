@@ -27,6 +27,11 @@ public class EventViewModel extends AndroidViewModel {
         return eventsDatabase.eventDao().getEvent(EVENTS.ERROR);
     }
 
+
+    public LiveData<Event> getPermission() {
+        return eventsDatabase.eventDao().getEvent(EVENTS.PERMISSION);
+    }
+
     public LiveData<Event> getWarning() {
         return eventsDatabase.eventDao().getEvent(EVENTS.WARNING);
     }

@@ -2,6 +2,7 @@ package threads.server.work;
 
 import android.content.Context;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,6 +24,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
@@ -39,6 +41,7 @@ import threads.server.core.peers.User;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.LiteService;
+import threads.server.services.ThumbnailService;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -114,10 +117,50 @@ public class ContentsWorker extends Worker {
 
         if (entries.isEmpty()) {
 
-            LiteService.createThread(getApplicationContext(), cid, filename, fileSize, mimeType);
+            Thread thread = threads.createThread(0L);
+            thread.setContent(cid);
+
+
+            if (filename != null) {
+                thread.setName(filename);
+                if (mimeType != null) {
+                    thread.setMimeType(mimeType);
+                } else {
+                    String evalMimeType = evaluateMimeType(filename);
+                    if (evalMimeType != null) {
+                        thread.setMimeType(evalMimeType);
+                    }
+
+                }
+            } else {
+                if (mimeType != null) {
+                    thread.setMimeType(mimeType);
+                }
+                thread.setName(cid.getCid());
+            }
+            thread.setSize(fileSize);
+
+            threads.storeThread(thread);
 
         }
     }
+
+    private String evaluateMimeType(@NonNull String filename) {
+        checkNotNull(filename);
+        try {
+            Optional<String> extension = ThumbnailService.getExtension(filename);
+            if (extension.isPresent()) {
+                String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.get());
+                if (mimeType != null) {
+                    return mimeType;
+                }
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+        return null;
+    }
+
 
     @NonNull
     @Override

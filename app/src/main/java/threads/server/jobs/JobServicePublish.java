@@ -16,8 +16,8 @@ import java.util.concurrent.Executors;
 
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
+import threads.server.InitApplication;
 import threads.server.core.peers.Content;
-import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -63,7 +63,7 @@ public class JobServicePublish extends JobService {
         executor.submit(() -> {
             long start = System.currentTimeMillis();
             try {
-                int timeout = Preferences.getConnectionTimeout(getApplicationContext());
+                int timeout = InitApplication.getConnectionTimeout(getApplicationContext());
                 IPFS ipfs = IPFS.getInstance(getApplicationContext());
                 checkNotNull(ipfs, "IPFS not valid");
 

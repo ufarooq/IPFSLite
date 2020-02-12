@@ -15,8 +15,17 @@
         android:icon="@drawable/account_star"
         android:orderInCategory="4"
         android:title="@string/action_your_peer"
-        app:iconTint="@color/colorAccent"
+        app:iconTint="?android:textColorSecondary"
         app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_select_all"
+        android:icon="@drawable/select_all"
+        android:orderInCategory="35"
+        android:title="@string/action_select_all"
+        android:visible="true"
+        app:iconTint="?android:textColorSecondary"
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/action_edit_pid"
@@ -24,6 +33,6 @@
         android:orderInCategory="40"
         android:title="@string/action_edit_peer"
         app:iconTint="?android:textColorSecondary"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 
 </menu>

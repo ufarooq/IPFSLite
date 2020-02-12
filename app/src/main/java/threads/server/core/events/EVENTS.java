@@ -12,6 +12,7 @@ public class EVENTS extends EventsAPI {
     public static final String ERROR = "ERROR";
     public static final String WARNING = "WARNING";
     public static final String INFO = "INFO";
+    public static final String PERMISSION = "PERMISSION";
 
     private static EVENTS INSTANCE = null;
 
@@ -53,6 +54,17 @@ public class EVENTS extends EventsAPI {
     public void postError(@NonNull String content) {
         java.lang.Thread threadError = new java.lang.Thread(()
                 -> error(content));
+        threadError.start();
+    }
+
+    public void permission(@NonNull String content) {
+        checkNotNull(content);
+        storeEvent(createEvent(PERMISSION, content));
+    }
+
+    public void postPermission(@NonNull String content) {
+        java.lang.Thread threadError = new java.lang.Thread(()
+                -> permission(content));
         threadError.start();
     }
 

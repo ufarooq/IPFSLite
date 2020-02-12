@@ -127,7 +127,7 @@ public class User {
     }
 
 
-    void setPublicKey(@Nullable String publicKey) {
+    public void setPublicKey(@Nullable String publicKey) {
         this.publicKey = publicKey;
     }
 

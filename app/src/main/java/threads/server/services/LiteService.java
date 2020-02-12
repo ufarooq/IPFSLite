@@ -4,10 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.util.Log;
-import android.webkit.MimeTypeMap;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RawRes;
 
 import com.google.gson.Gson;
@@ -18,7 +16,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -38,7 +35,6 @@ import threads.server.jobs.JobServiceCleanup;
 import threads.server.jobs.JobServiceIdentity;
 import threads.server.jobs.JobServicePublisher;
 import threads.server.utils.Network;
-import threads.server.utils.Preferences;
 import threads.server.work.ConnectPeerWorker;
 import threads.server.work.ConnectPeersWorker;
 import threads.server.work.LoadIdentityWorker;
@@ -173,9 +169,8 @@ public class LiteService {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                final PEERS peers = PEERS.getInstance(context);
-
-                final EVENTS events = EVENTS.getInstance(context);
+                PEERS peers = PEERS.getInstance(context);
+                EVENTS events = EVENTS.getInstance(context);
 
                 if (!peers.existsUser(user)) {
 
@@ -205,81 +200,6 @@ public class LiteService {
 
     public static String getAddressLink(@NonNull String address) {
         return "https://thetangle.org/address/" + address;
-    }
-
-
-    private static void cleanStates(@NonNull Context context) {
-        checkNotNull(context);
-
-        final THREADS threads = THREADS.getInstance(context);
-        final PEERS peers = PEERS.getInstance(context);
-        try {
-
-            threads.resetThreadsPublishing();
-            threads.resetThreadsLeaching();
-            peers.resetUsersDialing();
-            peers.resetPeersConnected();
-            peers.resetUsersConnected();
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
-    }
-
-
-    @Nullable
-    private static String evaluateMimeType(@NonNull String filename) {
-        try {
-            Optional<String> extension = ThumbnailService.getExtension(filename);
-            if (extension.isPresent()) {
-                String mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.get());
-                if (mimeType != null) {
-                    return mimeType;
-                }
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-        return null;
-    }
-
-    public static long createThread(@NonNull Context context,
-                                    @NonNull CID cid,
-                                    @Nullable String filename,
-                                    long fileSize,
-                                    @Nullable String mimeType) {
-
-        checkNotNull(context);
-        checkNotNull(cid);
-
-
-        THREADS threads = THREADS.getInstance(context);
-
-        Thread thread = threads.createThread(0L);
-        thread.setContent(cid);
-
-
-        if (filename != null) {
-            thread.setName(filename);
-            if (mimeType != null) {
-                thread.setMimeType(mimeType);
-            } else {
-                String evalMimeType = evaluateMimeType(filename);
-                if (evalMimeType != null) {
-                    thread.setMimeType(evalMimeType);
-                }
-
-            }
-        } else {
-            if (mimeType != null) {
-                thread.setMimeType(mimeType);
-            }
-            thread.setName(cid.getCid());
-        }
-        thread.setSize(fileSize);
-
-        return threads.storeThread(thread);
     }
 
 
@@ -329,10 +249,9 @@ public class LiteService {
         String protocolVersion = "n.a.";
         String agentVersion = "n.a.";
         List<String> addresses = new ArrayList<>();
-        final int timeout = Preferences.getConnectionTimeout(context);
         final IPFS ipfs = IPFS.getInstance(context);
 
-        PeerInfo info = ipfs.id(peer, timeout);
+        PeerInfo info = ipfs.id(peer, 5);
 
         if (info != null) {
             agentVersion = info.getAgentVersion();
@@ -416,14 +335,6 @@ public class LiteService {
         JobServicePublisher.publish(context);
         JobServiceCleanup.cleanup(context);
         JobServiceIdentity.publish(context);
-
-        new java.lang.Thread(() -> {
-            try {
-                LiteService.cleanStates(context);
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        }).start();
 
     }
 

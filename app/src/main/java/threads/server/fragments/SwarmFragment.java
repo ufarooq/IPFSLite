@@ -45,21 +45,18 @@ public class SwarmFragment extends Fragment implements
     private PeersViewAdapter peersViewAdapter;
     private Context mContext;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private SwarmFragment.ActionListener mListener;
     private long mLastClickTime = 0;
 
     @Override
     public void onDetach() {
         super.onDetach();
         mContext = null;
-        mListener = null;
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
-        mListener = (SwarmFragment.ActionListener) getActivity();
     }
 
     @Override
@@ -109,18 +106,6 @@ public class SwarmFragment extends Fragment implements
         peersViewAdapter = new PeersViewAdapter(this);
         mRecyclerView.setAdapter(peersViewAdapter);
 
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                if (dy > 0) {
-                    mListener.showMainFab(false);
-                } else if (dy < 0) {
-                    mListener.showMainFab(true);
-                }
-
-            }
-        });
 
         PeersViewModel messagesViewModel = new ViewModelProvider(this).get(PeersViewModel.class);
         messagesViewModel.getPeers().observe(getViewLifecycleOwner(), (peers) -> {
@@ -158,8 +143,9 @@ public class SwarmFragment extends Fragment implements
         }
     }
 
+
     @Override
-    public void invokeGeneralAction(@NonNull Peer peer, @NonNull View view) {
+    public void invokeAction(@NonNull Peer peer, @NonNull View view) {
         checkNotNull(peer);
         checkNotNull(view);
 
@@ -254,9 +240,4 @@ public class SwarmFragment extends Fragment implements
         LiteService.connectPeer(mContext, PID.create(pid), true);
     }
 
-    public interface ActionListener {
-
-        void showMainFab(boolean visible);
-
-    }
 }

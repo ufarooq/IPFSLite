@@ -134,7 +134,8 @@ public class UploadService extends Service {
     }
 
     @Nullable
-    private static Bitmap getPreview(@NonNull Context context, @NonNull Uri uri, @NonNull String mimeType) throws Exception {
+    private static Bitmap getPreview(@NonNull Context context, @NonNull Uri uri,
+                                     @NonNull String mimeType) throws Exception {
         checkNotNull(context);
         checkNotNull(uri);
         checkNotNull(mimeType);

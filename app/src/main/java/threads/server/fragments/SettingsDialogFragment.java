@@ -23,9 +23,9 @@ import java.util.List;
 
 import threads.ipfs.IPFS;
 import threads.ipfs.RoutingConfig;
+import threads.server.InitApplication;
 import threads.server.R;
 import threads.server.services.LiteService;
-import threads.server.utils.Preferences;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -240,7 +240,7 @@ public class SettingsDialogFragment extends DialogFragment {
 
         connection_timeout.setMax(120);
 
-        int connectionTimeout = Preferences.getConnectionTimeout(activity);
+        int connectionTimeout = InitApplication.getConnectionTimeout(activity);
 
         connection_timeout_text.setText(getString(R.string.connection_timeout,
                 String.valueOf(connectionTimeout)));
@@ -249,7 +249,7 @@ public class SettingsDialogFragment extends DialogFragment {
 
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
-                Preferences.setConnectionTimeout(activity, progress);
+                InitApplication.setConnectionTimeout(activity, progress);
                 connection_timeout_text.setText(
                         getString(R.string.connection_timeout,
                                 String.valueOf(progress)));

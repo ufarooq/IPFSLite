@@ -5,9 +5,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.Drawable;
 import android.graphics.pdf.PdfRenderer;
 import android.media.MediaMetadataRetriever;
 import android.media.ThumbnailUtils;
@@ -17,12 +14,8 @@ import android.provider.DocumentsContract;
 import android.util.Log;
 import android.util.Size;
 
-import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import com.amulyakhare.textdrawable.TextDrawable;
-import com.amulyakhare.textdrawable.util.ColorGenerator;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -43,70 +36,6 @@ public class ThumbnailService {
 
     private static final String TAG = ThumbnailService.class.getSimpleName();
     private static final int THUMBNAIL_SIZE = 128;
-
-
-    @NonNull
-    public static byte[] getImage(@NonNull Context context, @DrawableRes int id) {
-        checkNotNull(context);
-        Drawable drawable = context.getDrawable(id);
-        checkNotNull(drawable);
-        return getImage(drawable);
-    }
-
-    public static byte[] getImage(@NonNull String displayName) {
-        String letter = displayName.substring(0, 1);
-        int color = ColorGenerator.MATERIAL.getColor(displayName);
-        Canvas canvas = new Canvas();
-        TextDrawable drawable = TextDrawable.builder()
-                .buildRound(letter, color);
-        Bitmap bitmap = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888);
-        canvas.setBitmap(bitmap);
-        drawable.setBounds(0, 0, 64, 64);
-
-        drawable.draw(canvas);
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-        return stream.toByteArray();
-    }
-
-
-    @NonNull
-    public static CID getImage(@NonNull Context context,
-                               @NonNull String name,
-                               @DrawableRes int id) throws Exception {
-        checkNotNull(context);
-        checkNotNull(name);
-        byte[] data = getImageData(context, name, id);
-        final IPFS ipfs = IPFS.getInstance(context);
-        checkNotNull(ipfs);
-        CID cid = ipfs.storeData(data);
-        checkNotNull(cid);
-        return cid;
-    }
-
-    @NonNull
-    private static byte[] getImageData(@NonNull Context context, @NonNull String name, @DrawableRes int id) {
-        checkNotNull(context);
-        checkNotNull(name);
-        Drawable drawable = context.getDrawable(id);
-        checkNotNull(drawable);
-        int color = ColorGenerator.MATERIAL.getColor(name);
-        drawable.setColorFilter(color, PorterDuff.Mode.SRC_ATOP);
-        return getImage(drawable);
-    }
-
-    @NonNull
-    private static byte[] getImage(@NonNull Drawable drawable) {
-        Canvas canvas = new Canvas();
-        Bitmap bitmap = Bitmap.createBitmap(64, 64, Bitmap.Config.ARGB_8888);
-        canvas.setBitmap(bitmap);
-        drawable.setBounds(0, 0, 64, 64);
-
-        drawable.draw(canvas);
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-        return stream.toByteArray();
-    }
 
 
     @NonNull
@@ -267,11 +196,9 @@ public class ThumbnailService {
 
     }
 
-    private static Bitmap getBitmap(File file) throws IOException {
+    private static Bitmap getBitmap(@NonNull File file) throws IOException {
         try (InputStream input = new FileInputStream(file)) {
-            Bitmap bitmap = BitmapFactory.decodeStream(input);
-            input.close();
-            return bitmap;
+            return BitmapFactory.decodeStream(input);
         }
     }
 

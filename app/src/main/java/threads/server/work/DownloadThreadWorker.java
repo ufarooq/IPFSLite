@@ -23,6 +23,7 @@ import java.util.Optional;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.LinkInfo;
+import threads.server.core.peers.Content;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 
@@ -32,7 +33,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 public class DownloadThreadWorker extends Worker {
     public static final String WID = "DTW";
     private static final String TAG = DownloadThreadWorker.class.getSimpleName();
-    private static final String IDX = "IDX";
+
 
     public DownloadThreadWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
@@ -48,7 +49,7 @@ public class DownloadThreadWorker extends Worker {
 
 
         Data.Builder data = new Data.Builder();
-        data.putLong(IDX, idx);
+        data.putLong(Content.IDX, idx);
 
         OneTimeWorkRequest syncWorkRequest =
                 new OneTimeWorkRequest.Builder(DownloadThreadWorker.class)
@@ -72,7 +73,7 @@ public class DownloadThreadWorker extends Worker {
         try {
             THREADS threads = THREADS.getInstance(getApplicationContext());
 
-            long idx = getInputData().getLong(IDX, -1);
+            long idx = getInputData().getLong(Content.IDX, -1);
             checkArgument(idx >= 0);
 
             Thread thread = threads.getThreadByIdx(idx);

@@ -123,7 +123,7 @@ public class NameDialogFragment extends DialogFragment {
                 // Add action buttons
                 .setPositiveButton(android.R.string.ok, (dialog, id) -> {
 
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
+                    if (SystemClock.elapsedRealtime() - mLastClickTime < 500) {
                         return;
                     }
 

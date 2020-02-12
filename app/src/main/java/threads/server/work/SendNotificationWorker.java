@@ -123,14 +123,17 @@ public class SendNotificationWorker extends Worker {
 
             String publicKey = peers.getUserPublicKey(pid);
             boolean isLite = peers.getUserIsLite(pid);
+
             if (publicKey == null) {
+                String alias = peers.getUserAlias(pid);
                 events.invokeEvent(EVENTS.ERROR,
-                        "Failed sending notification to PID Inbox :"
-                                + pid + " Reason : Public Key not available");
+                        "Failed sending notification to :"
+                                + alias + " Reason : Public Key not available");
             } else if (!isLite) {
+                String alias = peers.getUserAlias(pid);
                 events.invokeEvent(EVENTS.ERROR,
-                        "Failed sending notification to PID Inbox :"
-                                + pid + " Reason : Peer is not a IPFS Lite client");
+                        "Failed sending notification to :"
+                                + alias + " Reason : Peer is not a IPFS Lite client");
             } else {
                 Content content = new Content();
 

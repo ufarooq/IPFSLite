@@ -1,6 +1,9 @@
 package threads.server.fragments;
 
+import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,6 +24,7 @@ import androidx.appcompat.view.ActionMode;
 import androidx.appcompat.view.menu.MenuBuilder;
 import androidx.appcompat.view.menu.MenuPopupHelper;
 import androidx.appcompat.widget.PopupMenu;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -32,6 +36,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.work.WorkManager;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -39,11 +47,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.ipfs.IPFS;
+import threads.ipfs.Multihash;
 import threads.ipfs.PID;
 import threads.server.R;
 import threads.server.core.events.EVENTS;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
+import threads.server.jobs.JobServiceIdentity;
 import threads.server.model.UsersViewModel;
 import threads.server.services.BootstrapService;
 import threads.server.services.LiteService;
@@ -61,6 +71,7 @@ public class PeersFragment extends Fragment implements
 
     private static final String TAG = PeersFragment.class.getSimpleName();
     private static final int CLICK_OFFSET = 500;
+    private static final int REQUEST_CAMERA_CAPTURE = 1;
     @NonNull
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private final AtomicBoolean run = new AtomicBoolean(false);
@@ -74,6 +85,7 @@ public class PeersFragment extends Fragment implements
     private PeersFragment.ActionListener mListener;
     private boolean isTablet;
     private boolean hasCamera;
+    private FloatingActionButton mMainFab;
 
     @Override
     public void onDetach() {
@@ -136,7 +148,7 @@ public class PeersFragment extends Fragment implements
 
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            mListener.clickScanPeer();
+            clickScanPeer();
             return true;
 
         } else if (item.getItemId() == R.id.action_your_pid) {
@@ -147,7 +159,19 @@ public class PeersFragment extends Fragment implements
 
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            mListener.clickInfoPeer();
+            clickInfoPeer();
+            return true;
+
+        } else if (item.getItemId() == R.id.action_select_all) {
+
+            if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+                return true;
+            }
+
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            mUsersViewAdapter.selectAllUsers();
+
             return true;
 
         } else if (item.getItemId() == R.id.action_edit_pid) {
@@ -158,7 +182,7 @@ public class PeersFragment extends Fragment implements
 
             mLastClickTime = SystemClock.elapsedRealtime();
 
-            mListener.clickEditPeer();
+            clickEditPeer();
             return true;
 
         }
@@ -174,6 +198,23 @@ public class PeersFragment extends Fragment implements
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+
+        mMainFab = view.findViewById(R.id.fab_main);
+        if (isTablet) {
+            mMainFab.setVisibility(View.GONE);
+        }
+
+        mMainFab.setOnClickListener((v) -> {
+
+            if (SystemClock.elapsedRealtime() - mLastClickTime < 500) {
+                return;
+            }
+            mLastClickTime = SystemClock.elapsedRealtime();
+
+            clickScanPeer();
+
+        });
+
         RecyclerView mRecyclerView = view.findViewById(R.id.recycler_users);
 
         mSwipeRefreshLayout = view.findViewById(R.id.swipe_container);
@@ -186,7 +227,7 @@ public class PeersFragment extends Fragment implements
 
         LinearLayoutManager linearLayout = new LinearLayoutManager(getContext());
         mRecyclerView.setLayoutManager(linearLayout);
-        mUsersViewAdapter = new UsersViewAdapter(mContext, this);
+        mUsersViewAdapter = new UsersViewAdapter(this);
         mRecyclerView.setAdapter(mUsersViewAdapter);
 
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -195,9 +236,9 @@ public class PeersFragment extends Fragment implements
                 super.onScrolled(recyclerView, dx, dy);
                 boolean hasSelection = mSelectionTracker.hasSelection();
                 if (dy > 0 && !hasSelection) {
-                    mListener.showMainFab(false);
+                    showMainFab(false);
                 } else if (dy < 0 && !hasSelection) {
-                    mListener.showMainFab(true);
+                    showMainFab(true);
                 }
 
             }
@@ -279,6 +320,59 @@ public class PeersFragment extends Fragment implements
 
     }
 
+    private void showMainFab(boolean visible) {
+        if (!isTablet) {
+            if (visible) {
+                mMainFab.show();
+            } else {
+                mMainFab.hide();
+            }
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        }
+
+        try {
+
+            IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+            if (result != null) {
+                if (result.getContents() != null) {
+                    String multihash = result.getContents();
+                    clickConnectPeer(multihash);
+                } else {
+                    EVENTS.getInstance(mContext).postError(getString(R.string.scan_failed));
+                }
+            }
+
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onRequestPermissionsResult
+            (int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CAMERA_CAPTURE) {
+            for (int i = 0, len = permissions.length; i < len; i++) {
+                if (grantResults[i] == PackageManager.PERMISSION_DENIED) {
+                    EVENTS.getInstance(mContext).postPermission(
+                            getString(R.string.permission_camera_denied));
+                }
+                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    clickConnectPeerWork();
+                }
+            }
+        }
+
+    }
+
     private ActionMode.Callback createActionModeCallback() {
         return new ActionMode.Callback() {
             @Override
@@ -287,7 +381,7 @@ public class PeersFragment extends Fragment implements
 
                 mListener.showBottomNavigation(false);
                 mListener.setPagingEnabled(false);
-                mListener.showMainFab(false);
+                showMainFab(false);
                 mHandler.post(() -> mUsersViewAdapter.notifyDataSetChanged());
 
                 return true;
@@ -368,7 +462,7 @@ public class PeersFragment extends Fragment implements
 
                 mListener.showBottomNavigation(true);
                 mListener.setPagingEnabled(true);
-                mListener.showMainFab(true);
+                showMainFab(true);
 
                 if (mActionMode != null) {
                     mActionMode = null;
@@ -531,20 +625,17 @@ public class PeersFragment extends Fragment implements
     private void connectUser(@NonNull String pid) {
         checkNotNull(pid);
 
-
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
 
             if (PEERS.getInstance(mContext).isUserBlocked(pid)) {
-                EVENTS.getInstance(mContext).invokeEvent(EVENTS.WARNING,
-                        mContext.getString(R.string.peer_is_blocked));
+                EVENTS.getInstance(mContext).warning(mContext.getString(R.string.peer_is_blocked));
 
             } else {
                 PEERS.getInstance(mContext).setUserDialing(pid, Network.isConnected(mContext));
+                ConnectPeerWorker.connect(mContext, pid);
             }
         });
-
-        ConnectPeerWorker.connect(mContext, pid);
 
     }
 
@@ -590,12 +681,13 @@ public class PeersFragment extends Fragment implements
 
     }
 
+    // todo remove and change to event mechanism
     private void peersOnlineStatus() {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
                 while (run.get()) {
-                    checkPeers();
+                    checkUsers();
                     java.lang.Thread.sleep(1000);
                 }
             } catch (Throwable e) {
@@ -604,17 +696,15 @@ public class PeersFragment extends Fragment implements
         });
     }
 
-
-    private void checkPeers() {
+    private void checkUsers() {
 
         try {
 
-            final PEERS peers = PEERS.getInstance(mContext);
+            PEERS peers = PEERS.getInstance(mContext);
 
-            final IPFS ipfs = IPFS.getInstance(mContext);
+            IPFS ipfs = IPFS.getInstance(mContext);
 
             List<PID> users = peers.getUsersPIDs();
-
 
             for (PID user : users) {
                 if (!peers.isUserBlocked(user) && !peers.getUserDialing(user)) {
@@ -630,29 +720,107 @@ public class PeersFragment extends Fragment implements
 
                     } catch (Throwable e) {
                         Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                        peers.setUserConnected(user, false);
                     }
                 }
             }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
 
+    private void clickScanPeer() {
+
+        if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_CAPTURE);
+            return;
+        }
+
+        clickConnectPeerWork();
+    }
+
+
+    private void clickConnectPeerWork() {
+        try {
+            PackageManager pm = mActivity.getPackageManager();
+
+            if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+                IntentIntegrator integrator = IntentIntegrator.forSupportFragment(this);
+                integrator.setOrientationLocked(false);
+                integrator.initiateScan();
+            } else {
+                EVENTS.getInstance(mContext).postError(getString(R.string.feature_camera_required));
+            }
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
     }
 
+
+    private void clickConnectPeer(@NonNull String pid) {
+        checkNotNull(pid);
+
+        // CHECKED if pid is valid
+        try {
+            Multihash.fromBase58(pid);
+        } catch (Throwable e) {
+            EVENTS.getInstance(mContext).postError(getString(R.string.multihash_not_valid));
+            return;
+        }
+
+        // CHECKED
+        PID host = IPFS.getPID(mContext);
+        PID user = PID.create(pid);
+
+        if (user.equals(host)) {
+            EVENTS.getInstance(mContext).postError(getString(R.string.same_pid_like_host));
+            return;
+        }
+
+        // CHECKED
+        if (!Network.isConnected(mContext)) {
+            EVENTS.getInstance(mContext).postWarning(getString(R.string.offline_mode));
+        }
+
+        LiteService.connectPeer(mContext, user, false);
+    }
+
+    private void clickEditPeer() {
+        try {
+            EditPeerDialogFragment editPeerDialogFragment = new EditPeerDialogFragment();
+            editPeerDialogFragment.show(getChildFragmentManager(), EditPeerDialogFragment.TAG);
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
+    private void clickInfoPeer() {
+
+        try {
+            JobServiceIdentity.publish(mContext);
+            PID pid = IPFS.getPID(mContext);
+            checkNotNull(pid);
+            try {
+                InfoDialogFragment.newInstance(pid.getPid(),
+                        getString(R.string.your_peer_id),
+                        getString(R.string.peer_access, pid.getPid()))
+                        .show(getChildFragmentManager(), InfoDialogFragment.TAG);
+
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+
+    }
+
     public interface ActionListener {
 
         void showBottomNavigation(boolean visible);
 
-        void showMainFab(boolean visible);
-
         void setPagingEnabled(boolean enabled);
 
-        void clickScanPeer();
-
-        void clickEditPeer();
-
-        void clickInfoPeer();
     }
 }
