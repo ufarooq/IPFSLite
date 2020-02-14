@@ -12,6 +12,7 @@ import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.os.IBinder;
 import android.util.Log;
+import android.widget.RemoteViews;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -19,8 +20,9 @@ import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
+import threads.server.MainActivity;
 import threads.server.R;
-import threads.server.work.ConnectPeersWorker;
+import threads.server.work.ConnectionWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -36,8 +38,7 @@ public class DaemonService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             try {
-                BootstrapService.bootstrap(getApplicationContext());
-                ConnectPeersWorker.connect(getApplicationContext(), 30);
+                ConnectionWorker.connect(getApplicationContext(), true);
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
@@ -126,15 +127,27 @@ public class DaemonService extends Service {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(),
                 HIGH_CHANNEL_ID);
 
-        builder.setContentTitle(getString(R.string.daemon_title));
         builder.setSmallIcon(R.drawable.server_network);
         builder.setPriority(NotificationManager.IMPORTANCE_MAX);
+        RemoteViews notificationLayout = new RemoteViews(getPackageName(), R.layout.notification);
+        RemoteViews notificationLayoutExpanded = new RemoteViews(getPackageName(), R.layout.notification);
+        builder.setCustomContentView(notificationLayout);
+        builder.setCustomBigContentView(notificationLayoutExpanded);
 
-        Intent defaultIntent = new Intent(getApplicationContext(), DaemonService.class);
-        defaultIntent.putExtra(START_DAEMON, false);
+
+        Intent stopIntent = new Intent(getApplicationContext(), DaemonService.class);
+        stopIntent.putExtra(START_DAEMON, false);
         int requestID = (int) System.currentTimeMillis();
-        PendingIntent defaultPendingIntent = PendingIntent.getService(
+        PendingIntent stopPendingIntent = PendingIntent.getService(
+                getApplicationContext(), requestID, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        notificationLayoutExpanded.setOnClickPendingIntent(R.id.action_pause, stopPendingIntent);
+        notificationLayout.setOnClickPendingIntent(R.id.action_pause, stopPendingIntent);
+
+        Intent defaultIntent = new Intent(getApplicationContext(), MainActivity.class);
+        requestID = (int) System.currentTimeMillis();
+        PendingIntent defaultPendingIntent = PendingIntent.getActivity(
                 getApplicationContext(), requestID, defaultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
         builder.setContentIntent(defaultPendingIntent);
 
         Notification notification = builder.build();

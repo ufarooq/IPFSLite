@@ -77,12 +77,6 @@
             tools:replace="screenOrientation" />
 
         <service
-            android:name=".jobs.JobServiceIdentity"
-            android:enabled="true"
-            android:exported="false"
-            android:permission="android.permission.BIND_JOB_SERVICE" />
-
-        <service
             android:name=".services.DownloaderService"
             android:enabled="true"
             android:exported="false"

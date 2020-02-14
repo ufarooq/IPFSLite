@@ -27,13 +27,13 @@ import threads.server.core.peers.User;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class ConnectPeerWorker extends Worker {
+public class ConnectUserWorker extends Worker {
 
     public static final String WID = "CPW";
-    private static final String TAG = ConnectPeerWorker.class.getSimpleName();
+    private static final String TAG = ConnectUserWorker.class.getSimpleName();
 
 
-    public ConnectPeerWorker(@NonNull Context context, @NonNull WorkerParameters params) {
+    public ConnectUserWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
     }
 
@@ -48,7 +48,7 @@ public class ConnectPeerWorker extends Worker {
         data.putString(Content.PID, pid);
 
         OneTimeWorkRequest syncWorkRequest =
-                new OneTimeWorkRequest.Builder(ConnectPeerWorker.class)
+                new OneTimeWorkRequest.Builder(ConnectUserWorker.class)
                         .setInputData(data.build())
                         .addTag(TAG)
                         .setConstraints(builder.build())
@@ -69,7 +69,7 @@ public class ConnectPeerWorker extends Worker {
         checkNotNull(pid);
         long start = System.currentTimeMillis();
 
-
+        Log.e(TAG, " start connect [" + pid + "]...");
         boolean isConnected = false;
         try {
             PEERS peers = PEERS.getInstance(getApplicationContext());
@@ -78,14 +78,8 @@ public class ConnectPeerWorker extends Worker {
 
             if (!peers.isUserBlocked(user)) {
 
-                if (peers.getUserPublicKey(user.getPid()) == null) {
-                    LoadIdentityWorker.identify(getApplicationContext(), user.getPid());
-                }
-
-
                 isConnected = connect(user);
                 peers.setUserDialing(pid, false);
-                peers.setUserConnected(user, isConnected);
 
                 if (isConnected) {
                     id(user.getPid());
@@ -115,6 +109,8 @@ public class ConnectPeerWorker extends Worker {
             PEERS peers = PEERS.getInstance(getApplicationContext());
             PID pid = PID.create(peerID);
             boolean update = false;
+
+
             Peer peerInfo = ipfs.swarmPeer(PID.create(peerID));
             String multiAddress = "";
             if (peerInfo != null) {
@@ -132,7 +128,8 @@ public class ConnectPeerWorker extends Worker {
                 }
             }
 
-            if (user.getPublicKey() == null || !user.isLite()) {
+
+            if (user.getPublicKey() == null || user.getAgent() == null) {
                 PeerInfo pInfo = ipfs.id(pid, timeout);
                 if (pInfo != null) {
 
@@ -145,9 +142,10 @@ public class ConnectPeerWorker extends Worker {
                             }
                         }
                     }
-                    if (!user.isLite()) {
+                    if (user.getAgent() == null) {
+                        update = true;
+                        user.setAgent(pInfo.getAgentVersion());
                         if (pInfo.isLiteAgent()) {
-                            update = true;
                             user.setLite(true);
                         }
                     }

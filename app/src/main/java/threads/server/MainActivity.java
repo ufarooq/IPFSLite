@@ -2,9 +2,15 @@ package threads.server;
 
 
 import android.app.SearchManager;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.net.Uri;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 import android.os.Bundle;
 import android.provider.DocumentsContract;
 import android.util.Log;
@@ -29,6 +35,8 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
 import com.google.android.material.snackbar.Snackbar;
 
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,6 +44,7 @@ import java.util.concurrent.Executors;
 import de.psdev.licensesdialog.LicensesDialogFragment;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
+import threads.ipfs.Multihash;
 import threads.ipfs.PID;
 import threads.server.core.events.EVENTS;
 import threads.server.core.peers.AddressType;
@@ -54,13 +63,18 @@ import threads.server.model.EventViewModel;
 import threads.server.model.SelectionViewModel;
 import threads.server.provider.FileDocumentsProvider;
 import threads.server.services.DaemonService;
+import threads.server.services.DiscoveryService;
 import threads.server.services.DownloaderService;
 import threads.server.services.LiteService;
+import threads.server.services.RegistrationService;
 import threads.server.services.UploadService;
 import threads.server.utils.CodecDecider;
 import threads.server.utils.CustomViewPager;
 import threads.server.utils.MimeType;
 import threads.server.utils.PermissionAction;
+import threads.server.work.ConnectionWorker;
+import threads.server.work.LoadNotificationsWorker;
+import threads.server.work.LoadPeersWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -73,7 +87,19 @@ public class MainActivity extends AppCompatActivity implements
         DontShowAgainFragmentDialog.ActionListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
+    private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
 
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            try {
+                ConnectionWorker.connect(getApplicationContext(), true);
+                LoadPeersWorker.loadPeers(getApplicationContext());
+                LoadNotificationsWorker.notifications(context);
+            } catch (Throwable e) {
+                Log.e(TAG, "" + e.getLocalizedMessage(), e);
+            }
+        }
+    };
     private DrawerLayout mDrawerLayout;
     private CustomViewPager mCustomViewPager;
     private BottomNavigationView mNavigation;
@@ -81,10 +107,14 @@ public class MainActivity extends AppCompatActivity implements
 
     private SelectionViewModel mSelectionViewModel;
     private Toolbar mToolbar;
+    private NsdManager mNsdManager;
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        unregisterReceiver(broadcastReceiver);
+        mNsdManager.unregisterService(RegistrationService.getInstance());
+        mNsdManager.stopServiceDiscovery(DiscoveryService.getInstance());
     }
 
 
@@ -285,6 +315,73 @@ public class MainActivity extends AppCompatActivity implements
         return true;
     }
 
+    private void registerService(int port, String serviceName) {
+        try {
+            String serviceType = "_ipfs-discovery._udp";
+            NsdServiceInfo serviceInfo = new NsdServiceInfo();
+            serviceInfo.setServiceName(serviceName);
+            serviceInfo.setServiceType(serviceType);
+            serviceInfo.setPort(port);
+            mNsdManager = (NsdManager) getSystemService(Context.NSD_SERVICE);
+            checkNotNull(mNsdManager);
+            mNsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD,
+                    RegistrationService.getInstance());
+
+            PID host = IPFS.getPID(getApplicationContext());
+            IPFS ipfs = IPFS.getInstance(getApplicationContext());
+
+            DiscoveryService discovery = DiscoveryService.getInstance();
+            discovery.setOnServiceFoundListener((info) -> {
+
+                Log.e(TAG, info.toString());
+
+                mNsdManager.resolveService(info, new NsdManager.ResolveListener() {
+                    @Override
+                    public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                        Log.e(TAG, "onResolveFailed : " + errorCode);
+                    }
+
+                    @Override
+                    public void onServiceResolved(NsdServiceInfo serviceInfo) {
+                        Log.e(TAG, "onServiceResolved : " + serviceInfo.toString());
+
+                        try {
+                            String serviceName = serviceInfo.getServiceName();
+                            if (!host.getPid().equals(serviceName)) {
+
+                                Multihash.fromBase58(serviceName);
+
+                                PID pid = PID.create(serviceName);
+                                if (!ipfs.isConnected(pid)) {
+
+                                    InetAddress inetAddress = serviceInfo.getHost();
+                                    String pre = "/ip4";
+                                    if (inetAddress instanceof Inet6Address) {
+                                        pre = "/ip6";
+                                    }
+                                    String multiAddress = pre + serviceInfo.getHost().toString() +
+                                            "/tcp/" + serviceInfo.getPort() + "/" +
+                                            IPFS.Style.p2p + "/" + pid.getPid();
+
+                                    int timeout = InitApplication.getConnectionTimeout(getApplicationContext());
+                                    ExecutorService executor = Executors.newSingleThreadExecutor();
+                                    executor.submit(() -> ipfs.swarmConnect(multiAddress, timeout));
+                                }
+                            }
+                        } catch (Throwable e) {
+                            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                        }
+                    }
+                });
+
+            });
+            mNsdManager.discoverServices(serviceType, NsdManager.PROTOCOL_DNS_SD, discovery);
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.ThreadsTheme);
@@ -299,6 +396,7 @@ public class MainActivity extends AppCompatActivity implements
         mToolbar.setSubtitle(R.string.files);
 
         LiteService.getInstance(getApplicationContext());
+
 
         mSelectionViewModel = new ViewModelProvider(this).get(SelectionViewModel.class);
 
@@ -451,8 +549,19 @@ public class MainActivity extends AppCompatActivity implements
 
         });
 
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(broadcastReceiver, intentFilter);
+
+
+        PID host = IPFS.getPID(getApplicationContext());
+        checkNotNull(host);
+        int port = IPFS.getSwarmPort(getApplicationContext());
+        registerService(port, host.getPid());
+
         Intent intent = getIntent();
         handleIntents(intent);
+
     }
 
 

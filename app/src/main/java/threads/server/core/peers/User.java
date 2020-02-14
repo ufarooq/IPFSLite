@@ -39,6 +39,10 @@ public class User {
     @ColumnInfo(name = "addresses")
     private Addresses addresses = new Addresses();
 
+    @Nullable
+    @ColumnInfo(name = "agent")
+    private String agent;
+
     User(@NonNull String alias, @NonNull String pid) {
         this.alias = alias;
         this.pid = pid;
@@ -167,4 +171,12 @@ public class User {
     }
 
 
+    @Nullable
+    public String getAgent() {
+        return agent;
+    }
+
+    public void setAgent(@Nullable String agent) {
+        this.agent = agent;
+    }
 }

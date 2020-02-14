@@ -31,9 +31,9 @@ import threads.ipfs.CID;
 import threads.ipfs.Multihash;
 import threads.server.R;
 import threads.server.core.events.EVENTS;
-import threads.server.services.BootstrapService;
 import threads.server.services.DownloaderService;
 import threads.server.utils.CodecDecider;
+import threads.server.work.ConnectionWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -218,7 +218,7 @@ public class EditMultihashDialogFragment extends DialogFragment {
                     codecDecider.getCodex() == CodecDecider.Codec.URI) {
 
                 String multihash = codecDecider.getMultihash();
-                BootstrapService.bootstrap(mContext);
+                ConnectionWorker.connect(mContext, true);
                 DownloaderService.download(mContext, CID.create(multihash));
             } else {
                 EVENTS.getInstance(mContext).postError(getString(R.string.codec_not_supported));

@@ -78,18 +78,6 @@ public class SettingsDialogFragment extends DialogFragment {
 
         });
 
-        Switch mdns_support = view.findViewById(R.id.mdns_support);
-        mdns_support.setChecked(IPFS.isMDNSEnabled(activity));
-        mdns_support.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            IPFS.setMDNSEnabled(activity, isChecked);
-
-            Toast.makeText(getContext(),
-                    R.string.daemon_restart_config_changed,
-                    Toast.LENGTH_LONG).show();
-
-
-        });
-
 
         Switch quic_support = view.findViewById(R.id.quic_support);
         quic_support.setChecked(IPFS.isQUICEnabled(activity));

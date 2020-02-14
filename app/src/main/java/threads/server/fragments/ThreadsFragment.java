@@ -70,7 +70,6 @@ import threads.server.jobs.JobServicePublish;
 import threads.server.model.SelectionViewModel;
 import threads.server.model.ThreadViewModel;
 import threads.server.provider.FileDocumentsProvider;
-import threads.server.services.BootstrapService;
 import threads.server.services.DownloaderService;
 import threads.server.services.LiteService;
 import threads.server.services.UploadService;
@@ -80,7 +79,7 @@ import threads.server.utils.Network;
 import threads.server.utils.ThreadItemDetailsLookup;
 import threads.server.utils.ThreadsItemKeyProvider;
 import threads.server.utils.ThreadsViewAdapter;
-import threads.server.work.ConnectPeersWorker;
+import threads.server.work.ConnectionWorker;
 import threads.server.work.DownloadThreadWorker;
 import threads.server.work.LoadNotificationsWorker;
 
@@ -224,28 +223,6 @@ public class ThreadsFragment extends Fragment implements
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setHasOptionsMenu(true);
-
-        mSelectionViewModel = new ViewModelProvider(mActivity).get(SelectionViewModel.class);
-
-
-        mSelectionViewModel.getParentThread().observe(this, (threadIdx) -> {
-
-            if (threadIdx != null) {
-                updateDirectory(threadIdx, mSelectionViewModel.getQuery().getValue());
-            }
-
-        });
-
-        mSelectionViewModel.getQuery().observe(this, (query) -> {
-
-            if (query != null) {
-                Long parent = mSelectionViewModel.getParentThread().getValue();
-                checkNotNull(parent);
-                updateDirectory(parent, query);
-            }
-
-        });
-
     }
 
     @Override
@@ -408,6 +385,36 @@ public class ThreadsFragment extends Fragment implements
             mLastClickTime = SystemClock.elapsedRealtime();
 
             threadsFabAction();
+
+        });
+
+
+        mSelectionViewModel = new ViewModelProvider(mActivity).get(SelectionViewModel.class);
+
+
+        mSelectionViewModel.getParentThread().observe(getViewLifecycleOwner(), (threadIdx) -> {
+
+            if (threadIdx != null) {
+
+                if (threadIdx == 0L) {
+                    mMainFab.setImageResource(R.drawable.plus_thick);
+                } else {
+                    mMainFab.setImageResource(R.drawable.back);
+                }
+
+
+                updateDirectory(threadIdx, mSelectionViewModel.getQuery().getValue());
+            }
+
+        });
+
+        mSelectionViewModel.getQuery().observe(getViewLifecycleOwner(), (query) -> {
+
+            if (query != null) {
+                Long parent = mSelectionViewModel.getParentThread().getValue();
+                checkNotNull(parent);
+                updateDirectory(parent, query);
+            }
 
         });
 
@@ -671,8 +678,8 @@ public class ThreadsFragment extends Fragment implements
                 if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
                     return true;
                 }
-
                 mLastClickTime = SystemClock.elapsedRealtime();
+
                 if (item.getItemId() == R.id.popup_info) {
                     clickThreadInfo(thread.getIdx());
                     return true;
@@ -918,11 +925,13 @@ public class ThreadsFragment extends Fragment implements
     @Override
     public void onClick(@NonNull Thread thread) {
         checkNotNull(thread);
+
+        if (SystemClock.elapsedRealtime() - mLastClickTime < 500) {
+            return;
+        }
+        mLastClickTime = SystemClock.elapsedRealtime();
+
         try {
-            if (SystemClock.elapsedRealtime() - mLastClickTime < 500) {
-                return;
-            }
-            mLastClickTime = SystemClock.elapsedRealtime();
 
             if (!mSelectionTracker.hasSelection()) {
                 long threadIdx = thread.getIdx();
@@ -1058,14 +1067,19 @@ public class ThreadsFragment extends Fragment implements
     @Override
     public void invokeDownload(@NonNull Thread thread) {
         checkNotNull(thread);
+
+        if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+            return;
+        }
+        mLastClickTime = SystemClock.elapsedRealtime();
+
         try {
 
             if (!Network.isConnected(mContext)) {
                 EVENTS.getInstance(mContext).postWarning(getString(R.string.offline_mode));
             }
 
-            BootstrapService.bootstrap(mContext);
-            ConnectPeersWorker.connect(mContext, 5);
+            ConnectionWorker.connect(mContext, true);
 
             WorkerService.markThreadDownload(mContext, thread.getIdx());
             DownloadThreadWorker.download(mContext, thread.getIdx());
@@ -1078,6 +1092,11 @@ public class ThreadsFragment extends Fragment implements
     public void invokePauseAction(@NonNull Thread thread) {
         checkNotNull(thread);
 
+        if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+            return;
+        }
+        mLastClickTime = SystemClock.elapsedRealtime();
+
         WorkerService.cancelThreadDownload(mContext, thread.getIdx());
     }
 
@@ -1087,7 +1106,7 @@ public class ThreadsFragment extends Fragment implements
         mSwipeRefreshLayout.setRefreshing(true);
 
         try {
-            LoadNotificationsWorker.notifications(mContext, 0);
+            LoadNotificationsWorker.notifications(mContext);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {
@@ -1107,8 +1126,6 @@ public class ThreadsFragment extends Fragment implements
                 CID cid = threads.getThreadContent(idx);
                 checkNotNull(cid);
 
-
-                BootstrapService.bootstrap(mContext);
                 JobServicePublish.publish(mContext, cid);
 
                 String gateway = LiteService.getGateway(mContext);
@@ -1163,7 +1180,7 @@ public class ThreadsFragment extends Fragment implements
                     codecDecider.getCodex() == CodecDecider.Codec.URI) {
 
                 String multihash = codecDecider.getMultihash();
-                BootstrapService.bootstrap(mContext);
+                ConnectionWorker.connect(mContext, true);
                 DownloaderService.download(mContext, CID.create(multihash));
             } else {
                 EVENTS.getInstance(mContext).postError(getString(R.string.codec_not_supported));

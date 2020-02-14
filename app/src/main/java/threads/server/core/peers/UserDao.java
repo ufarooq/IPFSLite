@@ -32,15 +32,8 @@ public interface UserDao {
     @Query("UPDATE User SET alias = :alias WHERE pid = :pid")
     void setAlias(String pid, String alias);
 
-    @Query("UPDATE User SET publicKey = :publicKey WHERE pid = :pid")
-    void setPublicKey(String pid, String publicKey);
-
-    @Query("UPDATE User SET lite = 1 WHERE pid = :pid")
-    void setLite(String pid);
-
     @Query("SELECT publicKey FROM User WHERE pid = :pid ")
     String getPublicKey(String pid);
-
 
     @Query("SELECT lite FROM User WHERE pid = :pid ")
     boolean isLite(String pid);
@@ -54,14 +47,8 @@ public interface UserDao {
     @Query("DELETE FROM User WHERE pid = :pid")
     void removeUserByPid(String pid);
 
-    @Query("DELETE FROM User WHERE pid IN (:pids)")
-    void removeUsersByPid(String... pids);
-
     @Query("SELECT * FROM User")
     LiveData<List<User>> getLiveDataUsers();
-
-    @Query("UPDATE User SET dialing = 0")
-    void resetUsersDialing();
 
     @Query("UPDATE User SET dialing = :dialing WHERE pid = :pid")
     void setUserDialing(String pid, boolean dialing);
@@ -72,12 +59,11 @@ public interface UserDao {
     @Query("SELECT dialing FROM User WHERE pid = :pid")
     boolean getUserDialing(String pid);
 
+    @Query("UPDATE User SET connected = 1, dialing = 0 WHERE pid = :pid")
+    void setConnected(String pid);
 
-    @Query("UPDATE User SET connected = 0")
-    void resetUsersConnected();
-
-    @Query("UPDATE User SET connected = :connected WHERE pid = :pid")
-    void setConnected(String pid, boolean connected);
+    @Query("UPDATE User SET connected = 0 WHERE pid = :pid")
+    void setDisconnected(String pid);
 
     @Query("SELECT connected FROM User WHERE pid = :pid ")
     boolean isConnected(String pid);

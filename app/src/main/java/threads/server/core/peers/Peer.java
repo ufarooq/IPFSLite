@@ -12,7 +12,7 @@ import threads.ipfs.PID;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 @androidx.room.Entity
-public class Peer implements Comparable<Peer> {
+public class Peer {
 
 
     @PrimaryKey
@@ -26,12 +26,6 @@ public class Peer implements Comparable<Peer> {
     private boolean relay;
     @ColumnInfo(name = "autonat")
     private boolean autonat;
-    @ColumnInfo(name = "pubsub")
-    private boolean pubsub;
-    @ColumnInfo(name = "latency")
-    private long latency;
-    @ColumnInfo(name = "connected")
-    private boolean connected;
 
 
     Peer(@NonNull String pid, @NonNull String multiAddress) {
@@ -39,9 +33,6 @@ public class Peer implements Comparable<Peer> {
         this.multiAddress = multiAddress;
         this.relay = false;
         this.autonat = false;
-        this.pubsub = false;
-        this.latency = 0;
-        this.connected = false;
 
     }
 
@@ -51,45 +42,12 @@ public class Peer implements Comparable<Peer> {
         return new Peer(pid.getPid(), multiAddress);
     }
 
-    public boolean isConnected() {
-        return connected;
-    }
-
-    public void setConnected(boolean connected) {
-        this.connected = connected;
-    }
-
-    public boolean isDialing() {
-        return false;
-    }
-
-    @NonNull
-    public String getAlias() {
-        return pid;
-    }
-
-    public boolean isPubsub() {
-        return pubsub;
-    }
-
-    public void setPubsub(boolean pubsub) {
-        this.pubsub = pubsub;
-    }
-
     public boolean isAutonat() {
         return autonat;
     }
 
     public void setAutonat(boolean autonat) {
         this.autonat = autonat;
-    }
-
-    long getLatency() {
-        return latency;
-    }
-
-    public void setLatency(long latency) {
-        this.latency = latency;
     }
 
     @Override
@@ -108,8 +66,6 @@ public class Peer implements Comparable<Peer> {
                 ", multiAddress='" + multiAddress + '\'' +
                 ", relay=" + relay +
                 ", autonat=" + autonat +
-                ", pubsub=" + pubsub +
-                ", latency=" + latency +
                 '}';
     }
 
@@ -141,11 +97,6 @@ public class Peer implements Comparable<Peer> {
         this.multiAddress = multiAddress;
     }
 
-    @Override
-    public int compareTo(@NonNull Peer peer) {
-        return Double.compare(peer.latency, this.latency);
-    }
-
     @NonNull
     public PID getPID() {
         return PID.create(getPid());
@@ -157,17 +108,11 @@ public class Peer implements Comparable<Peer> {
 
     }
 
-    public boolean isBlocked() {
-        return true;
-    }
-
     public boolean sameContent(@NonNull Peer peer) {
         checkNotNull(peer);
         if (this == peer) return true;
-        return Objects.equals(connected, peer.isConnected()) &&
-                Objects.equals(autonat, peer.isAutonat()) &&
-                Objects.equals(relay, peer.isRelay()) &&
-                Objects.equals(pubsub, peer.isPubsub());
+        return Objects.equals(autonat, peer.isAutonat()) &&
+                Objects.equals(relay, peer.isRelay());
     }
 
 

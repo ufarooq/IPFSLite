@@ -14,7 +14,6 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,7 +21,6 @@ import java.util.concurrent.Executors;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
-import threads.ipfs.PeerInfo;
 import threads.server.R;
 import threads.server.core.contents.CDS;
 import threads.server.core.contents.Contents;
@@ -32,13 +30,10 @@ import threads.server.core.peers.User;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.jobs.JobServiceCleanup;
-import threads.server.jobs.JobServiceIdentity;
 import threads.server.jobs.JobServicePublisher;
 import threads.server.utils.Network;
-import threads.server.work.ConnectPeerWorker;
-import threads.server.work.ConnectPeersWorker;
-import threads.server.work.LoadIdentityWorker;
-import threads.server.work.LoadNotificationsWorker;
+import threads.server.work.ConnectUserWorker;
+import threads.server.work.ConnectionWorker;
 import threads.server.work.SendNotificationWorker;
 
 import static androidx.core.util.Preconditions.checkArgument;
@@ -177,7 +172,7 @@ public class LiteService {
                     User newUser = peers.createUser(user, user.getPid());
                     newUser.setBlocked(false);
                     peers.storeUser(newUser);
-                    LoadIdentityWorker.identify(context, user.getPid());
+
                     if (addMessage) {
                         events.warning(context.getString(R.string.added_pid_to_peers, user));
                     }
@@ -189,8 +184,8 @@ public class LiteService {
 
                 peers.setUserDialing(user.getPid(), Network.isConnected(context));
 
-                BootstrapService.bootstrap(context);
-                ConnectPeerWorker.connect(context, user.getPid());
+                ConnectionWorker.connect(context, false);
+                ConnectUserWorker.connect(context, user.getPid());
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
@@ -245,43 +240,6 @@ public class LiteService {
         }
     }
 
-    public static String getDetailsReport(@NonNull Context context, @NonNull PID peer) {
-        String protocolVersion = "n.a.";
-        String agentVersion = "n.a.";
-        List<String> addresses = new ArrayList<>();
-        final IPFS ipfs = IPFS.getInstance(context);
-
-        PeerInfo info = ipfs.id(peer, 5);
-
-        if (info != null) {
-            agentVersion = info.getAgentVersion();
-            protocolVersion = info.getProtocolVersion();
-            addresses = info.getMultiAddresses();
-        }
-
-        String html = "<html><body style=\"background-color:snow;\"><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
-        if (LiteService.isNightNode(context)) {
-            html = "<html><head><style>body { background-color: DarkSlateGray; color: white;}</style></head><body><h3 style=\"text-align:center; color:teal;\">Peer Details</h3>";
-        }
-
-        html = html.concat("<div style=\"width: 80%;" +
-                "  word-wrap:break-word;\">").concat(peer.getPid()).concat("</div><br/>");
-
-        html = html.concat("<div style=\"width: 80%;" +
-                "  word-wrap:break-word;\">").concat("Protocol Version : ").concat(protocolVersion).concat("</div><br/>");
-
-        html = html.concat("<ul>");
-
-        for (String address : addresses) {
-            html = html.concat("<li><div style=\"width: 80%;" +
-                    "  word-wrap:break-word;\">").concat(address).concat("</div></li>");
-        }
-
-
-        return html.concat("</ul><br/></body><footer>Agent : <strong style=\"color:teal;\">" + agentVersion + "</strong></footer></html>");
-
-    }
-
 
     public void sendThreads(@NonNull Context context, @NonNull List<User> users, long[] indices) {
         checkNotNull(context);
@@ -327,14 +285,8 @@ public class LiteService {
         checkNotNull(context);
 
 
-        BootstrapService.bootstrap(context);
-        ConnectPeersWorker.connect(context, 5);
-        LoadNotificationsWorker.notifications(context, 10);
-
-
         JobServicePublisher.publish(context);
         JobServiceCleanup.cleanup(context);
-        JobServiceIdentity.publish(context);
 
     }
 

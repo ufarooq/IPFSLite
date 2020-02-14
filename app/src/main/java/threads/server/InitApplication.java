@@ -21,7 +21,6 @@ public class InitApplication extends Application {
     private static final String APP_KEY = "AppKey";
     private static final String UPDATE = "UPDATE";
     private static final String TAG = InitApplication.class.getSimpleName();
-    private static final String LOGIN_FLAG_KEY = "loginFlagKey";
     private static final String PREF_KEY = "prefKey";
     private static final String TIMEOUT_KEY = "timeoutKey";
 
@@ -40,22 +39,6 @@ public class InitApplication extends Application {
         editor.apply();
     }
 
-    public static boolean getLoginFlag(@NonNull Context context) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                APP_KEY, Context.MODE_PRIVATE);
-        return sharedPref.getBoolean(LOGIN_FLAG_KEY, false);
-    }
-
-    public static void setLoginFlag(@NonNull Context context, boolean login) {
-        checkNotNull(context);
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                APP_KEY, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putBoolean(LOGIN_FLAG_KEY, login);
-        editor.apply();
-    }
-
     public static void runUpdatesIfNecessary(@NonNull Context context) {
         try {
             int versionCode = context.getPackageManager().getPackageInfo(
@@ -64,7 +47,7 @@ public class InitApplication extends Application {
                     APP_KEY, Context.MODE_PRIVATE);
             if (prefs.getInt(UPDATE, 0) != versionCode) {
 
-                setLoginFlag(context, false); // TODO remove later
+
                 IPFS.deleteConfigFile(context); // TODO remove later
                 IPFS.cleanBaseDir(context); // TODO remove later
                 IPFS.cleanCacheDir(context); // TODO remove later
@@ -91,8 +74,6 @@ public class InitApplication extends Application {
 
                 InitApplication.setConnectionTimeout(context, 45);
                 EntityService.setTangleTimeout(context, 60);
-
-                IPFS.setMDNSEnabled(context, true);
 
                 IPFS.setRandomSwarmPort(context, true);
 

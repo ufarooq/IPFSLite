@@ -21,9 +21,8 @@ import threads.ipfs.IPFS;
 import threads.server.InitApplication;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
-import threads.server.services.BootstrapService;
 import threads.server.services.LiteService;
-import threads.server.work.ConnectPeersWorker;
+import threads.server.work.ConnectionWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -85,8 +84,7 @@ public class JobServicePublisher extends JobService {
                 }
 
                 if (!list.isEmpty()) {
-                    BootstrapService.bootstrap(getApplicationContext());
-                    ConnectPeersWorker.connect(getApplicationContext(), 10);
+                    ConnectionWorker.connect(getApplicationContext(), true);
                 }
 
                 for (CID content : contents) {

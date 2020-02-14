@@ -18,22 +18,16 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import threads.ipfs.PID;
 import threads.server.R;
-import threads.server.core.events.EVENTS;
 import threads.server.core.peers.Peer;
 import threads.server.model.PeersViewModel;
-import threads.server.services.BootstrapService;
 import threads.server.services.LiteService;
-import threads.server.services.LoadPeersService;
-import threads.server.utils.Network;
 import threads.server.utils.PeersViewAdapter;
+import threads.server.work.ConnectionWorker;
+import threads.server.work.LoadPeersWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -69,19 +63,12 @@ public class SwarmFragment extends Fragment implements
         if (animation) {
             mSwipeRefreshLayout.setRefreshing(true);
         }
+        ConnectionWorker.connect(mContext, true);
+        LoadPeersWorker.loadPeers(mContext);
 
-
-        try {
-            BootstrapService.bootstrap(mContext);
-            LoadPeersService.loadPeers(mContext);
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        } finally {
-            if (animation) {
-                mSwipeRefreshLayout.setRefreshing(false);
-            }
+        if (animation) {
+            mSwipeRefreshLayout.setRefreshing(false);
         }
-
     }
 
 
@@ -113,14 +100,8 @@ public class SwarmFragment extends Fragment implements
             try {
                 if (peers != null) {
                     try {
-                        List<Peer> connected = new ArrayList<>();
-                        for (Peer peer : peers) {
-                            if (peer.isConnected()) {
-                                connected.add(peer);
-                            }
-                        }
-                        connected.sort(Comparator.comparing(Peer::getAlias));
-                        peersViewAdapter.updateData(connected);
+                        peers.sort(Comparator.comparing(Peer::getPid));
+                        peersViewAdapter.updateData(peers);
                     } catch (Throwable e) {
                         Log.e(TAG, "" + e.getLocalizedMessage(), e);
                     }
@@ -168,9 +149,6 @@ public class SwarmFragment extends Fragment implements
                 } else if (item.getItemId() == R.id.popup_add) {
                     clickPeerAdd(peer.getPID().getPid());
                     return true;
-                } else if (item.getItemId() == R.id.popup_details) {
-                    clickPeerDetails(peer.getPID().getPid());
-                    return true;
                 }
                 return false;
 
@@ -200,38 +178,6 @@ public class SwarmFragment extends Fragment implements
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-    }
-
-
-    private void clickPeerDetails(@NonNull String pid) {
-
-        // CHECKED
-        if (!Network.isConnected(mContext)) {
-            EVENTS.getInstance(mContext).postWarning(getString(R.string.offline_mode));
-        }
-
-        try {
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                PID peer = PID.create(pid);
-                try {
-                    String html = LiteService.getDetailsReport(mContext, peer);
-
-
-                    DetailsDialogFragment.newInstance(
-                            DetailsDialogFragment.Type.HTML, html).show(
-                            getChildFragmentManager(),
-                            DetailsDialogFragment.TAG);
-                } catch (Throwable e) {
-                    EVENTS.getInstance(mContext).exception(e);
-                }
-            });
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
     }
 
 

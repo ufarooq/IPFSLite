@@ -225,7 +225,7 @@ public class ContentsWorker extends Worker {
             user.setBlocked(true);
             peers.storeUser(user);
 
-            ConnectPeerWorker.connect(getApplicationContext(), pid.getPid());
+            ConnectUserWorker.connect(getApplicationContext(), pid.getPid());
         }
     }
 

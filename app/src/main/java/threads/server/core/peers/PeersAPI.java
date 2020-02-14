@@ -62,12 +62,6 @@ public class PeersAPI {
         return Peer.createPeer(pid, multiAddress);
     }
 
-    @Nullable
-    public Peer getPeerByPID(@NonNull PID pid) {
-        checkNotNull(pid);
-        return getPeersDatabase().peersDao().getPeerByPid(pid.getPid());
-    }
-
 
     @NonNull
     public List<Peer> getPeers() {
@@ -75,15 +69,8 @@ public class PeersAPI {
     }
 
 
-    public void storePeer(@NonNull Peer peer) {
-        checkNotNull(peer);
-        getPeersDatabase().peersDao().insertPeer(peer);
-    }
-
-
-    public void updatePeer(@NonNull Peer peer) {
-        checkNotNull(peer);
-        getPeersDatabase().peersDao().updatePeer(peer);
+    public void storePeers(@NonNull List<Peer> peers) {
+        getPeersDatabase().peersDao().insertPeers(peers);
     }
 
 
@@ -132,11 +119,15 @@ public class PeersAPI {
         return getUsersDatabase().userDao().getNonBlockedLiteUsers();
     }
 
-    public void setUserConnected(@NonNull PID user, boolean connected) {
+    public void setUserConnected(@NonNull PID user) {
         checkNotNull(user);
-        getUsersDatabase().userDao().setConnected(user.getPid(), connected);
+        getUsersDatabase().userDao().setConnected(user.getPid());
     }
 
+    public void setUserDisconnected(@NonNull PID user) {
+        checkNotNull(user);
+        getUsersDatabase().userDao().setDisconnected(user.getPid());
+    }
 
     public void setUserDialing(@NonNull String pid, boolean dialing) {
         checkNotNull(pid);
@@ -165,37 +156,6 @@ public class PeersAPI {
         return getUsersDatabase().userDao().isConnected(pid);
     }
 
-    public void resetUsersDialing() {
-        getUsersDatabase().userDao().resetUsersDialing();
-    }
-
-    public void resetUsersConnected() {
-        getUsersDatabase().userDao().resetUsersConnected();
-    }
-
-    public void resetPeersConnected() {
-        getPeersDatabase().peersDao().resetPeersConnected();
-    }
-
-
-    public void setUserPublicKey(@NonNull PID user, @NonNull String publicKey) {
-        checkNotNull(user);
-        checkNotNull(publicKey);
-        setUserPublicKey(user.getPid(), publicKey);
-    }
-
-    public void setUserPublicKey(@NonNull String pid, @NonNull String publicKey) {
-        checkNotNull(pid);
-        checkNotNull(publicKey);
-        getUsersDatabase().userDao().setPublicKey(pid, publicKey);
-    }
-
-
-    public void setUserIsLite(@NonNull String pid) {
-        checkNotNull(pid);
-        getUsersDatabase().userDao().setLite(pid);
-    }
-
 
     @Nullable
     public String getUserPublicKey(@NonNull String pid) {
@@ -208,12 +168,6 @@ public class PeersAPI {
     public String getUserAlias(@NonNull String pid) {
         checkNotNull(pid);
         return getUsersDatabase().userDao().getAlias(pid);
-    }
-
-    public void setUserAlias(@NonNull PID user, @NonNull String alias) {
-        checkNotNull(user);
-        checkNotNull(alias);
-        setUserAlias(user.getPid(), alias);
     }
 
     public void setUserAlias(@NonNull String pid, @NonNull String alias) {
@@ -244,9 +198,8 @@ public class PeersAPI {
     }
 
 
-    public void removePeer(@NonNull Peer peer) {
-        checkNotNull(peer);
-        getPeersDatabase().peersDao().deletePeer(peer);
+    public void clearPeers() {
+        getPeersDatabase().peersDao().clear();
     }
 
     public boolean getUserIsLite(@NonNull String pid) {

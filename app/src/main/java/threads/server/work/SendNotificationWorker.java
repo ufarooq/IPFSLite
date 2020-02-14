@@ -126,14 +126,12 @@ public class SendNotificationWorker extends Worker {
 
             if (publicKey == null) {
                 String alias = peers.getUserAlias(pid);
-                events.invokeEvent(EVENTS.ERROR,
-                        "Failed sending notification to :"
-                                + alias + " Reason : Public Key not available");
+                events.error("Failed sending notification to :"
+                        + alias + " Reason : Public Key not available");
             } else if (!isLite) {
                 String alias = peers.getUserAlias(pid);
-                events.invokeEvent(EVENTS.ERROR,
-                        "Failed sending notification to :"
-                                + alias + " Reason : Peer is not a IPFS Lite client");
+                events.error("Failed sending notification to :"
+                        + alias + " Reason : Peer is not a IPFS Lite client");
             } else {
                 Content content = new Content();
 
@@ -151,17 +149,15 @@ public class SendNotificationWorker extends Worker {
                     entityService.insertData(getApplicationContext(), address, json);
                     long time = (System.currentTimeMillis() - startTime) / 1000;
 
-                    events.invokeEvent(EVENTS.INFO,
-                            getApplicationContext().getString(R.string.success_notification,
-                                    alias, String.valueOf(time)));
+                    events.error(getApplicationContext().getString(R.string.success_notification,
+                            alias, String.valueOf(time)));
 
 
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                     long time = (System.currentTimeMillis() - startTime) / 1000;
-                    events.invokeEvent(EVENTS.ERROR,
-                            getApplicationContext().getString(R.string.failed_notification,
-                                    alias, String.valueOf(time)));
+                    events.error(getApplicationContext().getString(R.string.failed_notification,
+                            alias, String.valueOf(time)));
 
                 }
 

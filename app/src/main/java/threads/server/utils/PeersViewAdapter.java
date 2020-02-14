@@ -68,18 +68,18 @@ public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.View
 
                 if (peer.isRelay()) {
                     res = R.drawable.access_point;
-                } else if (peer.isPubsub()) {
+                } else if (peer.isAutonat()) {
                     res = R.drawable.hubspot;
                 }
 
 
-                String name = peer.getAlias();
+                String name = peer.getPid();
                 int color = ColorGenerator.MATERIAL.getColor(name);
                 peerViewHolder.user_image.setImageResource(res);
                 peerViewHolder.user_image.setColorFilter(color);
 
 
-                peerViewHolder.user_alias.setText(peer.getAlias());
+                peerViewHolder.user_alias.setText(name);
 
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

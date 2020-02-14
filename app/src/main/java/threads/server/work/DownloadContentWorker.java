@@ -142,8 +142,6 @@ public class DownloadContentWorker extends Worker {
             if (success) {
                 threads.setThreadSeeding(idx);
 
-                checkParentComplete(thread.getParent());
-
                 if (size != file.length()) {
                     threads.setThreadSize(idx, file.length());
                 }
@@ -186,6 +184,7 @@ public class DownloadContentWorker extends Worker {
                     checkArgument(file.delete());
                 }
             }
+            checkParentComplete(thread.getParent());
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {

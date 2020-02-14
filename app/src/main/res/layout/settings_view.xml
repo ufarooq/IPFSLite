@@ -27,15 +27,6 @@
             android:padding="8dp"
             android:text="@string/dht_support" />
 
-        <Switch
-            android:id="@+id/mdns_support"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="16dp"
-            android:layout_marginTop="16dp"
-            android:layout_marginRight="16dp"
-            android:padding="8dp"
-            android:text="@string/mdns_support" />
 
         <View
             android:layout_width="match_parent"

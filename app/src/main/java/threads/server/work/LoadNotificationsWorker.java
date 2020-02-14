@@ -15,7 +15,6 @@ import androidx.work.WorkerParameters;
 import com.google.gson.Gson;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import threads.iota.Entity;
 import threads.iota.EntityService;
@@ -41,7 +40,7 @@ public class LoadNotificationsWorker extends Worker {
 
     }
 
-    public static void notifications(@NonNull Context context, int secondsDelay) {
+    public static void notifications(@NonNull Context context) {
         checkNotNull(context);
 
         if (!LiteService.isReceiveNotificationsEnabled(context)) {
@@ -54,7 +53,6 @@ public class LoadNotificationsWorker extends Worker {
 
         OneTimeWorkRequest syncWorkRequest =
                 new OneTimeWorkRequest.Builder(LoadNotificationsWorker.class)
-                        .setInitialDelay(secondsDelay, TimeUnit.SECONDS)
                         .addTag(TAG)
                         .setConstraints(builder.build())
                         .build();
@@ -128,7 +126,7 @@ public class LoadNotificationsWorker extends Worker {
                             } else {
                                 contentService.updateTimestamp(cid);
                             }
-                            ConnectPeerWorker.connect(getApplicationContext(), pid);
+                            ConnectUserWorker.connect(getApplicationContext(), pid);
 
 
                         } catch (Throwable e) {
