@@ -838,7 +838,13 @@ public class ThreadsFragment extends Fragment implements
             } catch (Throwable e) {
                 events.exception(e);
             } finally {
-                EVENTS.getInstance(mContext).postWarning(getString(R.string.added_thread_to_pins, thread.getName()));
+                if (pinned) {
+                    EVENTS.getInstance(mContext).postWarning(
+                            getString(R.string.added_thread_to_pins, thread.getName()));
+                } else {
+                    EVENTS.getInstance(mContext).postWarning(
+                            getString(R.string.removed_thread_from_pins, thread.getName()));
+                }
             }
         });
 

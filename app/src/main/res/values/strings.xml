@@ -131,5 +131,6 @@
     <string name="pins">Pins</string>
     <string name="pin_directory_not_supported">Pinning of directories is currently not supported.</string>
     <string name="added_thread_to_pins">Added \"%1$s\" to Pins</string>
+    <string name="removed_thread_from_pins">Removed \"%1$s\" from Pins</string>
     <string name="publish">Publish</string>
 </resources>

@@ -346,6 +346,7 @@ public class MainActivity extends AppCompatActivity implements
                         Log.e(TAG, "onResolveFailed : " + errorCode);
                     }
 
+
                     @Override
                     public void onServiceResolved(NsdServiceInfo serviceInfo) {
                         Log.e(TAG, "onServiceResolved : " + serviceInfo.toString());
@@ -441,6 +442,7 @@ public class MainActivity extends AppCompatActivity implements
                         break;
                     case R.id.navigation_swarm:
                         mToolbar.setSubtitle(R.string.swarm);
+                        break;
                     case R.id.navigation_pins:
                         mToolbar.setSubtitle(R.string.pins);
                         break;
