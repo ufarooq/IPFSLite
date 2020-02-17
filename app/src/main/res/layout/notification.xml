@@ -2,29 +2,29 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="16dp"
+    android:padding="8dp"
     tools:ignore="UseCompoundDrawables">
 
     <TextView
         android:id="@+id/notification_title"
         style="@style/TextAppearance.Compat.Notification.Title"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_weight="1"
         android:text="@string/daemon_title" />
 
     <ImageView
-        android:id="@+id/action_pause"
+        android:id="@+id/action_turn_off"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="center"
-        android:layout_marginStart="8dp"
+        android:layout_margin="8dp"
         android:background="@android:color/transparent"
         android:clickable="true"
         android:focusable="true"
-        android:src="@drawable/pause"
+        android:src="@drawable/access_point_network_off"
         tools:ignore="ContentDescription" />
 </LinearLayout>

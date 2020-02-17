@@ -62,7 +62,7 @@ public class InitApplication extends Application {
                 IPFS.setRoutingType(context, RoutingConfig.TypeEnum.dhtclient);
 
 
-                IPFS.setAutoNATServiceEnabled(context, false);
+                IPFS.setAutoNATServiceEnabled(context, true);
                 IPFS.setRelayHopEnabled(context, false);
                 IPFS.setAutoRelayEnabled(context, true);
 
@@ -75,6 +75,7 @@ public class InitApplication extends Application {
                 InitApplication.setConnectionTimeout(context, 45);
                 EntityService.setTangleTimeout(context, 60);
 
+                IPFS.setPubSubEnabled(context, false);
                 IPFS.setRandomSwarmPort(context, true);
 
 

@@ -7,7 +7,7 @@
         <menu>
             <item
                 android:id="@+id/nav_daemon"
-                android:icon="@drawable/play_circle"
+                android:icon="@drawable/access_point_network"
                 android:title="@string/start_daemon" />
             <item
                 android:id="@+id/nav_settings"

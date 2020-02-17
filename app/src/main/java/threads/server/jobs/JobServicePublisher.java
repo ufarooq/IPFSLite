@@ -10,19 +10,18 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import threads.ipfs.CID;
-import threads.ipfs.IPFS;
-import threads.server.InitApplication;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.LiteService;
 import threads.server.work.ConnectionWorker;
+import threads.server.work.LoaderContentWorker;
+import threads.server.work.PublishContentWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -61,40 +60,23 @@ public class JobServicePublisher extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
-
-
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             long start = System.currentTimeMillis();
             try {
-
-                IPFS ipfs = IPFS.getInstance(getApplicationContext());
-                int timeout = InitApplication.getConnectionTimeout(getApplicationContext());
-
-
                 THREADS threads = THREADS.getInstance(getApplicationContext());
-                List<CID> contents = new ArrayList<>();
                 List<Thread> list = threads.getPinnedThreads();
-
-                for (Thread thread : list) {
-                    CID cid = thread.getContent();
-                    if (cid != null) {
-                        contents.add(cid);
-                    }
-                }
 
                 if (!list.isEmpty()) {
                     ConnectionWorker.connect(getApplicationContext(), true);
                 }
 
-                for (CID content : contents) {
-                    Executors.newSingleThreadExecutor().submit(
-                            () -> ipfs.dhtPublish(content, true, timeout));
-                }
-
-
                 for (Thread thread : list) {
-                    JobServicePinLoader.loader(getApplicationContext(), thread.getIdx());
+                    CID cid = thread.getContent();
+                    if (cid != null) {
+                        PublishContentWorker.publish(getApplicationContext(), cid);
+                        LoaderContentWorker.loader(getApplicationContext(), thread.getIdx());
+                    }
                 }
 
             } catch (Throwable e) {
@@ -103,7 +85,6 @@ public class JobServicePublisher extends JobService {
                 Log.e(TAG, " finish onStart [" + (System.currentTimeMillis() - start) + "]...");
                 jobFinished(jobParameters, false);
             }
-
         });
         return true;
     }

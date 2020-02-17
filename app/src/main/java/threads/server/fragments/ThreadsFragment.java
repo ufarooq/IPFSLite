@@ -63,13 +63,13 @@ import threads.server.R;
 import threads.server.core.events.EVENTS;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
+import threads.server.core.threads.Status;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
-import threads.server.jobs.JobServiceDeleteThreads;
-import threads.server.jobs.JobServicePublish;
 import threads.server.model.SelectionViewModel;
 import threads.server.model.ThreadViewModel;
 import threads.server.provider.FileDocumentsProvider;
+import threads.server.services.DeleteThreadsService;
 import threads.server.services.DownloaderService;
 import threads.server.services.LiteService;
 import threads.server.services.UploadService;
@@ -82,6 +82,7 @@ import threads.server.utils.ThreadsViewAdapter;
 import threads.server.work.ConnectionWorker;
 import threads.server.work.DownloadThreadWorker;
 import threads.server.work.LoadNotificationsWorker;
+import threads.server.work.PublishContentWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -644,7 +645,7 @@ public class ThreadsFragment extends Fragment implements
         try {
             long[] entries = convert(mSelectionTracker.getSelection());
 
-            JobServiceDeleteThreads.removeThreads(mContext, entries);
+            DeleteThreadsService.removeThreads(mContext, entries);
 
             mSelectionTracker.clearSelection();
 
@@ -684,7 +685,7 @@ public class ThreadsFragment extends Fragment implements
                     clickThreadInfo(thread.getIdx());
                     return true;
                 } else if (item.getItemId() == R.id.popup_view) {
-                    clickThreadView(thread.getIdx());
+                    clickThreadView(thread);
                     return true;
                 } else if (item.getItemId() == R.id.popup_delete) {
                     clickThreadDelete(thread.getIdx());
@@ -823,6 +824,7 @@ public class ThreadsFragment extends Fragment implements
         executor.submit(() -> {
             try {
                 threads.setThreadPinned(idx, pinned);
+                threads.setThreadStatus(idx, Status.UNKNOWN);
             } catch (Throwable e) {
                 events.exception(e);
             }
@@ -1080,8 +1082,8 @@ public class ThreadsFragment extends Fragment implements
             }
 
             ConnectionWorker.connect(mContext, true);
-
-            WorkerService.markThreadDownload(mContext, thread.getIdx());
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> WorkerService.markThreadDownload(mContext, thread.getIdx()));
             DownloadThreadWorker.download(mContext, thread.getIdx());
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -1096,8 +1098,8 @@ public class ThreadsFragment extends Fragment implements
             return;
         }
         mLastClickTime = SystemClock.elapsedRealtime();
-
-        WorkerService.cancelThreadDownload(mContext, thread.getIdx());
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> WorkerService.cancelThreadDownload(mContext, thread.getIdx()));
     }
 
 
@@ -1115,32 +1117,25 @@ public class ThreadsFragment extends Fragment implements
 
     }
 
-    private void clickThreadView(long idx) {
+    private void clickThreadView(@NonNull Thread thread) {
 
-        final THREADS threads = THREADS.getInstance(mContext);
-        final EVENTS events = EVENTS.getInstance(mContext);
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
+        CID cid = thread.getContent();
+        checkNotNull(cid);
 
-                CID cid = threads.getThreadContent(idx);
-                checkNotNull(cid);
+        PublishContentWorker.publish(mContext, cid);
 
-                JobServicePublish.publish(mContext, cid);
+        try {
+            String gateway = LiteService.getGateway(mContext);
+            Uri uri = Uri.parse(gateway + "/" + IPFS.Style.ipfs + "/" + cid.getCid());
 
-                String gateway = LiteService.getGateway(mContext);
-                Uri uri = Uri.parse(gateway + "/ipfs/" + cid.getCid());
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
 
-                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-
-            } catch (Throwable e) {
-                events.exception(e);
-            }
-        });
-
+        } catch (Throwable e) {
+            EVENTS.getInstance(mContext).postError("" + e.getLocalizedMessage());
+        }
     }
 
 
@@ -1155,7 +1150,7 @@ public class ThreadsFragment extends Fragment implements
     }
 
     private void clickThreadDelete(long idx) {
-        JobServiceDeleteThreads.removeThreads(mContext, idx);
+        DeleteThreadsService.removeThreads(mContext, idx);
     }
 
 

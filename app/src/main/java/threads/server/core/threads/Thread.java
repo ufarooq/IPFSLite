@@ -58,7 +58,10 @@ public class Thread {
     private boolean seeding; // checked
     @ColumnInfo(name = "deleting")
     private boolean deleting; // checked
-
+    @NonNull
+    @TypeConverters(Status.class)
+    @ColumnInfo(name = "status")
+    private Status status;  // checked
 
     Thread(long parent) {
         this.parent = parent;
@@ -70,6 +73,7 @@ public class Thread {
         this.seeding = false;
         this.deleting = false;
         this.progress = 0;
+        this.status = Status.UNKNOWN;
     }
 
     static Thread createThread(long parent) {
@@ -232,5 +236,14 @@ public class Thread {
 
     public void setDeleting(boolean deleting) {
         this.deleting = deleting;
+    }
+
+    @NonNull
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(@NonNull Status status) {
+        this.status = status;
     }
 }

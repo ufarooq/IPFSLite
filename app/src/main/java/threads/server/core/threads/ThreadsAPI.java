@@ -42,6 +42,11 @@ public class ThreadsAPI {
         getThreadsDatabase().threadDao().setLeaching(idx, leaching);
     }
 
+    public void setThreadStatus(long idx, Status status) {
+        checkNotNull(status);
+        getThreadsDatabase().threadDao().setStatus(idx, status);
+    }
+
     public void setThreadSeeding(long idx) {
         getThreadsDatabase().threadDao().setSeeding(idx);
     }

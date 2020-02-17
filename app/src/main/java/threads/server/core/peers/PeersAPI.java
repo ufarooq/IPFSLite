@@ -55,11 +55,9 @@ public class PeersAPI {
 
 
     @NonNull
-    public Peer createPeer(@NonNull PID pid, @NonNull String multiAddress) {
+    public Peer createPeer(@NonNull PID pid) {
         checkNotNull(pid);
-        checkNotNull(multiAddress);
-
-        return Peer.createPeer(pid, multiAddress);
+        return Peer.createPeer(pid);
     }
 
 

@@ -29,6 +29,9 @@ public class ConnectionWorker extends Worker {
 
     @NonNull
     static final List<String> Bootstrap = new ArrayList<>(Arrays.asList(
+            "/ip4/147.75.80.110/tcp/4001/p2p/QmbFgm5zan8P6eWWmeyfncR5feYEMPbht5b1FW1C37aQ7y",
+            "/ip4/147.75.195.153/tcp/4001/p2p/QmW9m57aiBDHAkKj9nmFSEn7ZqrcF1fZS4bipsTCHburei",
+            "/ip4/147.75.70.221/tcp/4001/p2p/Qme8g49gm3q4Acp7xWBKg3nAa9fxZ1YmyDJdyGgoG6LsXh",
             "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ"            // mars.i.ipfs.io
     ));
     private static final String TAG = ConnectionWorker.class.getSimpleName();

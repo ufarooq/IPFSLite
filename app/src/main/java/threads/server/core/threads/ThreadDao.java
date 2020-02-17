@@ -45,6 +45,10 @@ public interface ThreadDao {
     @Query("UPDATE Thread SET leaching = :leaching  WHERE idx = :idx")
     void setLeaching(long idx, boolean leaching);
 
+    @Query("UPDATE Thread SET status = :status  WHERE idx = :idx")
+    @TypeConverters({Status.class})
+    void setStatus(long idx, Status status);
+
     @Query("UPDATE Thread SET seeding = 0, deleting = 1 WHERE idx IN (:idxs)")
     void setThreadsDeleting(long... idxs);
 

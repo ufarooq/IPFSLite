@@ -77,11 +77,6 @@ public class LoadPeersWorker extends Worker {
         checkNotNull(peer);
         PEERS peers = PEERS.getInstance(getApplicationContext());
 
-        threads.server.core.peers.Peer peerInstance = peers.createPeer(
-                peer.getPid(), peer.getMultiAddress());
-        peerInstance.setRelay(peer.isRelay());
-        peerInstance.setAutonat(peer.isAutonat());
-
-        return peerInstance;
+        return peers.createPeer(peer.getPid());
     }
 }

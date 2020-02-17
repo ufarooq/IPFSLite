@@ -66,13 +66,6 @@ public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.View
 
                 int res = R.drawable.server_network;
 
-                if (peer.isRelay()) {
-                    res = R.drawable.access_point;
-                } else if (peer.isAutonat()) {
-                    res = R.drawable.hubspot;
-                }
-
-
                 String name = peer.getPid();
                 int color = ColorGenerator.MATERIAL.getColor(name);
                 peerViewHolder.user_image.setImageResource(res);

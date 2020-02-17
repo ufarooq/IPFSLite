@@ -119,7 +119,7 @@ public class ConnectUserWorker extends Worker {
             User user = peers.getUserByPID(pid);
             checkNotNull(user);
 
-            if (!multiAddress.isEmpty()) {
+            if (!multiAddress.isEmpty() && !multiAddress.contains("/p2p-circuit/")) {
                 Addresses addresses = user.getAddresses();
                 if (!addresses.contains(multiAddress)) {
                     update = true;
@@ -189,6 +189,12 @@ public class ConnectUserWorker extends Worker {
                         ipfs.protectPeer(pid, tag);
                         return true;
                     }
+                }
+            }
+            if (!isStopped()) {
+                if (ipfs.arbitraryRelay(pid, timeout)) {
+                    ipfs.protectPeer(pid, tag);
+                    return true;
                 }
             }
         }
