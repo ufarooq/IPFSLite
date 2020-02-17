@@ -10,7 +10,7 @@ public enum Status {
     UNKNOWN(0),
     STARTED(1),
     SUCCESS(2),
-    FAILED(3);
+    FAILURE(3);
     @NonNull
     private final Integer code;
 
@@ -26,8 +26,8 @@ public enum Status {
             return Status.SUCCESS;
         } else if (status.equals(Status.STARTED.getCode())) {
             return Status.STARTED;
-        } else if (status.equals(Status.FAILED.getCode())) {
-            return Status.FAILED;
+        } else if (status.equals(Status.FAILURE.getCode())) {
+            return Status.FAILURE;
         } else if (status.equals(Status.UNKNOWN.getCode())) {
             return Status.UNKNOWN;
         } else {

@@ -31,13 +31,17 @@ import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class DownloadThreadWorker extends Worker {
-    public static final String WID = "DTW";
+    private static final String WID = "DTW";
     private static final String TAG = DownloadThreadWorker.class.getSimpleName();
 
 
     public DownloadThreadWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
 
+    }
+
+    public static String getUniqueId(long idx) {
+        return WID + idx;
     }
 
     public static void download(@NonNull Context context, long idx) {
@@ -59,7 +63,7 @@ public class DownloadThreadWorker extends Worker {
                         .build();
 
         WorkManager.getInstance(context).enqueueUniqueWork(
-                WID + idx, ExistingWorkPolicy.KEEP, syncWorkRequest);
+                getUniqueId(idx), ExistingWorkPolicy.KEEP, syncWorkRequest);
     }
 
     @NonNull

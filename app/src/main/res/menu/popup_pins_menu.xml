@@ -9,21 +9,9 @@
         app:iconTint="?android:textColorSecondary" />
 
     <item
-        android:id="@+id/popup_share"
-        android:icon="@drawable/share"
-        android:title="@string/share"
-        app:iconTint="?android:textColorSecondary" />
-
-    <item
-        android:id="@+id/popup_send"
-        android:icon="@drawable/send"
-        android:title="@string/action_send"
-        app:iconTint="?android:textColorSecondary" />
-
-    <item
-        android:id="@+id/popup_copy_to"
-        android:icon="@drawable/copy_to"
-        android:title="@string/copy_to"
+        android:id="@+id/popup_view"
+        android:icon="@drawable/view"
+        android:title="@string/view"
         app:iconTint="?android:textColorSecondary" />
 
     <item
@@ -33,9 +21,9 @@
         app:iconTint="?android:textColorSecondary" />
 
     <item
-        android:id="@+id/popup_pin"
-        android:icon="@drawable/pin_outline"
-        android:title="@string/pin"
+        android:id="@+id/popup_publish"
+        android:icon="@drawable/sync_upload"
+        android:title="@string/publish"
         app:iconTint="?android:textColorSecondary" />
 
     <item

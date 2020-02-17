@@ -18,5 +18,10 @@
         android:icon="@drawable/selector_swarm"
         app:iconTint="@color/colorAccent"
         android:title="@string/swarm" />
+    <item
+        android:id="@+id/navigation_pins"
+        android:icon="@drawable/selector_pins"
+        android:title="@string/pins"
+        app:iconTint="@color/colorAccent" />
 </menu>
 

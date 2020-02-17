@@ -47,7 +47,7 @@ import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class ContentsWorker extends Worker {
-    public static final String WID = "CW";
+    private static final String WID = "CW";
     private static final String TAG = ContentsWorker.class.getSimpleName();
 
     public ContentsWorker(@NonNull Context context, @NonNull WorkerParameters params) {

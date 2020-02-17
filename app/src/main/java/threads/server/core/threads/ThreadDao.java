@@ -25,6 +25,9 @@ public interface ThreadDao {
     @Query("SELECT * FROM Thread")
     LiveData<List<Thread>> getLiveDataThreads();
 
+    @Query("SELECT * FROM Thread  WHERE pinned = 1 AND deleting = 0")
+    LiveData<List<Thread>> getLiveDataVisbilePinnedThreads();
+
     @Query("DELETE FROM Thread")
     void clear();
 
@@ -51,6 +54,10 @@ public interface ThreadDao {
 
     @Query("UPDATE Thread SET seeding = 0, deleting = 1 WHERE idx IN (:idxs)")
     void setThreadsDeleting(long... idxs);
+
+
+    @Query("UPDATE Thread SET pinned = 0 WHERE idx IN (:idxs)")
+    void setThreadsUnpin(long... idxs);
 
     @Query("UPDATE Thread SET publishing = :publish  WHERE idx IN (:idxs)")
     void setThreadsPublishing(boolean publish, long... idxs);

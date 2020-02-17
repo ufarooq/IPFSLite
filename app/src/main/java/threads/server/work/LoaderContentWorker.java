@@ -30,7 +30,7 @@ import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class LoaderContentWorker extends Worker {
-    public static final String WID = "LCW";
+    private static final String WID = "LCW";
     private static final String TAG = LoaderContentWorker.class.getSimpleName();
 
     public LoaderContentWorker(@NonNull Context context, @NonNull WorkerParameters params) {
@@ -38,11 +38,14 @@ public class LoaderContentWorker extends Worker {
 
     }
 
+    private static String getUniqueId(long idx) {
+        return WID + idx;
+    }
+
     public static void loader(@NonNull Context context, long idx) {
         checkNotNull(context);
 
         Constraints.Builder builder = new Constraints.Builder()
-                .setRequiresCharging(true)
                 .setRequiredNetworkType(NetworkType.CONNECTED);
 
         Data.Builder data = new Data.Builder();
@@ -56,7 +59,7 @@ public class LoaderContentWorker extends Worker {
                         .build();
 
         WorkManager.getInstance(context).enqueueUniqueWork(
-                WID + idx, ExistingWorkPolicy.KEEP, syncWorkRequest);
+                getUniqueId(idx), ExistingWorkPolicy.KEEP, syncWorkRequest);
     }
 
     private boolean pinContent(@NonNull URL url) {
@@ -85,18 +88,16 @@ public class LoaderContentWorker extends Worker {
 
         long start = System.currentTimeMillis();
 
-        Log.e(TAG, " start [" + (System.currentTimeMillis() - start) + "]...");
 
         long idx = getInputData().getLong(Content.IDX, -1);
         checkArgument(idx >= 0);
+
+        Log.e(TAG, " start [" + idx + "]...");
 
         THREADS threads = THREADS.getInstance(getApplicationContext());
 
         try {
             String gateway = LiteService.getGateway(getApplicationContext());
-
-            threads.setThreadStatus(idx, Status.STARTED);
-
             Thread thread = threads.getThreadByIdx(idx);
             checkNotNull(thread);
 
@@ -112,9 +113,12 @@ public class LoaderContentWorker extends Worker {
                     threads.setThreadStatus(idx, Status.SUCCESS);
                     Log.e(TAG, "Success publish : " + url.toString() + " " + time + " [s]");
                 } else {
-                    threads.setThreadStatus(idx, Status.FAILED);
+                    threads.setThreadStatus(idx, Status.FAILURE);
                     Log.e(TAG, "Failed publish : " + url.toString() + " " + time + " [s]");
                 }
+
+                WorkManager.getInstance(getApplicationContext()).cancelUniqueWork(
+                        PublishContentWorker.getUniqueId(cid));
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);

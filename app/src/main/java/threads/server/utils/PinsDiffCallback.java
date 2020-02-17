@@ -10,11 +10,11 @@ import threads.server.core.threads.Thread;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class ThreadDiffCallback extends DiffUtil.Callback {
+public class PinsDiffCallback extends DiffUtil.Callback {
     private final List<Thread> mOldList;
     private final List<Thread> mNewList;
 
-    public ThreadDiffCallback(List<Thread> messages, List<Thread> messageThreads) {
+    public PinsDiffCallback(List<Thread> messages, List<Thread> messageThreads) {
         this.mOldList = messages;
         this.mNewList = messageThreads;
     }
@@ -40,22 +40,13 @@ public class ThreadDiffCallback extends DiffUtil.Callback {
         return sameContent(mOldList.get(oldItemPosition), mNewList.get(newItemPosition));
     }
 
-
     private boolean sameContent(@NonNull Thread t, @NonNull Thread o) {
         checkNotNull(t);
         checkNotNull(o);
         if (t == o) return true;
-        return t.getProgress() == o.getProgress() &&
-                t.isPinned() == o.isPinned() &&
-                t.isPublishing() == o.isPublishing() &&
-                t.isLeaching() == o.isLeaching() &&
-                t.isSeeding() == o.isSeeding() &&
+        return t.isPinned() == o.isPinned() &&
                 t.isDeleting() == o.isDeleting() &&
-                Objects.equals(t.getSize(), o.getSize()) &&
-                Objects.equals(t.getMimeType(), o.getMimeType()) &&
-                Objects.equals(t.getContent(), o.getContent()) &&
-                Objects.equals(t.getThumbnail(), o.getThumbnail()) &&
+                Objects.equals(t.getStatus(), o.getStatus()) &&
                 Objects.equals(t.getLastModified(), o.getLastModified());
     }
-
 }

@@ -36,7 +36,7 @@ import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class DownloadContentWorker extends Worker {
-    public static final String WID = "DCW";
+    private static final String WID = "DCW";
     private static final String TAG = DownloadContentWorker.class.getSimpleName();
     private static final String FN = "FN";
     private static final String FS = "FS";
@@ -46,6 +46,10 @@ public class DownloadContentWorker extends Worker {
             @NonNull WorkerParameters params) {
         super(context, params);
 
+    }
+
+    public static String getUniqueId(long idx) {
+        return WID + idx;
     }
 
     public static void download(@NonNull Context context, @NonNull CID cid,
@@ -75,7 +79,7 @@ public class DownloadContentWorker extends Worker {
                         .build();
 
         WorkManager.getInstance(context).enqueueUniqueWork(
-                WID + idx, ExistingWorkPolicy.KEEP, syncWorkRequest);
+                getUniqueId(idx), ExistingWorkPolicy.KEEP, syncWorkRequest);
     }
 
     @NonNull

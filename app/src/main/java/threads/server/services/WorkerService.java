@@ -21,9 +21,9 @@ public class WorkerService {
 
         THREADS.getInstance(context).setThreadLeaching(idx, false);
         WorkManager.getInstance(context).cancelUniqueWork(
-                DownloadContentWorker.WID + idx);
+                DownloadContentWorker.getUniqueId(idx));
         WorkManager.getInstance(context).cancelUniqueWork(
-                DownloadThreadWorker.WID + idx);
+                DownloadThreadWorker.getUniqueId(idx));
 
         List<Thread> threads = THREADS.getInstance(context).getChildren(idx);
         for (Thread thread : threads) {

@@ -55,6 +55,7 @@ import threads.server.fragments.DontShowAgainFragmentDialog;
 import threads.server.fragments.InfoDialogFragment;
 import threads.server.fragments.NameDialogFragment;
 import threads.server.fragments.PeersFragment;
+import threads.server.fragments.PinsFragment;
 import threads.server.fragments.SettingsDialogFragment;
 import threads.server.fragments.SwarmFragment;
 import threads.server.fragments.ThreadsFragment;
@@ -81,6 +82,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 public class MainActivity extends AppCompatActivity implements
         NavigationView.OnNavigationItemSelectedListener,
         ThreadsFragment.ActionListener,
+        PinsFragment.ActionListener,
         PeersFragment.ActionListener,
         NameDialogFragment.ActionListener,
         InfoDialogFragment.ActionListener,
@@ -432,6 +434,8 @@ public class MainActivity extends AppCompatActivity implements
                         break;
                     case R.id.navigation_swarm:
                         mToolbar.setSubtitle(R.string.swarm);
+                    case R.id.navigation_pins:
+                        mToolbar.setSubtitle(R.string.pins);
                         break;
                 }
             }
@@ -458,6 +462,10 @@ public class MainActivity extends AppCompatActivity implements
                 case R.id.navigation_swarm:
                     mCustomViewPager.setCurrentItem(2);
                     mToolbar.setSubtitle(R.string.swarm);
+                    return true;
+                case R.id.navigation_pins:
+                    mCustomViewPager.setCurrentItem(3);
+                    mToolbar.setSubtitle(R.string.pins);
                     return true;
             }
             return false;
@@ -746,6 +754,8 @@ public class MainActivity extends AppCompatActivity implements
                     return new PeersFragment();
                 case 2:
                     return new SwarmFragment();
+                case 3:
+                    return new PinsFragment();
                 default:
                     throw new RuntimeException("Not Supported position");
             }
@@ -753,7 +763,7 @@ public class MainActivity extends AppCompatActivity implements
 
         @Override
         public int getCount() {
-            return 3;
+            return 4;
         }
     }
 

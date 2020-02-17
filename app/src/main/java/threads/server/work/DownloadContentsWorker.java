@@ -24,7 +24,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class DownloadContentsWorker extends Worker {
 
-    public static final String WID = "DCW";
+    private static final String WID = "DCW";
     private static final String TAG = DownloadContentsWorker.class.getSimpleName();
 
 

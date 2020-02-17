@@ -132,21 +132,6 @@ public class Thread {
         this.mimeType = mimeType;
     }
 
-    public boolean sameContent(@NonNull Thread o) {
-        checkNotNull(o);
-        if (this == o) return true;
-        return pinned == o.isPinned() &&
-                progress == o.getProgress() &&
-                publishing == o.isPublishing() &&
-                leaching == o.isLeaching() &&
-                seeding == o.isSeeding() &&
-                deleting == o.isDeleting() &&
-                Objects.equals(size, o.getSize()) &&
-                Objects.equals(mimeType, o.getMimeType()) &&
-                Objects.equals(content, o.getContent()) &&
-                Objects.equals(thumbnail, o.getThumbnail()) &&
-                Objects.equals(lastModified, o.getLastModified());
-    }
 
     @Nullable
     public CID getThumbnail() {

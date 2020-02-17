@@ -127,7 +127,7 @@ public class DaemonService extends Service {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(),
                 HIGH_CHANNEL_ID);
 
-        builder.setSmallIcon(R.drawable.server_network);
+        builder.setSmallIcon(R.drawable.access_point_network);
         builder.setPriority(NotificationManager.IMPORTANCE_MAX);
         RemoteViews notificationLayout = new RemoteViews(getPackageName(), R.layout.notification);
         RemoteViews notificationLayoutExpanded = new RemoteViews(getPackageName(), R.layout.notification);
@@ -140,8 +140,8 @@ public class DaemonService extends Service {
         int requestID = (int) System.currentTimeMillis();
         PendingIntent stopPendingIntent = PendingIntent.getService(
                 getApplicationContext(), requestID, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        notificationLayoutExpanded.setOnClickPendingIntent(R.id.action_pause, stopPendingIntent);
-        notificationLayout.setOnClickPendingIntent(R.id.action_pause, stopPendingIntent);
+        notificationLayoutExpanded.setOnClickPendingIntent(R.id.action_turn_off, stopPendingIntent);
+        notificationLayout.setOnClickPendingIntent(R.id.action_turn_off, stopPendingIntent);
 
         Intent defaultIntent = new Intent(getApplicationContext(), MainActivity.class);
         requestID = (int) System.currentTimeMillis();

@@ -9,7 +9,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class EVENTS extends EventsAPI {
 
-    public static final String ERROR = "FAILED";
+    public static final String ERROR = "FAILURE";
     public static final String WARNING = "WARNING";
     public static final String INFO = "INFO";
     public static final String PERMISSION = "PERMISSION";

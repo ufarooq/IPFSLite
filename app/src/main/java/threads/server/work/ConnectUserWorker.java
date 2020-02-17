@@ -29,12 +29,16 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public class ConnectUserWorker extends Worker {
 
-    public static final String WID = "CPW";
+    private static final String WID = "CPW";
     private static final String TAG = ConnectUserWorker.class.getSimpleName();
 
 
     public ConnectUserWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
+    }
+
+    public static String getUniqueId(@NonNull String pid) {
+        return WID + pid;
     }
 
     public static void connect(@NonNull Context context, @NonNull String pid) {
@@ -55,7 +59,7 @@ public class ConnectUserWorker extends Worker {
                         .build();
 
         WorkManager.getInstance(context).enqueueUniqueWork(
-                WID + pid, ExistingWorkPolicy.KEEP, syncWorkRequest);
+                getUniqueId(pid), ExistingWorkPolicy.KEEP, syncWorkRequest);
 
 
     }

@@ -23,15 +23,20 @@ import threads.server.core.peers.Content;
 import static androidx.core.util.Preconditions.checkNotNull;
 
 public class PublishContentWorker extends Worker {
-    public static final String WID = "PCW";
+    private static final String WID = "PCW";
     private static final String TAG = PublishContentWorker.class.getSimpleName();
 
     public PublishContentWorker(@NonNull Context context, @NonNull WorkerParameters params) {
         super(context, params);
     }
 
-    public static void publish(@NonNull Context context, @NonNull CID cid) {
+    public static String getUniqueId(@NonNull CID cid) {
+        checkNotNull(cid);
+        return WID + cid.getCid();
+    }
 
+
+    public static void publish(@NonNull Context context, @NonNull CID cid) {
         checkNotNull(context);
         checkNotNull(cid);
 
@@ -50,7 +55,7 @@ public class PublishContentWorker extends Worker {
                         .build();
 
         WorkManager.getInstance(context).enqueueUniqueWork(
-                WID + cid.getCid(), ExistingWorkPolicy.KEEP, syncWorkRequest);
+                getUniqueId(cid), ExistingWorkPolicy.KEEP, syncWorkRequest);
     }
 
     @NonNull

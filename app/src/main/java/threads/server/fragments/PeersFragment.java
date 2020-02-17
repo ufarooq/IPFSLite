@@ -545,7 +545,7 @@ public class PeersFragment extends Fragment implements
                 PEERS.getInstance(mContext).setUserDialing(user.getPid(), false)
         );
         WorkManager.getInstance(mContext).cancelUniqueWork(
-                ConnectUserWorker.WID + user.getPid());
+                ConnectUserWorker.getUniqueId(user.getPid()));
 
     }
 

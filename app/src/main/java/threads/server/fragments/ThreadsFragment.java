@@ -82,7 +82,6 @@ import threads.server.utils.ThreadsViewAdapter;
 import threads.server.work.ConnectionWorker;
 import threads.server.work.DownloadThreadWorker;
 import threads.server.work.LoadNotificationsWorker;
-import threads.server.work.PublishContentWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -663,14 +662,21 @@ public class ThreadsFragment extends Fragment implements
 
         try {
             boolean sendActive = LiteService.isSendNotificationsEnabled(mContext);
-            boolean copyActive = !thread.isDir();
+            boolean copyActive = thread.isSeeding() && !thread.isDir();
+            boolean pinActive = thread.isSeeding() && !thread.isDir();
             boolean isPinned = thread.isPinned();
             boolean deleteActive = mSelectionViewModel.isTopLevel();
 
             PopupMenu menu = new PopupMenu(mContext, view);
             menu.inflate(R.menu.popup_threads_menu);
-            menu.getMenu().findItem(R.id.popup_pin).setVisible(!isPinned);
-            menu.getMenu().findItem(R.id.popup_unpin).setVisible(isPinned);
+            if (pinActive) {
+                menu.getMenu().findItem(R.id.popup_pin).setVisible(!isPinned);
+                menu.getMenu().findItem(R.id.popup_unpin).setVisible(isPinned);
+            } else {
+                menu.getMenu().findItem(R.id.popup_pin).setVisible(false);
+                menu.getMenu().findItem(R.id.popup_unpin).setVisible(false);
+            }
+
             menu.getMenu().findItem(R.id.popup_share).setVisible(sendActive);
             menu.getMenu().findItem(R.id.popup_delete).setVisible(deleteActive);
             menu.getMenu().findItem(R.id.popup_copy_to).setVisible(copyActive);
@@ -683,9 +689,6 @@ public class ThreadsFragment extends Fragment implements
 
                 if (item.getItemId() == R.id.popup_info) {
                     clickThreadInfo(thread.getIdx());
-                    return true;
-                } else if (item.getItemId() == R.id.popup_view) {
-                    clickThreadView(thread);
                     return true;
                 } else if (item.getItemId() == R.id.popup_delete) {
                     clickThreadDelete(thread.getIdx());
@@ -701,10 +704,10 @@ public class ThreadsFragment extends Fragment implements
                     clickThreadCopy(thread.getIdx());
                     return true;
                 } else if (item.getItemId() == R.id.popup_unpin) {
-                    clickThreadPublish(thread.getIdx(), false);
+                    clickThreadPublish(thread, false);
                     return true;
                 } else if (item.getItemId() == R.id.popup_pin) {
-                    clickThreadPublish(thread.getIdx(), true);
+                    clickThreadPublish(thread, true);
                     return true;
                 }
                 return false;
@@ -804,9 +807,16 @@ public class ThreadsFragment extends Fragment implements
 
     }
 
-    private void clickThreadPublish(long idx, boolean pinned) {
-
+    private void clickThreadPublish(@NonNull Thread thread, boolean pinned) {
+        checkNotNull(thread);
         if (pinned) {
+
+            if (thread.isDir()) {
+                EVENTS.getInstance(mContext).postWarning(getString(R.string.pin_directory_not_supported));
+                return;
+            }
+
+
             if (!InitApplication.getDontShowAgain(mContext, LiteService.PIN_SERVICE_KEY)) {
                 try {
                     DontShowAgainFragmentDialog.newInstance(
@@ -823,10 +833,12 @@ public class ThreadsFragment extends Fragment implements
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                threads.setThreadPinned(idx, pinned);
-                threads.setThreadStatus(idx, Status.UNKNOWN);
+                threads.setThreadPinned(thread.getIdx(), pinned);
+                threads.setThreadStatus(thread.getIdx(), Status.UNKNOWN);
             } catch (Throwable e) {
                 events.exception(e);
+            } finally {
+                EVENTS.getInstance(mContext).postWarning(getString(R.string.added_thread_to_pins, thread.getName()));
             }
         });
 
@@ -1115,27 +1127,6 @@ public class ThreadsFragment extends Fragment implements
             mSwipeRefreshLayout.setRefreshing(false);
         }
 
-    }
-
-    private void clickThreadView(@NonNull Thread thread) {
-
-        CID cid = thread.getContent();
-        checkNotNull(cid);
-
-        PublishContentWorker.publish(mContext, cid);
-
-        try {
-            String gateway = LiteService.getGateway(mContext);
-            Uri uri = Uri.parse(gateway + "/" + IPFS.Style.ipfs + "/" + cid.getCid());
-
-            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-
-        } catch (Throwable e) {
-            EVENTS.getInstance(mContext).postError("" + e.getLocalizedMessage());
-        }
     }
 
 

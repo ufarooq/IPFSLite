@@ -38,6 +38,10 @@ public class ThreadsAPI {
         getThreadsDatabase().threadDao().setThreadsDeleting(idxs);
     }
 
+    public void setThreadsUnpin(long... idxs) {
+        getThreadsDatabase().threadDao().setThreadsUnpin(idxs);
+    }
+
     public void setThreadLeaching(long idx, boolean leaching) {
         getThreadsDatabase().threadDao().setLeaching(idx, leaching);
     }

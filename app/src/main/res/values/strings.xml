@@ -77,6 +77,7 @@
     <string name="deleting_files_within_directory_not_supported">Deleting files within a directory is currently not supported</string>
     <string name="no_marked_file_delete">No files marked for deleting</string>
     <string name="no_marked_file_send">No marked files for sending</string>
+    <string name="no_marked_file_unpin">No marked files for unpin</string>
     <string name="general">General</string>
     <string name="pin_service_notice"><![CDATA[
     <h2>Publisher Service</h2>
@@ -128,4 +129,8 @@
     <string name="daemon_shutdown">Shutdown IPFS Lite Daemon &#8230;</string>
     <string name="content_already_exists">Content exists already with CID \"%1$s\"</string>
     <string name="scan_failed">Failed Scan Results</string>
+    <string name="pins">Pins</string>
+    <string name="pin_directory_not_supported">Pinning of directories is currently not supported.</string>
+    <string name="added_thread_to_pins">Added \"%1$s\" to Pins</string>
+    <string name="publish">Publish</string>
 </resources>
