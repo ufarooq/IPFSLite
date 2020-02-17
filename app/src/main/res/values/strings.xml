@@ -60,7 +60,6 @@
 
 
     <string name="cancel">Cancel</string>
-    <string name="mdns_support">MDNS Support</string>
     <string name="dht_support">Enable DHT Routing</string>
     <string name="prefer_tls">Prefer TLS</string>
     <string name="experimental_settings">Experimental Settings</string>

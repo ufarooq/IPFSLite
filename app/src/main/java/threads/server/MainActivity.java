@@ -38,6 +38,7 @@ import com.google.android.material.snackbar.Snackbar;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -330,6 +331,7 @@ public class MainActivity extends AppCompatActivity implements
                     RegistrationService.getInstance());
 
             PID host = IPFS.getPID(getApplicationContext());
+
             IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
             DiscoveryService discovery = DiscoveryService.getInstance();
@@ -338,6 +340,7 @@ public class MainActivity extends AppCompatActivity implements
                 Log.e(TAG, info.toString());
 
                 mNsdManager.resolveService(info, new NsdManager.ResolveListener() {
+
                     @Override
                     public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
                         Log.e(TAG, "onResolveFailed : " + errorCode);
@@ -349,7 +352,11 @@ public class MainActivity extends AppCompatActivity implements
 
                         try {
                             String serviceName = serviceInfo.getServiceName();
-                            if (!host.getPid().equals(serviceName)) {
+                            boolean connect = true;
+                            if (host != null) {
+                                connect = !Objects.equals(host.getPid(), serviceName);
+                            }
+                            if (connect) {
 
                                 Multihash.fromBase58(serviceName);
 

@@ -27,6 +27,7 @@ import static androidx.core.util.Preconditions.checkNotNull;
 public class ConnectionWorker extends Worker {
 
 
+    @SuppressWarnings("SpellCheckingInspection")
     @NonNull
     static final List<String> Bootstrap = new ArrayList<>(Arrays.asList(
             "/ip4/147.75.80.110/tcp/4001/p2p/QmbFgm5zan8P6eWWmeyfncR5feYEMPbht5b1FW1C37aQ7y",

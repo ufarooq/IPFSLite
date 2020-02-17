@@ -24,6 +24,6 @@ public class PinsViewModel extends AndroidViewModel {
 
 
     public LiveData<List<Thread>> getVisiblePinnedThreads() {
-        return threadsDatabase.threadDao().getLiveDataVisbilePinnedThreads();
+        return threadsDatabase.threadDao().getLiveDataPinnedThreads();
     }
 }
