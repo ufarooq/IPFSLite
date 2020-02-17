@@ -22,11 +22,9 @@ public class EventViewModel extends AndroidViewModel {
                 application.getApplicationContext()).getEventsDatabase();
     }
 
-
     public LiveData<Event> getException() {
         return eventsDatabase.eventDao().getEvent(EVENTS.ERROR);
     }
-
 
     public LiveData<Event> getPermission() {
         return eventsDatabase.eventDao().getEvent(EVENTS.PERMISSION);
