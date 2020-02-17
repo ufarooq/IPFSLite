@@ -30,16 +30,13 @@ public class PublishContentWorker extends Worker {
         super(context, params);
     }
 
-    public static String getUniqueId(@NonNull CID cid) {
+    static String getUniqueId(@NonNull CID cid) {
         checkNotNull(cid);
         return WID + cid.getCid();
     }
 
-
-    public static void publish(@NonNull Context context, @NonNull CID cid) {
-        checkNotNull(context);
+    static OneTimeWorkRequest getWorkRequest(@NonNull CID cid) {
         checkNotNull(cid);
-
         Constraints.Builder builder = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED);
 
@@ -47,15 +44,21 @@ public class PublishContentWorker extends Worker {
         Data.Builder data = new Data.Builder();
         data.putString(Content.CID, cid.getCid());
 
-        OneTimeWorkRequest syncWorkRequest =
-                new OneTimeWorkRequest.Builder(PublishContentWorker.class)
-                        .addTag(TAG)
-                        .setInputData(data.build())
-                        .setConstraints(builder.build())
-                        .build();
+        return new OneTimeWorkRequest.Builder(PublishContentWorker.class)
+                .addTag(TAG)
+                .setInputData(data.build())
+                .setConstraints(builder.build())
+                .build();
+
+    }
+
+    public static void publish(@NonNull Context context, @NonNull CID cid) {
+        checkNotNull(context);
+        checkNotNull(cid);
+
 
         WorkManager.getInstance(context).enqueueUniqueWork(
-                getUniqueId(cid), ExistingWorkPolicy.KEEP, syncWorkRequest);
+                getUniqueId(cid), ExistingWorkPolicy.KEEP, getWorkRequest(cid));
     }
 
     @NonNull
@@ -74,7 +77,7 @@ public class PublishContentWorker extends Worker {
             checkNotNull(ipfs, "IPFS not valid");
 
             ipfs.dhtPublish(CID.create(cidStr), true,
-                    (int) TimeUnit.MINUTES.toMillis(5));
+                    (int) TimeUnit.MINUTES.toSeconds(3));
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {

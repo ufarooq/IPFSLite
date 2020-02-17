@@ -20,8 +20,7 @@ import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.LiteService;
 import threads.server.work.ConnectionWorker;
-import threads.server.work.LoaderContentWorker;
-import threads.server.work.PublishContentWorker;
+import threads.server.work.PublisherChain;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -74,8 +73,7 @@ public class JobServicePublisher extends JobService {
                 for (Thread thread : list) {
                     CID cid = thread.getContent();
                     if (cid != null) {
-                        PublishContentWorker.publish(getApplicationContext(), cid);
-                        LoaderContentWorker.loader(getApplicationContext(), thread.getIdx());
+                        PublisherChain.publish(getApplicationContext(), cid, thread.getIdx());
                     }
                 }
 

@@ -49,8 +49,8 @@ import threads.server.utils.Network;
 import threads.server.utils.PinsItemDetailsLookup;
 import threads.server.utils.PinsItemKeyProvider;
 import threads.server.utils.PinsViewAdapter;
-import threads.server.work.LoaderContentWorker;
 import threads.server.work.PublishContentWorker;
+import threads.server.work.PublisherChain;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -352,8 +352,7 @@ public class PinsFragment extends Fragment implements PinsViewAdapter.PinsViewAd
         CID cid = thread.getContent();
         if (cid != null) {
             THREADS.getInstance(mContext).setThreadStatus(thread.getIdx(), Status.STARTED);
-            LoaderContentWorker.loader(mContext, thread.getIdx());
-            PublishContentWorker.publish(mContext, cid);
+            PublisherChain.publish(mContext, cid, thread.getIdx());
         }
 
     }

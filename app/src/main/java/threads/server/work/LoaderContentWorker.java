@@ -7,10 +7,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.work.Constraints;
 import androidx.work.Data;
-import androidx.work.ExistingWorkPolicy;
 import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkManager;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
@@ -42,8 +40,7 @@ public class LoaderContentWorker extends Worker {
         return WID + idx;
     }
 
-    public static void loader(@NonNull Context context, long idx) {
-        checkNotNull(context);
+    static OneTimeWorkRequest getWorkRequest(long idx) {
 
         Constraints.Builder builder = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED);
@@ -51,23 +48,20 @@ public class LoaderContentWorker extends Worker {
         Data.Builder data = new Data.Builder();
         data.putLong(Content.IDX, idx);
 
-        OneTimeWorkRequest syncWorkRequest =
-                new OneTimeWorkRequest.Builder(LoaderContentWorker.class)
-                        .addTag(TAG)
-                        .setInputData(data.build())
-                        .setConstraints(builder.build())
-                        .build();
-
-        WorkManager.getInstance(context).enqueueUniqueWork(
-                getUniqueId(idx), ExistingWorkPolicy.KEEP, syncWorkRequest);
+        return new OneTimeWorkRequest.Builder(LoaderContentWorker.class)
+                .addTag(TAG)
+                .setInputData(data.build())
+                .setConstraints(builder.build())
+                .build();
     }
+
 
     private boolean pinContent(@NonNull URL url) {
         checkNotNull(url);
         try {
             URLConnection con = url.openConnection();
             con.setConnectTimeout(15000);
-            con.setReadTimeout((int) TimeUnit.MINUTES.toMillis(30));
+            con.setReadTimeout((int) TimeUnit.MINUTES.toMillis(10));
             try (InputStream stream = con.getInputStream()) {
                 //noinspection StatementWithEmptyBody
                 while (stream.read() != -1) {
@@ -116,9 +110,6 @@ public class LoaderContentWorker extends Worker {
                     threads.setThreadStatus(idx, Status.FAILURE);
                     Log.e(TAG, "Failed publish : " + url.toString() + " " + time + " [s]");
                 }
-
-                WorkManager.getInstance(getApplicationContext()).cancelUniqueWork(
-                        PublishContentWorker.getUniqueId(cid));
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
