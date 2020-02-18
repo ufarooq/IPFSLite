@@ -133,10 +133,11 @@ public class PublishContentWorker extends Worker {
                     Log.e(TAG, "Failed publish : " + url.toString() + " " + time + " [s]");
                 }
             }
-            threads.resetThreadPublishing(idx);
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {
+            threads.resetThreadPublishing(idx);
             Log.e(TAG, " finish onStart [" + (System.currentTimeMillis() - start) + "]...");
         }
 
