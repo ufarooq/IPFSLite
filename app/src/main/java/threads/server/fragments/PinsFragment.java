@@ -30,6 +30,7 @@ import androidx.recyclerview.selection.SelectionTracker;
 import androidx.recyclerview.selection.StorageStrategy;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.work.WorkManager;
 
 import java.util.Comparator;
 import java.util.concurrent.ExecutorService;
@@ -50,7 +51,6 @@ import threads.server.utils.PinsItemDetailsLookup;
 import threads.server.utils.PinsItemKeyProvider;
 import threads.server.utils.PinsViewAdapter;
 import threads.server.work.PublishContentWorker;
-import threads.server.work.PublisherChain;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -349,11 +349,10 @@ public class PinsFragment extends Fragment implements PinsViewAdapter.PinsViewAd
         }
 
 
-        CID cid = thread.getContent();
-        if (cid != null) {
-            THREADS.getInstance(mContext).setThreadStatus(thread.getIdx(), Status.STARTED);
-            PublisherChain.publish(mContext, cid, thread.getIdx());
-        }
+        THREADS.getInstance(mContext).setThreadStatus(thread.getIdx(), Status.UNKNOWN);
+        THREADS.getInstance(mContext).setThreadPublishing(thread.getIdx());
+
+        PublishContentWorker.publish(mContext, thread.getIdx());
 
     }
 
@@ -489,8 +488,6 @@ public class PinsFragment extends Fragment implements PinsViewAdapter.PinsViewAd
         CID cid = thread.getContent();
         checkNotNull(cid);
 
-        PublishContentWorker.publish(mContext, cid);
-
         try {
             String gateway = LiteService.getGateway(mContext);
             Uri uri = Uri.parse(gateway + "/" + IPFS.Style.ipfs + "/" + cid.getCid());
@@ -505,6 +502,19 @@ public class PinsFragment extends Fragment implements PinsViewAdapter.PinsViewAd
         }
     }
 
+    @Override
+    public void invokePauseAction(@NonNull Thread thread) {
+        checkNotNull(thread);
+
+        if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
+            return;
+        }
+        mLastClickTime = SystemClock.elapsedRealtime();
+
+        THREADS.getInstance(mContext).resetThreadPublishing(thread.getIdx());
+        WorkManager.getInstance(mContext).cancelUniqueWork(
+                PublishContentWorker.getUniqueId(thread.getIdx()));
+    }
 
     private void clickThreadDelete(long idx) {
         DeleteThreadsService.removeThreads(mContext, idx);

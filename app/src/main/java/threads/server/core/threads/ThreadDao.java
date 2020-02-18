@@ -45,8 +45,11 @@ public interface ThreadDao {
     @TypeConverters({Converter.class})
     CID getThumbnail(long idx);
 
-    @Query("UPDATE Thread SET leaching = :leaching  WHERE idx = :idx")
-    void setLeaching(long idx, boolean leaching);
+    @Query("UPDATE Thread SET leaching = 1  WHERE idx = :idx")
+    void setLeaching(long idx);
+
+    @Query("UPDATE Thread SET leaching = 0  WHERE idx = :idx")
+    void resetLeaching(long idx);
 
     @Query("UPDATE Thread SET status = :status  WHERE idx = :idx")
     @TypeConverters({Status.class})
@@ -58,9 +61,6 @@ public interface ThreadDao {
 
     @Query("UPDATE Thread SET pinned = 0 WHERE idx IN (:idxs)")
     void setThreadsUnpin(long... idxs);
-
-    @Query("UPDATE Thread SET publishing = :publish  WHERE idx IN (:idxs)")
-    void setThreadsPublishing(boolean publish, long... idxs);
 
     @Query("UPDATE Thread SET pinned = :pinned  WHERE idx = :idx")
     void setPinned(long idx, boolean pinned);
@@ -76,11 +76,11 @@ public interface ThreadDao {
     @Delete
     void removeThreads(Thread... threads);
 
-    @Query("UPDATE Thread SET publishing = 0")
-    void resetThreadsPublishing();
+    @Query("UPDATE Thread SET publishing = 0 WHERE idx = :idx")
+    void resetThreadPublishing(long idx);
 
-    @Query("UPDATE Thread SET leaching = 0")
-    void resetThreadsLeaching();
+    @Query("UPDATE Thread SET publishing = 1 WHERE idx = :idx")
+    void setThreadPublishing(long idx);
 
     @Query("SELECT COUNT(idx) FROM Thread WHERE content =:cid OR thumbnail =:cid")
     @TypeConverters({Converter.class})

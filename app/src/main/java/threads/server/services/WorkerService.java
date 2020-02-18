@@ -19,7 +19,7 @@ public class WorkerService {
     public static void cancelThreadDownload(@NonNull Context context, long idx) {
         checkNotNull(context);
 
-        THREADS.getInstance(context).setThreadLeaching(idx, false);
+        THREADS.getInstance(context).resetThreadLeaching(idx);
         WorkManager.getInstance(context).cancelUniqueWork(
                 DownloadContentWorker.getUniqueId(idx));
         WorkManager.getInstance(context).cancelUniqueWork(
@@ -32,9 +32,10 @@ public class WorkerService {
 
     }
 
+
     public static void markThreadDownload(@NonNull Context context, long idx) {
         checkNotNull(context);
-        THREADS.getInstance(context).setThreadLeaching(idx, true);
+        THREADS.getInstance(context).setThreadLeaching(idx);
 
         List<Thread> threadList = THREADS.getInstance(context).getChildren(idx);
         for (Thread child : threadList) {

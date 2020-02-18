@@ -46,6 +46,7 @@ public class PinsDiffCallback extends DiffUtil.Callback {
         if (t == o) return true;
         return t.isPinned() == o.isPinned() &&
                 t.isDeleting() == o.isDeleting() &&
+                t.isPublishing() == o.isPublishing() &&
                 Objects.equals(t.getStatus(), o.getStatus()) &&
                 Objects.equals(t.getLastModified(), o.getLastModified());
     }

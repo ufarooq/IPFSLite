@@ -42,8 +42,12 @@ public class ThreadsAPI {
         getThreadsDatabase().threadDao().setThreadsUnpin(idxs);
     }
 
-    public void setThreadLeaching(long idx, boolean leaching) {
-        getThreadsDatabase().threadDao().setLeaching(idx, leaching);
+    public void setThreadLeaching(long idx) {
+        getThreadsDatabase().threadDao().setLeaching(idx);
+    }
+
+    public void resetThreadLeaching(long idx) {
+        getThreadsDatabase().threadDao().resetLeaching(idx);
     }
 
     public void setThreadStatus(long idx, Status status) {
@@ -183,13 +187,12 @@ public class ThreadsAPI {
         getThreadsDatabase().threadDao().setThumbnail(idx, image);
     }
 
-    public void resetThreadsPublishing() {
-        getThreadsDatabase().threadDao().resetThreadsPublishing();
+    public void setThreadPublishing(long idx) {
+        getThreadsDatabase().threadDao().setThreadPublishing(idx);
     }
 
-
-    public void resetThreadsLeaching() {
-        getThreadsDatabase().threadDao().resetThreadsLeaching();
+    public void resetThreadPublishing(long idx) {
+        getThreadsDatabase().threadDao().resetThreadPublishing(idx);
     }
 
 

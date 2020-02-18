@@ -94,7 +94,7 @@ public class ContentsWorker extends Worker {
                 Thread entry = entries.get(0);
 
                 if (!entry.isDeleting() && !entry.isSeeding()) {
-                    threads.setThreadLeaching(entry.getIdx(), true);
+                    threads.setThreadLeaching(entry.getIdx());
                     DownloadThreadWorker.download(getApplicationContext(), entry.getIdx());
                 }
             }

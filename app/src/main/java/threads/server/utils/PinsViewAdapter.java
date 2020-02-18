@@ -119,11 +119,8 @@ public class PinsViewAdapter extends RecyclerView.Adapter<PinsViewAdapter.ViewHo
 
             String title = getCompactString(thread.getName());
             threadViewHolder.content_title.setText(title);
-            if (thread.getStatus() == Status.STARTED) {
-                threadViewHolder.content_title.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                        R.drawable.sync_upload, 0, 0, 0);
-                threadViewHolder.content_title.setCompoundDrawablePadding(8);
-            } else if (thread.getStatus() == Status.SUCCESS) {
+
+            if (thread.getStatus() == Status.SUCCESS) {
                 threadViewHolder.content_title.setCompoundDrawablesRelativeWithIntrinsicBounds(
                         R.drawable.green_bubble, 0, 0, 0);
                 threadViewHolder.content_title.setCompoundDrawablePadding(8);
@@ -151,12 +148,21 @@ public class PinsViewAdapter extends RecyclerView.Adapter<PinsViewAdapter.ViewHo
                     threadViewHolder.general_action.setImageResource(R.drawable.checkbox_blank_circle_outline);
                 }
             } else {
-                threadViewHolder.general_action.setImageResource(R.drawable.dots);
-                threadViewHolder.general_action.setVisibility(View.VISIBLE);
+                if (thread.isPublishing()) {
+                    threadViewHolder.general_action.setImageResource(R.drawable.pause);
+                    threadViewHolder.general_action.setVisibility(View.VISIBLE);
 
-                threadViewHolder.general_action.setOnClickListener((v) ->
-                        mListener.invokeAction(thread, v)
-                );
+                    threadViewHolder.general_action.setOnClickListener((v) ->
+                            mListener.invokePauseAction(thread)
+                    );
+                } else {
+                    threadViewHolder.general_action.setImageResource(R.drawable.dots);
+                    threadViewHolder.general_action.setVisibility(View.VISIBLE);
+
+                    threadViewHolder.general_action.setOnClickListener((v) ->
+                            mListener.invokeAction(thread, v)
+                    );
+                }
             }
 
         } catch (Throwable e) {
@@ -250,6 +256,8 @@ public class PinsViewAdapter extends RecyclerView.Adapter<PinsViewAdapter.ViewHo
     public interface PinsViewAdapterListener {
 
         void invokeAction(@NonNull Thread thread, @NonNull View view);
+
+        void invokePauseAction(@NonNull Thread thread);
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

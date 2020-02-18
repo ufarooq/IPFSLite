@@ -15,12 +15,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import threads.ipfs.CID;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.LiteService;
 import threads.server.work.ConnectionWorker;
-import threads.server.work.PublisherChain;
+import threads.server.work.PublishContentWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -71,10 +70,7 @@ public class JobServicePublisher extends JobService {
                 }
 
                 for (Thread thread : list) {
-                    CID cid = thread.getContent();
-                    if (cid != null) {
-                        PublisherChain.publish(getApplicationContext(), cid, thread.getIdx());
-                    }
+                    PublishContentWorker.publish(getApplicationContext(), thread.getIdx());
                 }
 
             } catch (Throwable e) {

@@ -183,7 +183,7 @@ public class DownloadContentWorker extends Worker {
                     }
                 }
             } else {
-                threads.setThreadLeaching(idx, false);
+                threads.resetThreadLeaching(idx);
                 if (file.exists()) {
                     checkArgument(file.delete());
                 }
@@ -231,7 +231,7 @@ public class DownloadContentWorker extends Worker {
                 threads.setThreadSeeding(parent);
             } else {
                 if (!isOneLeaching) {
-                    threads.setThreadLeaching(parent, false);
+                    threads.resetThreadLeaching(parent);
                 }
             }
             Thread thread = threads.getThreadByIdx(parent);

@@ -8,9 +8,8 @@ import static androidx.core.util.Preconditions.checkNotNull;
 
 public enum Status {
     UNKNOWN(0),
-    STARTED(1),
-    SUCCESS(2),
-    FAILURE(3);
+    SUCCESS(1),
+    FAILURE(2);
     @NonNull
     private final Integer code;
 
@@ -24,8 +23,6 @@ public enum Status {
         checkNotNull(status);
         if (status.equals(Status.SUCCESS.getCode())) {
             return Status.SUCCESS;
-        } else if (status.equals(Status.STARTED.getCode())) {
-            return Status.STARTED;
         } else if (status.equals(Status.FAILURE.getCode())) {
             return Status.FAILURE;
         } else if (status.equals(Status.UNKNOWN.getCode())) {
