@@ -44,8 +44,8 @@ import threads.server.core.threads.Status;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.model.PinsViewModel;
-import threads.server.services.DeleteThreadsService;
 import threads.server.services.LiteService;
+import threads.server.services.ThreadsService;
 import threads.server.utils.Network;
 import threads.server.utils.PinsItemDetailsLookup;
 import threads.server.utils.PinsItemKeyProvider;
@@ -246,11 +246,17 @@ public class PinsFragment extends Fragment implements PinsViewAdapter.PinsViewAd
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> {
                 try {
+                    THREADS.getInstance(mContext).resetThreadsStatus(entries);
+                    THREADS.getInstance(mContext).resetThreadsPublishing(entries);
                     THREADS.getInstance(mContext).setThreadsUnpin(entries);
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
             });
+            for (long idx : entries) {
+                WorkManager.getInstance(mContext).cancelUniqueWork(
+                        PublishContentWorker.getUniqueId(idx));
+            }
 
             mSelectionTracker.clearSelection();
         } catch (Throwable e) {
@@ -282,7 +288,7 @@ public class PinsFragment extends Fragment implements PinsViewAdapter.PinsViewAd
         try {
             long[] entries = convert(mSelectionTracker.getSelection());
 
-            DeleteThreadsService.removeThreads(mContext, entries);
+            ThreadsService.removeThreads(mContext, entries);
 
             mSelectionTracker.clearSelection();
 
@@ -363,12 +369,14 @@ public class PinsFragment extends Fragment implements PinsViewAdapter.PinsViewAd
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                threads.setThreadPinned(idx, false);
-                threads.setThreadStatus(idx, Status.UNKNOWN);
+                threads.setThreadUnpin(idx);
+                threads.resetThreadStatus(idx);
             } catch (Throwable e) {
                 events.exception(e);
             }
         });
+        WorkManager.getInstance(mContext).cancelUniqueWork(
+                PublishContentWorker.getUniqueId(idx));
 
     }
 
@@ -517,7 +525,7 @@ public class PinsFragment extends Fragment implements PinsViewAdapter.PinsViewAd
     }
 
     private void clickThreadDelete(long idx) {
-        DeleteThreadsService.removeThreads(mContext, idx);
+        ThreadsService.removeThreads(mContext, idx);
     }
 
 

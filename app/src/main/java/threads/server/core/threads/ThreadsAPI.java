@@ -42,6 +42,15 @@ public class ThreadsAPI {
         getThreadsDatabase().threadDao().setThreadsUnpin(idxs);
     }
 
+    public void resetThreadsPublishing(long... idxs) {
+        getThreadsDatabase().threadDao().resetThreadsPublishing(idxs);
+    }
+
+
+    public void resetThreadsStatus(long... idxs) {
+        getThreadsDatabase().threadDao().setThreadsStatus(Status.UNKNOWN, idxs);
+    }
+
     public void setThreadLeaching(long idx) {
         getThreadsDatabase().threadDao().setLeaching(idx);
     }
@@ -53,6 +62,10 @@ public class ThreadsAPI {
     public void setThreadStatus(long idx, Status status) {
         checkNotNull(status);
         getThreadsDatabase().threadDao().setStatus(idx, status);
+    }
+
+    public void resetThreadStatus(long idx) {
+        getThreadsDatabase().threadDao().setStatus(idx, Status.UNKNOWN);
     }
 
     public void setThreadSeeding(long idx) {
@@ -166,8 +179,13 @@ public class ThreadsAPI {
         return getThreadsDatabase().threadDao().insertThread(thread);
     }
 
-    public void setThreadPinned(long idx, boolean pinned) {
-        getThreadsDatabase().threadDao().setPinned(idx, pinned);
+    public void setThreadPin(long idx) {
+        getThreadsDatabase().threadDao().setPinned(idx, true);
+
+    }
+
+    public void setThreadUnpin(long idx) {
+        getThreadsDatabase().threadDao().setPinned(idx, false);
 
     }
 

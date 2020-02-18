@@ -4,23 +4,25 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.work.WorkManager;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import threads.ipfs.IPFS;
 import threads.server.core.threads.THREADS;
+import threads.server.work.PublishContentWorker;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class DeleteThreadsService {
+public class ThreadsService {
 
 
-    private static final String TAG = DeleteThreadsService.class.getSimpleName();
-    private static final String ICES = "ices";
+    private static final String TAG = ThreadsService.class.getSimpleName();
 
     public static void removeThreads(@NonNull Context context, long... indices) {
         checkNotNull(context);
+
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -35,11 +37,15 @@ public class DeleteThreadsService {
 
                 threads.setThreadsDeleting(indices);
 
-                if (indices != null) {
-                    for (long idx : indices) {
-                        WorkerService.cancelThreadDownload(context, idx);
-                    }
+                for (long idx : indices) {
+                    WorkManager.getInstance(context).cancelUniqueWork(
+                            PublishContentWorker.getUniqueId(idx));
                 }
+
+                for (long idx : indices) {
+                    WorkerService.cancelThreadDownload(context, idx);
+                }
+
 
                 threads.removeThreads(ipfs, indices);
 

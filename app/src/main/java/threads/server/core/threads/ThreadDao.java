@@ -55,9 +55,15 @@ public interface ThreadDao {
     @TypeConverters({Status.class})
     void setStatus(long idx, Status status);
 
+    @Query("UPDATE Thread SET status = :status WHERE idx IN (:idxs)")
+    @TypeConverters({Status.class})
+    void setThreadsStatus(Status status, long... idxs);
+
     @Query("UPDATE Thread SET seeding = 0, deleting = 1 WHERE idx IN (:idxs)")
     void setThreadsDeleting(long... idxs);
 
+    @Query("UPDATE Thread SET publishing = 0 WHERE idx IN (:idxs)")
+    void resetThreadsPublishing(long... idxs);
 
     @Query("UPDATE Thread SET pinned = 0 WHERE idx IN (:idxs)")
     void setThreadsUnpin(long... idxs);

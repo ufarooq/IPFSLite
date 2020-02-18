@@ -63,15 +63,14 @@ import threads.server.R;
 import threads.server.core.events.EVENTS;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
-import threads.server.core.threads.Status;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.model.SelectionViewModel;
 import threads.server.model.ThreadViewModel;
 import threads.server.provider.FileDocumentsProvider;
-import threads.server.services.DeleteThreadsService;
 import threads.server.services.DownloaderService;
 import threads.server.services.LiteService;
+import threads.server.services.ThreadsService;
 import threads.server.services.UploadService;
 import threads.server.services.WorkerService;
 import threads.server.utils.CodecDecider;
@@ -644,7 +643,7 @@ public class ThreadsFragment extends Fragment implements
         try {
             long[] entries = convert(mSelectionTracker.getSelection());
 
-            DeleteThreadsService.removeThreads(mContext, entries);
+            ThreadsService.removeThreads(mContext, entries);
 
             mSelectionTracker.clearSelection();
 
@@ -833,8 +832,12 @@ public class ThreadsFragment extends Fragment implements
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             try {
-                threads.setThreadPinned(thread.getIdx(), pinned);
-                threads.setThreadStatus(thread.getIdx(), Status.UNKNOWN);
+                if (pinned) {
+                    threads.setThreadPin(thread.getIdx());
+                } else {
+                    threads.setThreadUnpin(thread.getIdx());
+                }
+                threads.resetThreadStatus(thread.getIdx());
             } catch (Throwable e) {
                 events.exception(e);
             } finally {
@@ -1147,7 +1150,7 @@ public class ThreadsFragment extends Fragment implements
     }
 
     private void clickThreadDelete(long idx) {
-        DeleteThreadsService.removeThreads(mContext, idx);
+        ThreadsService.removeThreads(mContext, idx);
     }
 
 
