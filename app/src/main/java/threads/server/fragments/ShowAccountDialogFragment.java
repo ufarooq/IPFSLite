@@ -16,7 +16,6 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -134,9 +133,8 @@ public class ShowAccountDialogFragment extends DialogFragment implements DialogI
         Dialog dialog = builder.create();
         Window window = dialog.getWindow();
         if (window != null) {
-            window.getAttributes().windowAnimations = R.style.DialogTopAnimation;
-            window.getAttributes().gravity = Gravity.TOP | Gravity.CENTER;
-            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            window.getAttributes().windowAnimations = R.style.DialogRightAnimation;
+            window.getAttributes().gravity = Gravity.CENTER;
         }
 
         return dialog;
