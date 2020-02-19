@@ -3,7 +3,6 @@ package threads.server;
 
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -148,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements
                         data = LiteService.loadRawData(getApplicationContext(), R.raw.privacy_policy);
                     }
 
-                    WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.HTML, data)
+                    WebViewDialogFragment.newInstance(data)
                             .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
 
                 } catch (Throwable e) {
@@ -202,9 +201,8 @@ public class MainActivity extends AppCompatActivity implements
             }
             case R.id.nav_settings: {
                 try {
-                    FragmentManager fm = getSupportFragmentManager();
                     SettingsDialogFragment settingsDialogFragment = new SettingsDialogFragment();
-                    settingsDialogFragment.show(fm, SettingsDialogFragment.TAG);
+                    settingsDialogFragment.show(getSupportFragmentManager(), SettingsDialogFragment.TAG);
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
                 }
@@ -220,7 +218,7 @@ public class MainActivity extends AppCompatActivity implements
                         data = "<!doctype html><html><head><style>body { background-color: DarkSlateGray; color: white; }</style></head><h2>Config</h2><pre>" + ipfs.config_show() + "</pre></html>";
                     }
 
-                    WebViewDialogFragment.newInstance(WebViewDialogFragment.Type.HTML, data)
+                    WebViewDialogFragment.newInstance(data)
                             .show(getSupportFragmentManager(), WebViewDialogFragment.TAG);
 
 
@@ -240,41 +238,6 @@ public class MainActivity extends AppCompatActivity implements
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
-
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-                break;
-            }
-            case R.id.nav_share: {
-                try {
-                    ComponentName[] names = {new ComponentName(
-                            getApplicationContext(), MainActivity.class)};
-                    String mimeType = "text/plain";
-                    Intent intent = ShareCompat.IntentBuilder.from(this)
-                            .setType(mimeType)
-                            .getIntent();
-                    intent.setAction(Intent.ACTION_SEND);
-                    intent.setType(mimeType);
-                    intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name));
-                    String sAux = "\n" + getString(R.string.store_mail) + "\n\n";
-                    if (BuildConfig.FDroid) {
-                        sAux = sAux + getString(R.string.fdroid_url) + "\n\n";
-                    } else {
-                        sAux = sAux + getString(R.string.play_store_url) + "\n\n";
-                    }
-                    intent.putExtra(Intent.EXTRA_TEXT, sAux);
-
-                    if (intent.resolveActivity(getPackageManager()) != null) {
-                        Intent chooser = Intent.createChooser(intent, getText(R.string.share));
-                        chooser.putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, names);
-                        startActivity(chooser);
-                    } else {
-                        java.lang.Thread threadError = new java.lang.Thread(()
-                                -> EVENTS.getInstance(getApplicationContext()).error(
-                                getString(R.string.no_activity_found_to_handle_uri)));
-                        threadError.start();
-                    }
 
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);

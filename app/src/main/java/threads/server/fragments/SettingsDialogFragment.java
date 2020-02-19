@@ -5,8 +5,11 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.SeekBar;
@@ -16,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
 import java.util.ArrayList;
@@ -259,11 +263,19 @@ public class SettingsDialogFragment extends DialogFragment {
                 LiteService.setAutoDownload(activity, isChecked)
         );
 
-
-        return new androidx.appcompat.app.AlertDialog.Builder(activity)
-                .setView(view)
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        builder.setView(view)
                 .setCancelable(false)
                 .create();
+        Dialog dialog = builder.create();
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.getAttributes().windowAnimations = R.style.DialogRightAnimation;
+            window.getAttributes().gravity = Gravity.CENTER;
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+
+        return dialog;
 
     }
 

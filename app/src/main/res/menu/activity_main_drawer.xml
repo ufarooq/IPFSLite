@@ -35,10 +35,6 @@
     <item android:title="@string/application">
         <menu>
             <item
-                android:id="@+id/nav_share"
-                android:icon="@drawable/share"
-                android:title="@string/share_app" />
-            <item
                 android:id="@+id/nav_documentation"
                 android:icon="@drawable/book_open_outline"
                 android:title="@string/documentation" />
