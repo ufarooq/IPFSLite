@@ -2,7 +2,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     tools:showIn="navigation_view">
-
+    <item android:title="@string/account">
+        <menu>
+            <item
+                android:id="@+id/nav_id"
+                android:icon="@drawable/qrcode"
+                android:title="@string/identification" />
+            <item
+                android:id="@+id/nav_inbox"
+                android:icon="@drawable/arrow_right_bold_outline"
+                android:title="@string/inbox" />
+        </menu>
+    </item>
     <item android:title="@string/general">
         <menu>
             <item
@@ -17,10 +28,6 @@
                 android:id="@+id/nav_config"
                 android:icon="@drawable/file_cog_outline"
                 android:title="@string/config" />
-            <item
-                android:id="@+id/nav_inbox"
-                android:icon="@drawable/arrow_right_bold_outline"
-                android:title="@string/inbox" />
         </menu>
     </item>
 

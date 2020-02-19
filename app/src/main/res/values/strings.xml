@@ -10,8 +10,8 @@
     <string name="action_info">Info</string>
     <string name="content_id">Content ID (CID)</string>
     <string name="peer_id">Peer ID (PID)</string>
-    <string name="your_peer_id">Your Peer ID (PID)</string>
-    <string name="peer_access">The QR code contains the peer ID (PID \"%1$s\") to access the node via IPFS.</string>
+    <string name="peer_access">The QR code contains the peer ID of \"%1$s\".</string>
+    <string name="account_access">The QR code contains my peer ID.</string>
     <string name="action_delete">Delete</string>
     <string name="licences">Licences</string>
     <string name="application">Application</string>
@@ -68,7 +68,6 @@
     <string name="swarm_settings">Swarm Settings</string>
     <string name="config">Config</string>
     <string name="send_to">Send to</string>
-    <string name="action_your_peer">Your Peer</string>
     <string name="inbox">Inbox</string>
     <string name="send_notifications_enabled">Support Sending Notifications</string>
     <string name="receive_notifications_enabled">Support Receiving Notifications</string>
@@ -133,4 +132,9 @@
     <string name="added_thread_to_pins">Added \"%1$s\" to Pins</string>
     <string name="removed_thread_from_pins">Removed \"%1$s\" from Pins</string>
     <string name="publish">Publish</string>
+    <string name="identification">Peer ID (PID)</string>
+    <string name="account">Account</string>
+    <string name="account_address">Account - Peer ID (PID)</string>
+    <string name="user_account_address_message">You can share your account Peer ID with others. So they can contact you, by simply scanning the QR code.</string>
+
 </resources>

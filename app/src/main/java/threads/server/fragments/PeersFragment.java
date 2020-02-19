@@ -127,9 +127,6 @@ public class PeersFragment extends Fragment implements
         MenuItem actionScanPid = menu.findItem(R.id.action_scan_pid);
         actionScanPid.setVisible(isTablet && hasCamera);
 
-        MenuItem actionYourPid = menu.findItem(R.id.action_your_pid);
-        actionYourPid.setVisible(true);
-
         MenuItem actionEditPid = menu.findItem(R.id.action_edit_pid);
         actionEditPid.setVisible(true);
 
@@ -147,17 +144,6 @@ public class PeersFragment extends Fragment implements
             mLastClickTime = SystemClock.elapsedRealtime();
 
             clickScanPeer();
-            return true;
-
-        } else if (item.getItemId() == R.id.action_your_pid) {
-
-            if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
-                return true;
-            }
-
-            mLastClickTime = SystemClock.elapsedRealtime();
-
-            clickInfoPeer();
             return true;
 
         } else if (item.getItemId() == R.id.action_select_all) {
@@ -505,7 +491,7 @@ public class PeersFragment extends Fragment implements
                     clickUserDelete(user.getPid());
                     return true;
                 } else if (item.getItemId() == R.id.popup_info) {
-                    clickUserInfo(user.getPid());
+                    clickUserInfo(user);
                     return true;
                 } else if (item.getItemId() == R.id.popup_edit) {
                     clickUserEdit(user.getPid());
@@ -603,12 +589,12 @@ public class PeersFragment extends Fragment implements
 
     }
 
-    private void clickUserInfo(@NonNull String pid) {
-        checkNotNull(pid);
+    private void clickUserInfo(@NonNull User user) {
+        checkNotNull(user);
         try {
-            InfoDialogFragment.newInstance(pid,
+            InfoDialogFragment.newInstance(user.getPid(),
                     getString(R.string.peer_id),
-                    getString(R.string.peer_access, pid))
+                    getString(R.string.peer_access, user.getAlias()))
                     .show(getChildFragmentManager(), InfoDialogFragment.TAG);
 
         } catch (Throwable e) {
@@ -759,26 +745,6 @@ public class PeersFragment extends Fragment implements
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-    }
-
-    private void clickInfoPeer() {
-
-        try {
-            PID pid = IPFS.getPID(mContext);
-            checkNotNull(pid);
-            try {
-                InfoDialogFragment.newInstance(pid.getPid(),
-                        getString(R.string.your_peer_id),
-                        getString(R.string.peer_access, pid.getPid()))
-                        .show(getChildFragmentManager(), InfoDialogFragment.TAG);
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-
     }
 
     public interface ActionListener {

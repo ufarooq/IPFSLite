@@ -10,7 +10,7 @@
         android:title="@string/action_select_all"
         android:visible="true"
         app:iconTint="?android:textColorSecondary"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 
 
 </menu>

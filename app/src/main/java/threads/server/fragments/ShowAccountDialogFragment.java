@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.Paint;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.Gravity;
@@ -34,37 +35,30 @@ import threads.server.provider.FileDocumentsProvider;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
-public class InfoDialogFragment extends DialogFragment implements DialogInterface.OnClickListener {
-
-    public static final String TAG = InfoDialogFragment.class.getSimpleName();
-
-    private static final String QR_CODE = "QR_CODE";
-    private static final String MESSAGE = "MESSAGE";
-    private static final String TITLE = "TITLE";
-    private String code;
+public class ShowAccountDialogFragment extends DialogFragment implements DialogInterface.OnClickListener {
+    public static final String TAG = ShowAccountDialogFragment.class.getSimpleName();
+    private static final String PID = "PID";
     private String message;
+    private String code;
     private Context mContext;
     private FragmentActivity mActivity;
 
-    public static InfoDialogFragment newInstance(@NonNull String code,
-                                                 @NonNull String title,
-                                                 @NonNull String message) {
+    public ShowAccountDialogFragment() {
+        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+        StrictMode.setVmPolicy(builder.build());
+    }
 
-        checkNotNull(code);
-        checkNotNull(title);
-        checkNotNull(message);
+    public static ShowAccountDialogFragment newInstance(@NonNull String pid) {
+        checkNotNull(pid);
 
         Bundle bundle = new Bundle();
-        bundle.putString(QR_CODE, code);
-        bundle.putString(MESSAGE, message);
-        bundle.putString(TITLE, title);
-        InfoDialogFragment fragment = new InfoDialogFragment();
+        bundle.putString(PID, pid);
+
+        ShowAccountDialogFragment fragment = new ShowAccountDialogFragment();
         fragment.setArguments(bundle);
         return fragment;
 
-
     }
-
 
     @Override
     public void onDetach() {
@@ -84,16 +78,21 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        LayoutInflater inflater = LayoutInflater.from(getActivity());
-        @SuppressLint("InflateParams")
-        View view = inflater.inflate(R.layout.dialog_info, null);
-
-        ImageView imageView = view.findViewById(R.id.dialog_server_info);
         Bundle bundle = getArguments();
         checkNotNull(bundle);
-        String title = bundle.getString(TITLE);
-        message = bundle.getString(MESSAGE);
-        code = bundle.getString(QR_CODE);
+        code = bundle.getString(PID);
+        checkNotNull(code);
+
+        message = getString(R.string.account_access);
+
+        LayoutInflater inflater = LayoutInflater.from(mContext);
+
+        @SuppressLint("InflateParams")
+        View view = inflater.inflate(R.layout.account_dialog, null);
+
+
+        ImageView imageView = view.findViewById(R.id.image_pid);
+
 
         TextView copy_to_clipboard = view.findViewById(R.id.copy_to_clipboard);
         copy_to_clipboard.setPaintFlags(copy_to_clipboard.getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG);
@@ -118,6 +117,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
             }
         });
 
+
         try {
             Bitmap imageBitmap = FileDocumentsProvider.getBitmap(code);
             imageView.setImageBitmap(imageBitmap);
@@ -126,12 +126,10 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
         }
 
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-
-        builder.setTitle(title)
-                .setMessage(message)
+        builder.setTitle(R.string.account_address)
+                .setMessage(R.string.user_account_address_message)
                 .setView(view)
-                .setPositiveButton(R.string.share, this)
-                .create();
+                .setPositiveButton(R.string.share, this);
 
         Dialog dialog = builder.create();
         Window window = dialog.getWindow();
@@ -144,24 +142,21 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
         return dialog;
     }
 
-
     @Override
     public void onClick(DialogInterface dialogInterface, int which) {
         if (which == AlertDialog.BUTTON_POSITIVE) {
+
             try {
                 shareQRCode(code, message);
+                Dialog dialog = getDialog();
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
-            Dialog dialog = getDialog();
-            if (dialog != null) {
-                dialog.dismiss();
-            }
-
         }
-
     }
-
 
     private void shareQRCode(@NonNull String code, @NonNull String message) {
         checkNotNull(code);

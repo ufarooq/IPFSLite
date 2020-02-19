@@ -12,7 +12,6 @@ import android.net.Uri;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.os.Bundle;
-import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -53,17 +52,16 @@ import threads.server.core.peers.PEERS;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.fragments.DontShowAgainFragmentDialog;
-import threads.server.fragments.InfoDialogFragment;
 import threads.server.fragments.NameDialogFragment;
 import threads.server.fragments.PeersFragment;
 import threads.server.fragments.PinsFragment;
 import threads.server.fragments.SettingsDialogFragment;
+import threads.server.fragments.ShowAccountDialogFragment;
 import threads.server.fragments.SwarmFragment;
 import threads.server.fragments.ThreadsFragment;
 import threads.server.fragments.WebViewDialogFragment;
 import threads.server.model.EventViewModel;
 import threads.server.model.SelectionViewModel;
-import threads.server.provider.FileDocumentsProvider;
 import threads.server.services.DaemonService;
 import threads.server.services.DiscoveryService;
 import threads.server.services.DownloaderService;
@@ -86,7 +84,6 @@ public class MainActivity extends AppCompatActivity implements
         PinsFragment.ActionListener,
         PeersFragment.ActionListener,
         NameDialogFragment.ActionListener,
-        InfoDialogFragment.ActionListener,
         DontShowAgainFragmentDialog.ActionListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -122,48 +119,20 @@ public class MainActivity extends AppCompatActivity implements
 
 
     @Override
-    public void shareQRCode(@NonNull String code, @NonNull String message) {
-        checkNotNull(code);
-        checkNotNull(message);
-        try {
-
-            Uri uri = FileDocumentsProvider.getUriForBitmap(code);
-            ComponentName[] names = {new ComponentName(getApplicationContext(), MainActivity.class)};
-
-            String mimeType = "image/png";
-            Intent intent = ShareCompat.IntentBuilder.from(this)
-                    .setStream(uri)
-                    .setType(mimeType)
-                    .getIntent();
-            intent.setAction(Intent.ACTION_SEND);
-            intent.putExtra(Intent.EXTRA_SUBJECT, code);
-            intent.putExtra(Intent.EXTRA_TEXT, message);
-            intent.putExtra(Intent.EXTRA_STREAM, uri);
-            intent.setType(mimeType);
-            intent.putExtra(DocumentsContract.EXTRA_EXCLUDE_SELF, true);
-            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-            if (intent.resolveActivity(getPackageManager()) != null) {
-                Intent chooser = Intent.createChooser(intent, getText(R.string.share));
-                chooser.putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, names);
-                startActivity(chooser);
-            } else {
-                java.lang.Thread threadError = new java.lang.Thread(()
-                        -> EVENTS.getInstance(getApplicationContext()).error(
-                        getString(R.string.no_activity_found_to_handle_uri)));
-                threadError.start();
-            }
-
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
-
-
-    @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
 
         switch (menuItem.getItemId()) {
+            case R.id.nav_id: {
+                try {
+                    PID pid = IPFS.getPID(getApplicationContext());
+                    checkNotNull(pid);
+                    ShowAccountDialogFragment.newInstance(pid.getPid()).show(
+                            getSupportFragmentManager(), ShowAccountDialogFragment.TAG);
+                } catch (Throwable e) {
+                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                }
+                break;
+            }
             case R.id.nav_daemon: {
                 DaemonService.invoke(getApplicationContext(), true);
                 break;

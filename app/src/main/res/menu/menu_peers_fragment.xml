@@ -11,10 +11,10 @@
         app:showAsAction="ifRoom" />
 
     <item
-        android:id="@+id/action_your_pid"
-        android:icon="@drawable/account_star"
-        android:orderInCategory="4"
-        android:title="@string/action_your_peer"
+        android:id="@+id/action_edit_pid"
+        android:icon="@drawable/account_edit"
+        android:orderInCategory="30"
+        android:title="@string/action_edit_peer"
         app:iconTint="?android:textColorSecondary"
         app:showAsAction="ifRoom" />
 
@@ -27,12 +27,5 @@
         app:iconTint="?android:textColorSecondary"
         app:showAsAction="never" />
 
-    <item
-        android:id="@+id/action_edit_pid"
-        android:icon="@drawable/account_edit"
-        android:orderInCategory="40"
-        android:title="@string/action_edit_peer"
-        app:iconTint="?android:textColorSecondary"
-        app:showAsAction="never" />
 
 </menu>
