@@ -149,7 +149,7 @@ public class SendNotificationWorker extends Worker {
                     entityService.insertData(getApplicationContext(), address, json);
                     long time = (System.currentTimeMillis() - startTime) / 1000;
 
-                    events.error(getApplicationContext().getString(R.string.success_notification,
+                    events.warning(getApplicationContext().getString(R.string.success_notification,
                             alias, String.valueOf(time)));
 
 

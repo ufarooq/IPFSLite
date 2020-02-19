@@ -89,7 +89,7 @@
     <string name="gateway">Gateway</string>
     <string name="support_automatic_download">Automatic Download</string>
     <string name="success_notification">Sending notification to peer \"%1$s\" [%2$s s]</string>
-    <string name="failed_notification">Failed sending notification to peer \"%1$s\" [%2$s s]</string>
+    <string name="failed_notification">Failed notification to peer \"%1$s\" [%2$s s]</string>
     <string name="enable_random_swarm_port">Random Swarm Port</string>
     <string name="swarm">Swarm</string>
     <string name="file_not_found">File could not be downloaded</string>
