@@ -3,6 +3,7 @@ package threads.server.services;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -33,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
+import threads.server.MainActivity;
 import threads.server.R;
 import threads.server.core.events.EVENTS;
 import threads.server.core.threads.THREADS;
@@ -372,7 +374,12 @@ public class UploadService extends Service {
         builder.setContentTitle(getString(R.string.upload_ipfs_lite));
         builder.setSmallIcon(R.drawable.action_upload);
         builder.setPriority(NotificationManager.IMPORTANCE_MAX);
+        Intent defaultIntent = new Intent(getApplicationContext(), MainActivity.class);
+        int requestID = (int) System.currentTimeMillis();
+        PendingIntent defaultPendingIntent = PendingIntent.getActivity(
+                getApplicationContext(), requestID, defaultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+        builder.setContentIntent(defaultPendingIntent);
         Notification notification = builder.build();
 
         NotificationManager notificationManager = (NotificationManager)
@@ -391,6 +398,12 @@ public class UploadService extends Service {
                         .setContentText(name)
                         .setPriority(NotificationCompat.PRIORITY_MAX);
 
+        Intent defaultIntent = new Intent(getApplicationContext(), MainActivity.class);
+        int requestID = (int) System.currentTimeMillis();
+        PendingIntent defaultPendingIntent = PendingIntent.getActivity(
+                getApplicationContext(), requestID, defaultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        builder.setContentIntent(defaultPendingIntent);
         Notification notification = builder.build();
 
         NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -408,6 +421,12 @@ public class UploadService extends Service {
         builder.setSmallIcon(R.drawable.action_upload);
         builder.setPriority(NotificationManager.IMPORTANCE_MAX);
 
+        Intent defaultIntent = new Intent(getApplicationContext(), MainActivity.class);
+        int requestID = (int) System.currentTimeMillis();
+        PendingIntent defaultPendingIntent = PendingIntent.getActivity(
+                getApplicationContext(), requestID, defaultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        builder.setContentIntent(defaultPendingIntent);
         Notification notification = builder.build();
 
         NotificationManager notificationManager = (NotificationManager)
