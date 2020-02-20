@@ -171,13 +171,11 @@ public class ConnectUserWorker extends Worker {
         IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
         if (ipfs.isConnected(pid)) {
-            ipfs.protectPeer(pid, tag);
             return true;
         } else {
 
             if (!isStopped()) {
                 if (ipfs.swarmConnect(pid, timeout)) {
-                    ipfs.protectPeer(pid, tag);
                     return true;
                 }
             }
@@ -190,16 +188,12 @@ public class ConnectUserWorker extends Worker {
                     String multiAddress = address.concat("/" + IPFS.Style.p2p + "/" + pid.getPid());
                     Log.e(TAG, "Connect to " + multiAddress);
                     if (ipfs.swarmConnect(multiAddress, timeout)) {
-                        ipfs.protectPeer(pid, tag);
                         return true;
                     }
                 }
             }
             if (!isStopped()) {
-                if (ipfs.arbitraryRelay(pid, timeout)) {
-                    ipfs.protectPeer(pid, tag);
-                    return true;
-                }
+                return ipfs.arbitraryRelay(pid, timeout);
             }
         }
         return false;

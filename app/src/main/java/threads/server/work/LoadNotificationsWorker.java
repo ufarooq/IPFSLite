@@ -94,7 +94,7 @@ public class LoadNotificationsWorker extends Worker {
                     checkNotNull(ipfs, "IPFS not valid");
                     if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
                         try {
-                            String privateKey = ipfs.getPrivateKey();
+                            String privateKey = IPFS.getPrivateKey(getApplicationContext());
                             checkNotNull(privateKey, "Private Key not valid");
                             String pid = data.get(Content.PID);
                             checkNotNull(pid);
@@ -141,7 +141,6 @@ public class LoadNotificationsWorker extends Worker {
         } finally {
             Log.e(TAG, " finish onStart [" + (System.currentTimeMillis() - start) + "]...");
         }
-
 
         return Result.success();
 

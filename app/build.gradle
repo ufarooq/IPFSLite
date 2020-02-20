@@ -120,10 +120,10 @@ dependencies {
     implementation 'threads.core:iota:0.1.1'
 
     // API (LICENSE done)
-    implementation 'threads.mobile:ipfs:0.4.6'
+    implementation 'threads.mobile:ipfs:0.4.7'
 
     // API (LICENSE done)
-    implementation 'threads.core:ipfs:0.5.7'
+    implementation 'threads.core:ipfs:0.5.8'
 
     // API (LICENSE done)
     implementation 'com.google.code.gson:gson:2.8.6'

@@ -28,7 +28,7 @@
         android:layout_gravity="start|center"
         android:layout_weight="1"
         android:drawablePadding="8dp"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Body1" />
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
     <ImageView
         android:id="@+id/user_action"
