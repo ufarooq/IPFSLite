@@ -152,9 +152,8 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                 threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
 
             } else if (thread.isPublishing()) {
-                threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
-
                 if (thread.isSeeding()) {
+                    threadViewHolder.progress_bar.setVisibility(View.INVISIBLE);
                     threadViewHolder.general_action.setImageResource(R.drawable.dots);
                     threadViewHolder.general_action.setVisibility(View.VISIBLE);
 
@@ -162,6 +161,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
                             mListener.invokeAction(thread, v)
                     );
                 } else {
+                    threadViewHolder.progress_bar.setVisibility(View.VISIBLE);
                     threadViewHolder.general_action.setImageResource(R.drawable.upload);
                     threadViewHolder.general_action.setClickable(false);
                 }
