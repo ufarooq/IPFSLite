@@ -11,6 +11,8 @@ import threads.iota.EntityService;
 import threads.ipfs.ConnMgrConfig;
 import threads.ipfs.IPFS;
 import threads.ipfs.RoutingConfig;
+import threads.server.jobs.JobServiceCleanup;
+import threads.server.jobs.JobServicePublisher;
 import threads.server.services.LiteService;
 import threads.server.utils.ProgressChannel;
 
@@ -23,6 +25,7 @@ public class InitApplication extends Application {
     private static final String TAG = InitApplication.class.getSimpleName();
     private static final String PREF_KEY = "prefKey";
     private static final String TIMEOUT_KEY = "timeoutKey";
+
 
     public static int getConnectionTimeout(@NonNull Context context) {
         checkNotNull(context);
@@ -85,6 +88,8 @@ public class InitApplication extends Application {
                 editor.putInt(UPDATE, versionCode);
                 editor.apply();
             }
+
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
@@ -114,6 +119,11 @@ public class InitApplication extends Application {
         super.onCreate();
 
         runUpdatesIfNecessary(getApplicationContext());
+
+        // periodic jobs
+        JobServicePublisher.publish(getApplicationContext());
+        JobServiceCleanup.cleanup(getApplicationContext());
+
 
         ProgressChannel.createProgressChannel(getApplicationContext());
     }

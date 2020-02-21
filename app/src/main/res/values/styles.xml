@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
+
     <style name="DialogRightAnimation" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
         <item name="android:windowEnterAnimation">@anim/slide_in_right</item>
         <item name="android:windowExitAnimation">@anim/slide_out_right</item>
@@ -29,6 +30,5 @@
 
         <item name="windowActionModeOverlay">true</item>
         <item name="actionModeBackground">@color/colorBackground</item>
-        <item name="actionMenuTextColor">@color/colorAccent</item>
     </style>
 </resources>

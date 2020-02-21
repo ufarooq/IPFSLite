@@ -23,6 +23,7 @@ import threads.ipfs.IPFS;
 import threads.server.core.contents.CDS;
 import threads.server.core.contents.Content;
 import threads.server.core.contents.ContentDatabase;
+import threads.server.services.LiteService;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -62,10 +63,11 @@ public class JobServiceCleanup extends JobService {
             long start = System.currentTimeMillis();
 
             try {
-
-                final CDS contentService = CDS.getInstance(getApplicationContext());
-                final EntityService entityService = EntityService.getInstance(getApplicationContext());
-                final IPFS ipfs = IPFS.getInstance(getApplicationContext());
+                // LITE service is necessary to start the daemon
+                LiteService.getInstance(getApplicationContext());
+                CDS contentService = CDS.getInstance(getApplicationContext());
+                EntityService entityService = EntityService.getInstance(getApplicationContext());
+                IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
                 // remove all old hashes from hash database
                 HashDatabase hashDatabase = entityService.getHashDatabase();

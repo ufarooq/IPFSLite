@@ -109,15 +109,15 @@ public class SendNotificationWorker extends Worker {
 
         checkNotNull(pid);
         checkNotNull(cid);
-        Gson gson = new Gson();
 
-        final PEERS peers = PEERS.getInstance(getApplicationContext());
-        final PID host = IPFS.getPID(getApplicationContext());
-        final EVENTS events = EVENTS.getInstance(getApplicationContext());
-        checkNotNull(host);
-
-        final EntityService entityService = EntityService.getInstance(getApplicationContext());
         try {
+            Gson gson = new Gson();
+            PEERS peers = PEERS.getInstance(getApplicationContext());
+            PID host = IPFS.getPID(getApplicationContext());
+            EVENTS events = EVENTS.getInstance(getApplicationContext());
+            checkNotNull(host);
+
+            EntityService entityService = EntityService.getInstance(getApplicationContext());
             String address = AddressType.getAddress(
                     PID.create(pid), AddressType.NOTIFICATION);
 
@@ -158,7 +158,6 @@ public class SendNotificationWorker extends Worker {
                     long time = (System.currentTimeMillis() - startTime) / 1000;
                     events.error(getApplicationContext().getString(R.string.failed_notification,
                             alias, String.valueOf(time)));
-
                 }
 
             }

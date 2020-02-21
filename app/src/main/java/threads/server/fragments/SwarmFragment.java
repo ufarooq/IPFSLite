@@ -95,7 +95,7 @@ public class SwarmFragment extends Fragment implements
 
 
         PeersViewModel messagesViewModel = new ViewModelProvider(this).get(PeersViewModel.class);
-        messagesViewModel.getPeers().observe(getViewLifecycleOwner(), (peers) -> {
+        messagesViewModel.getPeers().observe(this, (peers) -> {
 
             try {
                 if (peers != null) {

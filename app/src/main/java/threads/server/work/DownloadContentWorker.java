@@ -90,114 +90,117 @@ public class DownloadContentWorker extends Worker {
 
         Log.e(TAG, " start [" + (System.currentTimeMillis() - start) + "]...");
 
-        THREADS threads = THREADS.getInstance(getApplicationContext());
-        IPFS ipfs = IPFS.getInstance(getApplicationContext());
-
-        String filename = getInputData().getString(FN);
-        checkNotNull(filename);
-        String cidStr = getInputData().getString(Content.CID);
-        checkNotNull(cidStr);
-        long idx = getInputData().getLong(Content.IDX, -1);
-        checkArgument(idx >= 0);
-        long size = getInputData().getLong(FS, -1);
-
-        CID cid = CID.create(cidStr);
-        Thread thread = threads.getThreadByIdx(idx);
-        checkNotNull(thread);
-
-        // security check that thread is not already seeding
-        if (thread.isSeeding()) {
-            return Result.success();
-        }
-
-
-        NotificationCompat.Builder builder =
-                ProgressChannel.createProgressNotification(
-                        getApplicationContext(), filename);
-
-        final NotificationManager notificationManager = (NotificationManager)
-                getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
-        int notifyID = cid.getCid().hashCode();
-        Notification notification = builder.build();
-        if (notificationManager != null) {
-            notificationManager.notify(notifyID, notification);
-        }
-
-        boolean success;
         try {
-            File file = ipfs.createCacheFile(cid);
-            success = ipfs.loadToFile(file, cid,
-                    new Progress() {
-                        @Override
-                        public boolean isClosed() {
-                            return isStopped();
-                        }
+            THREADS threads = THREADS.getInstance(getApplicationContext());
+            IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
-                        @Override
-                        public void setProgress(int percent) {
-                            builder.setProgress(100, percent, false);
-                            threads.setThreadProgress(idx, percent);
-                            if (notificationManager != null) {
-                                notificationManager.notify(notifyID, builder.build());
+            String filename = getInputData().getString(FN);
+            checkNotNull(filename);
+            String cidStr = getInputData().getString(Content.CID);
+            checkNotNull(cidStr);
+            long idx = getInputData().getLong(Content.IDX, -1);
+            checkArgument(idx >= 0);
+            long size = getInputData().getLong(FS, -1);
+
+            CID cid = CID.create(cidStr);
+            Thread thread = threads.getThreadByIdx(idx);
+            checkNotNull(thread);
+
+            // security check that thread is not already seeding
+            if (thread.isSeeding()) {
+                return Result.success();
+            }
+
+
+            NotificationCompat.Builder builder =
+                    ProgressChannel.createProgressNotification(
+                            getApplicationContext(), filename);
+
+            NotificationManager notificationManager = (NotificationManager)
+                    getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+            int notifyID = cid.getCid().hashCode();
+            Notification notification = builder.build();
+            if (notificationManager != null) {
+                notificationManager.notify(notifyID, notification);
+            }
+
+            boolean success;
+            try {
+                File file = ipfs.createCacheFile(cid);
+                success = ipfs.loadToFile(file, cid,
+                        new Progress() {
+                            @Override
+                            public boolean isClosed() {
+                                return isStopped();
                             }
-                        }
-                    });
 
-            if (success) {
-                threads.setThreadSeeding(idx);
+                            @Override
+                            public void setProgress(int percent) {
+                                builder.setProgress(100, percent, false);
+                                threads.setThreadProgress(idx, percent);
+                                if (notificationManager != null) {
+                                    notificationManager.notify(notifyID, builder.build());
+                                }
+                            }
+                        });
 
-                if (size != file.length()) {
-                    threads.setThreadSize(idx, file.length());
-                }
+                if (success) {
+                    threads.setThreadSeeding(idx);
 
-                if (thread.getMimeType().isEmpty()) {
-                    ContentInfo contentInfo = ipfs.getContentInfo(file);
-                    if (contentInfo != null) {
-                        String mimeType = contentInfo.getMimeType();
-                        if (mimeType != null) {
-                            threads.setThreadMimeType(idx, mimeType);
+                    if (size != file.length()) {
+                        threads.setThreadSize(idx, file.length());
+                    }
+
+                    if (thread.getMimeType().isEmpty()) {
+                        ContentInfo contentInfo = ipfs.getContentInfo(file);
+                        if (contentInfo != null) {
+                            String mimeType = contentInfo.getMimeType();
+                            if (mimeType != null) {
+                                threads.setThreadMimeType(idx, mimeType);
+                            } else {
+                                threads.setThreadMimeType(idx, MimeType.OCTET_MIME_TYPE);
+                            }
+                            String name = thread.getName();
+                            if (!name.contains(".")) {
+                                String[] extensions = contentInfo.getFileExtensions();
+                                if (extensions != null) {
+                                    String ext = extensions[0];
+                                    threads.setThreadName(idx, name + "." + ext);
+                                }
+                            }
                         } else {
                             threads.setThreadMimeType(idx, MimeType.OCTET_MIME_TYPE);
                         }
-                        String name = thread.getName();
-                        if (!name.contains(".")) {
-                            String[] extensions = contentInfo.getFileExtensions();
-                            if (extensions != null) {
-                                String ext = extensions[0];
-                                threads.setThreadName(idx, name + "." + ext);
+                    }
+
+                    if (threads.getThreadThumbnail(idx) == null) {
+                        String mimeType = threads.getThreadMimeType(idx);
+                        if (mimeType != null) {
+                            CID image = ThumbnailService.getThumbnail(getApplicationContext(),
+                                    file, mimeType);
+                            if (image != null) {
+                                threads.setThreadThumbnail(idx, image);
                             }
                         }
-                    } else {
-                        threads.setThreadMimeType(idx, MimeType.OCTET_MIME_TYPE);
+                    }
+                } else {
+                    threads.resetThreadLeaching(idx);
+                    if (file.exists()) {
+                        checkArgument(file.delete());
                     }
                 }
-
-                if (threads.getThreadThumbnail(idx) == null) {
-                    String mimeType = threads.getThreadMimeType(idx);
-                    if (mimeType != null) {
-                        CID image = ThumbnailService.getThumbnail(getApplicationContext(),
-                                file, mimeType);
-                        if (image != null) {
-                            threads.setThreadThumbnail(idx, image);
-                        }
-                    }
-                }
-            } else {
-                threads.resetThreadLeaching(idx);
-                if (file.exists()) {
-                    checkArgument(file.delete());
+                checkParentComplete(thread.getParent());
+            } finally {
+                if (notificationManager != null) {
+                    notificationManager.cancel(notifyID);
                 }
             }
-            checkParentComplete(thread.getParent());
+
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {
-            if (notificationManager != null) {
-                notificationManager.cancel(notifyID);
-            }
             Log.e(TAG, " finish onStart [" + (System.currentTimeMillis() - start) + "]...");
         }
-
         return Result.success();
 
     }

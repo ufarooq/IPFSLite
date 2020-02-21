@@ -8,33 +8,22 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.RawRes;
 
-import com.google.gson.Gson;
-
 import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.server.R;
-import threads.server.core.contents.CDS;
-import threads.server.core.contents.Contents;
 import threads.server.core.events.EVENTS;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
-import threads.server.core.threads.THREADS;
-import threads.server.core.threads.Thread;
-import threads.server.jobs.JobServiceCleanup;
-import threads.server.jobs.JobServicePublisher;
 import threads.server.utils.Network;
 import threads.server.work.ConnectUserWorker;
 import threads.server.work.ConnectionWorker;
-import threads.server.work.SendNotificationWorker;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -44,7 +33,7 @@ public class LiteService {
 
     public static final String PIN_SERVICE_KEY = "pinServiceKey";
     private static final String TAG = LiteService.class.getSimpleName();
-    private static final Gson gson = new Gson();
+
     private static final String APP_KEY = "AppKey";
     private static final String PIN_SERVICE_TIME_KEY = "pinServiceTimeKey";
     private static final String GATEWAY_KEY = "gatewayKey";
@@ -143,12 +132,12 @@ public class LiteService {
     public static LiteService getInstance(@NonNull Context context) {
         checkNotNull(context);
         if (INSTANCE == null) {
-
             synchronized (LiteService.class) {
 
                 if (INSTANCE == null) {
                     INSTANCE = new LiteService();
-                    INSTANCE.init(context);
+                    IPFS ipfs = IPFS.getInstance(context);
+                    ipfs.daemon("/go-ipfs/05.0-dev/lite", false);
                 }
             }
 
@@ -192,12 +181,6 @@ public class LiteService {
         });
     }
 
-
-    public static String getAddressLink(@NonNull String address) {
-        return "https://thetangle.org/address/" + address;
-    }
-
-
     public static boolean isNightNode(@NonNull Context context) {
         int nightModeFlags =
                 context.getResources().getConfiguration().uiMode &
@@ -228,67 +211,5 @@ public class LiteService {
             return "";
         }
     }
-
-    public static void deleteUser(@NonNull Context context, @NonNull String pid) {
-        checkNotNull(context);
-        checkNotNull(pid);
-        try {
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> PEERS.getInstance(context).removeUser(pid));
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
-    }
-
-
-    public void sendThreads(@NonNull Context context, @NonNull List<User> users, long[] indices) {
-        checkNotNull(context);
-        checkNotNull(users);
-        checkNotNull(indices);
-
-        if (users.isEmpty()) {
-            EVENTS.getInstance(context).postError(
-                    context.getString(R.string.no_sharing_peers));
-        } else {
-            EVENTS.getInstance(context).postWarning(
-                    context.getString(R.string.send_notifications));
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            executor.submit(() -> {
-                try {
-
-                    Contents contents = new Contents();
-                    THREADS threads = THREADS.getInstance(context);
-                    List<Thread> threadList = threads.getThreadsByIdx(indices);
-
-                    contents.add(threadList);
-
-                    String data = gson.toJson(contents);
-                    IPFS ipfs = IPFS.getInstance(context);
-                    CID cid = ipfs.storeText(data);
-                    checkNotNull(cid);
-                    PID host = IPFS.getPID(context);
-                    checkNotNull(host);
-                    CDS contentService = CDS.getInstance(context);
-                    contentService.insertContent(host.getPid(), cid.getCid(), true);
-
-                    SendNotificationWorker.sendUsers(context, users, cid.getCid());
-
-                } catch (Throwable e) {
-                    Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                }
-            });
-        }
-    }
-
-    private void init(@NonNull Context context) {
-        checkNotNull(context);
-
-
-        JobServicePublisher.publish(context);
-        JobServiceCleanup.cleanup(context);
-
-    }
-
 
 }

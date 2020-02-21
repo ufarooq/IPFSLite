@@ -81,13 +81,10 @@ public class ContentsWorker extends Worker {
     private void downloadContent(@NonNull CID cid) {
         checkNotNull(cid);
 
-        final THREADS threads = THREADS.getInstance(getApplicationContext());
-
-        final EVENTS events = EVENTS.getInstance(getApplicationContext());
+        THREADS threads = THREADS.getInstance(getApplicationContext());
+        EVENTS events = EVENTS.getInstance(getApplicationContext());
 
         try {
-
-
             List<Thread> entries = threads.getThreadsByContentAndParent(cid, 0L);
 
             if (!entries.isEmpty()) {

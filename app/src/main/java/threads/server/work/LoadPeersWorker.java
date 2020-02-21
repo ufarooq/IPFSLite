@@ -45,33 +45,26 @@ public class LoadPeersWorker extends Worker {
     @Override
     public Result doWork() {
         try {
-            evaluateAllPeers();
+            IPFS ipfs = IPFS.getInstance(getApplicationContext());
+            PEERS peersInstance = PEERS.getInstance(getApplicationContext());
+
+            checkNotNull(ipfs);
+
+            List<Peer> peers = ipfs.swarmPeers();
+
+            List<threads.server.core.peers.Peer> list = new ArrayList<>();
+            for (threads.ipfs.Peer peer : peers) {
+                list.add(createPeer(peer));
+            }
+
+            peersInstance.clearPeers();
+            peersInstance.storePeers(list);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }
-
-
         return Result.success();
     }
 
-
-    private void evaluateAllPeers() {
-        IPFS ipfs = IPFS.getInstance(getApplicationContext());
-        PEERS peersInstance = PEERS.getInstance(getApplicationContext());
-
-        checkNotNull(ipfs);
-
-        List<Peer> peers = ipfs.swarmPeers();
-
-        List<threads.server.core.peers.Peer> list = new ArrayList<>();
-        for (threads.ipfs.Peer peer : peers) {
-            list.add(createPeer(peer));
-        }
-
-        peersInstance.clearPeers();
-        peersInstance.storePeers(list);
-
-    }
 
     private threads.server.core.peers.Peer createPeer(@NonNull threads.ipfs.Peer peer) {
         checkNotNull(peer);

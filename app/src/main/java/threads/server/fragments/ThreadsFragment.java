@@ -61,8 +61,6 @@ import threads.server.InitApplication;
 import threads.server.MainActivity;
 import threads.server.R;
 import threads.server.core.events.EVENTS;
-import threads.server.core.peers.PEERS;
-import threads.server.core.peers.User;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.model.SelectionViewModel;
@@ -391,7 +389,7 @@ public class ThreadsFragment extends Fragment implements
         mSelectionViewModel = new ViewModelProvider(mActivity).get(SelectionViewModel.class);
 
 
-        mSelectionViewModel.getParentThread().observe(getViewLifecycleOwner(), (threadIdx) -> {
+        mSelectionViewModel.getParentThread().observe(this, (threadIdx) -> {
 
             if (threadIdx != null) {
 
@@ -407,7 +405,7 @@ public class ThreadsFragment extends Fragment implements
 
         });
 
-        mSelectionViewModel.getQuery().observe(getViewLifecycleOwner(), (query) -> {
+        mSelectionViewModel.getQuery().observe(this, (query) -> {
 
             if (query != null) {
                 Long parent = mSelectionViewModel.getParentThread().getValue();
@@ -548,51 +546,24 @@ public class ThreadsFragment extends Fragment implements
 
     private void clickThreadsSend(final long[] indices) {
 
-
         // CHECKED
         if (!Network.isConnected(mContext)) {
-            EVENTS.getInstance(mContext).postWarning(
-                    getString(R.string.offline_mode));
+            EVENTS.getInstance(mContext).postWarning(getString(R.string.offline_mode));
         }
 
-
-        final PEERS peers = PEERS.getInstance(mContext);
-        final EVENTS events = EVENTS.getInstance(mContext);
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                List<User> users = peers.getNonBlockedLiteUsers();
-
-                if (users.isEmpty()) {
-                    events.error(getString(R.string.no_sharing_peers));
-                } else if (users.size() == 1) {
-                    LiteService.getInstance(mContext).sendThreads(mContext, users, indices);
-                } else {
-
-                    SendDialogFragment dialogFragment = new SendDialogFragment();
-                    Bundle bundle = new Bundle();
-                    bundle.putLongArray(SendDialogFragment.IDXS, indices);
-                    dialogFragment.setArguments(bundle);
-                    dialogFragment.show(getChildFragmentManager(), SendDialogFragment.TAG);
-                }
-
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-        });
-
+        SendDialogFragment dialogFragment = new SendDialogFragment();
+        Bundle bundle = new Bundle();
+        bundle.putLongArray(SendDialogFragment.IDXS, indices);
+        dialogFragment.setArguments(bundle);
+        dialogFragment.show(getChildFragmentManager(), SendDialogFragment.TAG);
 
     }
 
     private void sendAction() {
-        final EVENTS events = EVENTS.getInstance(mContext);
 
         Selection<Long> selection = mSelectionTracker.getSelection();
         if (selection.size() == 0) {
-            java.lang.Thread thread = new java.lang.Thread(() -> events.invokeEvent(
-                    EVENTS.WARNING,
-                    getString(R.string.no_marked_file_send)));
-            thread.start();
+            EVENTS.getInstance(mContext).postWarning(getString(R.string.no_marked_file_send));
             return;
         }
 

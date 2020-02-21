@@ -284,7 +284,7 @@ public class PeersFragment extends Fragment implements
 
 
         UsersViewModel messagesViewModel = new ViewModelProvider(this).get(UsersViewModel.class);
-        messagesViewModel.getUsers().observe(getViewLifecycleOwner(), (peers) -> {
+        messagesViewModel.getUsers().observe(this, (peers) -> {
 
             try {
                 if (peers != null) {
@@ -423,7 +423,7 @@ public class PeersFragment extends Fragment implements
                             Selection<String> entries = mSelectionTracker.getSelection();
 
                             for (String pid : entries) {
-                                LiteService.deleteUser(mContext, pid);
+                                deleteUser(pid);
                             }
 
                             mSelectionTracker.clearSelection();
@@ -566,7 +566,7 @@ public class PeersFragment extends Fragment implements
     private void clickUserDelete(@NonNull String pid) {
         checkNotNull(pid);
 
-        LiteService.deleteUser(mContext, pid);
+        deleteUser(pid);
     }
 
     private void clickUserBlock(@NonNull String pid, boolean value) {
@@ -742,6 +742,16 @@ public class PeersFragment extends Fragment implements
         try {
             EditPeerDialogFragment editPeerDialogFragment = new EditPeerDialogFragment();
             editPeerDialogFragment.show(getChildFragmentManager(), EditPeerDialogFragment.TAG);
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
+    private void deleteUser(@NonNull String pid) {
+        checkNotNull(pid);
+        try {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.submit(() -> PEERS.getInstance(mContext).removeUser(pid));
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }

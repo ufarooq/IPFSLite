@@ -108,6 +108,10 @@ public class MainActivity extends AppCompatActivity implements
     private Toolbar mToolbar;
     private NsdManager mNsdManager;
 
+    private static String getAddressLink(@NonNull String address) {
+        return "https://thetangle.org/address/" + address;
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -115,7 +119,6 @@ public class MainActivity extends AppCompatActivity implements
         mNsdManager.unregisterService(RegistrationService.getInstance());
         mNsdManager.stopServiceDiscovery(DiscoveryService.getInstance());
     }
-
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
@@ -232,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements
                     PID pid = IPFS.getPID(this);
                     checkNotNull(pid);
                     String address = AddressType.getAddress(pid, AddressType.NOTIFICATION);
-                    Uri uri = Uri.parse(LiteService.getAddressLink(address));
+                    Uri uri = Uri.parse(getAddressLink(address));
 
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -337,8 +340,8 @@ public class MainActivity extends AppCompatActivity implements
         setSupportActionBar(mToolbar);
         mToolbar.setSubtitle(R.string.files);
 
+        // LITE service is necessary to start the daemon
         LiteService.getInstance(getApplicationContext());
-
 
         mSelectionViewModel = new ViewModelProvider(this).get(SelectionViewModel.class);
 

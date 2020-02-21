@@ -25,10 +25,6 @@
     <string name="daemon_restart_config_changed">Please restart the application due to the configuration changes.</string>
     <string name="privacy_policy">Privacy Policy</string>
     <string name="quic_support">QUIC Support</string>
-    <string name="share_app">Share</string>
-    <string name="play_store_url">https://play.google.com/store/apps/details?id=threads.server</string>
-    <string name="fdroid_url">https://f-droid.org/packages/threads.server/</string>
-    <string name="store_mail">Let me recommend you this application.</string>
     <string name="issues">Issue Report</string>
     <string name="copy_to_clipboard">Copy to clipboard</string>
     <string name="qr_code">QR Code</string>
@@ -43,7 +39,7 @@
     <string name="same_pid_like_host">Invalid: Peer ID is your Host Peer ID</string>
     <string name="peer_name">New Peer Name</string>
     <string name="peer_is_blocked">Peer is blocked. Unblock first.</string>
-    <string name="no_sharing_peers">Currently no IPFS Lite peers are available to share data with.</string>
+    <string name="no_sharing_peers">Currently no IPFS Lite peers are available in your Peers list to share data with.</string>
     <string name="select_files">File Chooser</string>
     <string name="action_select_all">Select All</string>
     <string name="auto_relay_support">Enable Auto Relay</string>
@@ -59,7 +55,6 @@
     <string name="permission_camera_denied">Permission camera denied</string>
 
 
-    <string name="cancel">Cancel</string>
     <string name="dht_support">Enable DHT Routing</string>
     <string name="prefer_tls">Prefer TLS</string>
     <string name="experimental_settings">Experimental Settings</string>
@@ -136,5 +131,5 @@
     <string name="account">Account</string>
     <string name="account_address">Account - Peer ID (PID)</string>
     <string name="user_account_address_message">You can share your account Peer ID with others. So they can contact you, by simply scanning the QR code.</string>
-
+    <string name="select_lite_peer">Select Lite Peers</string>
 </resources>

@@ -21,7 +21,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="start|center"
         android:layout_weight="1"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Body1"
+        android:textAppearance="@style/TextAppearance.AppCompat.Small"
+        android:textColor="?android:textColorPrimary"
         tools:ignore="ContentDescription" />
 
 </LinearLayout>

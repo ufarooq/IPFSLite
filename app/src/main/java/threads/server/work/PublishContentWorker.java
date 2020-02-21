@@ -94,8 +94,6 @@ public class PublishContentWorker extends Worker {
     public Result doWork() {
 
         long start = System.currentTimeMillis();
-
-
         long idx = getInputData().getLong(Content.IDX, -1);
         checkArgument(idx >= 0);
 

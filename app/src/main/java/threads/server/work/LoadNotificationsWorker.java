@@ -67,7 +67,7 @@ public class LoadNotificationsWorker extends Worker {
     public Result doWork() {
 
         long start = System.currentTimeMillis();
-        Log.e(TAG, " start [" + (System.currentTimeMillis() - start) + "]...");
+        Log.e(TAG, " start ...");
         try {
             Gson gson = new Gson();
             PID host = IPFS.getPID(getApplicationContext());

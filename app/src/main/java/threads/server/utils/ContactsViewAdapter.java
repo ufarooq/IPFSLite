@@ -1,6 +1,5 @@
 package threads.server.utils;
 
-import android.graphics.Color;
 import android.util.Log;
 import android.util.Pair;
 import android.view.LayoutInflater;
@@ -94,10 +93,11 @@ public class ContactsViewAdapter extends RecyclerView.Adapter<ContactsViewAdapte
 
             holder.view.setOnClickListener((v) -> {
 
-                if (selected.get()) {
-                    v.setBackgroundColor(android.R.drawable.list_selector_background);
+                if (!selected.get()) {
+                    v.setBackgroundResource(R.color.colorSelectedItem);
                 } else {
-                    v.setBackgroundColor(Color.GRAY);
+                    v.setBackgroundColor(
+                            android.R.drawable.list_selector_background);
                 }
                 selected.set(!selected.get());
 
