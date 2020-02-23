@@ -121,22 +121,10 @@ public class EditMultihashDialogFragment extends DialogFragment {
                     String hash = text.toString();
 
                     downloadMultihash(hash);
-                    dismiss();
+
 
                 })
-                /*
-                .setNegativeButton(android.R.string.cancel, (dialog, id) -> {
 
-                    if (SystemClock.elapsedRealtime() - mLastClickTime < 1000) {
-                        return;
-                    }
-
-                    mLastClickTime = SystemClock.elapsedRealtime();
-
-                    removeKeyboards();
-                    dismiss();
-
-                })*/
                 .setTitle(getString(R.string.content_id));
 
 
@@ -225,6 +213,8 @@ public class EditMultihashDialogFragment extends DialogFragment {
             }
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        } finally {
+            dismiss();
         }
     }
 

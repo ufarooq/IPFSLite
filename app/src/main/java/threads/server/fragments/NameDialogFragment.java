@@ -25,9 +25,13 @@ import androidx.fragment.app.DialogFragment;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.server.R;
+import threads.server.core.events.EVENTS;
+import threads.server.core.peers.PEERS;
 
 import static androidx.core.util.Preconditions.checkNotNull;
 
@@ -36,7 +40,7 @@ public class NameDialogFragment extends DialogFragment {
     private static final String TITLE = "TITLE";
     private static final String PID = "PID";
     private final AtomicBoolean notPrintErrorMessages = new AtomicBoolean(false);
-    private NameDialogFragment.ActionListener mListener;
+
     private long mLastClickTime = 0;
     private TextInputLayout edit_multi_hash_layout;
     private TextInputEditText multihash;
@@ -57,18 +61,12 @@ public class NameDialogFragment extends DialogFragment {
     public void onDetach() {
         super.onDetach();
         mContext = null;
-        mListener = null;
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
-        try {
-            mListener = (NameDialogFragment.ActionListener) getActivity();
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
     }
 
     @Override
@@ -135,8 +133,8 @@ public class NameDialogFragment extends DialogFragment {
                     Editable text = multihash.getText();
                     checkNotNull(text);
                     String name = text.toString();
-                    dismiss();
-                    mListener.name(pid, name);
+
+                    name(pid, name);
 
 
                 })
@@ -158,6 +156,24 @@ public class NameDialogFragment extends DialogFragment {
         return dialog;
     }
 
+
+    private void name(@NonNull String pid, @NonNull String name) {
+        checkNotNull(pid);
+        checkNotNull(name);
+
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            try {
+                PEERS.getInstance(mContext).setUserAlias(pid, name);
+            } catch (Throwable e) {
+                EVENTS.getInstance(mContext).exception(e);
+            } finally {
+                dismiss();
+            }
+        });
+
+
+    }
 
     private void isValidName(Dialog dialog) {
         if (dialog instanceof AlertDialog) {
@@ -215,9 +231,4 @@ public class NameDialogFragment extends DialogFragment {
         notPrintErrorMessages.set(false);
     }
 
-    public interface ActionListener {
-
-        void name(@NonNull String pid, @NonNull String name);
-
-    }
 }

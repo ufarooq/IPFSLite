@@ -45,13 +45,10 @@ import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
 import threads.ipfs.PID;
-import threads.server.core.events.EVENTS;
 import threads.server.core.peers.AddressType;
-import threads.server.core.peers.PEERS;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.fragments.DontShowAgainFragmentDialog;
-import threads.server.fragments.NameDialogFragment;
 import threads.server.fragments.PeersFragment;
 import threads.server.fragments.PinsFragment;
 import threads.server.fragments.SettingsDialogFragment;
@@ -82,7 +79,6 @@ public class MainActivity extends AppCompatActivity implements
         ThreadsFragment.ActionListener,
         PinsFragment.ActionListener,
         PeersFragment.ActionListener,
-        NameDialogFragment.ActionListener,
         DontShowAgainFragmentDialog.ActionListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -658,24 +654,6 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void dontShowAgain(@NonNull String key, boolean notShowAgain) {
         InitApplication.setDontShowAgain(this, key, notShowAgain);
-    }
-
-
-    @Override
-    public void name(@NonNull String pid, @NonNull String name) {
-        checkNotNull(pid);
-        checkNotNull(name);
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            try {
-                PEERS.getInstance(getApplicationContext()).setUserAlias(pid, name);
-            } catch (Throwable e) {
-                EVENTS.getInstance(getApplicationContext()).exception(e);
-            }
-        });
-
-
     }
 
 

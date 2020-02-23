@@ -148,16 +148,7 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
     @Override
     public void onClick(DialogInterface dialogInterface, int which) {
         if (which == AlertDialog.BUTTON_POSITIVE) {
-            try {
-                shareQRCode(code, message);
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
-            Dialog dialog = getDialog();
-            if (dialog != null) {
-                dialog.dismiss();
-            }
-
+            shareQRCode(code, message);
         }
 
     }
@@ -195,6 +186,8 @@ public class InfoDialogFragment extends DialogFragment implements DialogInterfac
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        } finally {
+            dismiss();
         }
     }
 

@@ -143,16 +143,7 @@ public class ShowAccountDialogFragment extends DialogFragment implements DialogI
     @Override
     public void onClick(DialogInterface dialogInterface, int which) {
         if (which == AlertDialog.BUTTON_POSITIVE) {
-
-            try {
-                shareQRCode(code, message);
-                Dialog dialog = getDialog();
-                if (dialog != null) {
-                    dialog.dismiss();
-                }
-            } catch (Throwable e) {
-                Log.e(TAG, "" + e.getLocalizedMessage(), e);
-            }
+            shareQRCode(code, message);
         }
     }
 
@@ -188,6 +179,8 @@ public class ShowAccountDialogFragment extends DialogFragment implements DialogI
 
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        } finally {
+            dismiss();
         }
     }
 

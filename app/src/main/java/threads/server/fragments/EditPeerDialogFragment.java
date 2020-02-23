@@ -148,7 +148,7 @@ public class EditPeerDialogFragment extends DialogFragment {
                     String hash = text.toString();
 
                     clickConnectPeer(hash);
-                    dismiss();
+
 
                 })
                 .setTitle(getString(R.string.peer_id));
@@ -209,29 +209,34 @@ public class EditPeerDialogFragment extends DialogFragment {
     private void clickConnectPeer(@NonNull String pid) {
         checkNotNull(pid);
 
-        // CHECKED if pid is valid
         try {
-            Multihash.fromBase58(pid);
-        } catch (Throwable e) {
-            EVENTS.getInstance(mContext).postError(getString(R.string.multihash_not_valid));
-            return;
+            // CHECKED if pid is valid
+            try {
+                Multihash.fromBase58(pid);
+            } catch (Throwable e) {
+                EVENTS.getInstance(mContext).postError(getString(R.string.multihash_not_valid));
+                return;
+            }
+
+            // CHECKED
+            PID host = IPFS.getPID(mContext);
+            PID user = PID.create(pid);
+
+            if (user.equals(host)) {
+                EVENTS.getInstance(mContext).postError(getString(R.string.same_pid_like_host));
+                return;
+            }
+
+            // CHECKED
+            if (!Network.isConnected(mContext)) {
+                EVENTS.getInstance(mContext).postWarning(getString(R.string.offline_mode));
+            }
+
+            LiteService.connectPeer(mContext, user, false);
+        } finally {
+            dismiss();
         }
 
-        // CHECKED
-        PID host = IPFS.getPID(mContext);
-        PID user = PID.create(pid);
-
-        if (user.equals(host)) {
-            EVENTS.getInstance(mContext).postError(getString(R.string.same_pid_like_host));
-            return;
-        }
-
-        // CHECKED
-        if (!Network.isConnected(mContext)) {
-            EVENTS.getInstance(mContext).postWarning(getString(R.string.offline_mode));
-        }
-
-        LiteService.connectPeer(mContext, user, false);
     }
 
 }

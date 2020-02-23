@@ -62,7 +62,7 @@ public class SendDialogFragment extends BottomSheetDialogFragment implements Con
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.send_view, container, false);
+        View view = inflater.inflate(R.layout.contacts_view, container, false);
 
 
         Bundle args = getArguments();
@@ -91,8 +91,6 @@ public class SendDialogFragment extends BottomSheetDialogFragment implements Con
             List<User> users = mContactsViewAdapter.getSelectedAccounts();
 
             sendThreads(users, indices);
-
-            dismiss();
 
         });
 
@@ -143,6 +141,7 @@ public class SendDialogFragment extends BottomSheetDialogFragment implements Con
         checkNotNull(users);
         checkNotNull(indices);
 
+
         if (users.isEmpty()) {
             EVENTS.getInstance(mContext).postError(
                     mContext.getString(R.string.no_sharing_peers));
@@ -173,9 +172,12 @@ public class SendDialogFragment extends BottomSheetDialogFragment implements Con
 
                 } catch (Throwable e) {
                     Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                } finally {
+                    dismiss();
                 }
             });
         }
+
     }
 
 }
