@@ -85,6 +85,42 @@ public class PeersFragment extends Fragment implements
     private boolean hasCamera;
     private FloatingActionButton mMainFab;
 
+    private static void checkUsers(@NonNull Context context) {
+        checkNotNull(context);
+        try {
+
+            PEERS peers = PEERS.getInstance(context);
+
+            IPFS ipfs = IPFS.getInstance(context);
+
+            List<PID> users = peers.getUsersPIDs();
+
+            for (PID user : users) {
+                if (!peers.isUserBlocked(user) && !peers.getUserDialing(user)) {
+
+                    try {
+                        boolean value = ipfs.isConnected(user);
+
+                        boolean preValue = peers.isUserConnected(user);
+
+                        if (preValue != value) {
+                            if (value) {
+                                peers.setUserConnected(user);
+                            } else {
+                                peers.setUserDisconnected(user);
+                            }
+                        }
+
+                    } catch (Throwable e) {
+                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
+                    }
+                }
+            }
+        } catch (Throwable e) {
+            Log.e(TAG, "" + e.getLocalizedMessage(), e);
+        }
+    }
+
     @Override
     public void onDetach() {
         super.onDetach();
@@ -635,49 +671,13 @@ public class PeersFragment extends Fragment implements
         executor.submit(() -> {
             try {
                 while (run.get()) {
-                    checkUsers();
+                    checkUsers(mContext);
                     java.lang.Thread.sleep(1000);
                 }
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);
             }
         });
-    }
-
-    private void checkUsers() {
-
-        try {
-
-            PEERS peers = PEERS.getInstance(mContext);
-
-            IPFS ipfs = IPFS.getInstance(mContext);
-
-            List<PID> users = peers.getUsersPIDs();
-
-            for (PID user : users) {
-                if (!peers.isUserBlocked(user) && !peers.getUserDialing(user)) {
-
-                    try {
-                        boolean value = ipfs.isConnected(user);
-
-                        boolean preValue = peers.isUserConnected(user);
-
-                        if (preValue != value) {
-                            if (value) {
-                                peers.setUserConnected(user);
-                            } else {
-                                peers.setUserDisconnected(user);
-                            }
-                        }
-
-                    } catch (Throwable e) {
-                        Log.e(TAG, "" + e.getLocalizedMessage(), e);
-                    }
-                }
-            }
-        } catch (Throwable e) {
-            Log.e(TAG, "" + e.getLocalizedMessage(), e);
-        }
     }
 
     private void clickScanPeer() {

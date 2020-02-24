@@ -122,6 +122,9 @@ public class InitApplication extends Application {
 
         // periodic jobs
         JobServicePublisher.publish(getApplicationContext());
+
+        // todo the service calls rm functions
+        // todo also it calls LiteService
         JobServiceCleanup.cleanup(getApplicationContext());
 
 
