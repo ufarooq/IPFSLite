@@ -61,7 +61,7 @@ public class ProgressChannel {
         builder.setAutoCancel(true);
         builder.setContentText(content);
         builder.setPriority(NotificationManager.IMPORTANCE_HIGH);
-        builder.setSmallIcon(R.drawable.server_network);
+        builder.setSmallIcon(R.drawable.download);
         return builder;
     }
 

@@ -21,15 +21,18 @@ import com.j256.simplemagic.ContentInfo;
 
 import java.io.File;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.Progress;
+import threads.server.InitApplication;
 import threads.server.core.peers.Content;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.ThumbnailService;
 import threads.server.utils.MimeType;
+import threads.server.utils.Network;
 import threads.server.utils.ProgressChannel;
 
 import static androidx.core.util.Preconditions.checkArgument;
@@ -90,6 +93,8 @@ public class DownloadContentWorker extends Worker {
 
         Log.e(TAG, " start [" + (System.currentTimeMillis() - start) + "]...");
 
+
+        int timeout = InitApplication.getDownloadTimeout(getApplicationContext());
         try {
             THREADS threads = THREADS.getInstance(getApplicationContext());
             IPFS ipfs = IPFS.getInstance(getApplicationContext());
@@ -123,7 +128,7 @@ public class DownloadContentWorker extends Worker {
             if (notificationManager != null) {
                 notificationManager.notify(notifyID, notification);
             }
-
+            AtomicLong started = new AtomicLong(System.currentTimeMillis());
             boolean success;
             try {
                 File file = ipfs.createCacheFile(cid);
@@ -131,7 +136,11 @@ public class DownloadContentWorker extends Worker {
                         new Progress() {
                             @Override
                             public boolean isClosed() {
-                                return isStopped();
+
+                                long diff = System.currentTimeMillis() - started.get();
+                                boolean abort = !Network.isConnected(getApplicationContext())
+                                        || (diff > (timeout * 1000));
+                                return isStopped() || abort;
                             }
 
                             @Override
@@ -141,6 +150,7 @@ public class DownloadContentWorker extends Worker {
                                 if (notificationManager != null) {
                                     notificationManager.notify(notifyID, builder.build());
                                 }
+                                started.set(System.currentTimeMillis());
                             }
                         });
 

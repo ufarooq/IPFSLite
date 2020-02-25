@@ -19,13 +19,16 @@ import androidx.work.WorkerParameters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.LinkInfo;
+import threads.server.InitApplication;
 import threads.server.core.peers.Content;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
+import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -124,9 +127,17 @@ public class DownloadThreadWorker extends Worker {
     private List<LinkInfo> getLinks(@NonNull CID cid) {
 
         checkNotNull(cid);
+        int timeout = InitApplication.getDownloadTimeout(getApplicationContext());
         IPFS ipfs = IPFS.getInstance(getApplicationContext());
+        AtomicLong started = new AtomicLong(System.currentTimeMillis());
+        List<LinkInfo> links = ipfs.ls(cid, () -> {
 
-        List<LinkInfo> links = ipfs.ls(cid, this::isStopped);
+            long diff = System.currentTimeMillis() - started.get();
+            boolean abort = !Network.isConnected(getApplicationContext())
+                    || (diff > (timeout * 1000));
+            return isStopped() || abort;
+
+        });
         if (links == null) {
             Log.e(TAG, "no links");
             return null;

@@ -132,4 +132,5 @@
     <string name="account_address">Account - Peer ID (PID)</string>
     <string name="user_account_address_message">You can share your account Peer ID with others. So they can contact you, by simply scanning the QR code.</string>
     <string name="select_lite_peer">Select Lite Peers</string>
+    <string name="download_timeout">Download Timeout %1$s[s]</string>
 </resources>

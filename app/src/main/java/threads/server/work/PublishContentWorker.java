@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
+import threads.server.InitApplication;
 import threads.server.core.peers.Content;
 import threads.server.core.threads.Status;
 import threads.server.core.threads.THREADS;
@@ -100,7 +101,7 @@ public class PublishContentWorker extends Worker {
         Log.e(TAG, " start [" + idx + "]...");
 
         THREADS threads = THREADS.getInstance(getApplicationContext());
-
+        int timeout = InitApplication.getDownloadTimeout(getApplicationContext());
         try {
             threads.setThreadStatus(idx, Status.UNKNOWN);
             String gateway = LiteService.getGateway(getApplicationContext());
@@ -113,8 +114,7 @@ public class PublishContentWorker extends Worker {
                 IPFS ipfs = IPFS.getInstance(getApplicationContext());
                 checkNotNull(ipfs, "IPFS not valid");
 
-                ipfs.dhtPublish(cid, true,
-                        (int) TimeUnit.MINUTES.toSeconds(3));
+                ipfs.dhtPublish(cid, true, timeout);
 
 
                 long pageTime = System.currentTimeMillis();

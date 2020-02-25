@@ -257,6 +257,37 @@ public class SettingsDialogFragment extends DialogFragment {
             }
         });
 
+        TextView download_timeout_text = view.findViewById(R.id.download_timeout_text);
+        SeekBar download_timeout = view.findViewById(R.id.download_timeout);
+
+
+        download_timeout.setMax(600);
+
+        int downloadTimeout = InitApplication.getDownloadTimeout(activity);
+
+        download_timeout_text.setText(getString(R.string.download_timeout,
+                String.valueOf(downloadTimeout)));
+        download_timeout.setProgress(downloadTimeout);
+        download_timeout.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
+                InitApplication.setDownloadTimeout(activity, progress);
+                download_timeout_text.setText(
+                        getString(R.string.download_timeout,
+                                String.valueOf(progress)));
+
+            }
+
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // ignore, not used
+            }
+
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                // ignore, not used
+            }
+        });
+
         Switch support_automatic_download = view.findViewById(R.id.support_automatic_download);
         support_automatic_download.setChecked(LiteService.isAutoDownload(activity));
         support_automatic_download.setOnCheckedChangeListener((buttonView, isChecked) ->

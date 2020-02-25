@@ -209,6 +209,21 @@
             android:layout_height="wrap_content"
             android:layout_margin="16dp" />
 
+        <TextView
+            android:id="@+id/download_timeout_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/fab_margin"
+            android:layout_marginTop="16dp"
+            android:layout_marginRight="@dimen/fab_margin" />
+
+        <SeekBar
+            android:id="@+id/download_timeout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp" />
+
+
         <Switch
             android:id="@+id/support_automatic_download"
             android:layout_width="match_parent"

@@ -290,6 +290,7 @@ public class MainActivity extends AppCompatActivity implements
                             }
                             if (connect) {
 
+                                // todo whay sometimes not working URGENT
                                 Multihash.fromBase58(serviceName);
 
                                 PID pid = PID.create(serviceName);

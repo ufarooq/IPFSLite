@@ -25,7 +25,22 @@ public class InitApplication extends Application {
     private static final String TAG = InitApplication.class.getSimpleName();
     private static final String PREF_KEY = "prefKey";
     private static final String TIMEOUT_KEY = "timeoutKey";
+    private static final String DOWN_TIMEOUT_KEY = "downTimeoutKey";
 
+    public static int getDownloadTimeout(@NonNull Context context) {
+        checkNotNull(context);
+        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+        return sharedPref.getInt(DOWN_TIMEOUT_KEY, 60);
+    }
+
+    public static void setDownloadTimeout(@NonNull Context context, int timeout) {
+        checkNotNull(context);
+        checkArgument(timeout >= 0);
+        SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putInt(DOWN_TIMEOUT_KEY, timeout);
+        editor.apply();
+    }
 
     public static int getConnectionTimeout(@NonNull Context context) {
         checkNotNull(context);
@@ -76,6 +91,8 @@ public class InitApplication extends Application {
 
 
                 InitApplication.setConnectionTimeout(context, 45);
+                InitApplication.setDownloadTimeout(context, 180);
+                
                 EntityService.setTangleTimeout(context, 60);
 
                 IPFS.setPubSubEnabled(context, false);

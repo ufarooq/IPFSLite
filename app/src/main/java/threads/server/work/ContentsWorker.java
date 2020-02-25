@@ -25,12 +25,14 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
 import threads.ipfs.PID;
 import threads.ipfs.Progress;
+import threads.server.InitApplication;
 import threads.server.core.contents.CDS;
 import threads.server.core.contents.ContentEntry;
 import threads.server.core.contents.Contents;
@@ -42,6 +44,7 @@ import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.LiteService;
 import threads.server.services.ThumbnailService;
+import threads.server.utils.Network;
 
 import static androidx.core.util.Preconditions.checkArgument;
 import static androidx.core.util.Preconditions.checkNotNull;
@@ -252,9 +255,10 @@ public class ContentsWorker extends Worker {
 
     private Contents downloadContents(@NonNull CID cid) throws IOException {
 
-        final Gson gson = new Gson();
-        final IPFS ipfs = IPFS.getInstance(getApplicationContext());
-
+        Gson gson = new Gson();
+        IPFS ipfs = IPFS.getInstance(getApplicationContext());
+        int timeout = InitApplication.getDownloadTimeout(getApplicationContext());
+        AtomicLong started = new AtomicLong(System.currentTimeMillis());
         File file = ipfs.createCacheFile(cid);
         try {
 
@@ -262,8 +266,14 @@ public class ContentsWorker extends Worker {
                     new Progress() {
                         @Override
                         public boolean isClosed() {
-                            return isStopped();
+
+                            long diff = System.currentTimeMillis() - started.get();
+                            boolean abort = !Network.isConnected(getApplicationContext())
+                                    || (diff > (timeout * 1000));
+                            return isStopped() || abort;
+
                         }
+
                     });
 
             if (success) {

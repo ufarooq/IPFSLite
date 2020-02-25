@@ -14,7 +14,6 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import threads.server.core.contents.CDS;
 import threads.server.core.contents.Content;
@@ -69,10 +68,6 @@ public class DownloadContentsWorker extends Worker {
 
 
             if (!threads.isUserBlocked(pid)) {
-
-                long timestamp = System.currentTimeMillis() -
-                        TimeUnit.MINUTES.toMillis(10);
-
 
                 List<Content> contents = contentService.getContentDatabase().
                         contentDao().getContents(pid);

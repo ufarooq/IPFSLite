@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.PrimaryKey;
-import androidx.room.TypeConverters;
 
 import java.util.Objects;
 
@@ -35,9 +34,8 @@ public class User {
     private boolean lite;
 
     @NonNull
-    @TypeConverters(Addresses.class)
-    @ColumnInfo(name = "addresses")
-    private Addresses addresses = new Addresses();
+    @ColumnInfo(name = "address")
+    private String address = "";
 
     @Nullable
     @ColumnInfo(name = "agent")
@@ -50,6 +48,7 @@ public class User {
         this.dialing = false;
         this.connected = false;
         this.lite = false;
+        this.address = "";
     }
 
     @NonNull
@@ -57,24 +56,6 @@ public class User {
         checkNotNull(alias);
         checkNotNull(pid);
         return new User(alias, pid.getPid());
-    }
-
-    @NonNull
-    public Addresses getAddresses() {
-        return (Addresses) addresses.clone();
-    }
-
-    public void setAddresses(@NonNull Addresses addresses) {
-        this.addresses = addresses;
-    }
-
-    public void addAddress(@NonNull String address) {
-        checkNotNull(address);
-        this.addresses.add(address);
-    }
-
-    public void clearAddresses() {
-        this.addresses.clear();
     }
 
     public boolean isLite() {
@@ -178,5 +159,14 @@ public class User {
 
     public void setAgent(@Nullable String agent) {
         this.agent = agent;
+    }
+
+    @NonNull
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(@NonNull String address) {
+        this.address = address;
     }
 }
