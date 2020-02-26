@@ -1,7 +1,6 @@
 package threads.server.fragments;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.graphics.drawable.ColorDrawable;
@@ -20,10 +19,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentActivity;
+
+import java.util.Objects;
 
 import threads.server.R;
 
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class DontShowAgainFragmentDialog extends DialogFragment {
     public static final String TAG = DontShowAgainFragmentDialog.class.getSimpleName();
@@ -35,10 +36,11 @@ public class DontShowAgainFragmentDialog extends DialogFragment {
     private int backgroundColor;
     private CheckBox dontShowAgain;
     private String key;
+    private FragmentActivity mActivity;
 
     public static DontShowAgainFragmentDialog newInstance(@NonNull String text,
                                                           @NonNull String key) {
-        checkNotNull(text);
+
         Bundle bundle = new Bundle();
         bundle.putString(TEXT, text);
         bundle.putString(KEY, key);
@@ -58,12 +60,14 @@ public class DontShowAgainFragmentDialog extends DialogFragment {
         super.onDetach();
         listener = null;
         mContext = null;
+        mActivity = null;
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
+        mActivity = getActivity();
         try {
             listener = (DontShowAgainFragmentDialog.ActionListener) getActivity();
             backgroundColor = getThemeBackgroundColor(context);
@@ -76,18 +80,16 @@ public class DontShowAgainFragmentDialog extends DialogFragment {
     @NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        Activity activity = getActivity();
-        checkNotNull(activity);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-        LayoutInflater inflater = activity.getLayoutInflater();
+        LayoutInflater inflater = mActivity.getLayoutInflater();
 
         Bundle bundle = getArguments();
-        checkNotNull(bundle);
+        Objects.requireNonNull(bundle);
         String text = bundle.getString(TEXT);
-        checkNotNull(text);
+        Objects.requireNonNull(text);
         key = bundle.getString(KEY);
-        checkNotNull(key);
+        Objects.requireNonNull(key);
 
         @SuppressLint("InflateParams")
         View view = inflater.inflate(R.layout.checkbox, null);

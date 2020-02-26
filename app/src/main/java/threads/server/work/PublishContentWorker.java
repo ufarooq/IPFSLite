@@ -17,6 +17,7 @@ import androidx.work.WorkerParameters;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import threads.ipfs.CID;
@@ -27,9 +28,6 @@ import threads.server.core.threads.Status;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.services.LiteService;
-
-import static androidx.core.util.Preconditions.checkArgument;
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class PublishContentWorker extends Worker {
     private static final String WID = "LCW";
@@ -60,7 +58,6 @@ public class PublishContentWorker extends Worker {
     }
 
     public static void publish(@NonNull Context context, long idx) {
-        checkNotNull(context);
 
         WorkManager.getInstance(context).enqueueUniqueWork(
                 getUniqueId(idx), ExistingWorkPolicy.KEEP, getWorkRequest(idx));
@@ -68,7 +65,7 @@ public class PublishContentWorker extends Worker {
 
 
     private boolean pinContent(@NonNull URL url) {
-        checkNotNull(url);
+
         try {
             URLConnection con = url.openConnection();
             con.setConnectTimeout(15000);
@@ -96,7 +93,6 @@ public class PublishContentWorker extends Worker {
 
         long start = System.currentTimeMillis();
         long idx = getInputData().getLong(Content.IDX, -1);
-        checkArgument(idx >= 0);
 
         Log.e(TAG, " start [" + idx + "]...");
 
@@ -106,13 +102,12 @@ public class PublishContentWorker extends Worker {
             threads.setThreadStatus(idx, Status.UNKNOWN);
             String gateway = LiteService.getGateway(getApplicationContext());
             Thread thread = threads.getThreadByIdx(idx);
-            checkNotNull(thread);
+            Objects.requireNonNull(thread);
 
             CID cid = thread.getContent();
             if (cid != null) {
 
                 IPFS ipfs = IPFS.getInstance(getApplicationContext());
-                checkNotNull(ipfs, "IPFS not valid");
 
                 ipfs.dhtPublish(cid, true, timeout);
 

@@ -12,8 +12,6 @@ import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.core.threads.ThreadsDatabase;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class ThreadViewModel extends AndroidViewModel {
 
     private final ThreadsDatabase threadsDatabase;
@@ -26,7 +24,7 @@ public class ThreadViewModel extends AndroidViewModel {
 
 
     public LiveData<List<Thread>> getVisibleChildrenByQuery(long thread, String query) {
-        checkNotNull(query);
+
         String searchQuery = query.trim();
         if (!searchQuery.startsWith("%")) {
             searchQuery = "%" + searchQuery;

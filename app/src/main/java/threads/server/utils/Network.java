@@ -16,21 +16,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class Network {
 
     private static final int MIN_NETWORK_BANDWIDTH_KBPS = 4000;
 
 
     private static boolean isIPv6(@NonNull String ma) {
-        checkNotNull(ma);
+
         return ma.startsWith("/ip6/");
     }
 
 
     public static boolean isConnected(@NonNull Context context) {
-        checkNotNull(context);
+
         ConnectivityManager connectivityManager = (ConnectivityManager)
                 context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -46,7 +44,7 @@ public class Network {
     }
 
     public static boolean isConnectedWifi(@NonNull Context context) {
-        checkNotNull(context);
+
         ConnectivityManager connectivityManager = (ConnectivityManager)
                 context.getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -64,7 +62,7 @@ public class Network {
     }
 
     public static boolean isConnectedMobile(@NonNull Context context) {
-        checkNotNull(context);
+
 
         ConnectivityManager connectivityManager = (ConnectivityManager)
                 context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -81,7 +79,6 @@ public class Network {
     }
 
     private static boolean isConnectedFast(@NonNull Context context) {
-        checkNotNull(context);
 
         ConnectivityManager connectivityManager = (ConnectivityManager)
                 context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -97,7 +94,6 @@ public class Network {
 
 
     private static boolean isConnectedMinHighBandwidth(@NonNull Context context) {
-        checkNotNull(context);
 
         ConnectivityManager connectivityManager = (ConnectivityManager)
                 context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -195,7 +191,7 @@ public class Network {
     }
 
     private static boolean isIPv6GlobalAddress(@NonNull Inet6Address address) {
-        checkNotNull(address);
+
         if (address.isLinkLocalAddress()) return false;
 
         String host = address.getHostAddress();
@@ -204,7 +200,6 @@ public class Network {
     }
 
     private static boolean isValidPublicIP(@NonNull InetAddress address) {
-        checkNotNull(address);
 
         return !(address.isSiteLocalAddress() ||
                 address.isAnyLocalAddress() ||

@@ -22,14 +22,12 @@ import threads.ipfs.Peer;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class ConnectionWorker extends Worker {
 
 
     @SuppressWarnings("SpellCheckingInspection")
     @NonNull
-    static final List<String> Bootstrap = new ArrayList<>(Arrays.asList(
+    private static final List<String> Bootstrap = new ArrayList<>(Arrays.asList(
             "/ip4/147.75.80.110/tcp/4001/p2p/QmbFgm5zan8P6eWWmeyfncR5feYEMPbht5b1FW1C37aQ7y",
             "/ip4/147.75.195.153/tcp/4001/p2p/QmW9m57aiBDHAkKj9nmFSEn7ZqrcF1fZS4bipsTCHburei",
             "/ip4/147.75.70.221/tcp/4001/p2p/Qme8g49gm3q4Acp7xWBKg3nAa9fxZ1YmyDJdyGgoG6LsXh",
@@ -44,7 +42,7 @@ public class ConnectionWorker extends Worker {
     }
 
     public static void connect(@NonNull Context context, boolean loadUser) {
-        checkNotNull(context);
+
         Constraints.Builder builder = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED);
 
@@ -76,7 +74,6 @@ public class ConnectionWorker extends Worker {
         Log.e(TAG, " start [Load Users : " + loadUsers + "]...");
         try {
             IPFS ipfs = IPFS.getInstance(getApplicationContext());
-            checkNotNull(ipfs, "IPFS not defined");
 
             List<Peer> peers = ipfs.swarmPeers();
 

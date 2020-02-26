@@ -6,8 +6,6 @@ import androidx.room.PrimaryKey;
 
 import threads.ipfs.CID;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 
 @androidx.room.Entity
 public class Content {
@@ -34,8 +32,7 @@ public class Content {
     }
 
     public static Content create(@NonNull String pid, @NonNull String cid, boolean finished) {
-        checkNotNull(pid);
-        checkNotNull(cid);
+
         return new Content(pid, cid, System.currentTimeMillis(), finished);
     }
 

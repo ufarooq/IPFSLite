@@ -9,8 +9,6 @@ import java.util.Objects;
 
 import threads.ipfs.PID;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 
 @androidx.room.Entity
 public class User {
@@ -35,7 +33,7 @@ public class User {
 
     @NonNull
     @ColumnInfo(name = "address")
-    private String address = "";
+    private String address;
 
     @Nullable
     @ColumnInfo(name = "agent")
@@ -53,8 +51,7 @@ public class User {
 
     @NonNull
     static User createUser(@NonNull String alias, @NonNull PID pid) {
-        checkNotNull(alias);
-        checkNotNull(pid);
+
         return new User(alias, pid.getPid());
     }
 
@@ -130,13 +127,13 @@ public class User {
     }
 
     public boolean areItemsTheSame(@NonNull User user) {
-        checkNotNull(user);
+
         return this.pid.equals(user.pid);
 
     }
 
     public boolean sameContent(@NonNull User user) {
-        checkNotNull(user);
+
         if (this == user) return true;
         return Objects.equals(connected, user.isConnected()) &&
                 Objects.equals(dialing, user.isDialing()) &&

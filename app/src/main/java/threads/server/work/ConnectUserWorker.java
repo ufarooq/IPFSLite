@@ -24,8 +24,6 @@ import threads.server.core.peers.Content;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class ConnectUserWorker extends Worker {
 
     private static final String WID = "CPW";
@@ -41,8 +39,7 @@ public class ConnectUserWorker extends Worker {
     }
 
     public static void connect(@NonNull Context context, @NonNull String pid) {
-        checkNotNull(context);
-        checkNotNull(pid);
+
         Constraints.Builder builder = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED);
 
@@ -69,7 +66,7 @@ public class ConnectUserWorker extends Worker {
     public Result doWork() {
 
         String pid = getInputData().getString(Content.PID);
-        checkNotNull(pid);
+        Objects.requireNonNull(pid);
         long start = System.currentTimeMillis();
 
         Log.e(TAG, " start connect [" + pid + "]...");
@@ -108,7 +105,7 @@ public class ConnectUserWorker extends Worker {
         int timeout = InitApplication.getConnectionTimeout(getApplicationContext());
         try {
             IPFS ipfs = IPFS.getInstance(getApplicationContext());
-            checkNotNull(ipfs, "IPFS not valid");
+
             PEERS peers = PEERS.getInstance(getApplicationContext());
             PID pid = PID.create(peerID);
             boolean update = false;
@@ -120,7 +117,7 @@ public class ConnectUserWorker extends Worker {
                 multiAddress = peerInfo.getMultiAddress();
             }
             User user = peers.getUserByPID(pid);
-            checkNotNull(user);
+            Objects.requireNonNull(user);
 
             if (!multiAddress.isEmpty() && !multiAddress.contains("p2p-circuit")) {
                 if (!Objects.equals(user.getAddress(), multiAddress)) {
@@ -145,8 +142,9 @@ public class ConnectUserWorker extends Worker {
                     }
                     if (user.getAgent() == null) {
                         update = true;
-                        user.setAgent(pInfo.getAgentVersion());
-                        if (pInfo.isLiteAgent()) {
+                        String agent = pInfo.getAgentVersion();
+                        user.setAgent(agent);
+                        if (agent.endsWith("lite")) {
                             user.setLite(true);
                         }
                     }
@@ -162,7 +160,6 @@ public class ConnectUserWorker extends Worker {
     }
 
     private boolean connect(@NonNull PID pid) {
-        checkNotNull(pid);
 
         int timeout = InitApplication.getConnectionTimeout(getApplicationContext());
         IPFS ipfs = IPFS.getInstance(getApplicationContext());
@@ -175,7 +172,7 @@ public class ConnectUserWorker extends Worker {
                 // now check old addresses
                 PEERS peers = PEERS.getInstance(getApplicationContext());
                 User user = peers.getUserByPID(pid);
-                checkNotNull(user);
+                Objects.requireNonNull(user);
                 String address = user.getAddress();
                 if (!address.isEmpty() && !address.contains("p2p-circuit")) {
                     String multiAddress = address.concat("/" + IPFS.Style.p2p + "/" + pid.getPid());

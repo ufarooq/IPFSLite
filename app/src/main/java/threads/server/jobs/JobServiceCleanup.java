@@ -9,7 +9,6 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.core.util.Preconditions;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -81,7 +80,6 @@ public class JobServiceCleanup extends JobService {
                 List<Content> entries = contentDatabase.contentDao().
                         getContentWithSmallerTimestamp(timestamp);
 
-                Preconditions.checkNotNull(ipfs, "IPFS not valid");
 
                 try {
                     for (threads.server.core.contents.Content content : entries) {

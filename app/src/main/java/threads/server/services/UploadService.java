@@ -28,6 +28,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,8 +40,6 @@ import threads.server.R;
 import threads.server.core.events.EVENTS;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
-
-import static androidx.core.util.Preconditions.checkNotNull;
 
 
 public class UploadService extends Service {
@@ -54,8 +53,7 @@ public class UploadService extends Service {
     private final AtomicInteger counter = new AtomicInteger(0);
 
     public static void invoke(@NonNull Context context, @NonNull Uri uri) {
-        checkNotNull(context);
-        checkNotNull(uri);
+
         try {
             Intent intent = new Intent(context, UploadService.class);
             intent.putExtra(URI, uri);
@@ -66,7 +64,7 @@ public class UploadService extends Service {
     }
 
     private static void createChannel(@NonNull Context context) {
-        checkNotNull(context);
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             try {
                 CharSequence name = context.getString(R.string.upload_channel_name);
@@ -91,9 +89,6 @@ public class UploadService extends Service {
     public static CID getThumbnail(@NonNull Context context,
                                    @NonNull Uri uri,
                                    @NonNull String mimeType) {
-        checkNotNull(context);
-        checkNotNull(uri);
-        checkNotNull(mimeType);
 
         CID cid = null;
         byte[] bytes = null;
@@ -120,9 +115,6 @@ public class UploadService extends Service {
     private static byte[] getPreviewImage(@NonNull Context context,
                                           @NonNull Uri uri,
                                           @NonNull String mimeType) throws Exception {
-        checkNotNull(context);
-        checkNotNull(uri);
-        checkNotNull(mimeType);
 
         Bitmap bitmap = getPreview(context, uri, mimeType);
         if (bitmap != null) {
@@ -138,9 +130,7 @@ public class UploadService extends Service {
     @Nullable
     private static Bitmap getPreview(@NonNull Context context, @NonNull Uri uri,
                                      @NonNull String mimeType) throws Exception {
-        checkNotNull(context);
-        checkNotNull(uri);
-        checkNotNull(mimeType);
+
 
         if (mimeType.startsWith("video")) {
 
@@ -179,12 +169,11 @@ public class UploadService extends Service {
 
     @NonNull
     private static Bitmap getPDFBitmap(@NonNull Context context, @NonNull Uri uri) throws Exception {
-        checkNotNull(context);
-        checkNotNull(uri);
+
 
         ParcelFileDescriptor fileDescriptor = context.getContentResolver().openFileDescriptor(
                 uri, "r");
-        checkNotNull(fileDescriptor);
+        Objects.requireNonNull(fileDescriptor);
         PdfRenderer pdfRenderer = new PdfRenderer(fileDescriptor);
 
         PdfRenderer.Page rendererPage = pdfRenderer.openPage(0);
@@ -216,19 +205,17 @@ public class UploadService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        checkNotNull(intent);
-
         if (counter.get() == 0) {
             startForeground(NOTIFICATION_ID, buildNotification());
         }
         Uri uri = intent.getParcelableExtra(URI);
-        checkNotNull(uri);
+        Objects.requireNonNull(uri);
         storeData(uri);
         return START_NOT_STICKY;
     }
 
     private void storeData(@NonNull Uri uri) {
-        checkNotNull(uri);
+
         final EVENTS events = EVENTS.getInstance(getApplicationContext());
         final THREADS threads = THREADS.getInstance(getApplicationContext());
 
@@ -236,14 +223,14 @@ public class UploadService extends Service {
         UPLOAD_SERVICE.submit(() -> {
             try {
                 IPFS ipfs = IPFS.getInstance(getApplicationContext());
-                checkNotNull(ipfs, "IPFS is not valid");
+
                 InputStream inputStream =
                         getContentResolver().openInputStream(uri);
-                checkNotNull(inputStream);
+                Objects.requireNonNull(inputStream);
 
                 ThumbnailService.FileDetails fileDetails =
                         ThumbnailService.getFileDetails(getApplicationContext(), uri);
-                checkNotNull(fileDetails);
+                Objects.requireNonNull(fileDetails);
 
                 String name = fileDetails.getFileName();
                 long size = fileDetails.getFileSize();
@@ -270,7 +257,7 @@ public class UploadService extends Service {
                 try {
 
                     CID cid = ipfs.storeInputStream(inputStream);
-                    checkNotNull(cid);
+                    Objects.requireNonNull(cid);
 
                     // cleanup of entries with same CID and hierarchy
                     List<Thread> sameEntries = threads.getThreadsByContentAndParent(cid, 0L);
@@ -304,7 +291,6 @@ public class UploadService extends Service {
 
     @Nullable
     private CID getThumbnail(@NonNull Uri uri) {
-        checkNotNull(uri);
 
         CID cid = null;
         byte[] bytes = null;
@@ -329,7 +315,6 @@ public class UploadService extends Service {
 
     @Nullable
     private byte[] getPreviewImage(@NonNull Uri uri) {
-        checkNotNull(uri);
 
         Bitmap bitmap = getBitmapThumbnail(uri);
         if (bitmap != null) {

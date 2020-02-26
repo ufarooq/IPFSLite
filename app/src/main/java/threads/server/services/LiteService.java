@@ -12,6 +12,7 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -24,9 +25,6 @@ import threads.server.core.peers.User;
 import threads.server.utils.Network;
 import threads.server.work.ConnectUserWorker;
 import threads.server.work.ConnectionWorker;
-
-import static androidx.core.util.Preconditions.checkArgument;
-import static androidx.core.util.Preconditions.checkNotNull;
 
 
 public class LiteService {
@@ -47,14 +45,14 @@ public class LiteService {
 
 
     public static boolean isAutoDownload(@NonNull Context context) {
-        checkNotNull(context);
+        Objects.requireNonNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(
                 APP_KEY, Context.MODE_PRIVATE);
         return sharedPref.getBoolean(AUTO_DOWNLOAD_KEY, true);
     }
 
     public static void setAutoDownload(@NonNull Context context, boolean automaticDownload) {
-        checkNotNull(context);
+        Objects.requireNonNull(context);
 
         SharedPreferences sharedPref = context.getSharedPreferences(
                 APP_KEY, Context.MODE_PRIVATE);
@@ -66,15 +64,15 @@ public class LiteService {
 
     @NonNull
     public static String getGateway(@NonNull Context context) {
-        checkNotNull(context);
+        Objects.requireNonNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(
                 APP_KEY, Context.MODE_PRIVATE);
         return sharedPref.getString(GATEWAY_KEY, "https://ipfs.io");
     }
 
     public static void setGateway(@NonNull Context context, @NonNull String gateway) {
-        checkNotNull(context);
-        checkNotNull(gateway);
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(gateway);
         SharedPreferences sharedPref = context.getSharedPreferences(
                 APP_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
@@ -84,14 +82,13 @@ public class LiteService {
     }
 
     public static int getPublishServiceTime(@NonNull Context context) {
-        checkNotNull(context);
+        Objects.requireNonNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         return sharedPref.getInt(PIN_SERVICE_TIME_KEY, 6);
     }
 
     public static void setPublisherServiceTime(@NonNull Context context, int timeout) {
-        checkNotNull(context);
-        checkArgument(timeout >= 0);
+        Objects.requireNonNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putInt(PIN_SERVICE_TIME_KEY, timeout);
@@ -100,13 +97,13 @@ public class LiteService {
 
 
     public static boolean isSendNotificationsEnabled(@NonNull Context context) {
-        checkNotNull(context);
+        Objects.requireNonNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         return sharedPref.getBoolean(SEND_NOTIFICATIONS_ENABLED_KEY, true);
     }
 
     public static void setSendNotificationsEnabled(@NonNull Context context, boolean enable) {
-        checkNotNull(context);
+        Objects.requireNonNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putBoolean(SEND_NOTIFICATIONS_ENABLED_KEY, enable);
@@ -115,13 +112,13 @@ public class LiteService {
 
 
     public static boolean isReceiveNotificationsEnabled(@NonNull Context context) {
-        checkNotNull(context);
+        Objects.requireNonNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         return sharedPref.getBoolean(RECEIVE_NOTIFICATIONS_ENABLED_KEY, true);
     }
 
     public static void setReceiveNotificationsEnabled(@NonNull Context context, boolean enable) {
-        checkNotNull(context);
+        Objects.requireNonNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(APP_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putBoolean(RECEIVE_NOTIFICATIONS_ENABLED_KEY, enable);
@@ -130,7 +127,7 @@ public class LiteService {
 
     @NonNull
     public static LiteService getInstance(@NonNull Context context) {
-        checkNotNull(context);
+        Objects.requireNonNull(context);
         if (INSTANCE == null) {
             synchronized (LiteService.class) {
 
@@ -147,8 +144,8 @@ public class LiteService {
 
 
     public static void connectPeer(@NonNull Context context, @NonNull PID user, boolean addMessage) {
-        checkNotNull(context);
-        checkNotNull(user);
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(user);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -197,7 +194,7 @@ public class LiteService {
 
     @NonNull
     public static String loadRawData(@NonNull Context context, @RawRes int id) {
-        checkNotNull(context);
+        Objects.requireNonNull(context);
 
         try (InputStream inputStream = context.getResources().openRawResource(id)) {
             try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {

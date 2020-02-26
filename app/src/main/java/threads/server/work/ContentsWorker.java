@@ -24,6 +24,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -46,9 +47,6 @@ import threads.server.services.LiteService;
 import threads.server.services.ThumbnailService;
 import threads.server.utils.Network;
 
-import static androidx.core.util.Preconditions.checkArgument;
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class ContentsWorker extends Worker {
     private static final String WID = "CW";
     private static final String TAG = ContentsWorker.class.getSimpleName();
@@ -58,9 +56,7 @@ public class ContentsWorker extends Worker {
     }
 
     public static void download(@NonNull Context context, @NonNull String cid, @NonNull String pid) {
-        checkNotNull(context);
-        checkNotNull(cid);
-        checkNotNull(pid);
+
         Constraints.Builder builder = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED);
 
@@ -82,7 +78,6 @@ public class ContentsWorker extends Worker {
     }
 
     private void downloadContent(@NonNull CID cid) {
-        checkNotNull(cid);
 
         THREADS threads = THREADS.getInstance(getApplicationContext());
         EVENTS events = EVENTS.getInstance(getApplicationContext());
@@ -110,9 +105,8 @@ public class ContentsWorker extends Worker {
     private void createThread(@NonNull CID cid, @Nullable String filename,
                               @Nullable String mimeType, long fileSize) {
 
-        final THREADS threads = THREADS.getInstance(getApplicationContext());
-        final IPFS ipfs = IPFS.getInstance(getApplicationContext());
-        checkNotNull(ipfs, "IPFS not valid");
+        THREADS threads = THREADS.getInstance(getApplicationContext());
+
         List<Thread> entries = threads.getThreadsByContentAndParent(cid, 0L);
 
         if (entries.isEmpty()) {
@@ -146,7 +140,7 @@ public class ContentsWorker extends Worker {
     }
 
     private String evaluateMimeType(@NonNull String filename) {
-        checkNotNull(filename);
+
         try {
             Optional<String> extension = ThumbnailService.getExtension(filename);
             if (extension.isPresent()) {
@@ -171,9 +165,9 @@ public class ContentsWorker extends Worker {
 
         try {
             String cidStr = getInputData().getString(Content.CID);
-            checkNotNull(cidStr);
+            Objects.requireNonNull(cidStr);
             String pidStr = getInputData().getString(Content.PID);
-            checkNotNull(pidStr);
+            Objects.requireNonNull(pidStr);
 
             Multihash.fromBase58(cidStr);
             Multihash.fromBase58(pidStr);
@@ -211,11 +205,9 @@ public class ContentsWorker extends Worker {
     }
 
     private void createBlockedUser(@NonNull PID pid) {
-        checkNotNull(pid);
 
-        IPFS ipfs = IPFS.getInstance(getApplicationContext());
+
         PEERS peers = PEERS.getInstance(getApplicationContext());
-        checkNotNull(ipfs, "IPFS not defined");
 
 
         if (peers.getUserByPID(pid) == null) {
@@ -291,7 +283,10 @@ public class ContentsWorker extends Worker {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         } finally {
             if (file.exists()) {
-                checkArgument(file.delete());
+                boolean result = file.delete();
+                if (!result) {
+                    Log.e(TAG, "Could not delete file");
+                }
             }
         }
 

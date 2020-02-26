@@ -18,6 +18,7 @@ import androidx.work.WorkerParameters;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -29,9 +30,6 @@ import threads.server.core.peers.Content;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.utils.Network;
-
-import static androidx.core.util.Preconditions.checkArgument;
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class DownloadThreadWorker extends Worker {
     private static final String WID = "DTW";
@@ -48,8 +46,6 @@ public class DownloadThreadWorker extends Worker {
     }
 
     public static void download(@NonNull Context context, long idx) {
-        checkNotNull(context);
-
 
         Constraints.Builder builder = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED);
@@ -81,13 +77,12 @@ public class DownloadThreadWorker extends Worker {
             THREADS threads = THREADS.getInstance(getApplicationContext());
 
             long idx = getInputData().getLong(Content.IDX, -1);
-            checkArgument(idx >= 0);
 
             Thread thread = threads.getThreadByIdx(idx);
-            checkNotNull(thread);
+            Objects.requireNonNull(thread);
 
             CID cid = thread.getContent();
-            checkNotNull(cid);
+            Objects.requireNonNull(cid);
 
             List<LinkInfo> links = getLinks(cid);
 
@@ -126,7 +121,6 @@ public class DownloadThreadWorker extends Worker {
     @Nullable
     private List<LinkInfo> getLinks(@NonNull CID cid) {
 
-        checkNotNull(cid);
         int timeout = InitApplication.getDownloadTimeout(getApplicationContext());
         IPFS ipfs = IPFS.getInstance(getApplicationContext());
         AtomicLong started = new AtomicLong(System.currentTimeMillis());
@@ -152,8 +146,6 @@ public class DownloadThreadWorker extends Worker {
     }
 
     private Thread getDirectoryThread(@NonNull Thread thread, @NonNull CID cid) {
-        checkNotNull(thread);
-        checkNotNull(cid);
 
         THREADS threads = THREADS.getInstance(getApplicationContext());
         List<Thread> entries = threads.getThreadsByContent(cid);
@@ -181,7 +173,7 @@ public class DownloadThreadWorker extends Worker {
 
                 long idx = createThread(cid, link, thread);
                 entry = THREADS.getInstance(getApplicationContext()).getThreadByIdx(idx);
-                checkNotNull(entry);
+                Objects.requireNonNull(entry);
 
                 threadList.add(entry);
             }
@@ -195,7 +187,7 @@ public class DownloadThreadWorker extends Worker {
                 DownloadThreadWorker.download(getApplicationContext(), thread.getIdx());
             } else {
                 CID content = thread.getContent();
-                checkNotNull(content);
+                Objects.requireNonNull(content);
                 DownloadContentWorker.download(getApplicationContext(), content,
                         thread.getIdx(), thread.getName(), thread.getSize());
             }
@@ -203,9 +195,6 @@ public class DownloadThreadWorker extends Worker {
     }
 
     private long createThread(@NonNull CID cid, @NonNull LinkInfo link, @NonNull Thread parent) {
-        checkNotNull(cid);
-        checkNotNull(link);
-        checkNotNull(parent);
 
 
         THREADS threads = THREADS.getInstance(getApplicationContext());

@@ -28,8 +28,6 @@ import threads.server.core.threads.Status;
 import threads.server.core.threads.Thread;
 import threads.server.services.MimeTypeService;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class PinsViewAdapter extends RecyclerView.Adapter<PinsViewAdapter.ViewHolder> implements PinsItemPosition {
 
     private static final String TAG = PinsViewAdapter.class.getSimpleName();
@@ -47,7 +45,7 @@ public class PinsViewAdapter extends RecyclerView.Adapter<PinsViewAdapter.ViewHo
     }
 
     private static String getCompactString(@NonNull String title) {
-        checkNotNull(title);
+
         return title.replace("\n", " ");
     }
 

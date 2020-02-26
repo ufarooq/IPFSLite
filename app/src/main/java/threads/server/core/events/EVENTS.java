@@ -5,8 +5,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.room.Room;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class EVENTS extends EventsAPI {
 
     public static final String ERROR = "FAILURE";
@@ -23,15 +21,12 @@ public class EVENTS extends EventsAPI {
     @NonNull
     private static EVENTS createEvents(@NonNull EventsDatabase eventsDatabase) {
 
-        checkNotNull(eventsDatabase);
-
         return new EVENTS.Builder()
                 .eventsDatabase(eventsDatabase)
                 .build();
     }
 
     public static EVENTS getInstance(@NonNull Context context) {
-        checkNotNull(context);
 
         if (INSTANCE == null) {
             synchronized (EVENTS.class) {
@@ -47,7 +42,7 @@ public class EVENTS extends EventsAPI {
     }
 
     public void error(@NonNull String content) {
-        checkNotNull(content);
+
         storeEvent(createEvent(ERROR, content));
     }
 
@@ -58,7 +53,7 @@ public class EVENTS extends EventsAPI {
     }
 
     public void permission(@NonNull String content) {
-        checkNotNull(content);
+
         storeEvent(createEvent(PERMISSION, content));
     }
 
@@ -76,12 +71,12 @@ public class EVENTS extends EventsAPI {
     }
 
     public void warning(@NonNull String content) {
-        checkNotNull(content);
+
         storeEvent(createEvent(WARNING, content));
     }
 
     public void exception(@NonNull Throwable throwable) {
-        checkNotNull(throwable);
+
         error("" + throwable.getLocalizedMessage());
     }
 
@@ -89,13 +84,12 @@ public class EVENTS extends EventsAPI {
         EventsDatabase eventsDatabase = null;
 
         EVENTS build() {
-            checkNotNull(eventsDatabase);
 
             return new EVENTS(this);
         }
 
         Builder eventsDatabase(@NonNull EventsDatabase eventsDatabase) {
-            checkNotNull(eventsDatabase);
+
             this.eventsDatabase = eventsDatabase;
             return this;
         }

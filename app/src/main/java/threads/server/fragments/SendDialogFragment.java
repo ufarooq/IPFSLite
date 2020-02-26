@@ -19,6 +19,7 @@ import com.google.gson.Gson;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -35,8 +36,6 @@ import threads.server.core.threads.Thread;
 import threads.server.model.LiteUsersViewModel;
 import threads.server.utils.ContactsViewAdapter;
 import threads.server.work.SendNotificationWorker;
-
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class SendDialogFragment extends BottomSheetDialogFragment implements ContactsViewAdapter.ValidateListener {
     public static final String TAG = SendDialogFragment.class.getSimpleName();
@@ -66,7 +65,7 @@ public class SendDialogFragment extends BottomSheetDialogFragment implements Con
 
 
         Bundle args = getArguments();
-        checkNotNull(args);
+        Objects.requireNonNull(args);
         final long[] indices = args.getLongArray(IDXS);
 
         RecyclerView recycler_view_contact_list = view.findViewById(R.id.send_contact_list);
@@ -96,7 +95,7 @@ public class SendDialogFragment extends BottomSheetDialogFragment implements Con
 
         LiteUsersViewModel messagesViewModel = new ViewModelProvider(this).
                 get(LiteUsersViewModel.class);
-        messagesViewModel.getLiteUsers().observe(this, (peers) -> {
+        messagesViewModel.getLiteUsers().observe(getViewLifecycleOwner(), (peers) -> {
 
             try {
                 if (peers != null) {
@@ -138,8 +137,6 @@ public class SendDialogFragment extends BottomSheetDialogFragment implements Con
 
 
     private void sendThreads(@NonNull List<User> users, long[] indices) {
-        checkNotNull(users);
-        checkNotNull(indices);
 
 
         if (users.isEmpty()) {
@@ -162,9 +159,9 @@ public class SendDialogFragment extends BottomSheetDialogFragment implements Con
                     String data = gson.toJson(contents);
                     IPFS ipfs = IPFS.getInstance(mContext);
                     CID cid = ipfs.storeText(data);
-                    checkNotNull(cid);
+                    Objects.requireNonNull(cid);
                     PID host = IPFS.getPID(mContext);
-                    checkNotNull(host);
+                    Objects.requireNonNull(host);
                     CDS contentService = CDS.getInstance(mContext);
                     contentService.insertContent(host.getPid(), cid.getCid(), true);
 

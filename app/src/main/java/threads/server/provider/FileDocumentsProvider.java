@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -45,7 +46,6 @@ import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 
 import static android.os.ParcelFileDescriptor.MODE_READ_ONLY;
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class FileDocumentsProvider extends DocumentsProvider {
     private static final String TAG = FileDocumentsProvider.class.getSimpleName();
@@ -390,7 +390,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
 
     @NonNull
     private File getContentFile(@NonNull CID cid) {
-        checkNotNull(cid);
+
         File file = new File(ipfs.getCacheDir(), cid.getCid());
         if (!file.exists()) {
             ipfs.storeToFile(file, cid);
@@ -414,7 +414,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
     @Override
     public boolean onCreate() {
         Context context = getContext();
-        checkNotNull(context);
+        Objects.requireNonNull(context);
         appName = context.getString(R.string.app_name);
         InitApplication.runUpdatesIfNecessary(context);
         threads = THREADS.getInstance(context);
@@ -447,9 +447,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
                                                 @NonNull OutputStream os,
                                                 @NonNull CID cid,
                                                 @Nullable CancellationSignal signal) throws Exception {
-            checkNotNull(ipfs);
-            checkNotNull(cid);
-            checkNotNull(os);
+
             Reader reader = ipfs.getReader(cid);
             try {
                 int size = 262158;

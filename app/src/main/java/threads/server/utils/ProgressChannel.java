@@ -13,15 +13,13 @@ import androidx.core.app.NotificationCompat;
 import threads.server.MainActivity;
 import threads.server.R;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class ProgressChannel {
 
     private static final String CHANNEL_ID = "CHANNEL_ID";
     private static final String TAG = ProgressChannel.class.getSimpleName();
 
     public static void createProgressChannel(@NonNull Context context) {
-        checkNotNull(context);
+
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             try {
@@ -46,8 +44,6 @@ public class ProgressChannel {
 
     public static NotificationCompat.Builder createProgressNotification(
             @NonNull Context context, @NonNull String content) {
-        checkNotNull(context);
-        checkNotNull(content);
 
         Intent main = new Intent(context, MainActivity.class);
 

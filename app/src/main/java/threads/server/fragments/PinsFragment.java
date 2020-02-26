@@ -1,5 +1,6 @@
 package threads.server.fragments;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -33,6 +34,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.work.WorkManager;
 
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -51,8 +53,6 @@ import threads.server.utils.PinsItemDetailsLookup;
 import threads.server.utils.PinsItemKeyProvider;
 import threads.server.utils.PinsViewAdapter;
 import threads.server.work.PublishContentWorker;
-
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class PinsFragment extends Fragment implements PinsViewAdapter.PinsViewAdapterListener {
 
@@ -140,7 +140,7 @@ public class PinsFragment extends Fragment implements PinsViewAdapter.PinsViewAd
 
 
         PinsViewModel mPinsViewModel = new ViewModelProvider(this).get(PinsViewModel.class);
-        mPinsViewModel.getVisiblePinnedThreads().observe(this, (threads) -> {
+        mPinsViewModel.getVisiblePinnedThreads().observe(getViewLifecycleOwner(), (threads) -> {
 
             if (threads != null) {
 
@@ -298,11 +298,9 @@ public class PinsFragment extends Fragment implements PinsViewAdapter.PinsViewAd
 
     }
 
+    @SuppressLint("RestrictedApi")
     @Override
     public void invokeAction(@NonNull Thread thread, @NonNull View view) {
-        checkNotNull(thread);
-        checkNotNull(view);
-
 
         try {
             PopupMenu menu = new PopupMenu(mContext, view);
@@ -470,7 +468,7 @@ public class PinsFragment extends Fragment implements PinsViewAdapter.PinsViewAd
             executor.submit(() -> {
                 try {
                     CID cid = threads.getThreadContent(idx);
-                    checkNotNull(cid);
+                    Objects.requireNonNull(cid);
                     String multihash = cid.getCid();
 
                     InfoDialogFragment.newInstance(multihash,
@@ -494,7 +492,7 @@ public class PinsFragment extends Fragment implements PinsViewAdapter.PinsViewAd
     private void clickThreadView(@NonNull Thread thread) {
 
         CID cid = thread.getContent();
-        checkNotNull(cid);
+        Objects.requireNonNull(cid);
 
         try {
             String gateway = LiteService.getGateway(mContext);
@@ -512,7 +510,6 @@ public class PinsFragment extends Fragment implements PinsViewAdapter.PinsViewAd
 
     @Override
     public void invokePauseAction(@NonNull Thread thread) {
-        checkNotNull(thread);
 
         if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
             return;

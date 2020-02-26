@@ -23,14 +23,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.util.Objects;
 import java.util.Optional;
 
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.server.utils.MimeType;
-
-import static androidx.core.util.Preconditions.checkArgument;
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class ThumbnailService {
 
@@ -40,12 +38,10 @@ public class ThumbnailService {
 
     @NonNull
     private static Bitmap getPDFBitmap(@NonNull Context context, @NonNull Uri uri) throws Exception {
-        checkNotNull(context);
-        checkNotNull(uri);
 
         ParcelFileDescriptor fileDescriptor = context.getContentResolver().openFileDescriptor(
                 uri, "r");
-        checkNotNull(fileDescriptor);
+        Objects.requireNonNull(fileDescriptor);
         PdfRenderer pdfRenderer = new PdfRenderer(fileDescriptor);
 
         PdfRenderer.Page rendererPage = pdfRenderer.openPage(0);
@@ -71,10 +67,7 @@ public class ThumbnailService {
 
     @Nullable
     static FileDetails getFileDetails(@NonNull Context context, @NonNull Uri uri) {
-        checkNotNull(context);
-        checkNotNull(uri);
 
-        Log.e(TAG, uri.toString());
 
         ContentResolver contentResolver = context.getContentResolver();
         String mimeType = contentResolver.getType(uri);
@@ -86,7 +79,7 @@ public class ThumbnailService {
                 DocumentsContract.Document.COLUMN_DISPLAY_NAME,
                 DocumentsContract.Document.COLUMN_SIZE}, null, null, null)) {
 
-            checkNotNull(cursor);
+            Objects.requireNonNull(cursor);
             cursor.moveToFirst();
 
             String fileName = cursor.getString(0);
@@ -114,9 +107,6 @@ public class ThumbnailService {
     public static CID getThumbnail(@NonNull Context context,
                                    @NonNull File file,
                                    @NonNull String mimeType) {
-        checkNotNull(context);
-        checkNotNull(file);
-        checkNotNull(mimeType);
 
 
         try {
@@ -149,9 +139,7 @@ public class ThumbnailService {
 
     @Nullable
     private static Bitmap getPreview(@NonNull Context context, @NonNull File file, @NonNull String mimeType) {
-        checkNotNull(context);
-        checkNotNull(file);
-        checkNotNull(mimeType);
+
 
         try {
             if (mimeType.startsWith("video")) {
@@ -211,9 +199,7 @@ public class ThumbnailService {
         private final long fileSize;
 
         private FileDetails(@NonNull String fileName, @NonNull String mimeType, long fileSize) {
-            checkNotNull(fileName);
-            checkNotNull(mimeType);
-            checkArgument(fileSize > -1);
+
             this.fileName = fileName;
             this.mimeType = mimeType;
             this.fileSize = fileSize;

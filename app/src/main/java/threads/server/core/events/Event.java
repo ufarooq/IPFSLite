@@ -9,8 +9,6 @@ import androidx.room.TypeConverters;
 
 import java.util.Date;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 @Entity
 public class Event {
 
@@ -27,9 +25,7 @@ public class Event {
     private final Date date;
 
     Event(@NonNull String identifier, @NonNull String content, @NonNull Date date) {
-        checkNotNull(identifier);
-        checkNotNull(content);
-        checkNotNull(date);
+
         this.identifier = identifier;
         this.date = date;
         this.content = content;

@@ -1,5 +1,6 @@
 package threads.server.fragments;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -28,8 +29,6 @@ import threads.server.services.LiteService;
 import threads.server.utils.PeersViewAdapter;
 import threads.server.work.ConnectionWorker;
 import threads.server.work.LoadPeersWorker;
-
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class SwarmFragment extends Fragment implements
         SwipeRefreshLayout.OnRefreshListener, PeersViewAdapter.PeersViewAdapterListener {
@@ -95,7 +94,7 @@ public class SwarmFragment extends Fragment implements
 
 
         PeersViewModel messagesViewModel = new ViewModelProvider(this).get(PeersViewModel.class);
-        messagesViewModel.getPeers().observe(this, (peers) -> {
+        messagesViewModel.getPeers().observe(getViewLifecycleOwner(), (peers) -> {
 
             try {
                 if (peers != null) {
@@ -124,11 +123,9 @@ public class SwarmFragment extends Fragment implements
         }
     }
 
-
+    @SuppressLint("RestrictedApi")
     @Override
     public void invokeAction(@NonNull Peer peer, @NonNull View view) {
-        checkNotNull(peer);
-        checkNotNull(view);
 
         try {
 
@@ -168,7 +165,7 @@ public class SwarmFragment extends Fragment implements
 
 
     private void clickPeerInfo(@NonNull String pid) {
-        checkNotNull(pid);
+
         try {
             InfoDialogFragment.newInstance(pid,
                     getString(R.string.peer_id),
@@ -182,7 +179,7 @@ public class SwarmFragment extends Fragment implements
 
 
     private void clickPeerAdd(@NonNull String pid) {
-        checkNotNull(pid);
+
         LiteService.connectPeer(mContext, PID.create(pid), true);
     }
 

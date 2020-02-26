@@ -1,7 +1,6 @@
 package threads.server.fragments;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -21,10 +20,12 @@ import android.view.inputmethod.InputMethodManager;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -32,8 +33,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import threads.server.R;
 import threads.server.core.events.EVENTS;
 import threads.server.core.peers.PEERS;
-
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class NameDialogFragment extends DialogFragment {
     public static final String TAG = NameDialogFragment.class.getSimpleName();
@@ -45,6 +44,7 @@ public class NameDialogFragment extends DialogFragment {
     private TextInputLayout edit_multi_hash_layout;
     private TextInputEditText multihash;
     private Context mContext;
+    private FragmentActivity mActivity;
 
     public static NameDialogFragment newInstance(@NonNull String pid, @NonNull String title) {
 
@@ -61,30 +61,29 @@ public class NameDialogFragment extends DialogFragment {
     public void onDetach() {
         super.onDetach();
         mContext = null;
+        mActivity = null;
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
+        mActivity = getActivity();
     }
 
     @Override
     @NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        Activity activity = getActivity();
-        checkNotNull(activity);
-
 
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
 
-        LayoutInflater inflater = activity.getLayoutInflater();
+        LayoutInflater inflater = mActivity.getLayoutInflater();
 
         Bundle args = getArguments();
-        checkNotNull(args);
+        Objects.requireNonNull(args);
         final String pid = args.getString(PID);
-        checkNotNull(pid);
+        Objects.requireNonNull(pid);
         String title = args.getString(TITLE);
 
 
@@ -131,7 +130,7 @@ public class NameDialogFragment extends DialogFragment {
 
 
                     Editable text = multihash.getText();
-                    checkNotNull(text);
+                    Objects.requireNonNull(text);
                     String name = text.toString();
 
                     name(pid, name);
@@ -158,8 +157,6 @@ public class NameDialogFragment extends DialogFragment {
 
 
     private void name(@NonNull String pid, @NonNull String name) {
-        checkNotNull(pid);
-        checkNotNull(name);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -179,7 +176,7 @@ public class NameDialogFragment extends DialogFragment {
         if (dialog instanceof AlertDialog) {
             AlertDialog alertDialog = (AlertDialog) dialog;
             Editable text = multihash.getText();
-            checkNotNull(text);
+            Objects.requireNonNull(text);
             String multi = text.toString();
 
 

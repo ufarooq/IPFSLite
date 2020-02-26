@@ -16,9 +16,6 @@ import threads.server.jobs.JobServicePublisher;
 import threads.server.services.LiteService;
 import threads.server.utils.ProgressChannel;
 
-import static androidx.core.util.Preconditions.checkArgument;
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class InitApplication extends Application {
     private static final String APP_KEY = "AppKey";
     private static final String UPDATE = "UPDATE";
@@ -28,14 +25,13 @@ public class InitApplication extends Application {
     private static final String DOWN_TIMEOUT_KEY = "downTimeoutKey";
 
     public static int getDownloadTimeout(@NonNull Context context) {
-        checkNotNull(context);
+
         SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
         return sharedPref.getInt(DOWN_TIMEOUT_KEY, 60);
     }
 
     public static void setDownloadTimeout(@NonNull Context context, int timeout) {
-        checkNotNull(context);
-        checkArgument(timeout >= 0);
+
         SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putInt(DOWN_TIMEOUT_KEY, timeout);
@@ -43,14 +39,13 @@ public class InitApplication extends Application {
     }
 
     public static int getConnectionTimeout(@NonNull Context context) {
-        checkNotNull(context);
+
         SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
         return sharedPref.getInt(TIMEOUT_KEY, 15);
     }
 
     public static void setConnectionTimeout(@NonNull Context context, int timeout) {
-        checkNotNull(context);
-        checkArgument(timeout >= 0);
+
         SharedPreferences sharedPref = context.getSharedPreferences(PREF_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putInt(TIMEOUT_KEY, timeout);
@@ -92,10 +87,9 @@ public class InitApplication extends Application {
 
                 InitApplication.setConnectionTimeout(context, 45);
                 InitApplication.setDownloadTimeout(context, 180);
-                
+
                 EntityService.setTangleTimeout(context, 60);
 
-                IPFS.setPubSubEnabled(context, false);
                 IPFS.setRandomSwarmPort(context, true);
 
 
@@ -113,16 +107,14 @@ public class InitApplication extends Application {
     }
 
     public static boolean getDontShowAgain(@NonNull Context context, @NonNull String key) {
-        checkNotNull(context);
-        checkNotNull(key);
+
         SharedPreferences sharedPref = context.getSharedPreferences(
                 APP_KEY, Context.MODE_PRIVATE);
         return sharedPref.getBoolean(key, false);
     }
 
     public static void setDontShowAgain(@NonNull Context context, @NonNull String key, boolean value) {
-        checkNotNull(context);
-        checkNotNull(key);
+
         SharedPreferences sharedPref = context.getSharedPreferences(
                 APP_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();

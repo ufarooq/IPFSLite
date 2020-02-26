@@ -6,8 +6,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class DiscoveryService implements NsdManager.DiscoveryListener {
     private static final String TAG = DiscoveryService.class.getSimpleName();
     private static DiscoveryService INSTANCE = null;
@@ -28,7 +26,7 @@ public class DiscoveryService implements NsdManager.DiscoveryListener {
     }
 
     public void setOnServiceFoundListener(@NonNull OnServiceFoundListener listener) {
-        checkNotNull(listener);
+
         mListener = listener;
     }
 

@@ -15,6 +15,7 @@ import androidx.work.WorkerParameters;
 import com.google.gson.Gson;
 
 import java.util.List;
+import java.util.Objects;
 
 import threads.iota.Entity;
 import threads.iota.EntityService;
@@ -26,8 +27,6 @@ import threads.server.core.contents.CDS;
 import threads.server.core.peers.AddressType;
 import threads.server.core.peers.Content;
 import threads.server.services.LiteService;
-
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class LoadNotificationsWorker extends Worker {
 
@@ -41,7 +40,7 @@ public class LoadNotificationsWorker extends Worker {
     }
 
     public static void notifications(@NonNull Context context) {
-        checkNotNull(context);
+
 
         if (!LiteService.isReceiveNotificationsEnabled(context)) {
             return;
@@ -71,7 +70,7 @@ public class LoadNotificationsWorker extends Worker {
         try {
             Gson gson = new Gson();
             PID host = IPFS.getPID(getApplicationContext());
-            checkNotNull(host);
+            Objects.requireNonNull(host);
 
             EntityService entityService = EntityService.getInstance(getApplicationContext());
             CDS contentService = CDS.getInstance(getApplicationContext());
@@ -91,17 +90,17 @@ public class LoadNotificationsWorker extends Worker {
                 if (data != null) {
 
                     IPFS ipfs = IPFS.getInstance(getApplicationContext());
-                    checkNotNull(ipfs, "IPFS not valid");
+
                     if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
                         try {
                             String privateKey = IPFS.getPrivateKey(getApplicationContext());
-                            checkNotNull(privateKey, "Private Key not valid");
+                            Objects.requireNonNull(privateKey, "Private Key not valid");
                             String pid = data.get(Content.PID);
-                            checkNotNull(pid);
+                            Objects.requireNonNull(pid);
                             String encCid = data.get(Content.CID);
-                            checkNotNull(encCid);
-                            final String cid = Encryption.decryptRSA(encCid, privateKey);
-                            checkNotNull(cid);
+                            Objects.requireNonNull(encCid);
+                            String cid = Encryption.decryptRSA(encCid, privateKey);
+                            Objects.requireNonNull(cid);
 
                             // check if cid is valid
                             try {

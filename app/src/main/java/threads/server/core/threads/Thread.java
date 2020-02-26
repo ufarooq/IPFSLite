@@ -13,8 +13,6 @@ import java.util.Objects;
 import threads.ipfs.CID;
 import threads.server.core.Converter;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 
 @androidx.room.Entity
 public class Thread {
@@ -128,7 +126,7 @@ public class Thread {
     }
 
     public void setMimeType(@NonNull String mimeType) {
-        checkNotNull(mimeType);
+
         this.mimeType = mimeType;
     }
 
@@ -143,7 +141,7 @@ public class Thread {
     }
 
     public boolean areItemsTheSame(@NonNull Thread thread) {
-        checkNotNull(thread);
+
         return idx == thread.getIdx();
 
     }

@@ -21,14 +21,11 @@ import threads.server.services.LiteService;
 import threads.server.work.ConnectionWorker;
 import threads.server.work.PublishContentWorker;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class JobServicePublisher extends JobService {
 
     private static final String TAG = JobServicePublisher.class.getSimpleName();
 
     public static void publish(@NonNull Context context) {
-        checkNotNull(context);
 
         int time = LiteService.getPublishServiceTime(context);
 

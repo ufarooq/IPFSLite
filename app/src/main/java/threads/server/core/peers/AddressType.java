@@ -8,17 +8,14 @@ import org.iota.jota.utils.TrytesConverter;
 import threads.iota.IOTA;
 import threads.ipfs.PID;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public enum AddressType {
     INBOX, PEER, NOTIFICATION;
 
     @NonNull
     public static String getAddress(@NonNull PID pid, @NonNull AddressType addressType) {
-        checkNotNull(pid);
-        checkNotNull(addressType);
+
         String address = TrytesConverter.asciiToTrytes(pid.getPid());
-        checkNotNull(address);
+
         switch (addressType) {
             case PEER:
                 return IOTA.addChecksum(

@@ -5,8 +5,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.room.Room;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class THREADS extends ThreadsAPI {
     public static final String TAG = THREADS.class.getSimpleName();
     private static THREADS INSTANCE = null;
@@ -17,7 +15,7 @@ public class THREADS extends ThreadsAPI {
 
     @NonNull
     private static THREADS createThreads(@NonNull ThreadsDatabase threadsDatabase) {
-        checkNotNull(threadsDatabase);
+
 
         return new THREADS.Builder()
                 .threadsDatabase(threadsDatabase)
@@ -25,7 +23,7 @@ public class THREADS extends ThreadsAPI {
     }
 
     public static THREADS getInstance(@NonNull Context context) {
-        checkNotNull(context);
+
 
         if (INSTANCE == null) {
             synchronized (THREADS.class) {
@@ -46,14 +44,12 @@ public class THREADS extends ThreadsAPI {
         ThreadsDatabase threadsDatabase = null;
 
         public THREADS build() {
-            checkNotNull(threadsDatabase);
-
 
             return new THREADS(this);
         }
 
         Builder threadsDatabase(@NonNull ThreadsDatabase threadsDatabase) {
-            checkNotNull(threadsDatabase);
+
             this.threadsDatabase = threadsDatabase;
             return this;
         }

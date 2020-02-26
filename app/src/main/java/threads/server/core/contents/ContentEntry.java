@@ -4,8 +4,6 @@ import androidx.annotation.NonNull;
 
 import java.util.Objects;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class ContentEntry {
     private final String filename;
     private final long size;
@@ -16,9 +14,6 @@ public class ContentEntry {
                  @NonNull String filename,
                  @NonNull String mimeType,
                  long size) {
-        checkNotNull(cid);
-        checkNotNull(filename);
-        checkNotNull(size);
         this.cid = cid;
         this.filename = filename;
         this.size = size;

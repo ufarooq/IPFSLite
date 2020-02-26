@@ -13,15 +13,12 @@ import threads.ipfs.IPFS;
 import threads.server.core.threads.THREADS;
 import threads.server.work.PublishContentWorker;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class ThreadsService {
 
 
     private static final String TAG = ThreadsService.class.getSimpleName();
 
     public static void removeThreads(@NonNull Context context, long... indices) {
-        checkNotNull(context);
 
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -32,8 +29,6 @@ public class ThreadsService {
 
                 THREADS threads = THREADS.getInstance(context);
                 IPFS ipfs = IPFS.getInstance(context);
-
-                checkNotNull(ipfs, "IPFS is not valid");
 
                 threads.setThreadsDeleting(indices);
 

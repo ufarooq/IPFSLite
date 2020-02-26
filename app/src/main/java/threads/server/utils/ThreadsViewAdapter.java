@@ -28,8 +28,6 @@ import threads.server.R;
 import threads.server.core.threads.Thread;
 import threads.server.services.MimeTypeService;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.ViewHolder> implements ThreadItemPosition {
 
     private static final String TAG = ThreadsViewAdapter.class.getSimpleName();
@@ -47,7 +45,7 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
     }
 
     private static String getCompactString(@NonNull String title) {
-        checkNotNull(title);
+
         return title.replace("\n", " ");
     }
 

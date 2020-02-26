@@ -9,8 +9,6 @@ import java.util.Objects;
 
 import threads.ipfs.PID;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 @androidx.room.Entity
 public class Peer {
 
@@ -27,7 +25,7 @@ public class Peer {
     }
 
     static Peer createPeer(@NonNull PID pid) {
-        checkNotNull(pid);
+
         return new Peer(pid.getPid());
     }
 
@@ -64,7 +62,7 @@ public class Peer {
     }
 
     public boolean areItemsTheSame(@NonNull Peer peer) {
-        checkNotNull(peer);
+
         return this.pid.equals(peer.pid);
 
     }

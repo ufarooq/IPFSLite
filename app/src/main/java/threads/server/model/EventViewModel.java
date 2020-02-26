@@ -10,8 +10,6 @@ import threads.server.core.events.EVENTS;
 import threads.server.core.events.Event;
 import threads.server.core.events.EventsDatabase;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class EventViewModel extends AndroidViewModel {
 
     private final EventsDatabase eventsDatabase;
@@ -36,12 +34,6 @@ public class EventViewModel extends AndroidViewModel {
 
     public LiveData<Event> getInfo() {
         return eventsDatabase.eventDao().getEvent(EVENTS.INFO);
-    }
-
-
-    public LiveData<Event> getEvent(@NonNull String event) {
-        checkNotNull(event);
-        return eventsDatabase.eventDao().getEvent(event);
     }
 
 

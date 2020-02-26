@@ -17,8 +17,6 @@ import threads.ipfs.IPFS;
 import threads.ipfs.Peer;
 import threads.server.core.peers.PEERS;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class LoadPeersWorker extends Worker {
 
 
@@ -29,7 +27,6 @@ public class LoadPeersWorker extends Worker {
     }
 
     public static void loadPeers(@NonNull Context context) {
-        checkNotNull(context);
 
 
         OneTimeWorkRequest syncWorkRequest =
@@ -48,8 +45,6 @@ public class LoadPeersWorker extends Worker {
             IPFS ipfs = IPFS.getInstance(getApplicationContext());
             PEERS peersInstance = PEERS.getInstance(getApplicationContext());
 
-            checkNotNull(ipfs);
-
             List<Peer> peers = ipfs.swarmPeers();
 
             List<threads.server.core.peers.Peer> list = new ArrayList<>();
@@ -67,7 +62,7 @@ public class LoadPeersWorker extends Worker {
 
 
     private threads.server.core.peers.Peer createPeer(@NonNull threads.ipfs.Peer peer) {
-        checkNotNull(peer);
+
         PEERS peers = PEERS.getInstance(getApplicationContext());
 
         return peers.createPeer(peer.getPid());

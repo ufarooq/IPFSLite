@@ -5,8 +5,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.room.Room;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class PEERS extends PeersAPI {
 
     private static PEERS INSTANCE = null;
@@ -18,8 +16,6 @@ public class PEERS extends PeersAPI {
     @NonNull
     private static PEERS createPeers(@NonNull UsersDatabase usersDatabase,
                                      @NonNull PeersDatabase peersDatabase) {
-        checkNotNull(usersDatabase);
-        checkNotNull(peersDatabase);
 
         return new Builder()
                 .usersDatabase(usersDatabase)
@@ -28,7 +24,6 @@ public class PEERS extends PeersAPI {
     }
 
     public static PEERS getInstance(@NonNull Context context) {
-        checkNotNull(context);
 
         if (INSTANCE == null) {
             synchronized (PEERS.class) {
@@ -52,21 +47,20 @@ public class PEERS extends PeersAPI {
         PeersDatabase peersDatabase = null;
 
         public PEERS build() {
-            checkNotNull(usersDatabase);
-            checkNotNull(peersDatabase);
+
             return new PEERS(this);
         }
 
 
         Builder usersDatabase(@NonNull UsersDatabase usersDatabase) {
-            checkNotNull(usersDatabase);
+
             this.usersDatabase = usersDatabase;
             return this;
         }
 
 
         Builder peersDatabase(@NonNull PeersDatabase peersDatabase) {
-            checkNotNull(peersDatabase);
+
             this.peersDatabase = peersDatabase;
             return this;
         }

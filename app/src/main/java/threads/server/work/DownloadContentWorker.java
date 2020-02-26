@@ -21,6 +21,7 @@ import com.j256.simplemagic.ContentInfo;
 
 import java.io.File;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 import threads.ipfs.CID;
@@ -34,9 +35,6 @@ import threads.server.services.ThumbnailService;
 import threads.server.utils.MimeType;
 import threads.server.utils.Network;
 import threads.server.utils.ProgressChannel;
-
-import static androidx.core.util.Preconditions.checkArgument;
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class DownloadContentWorker extends Worker {
     private static final String WID = "DCW";
@@ -58,9 +56,6 @@ public class DownloadContentWorker extends Worker {
     public static void download(@NonNull Context context, @NonNull CID cid,
                                 long idx, @NonNull String filename, long size) {
 
-        checkNotNull(context);
-        checkNotNull(cid);
-        checkNotNull(filename);
 
         Log.e(TAG, "DownloadContentWorker mark for running : " + filename);
 
@@ -100,16 +95,16 @@ public class DownloadContentWorker extends Worker {
             IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
             String filename = getInputData().getString(FN);
-            checkNotNull(filename);
+            Objects.requireNonNull(filename);
             String cidStr = getInputData().getString(Content.CID);
-            checkNotNull(cidStr);
+            Objects.requireNonNull(cidStr);
             long idx = getInputData().getLong(Content.IDX, -1);
-            checkArgument(idx >= 0);
+
             long size = getInputData().getLong(FS, -1);
 
             CID cid = CID.create(cidStr);
             Thread thread = threads.getThreadByIdx(idx);
-            checkNotNull(thread);
+            Objects.requireNonNull(thread);
 
             // security check that thread is not already seeding
             if (thread.isSeeding()) {
@@ -196,7 +191,10 @@ public class DownloadContentWorker extends Worker {
                 } else {
                     threads.resetThreadLeaching(idx);
                     if (file.exists()) {
-                        checkArgument(file.delete());
+                        boolean res = file.delete();
+                        if (!res) {
+                            Log.e(TAG, "Could not delete file");
+                        }
                     }
                 }
                 checkParentComplete(thread.getParent());
@@ -248,7 +246,7 @@ public class DownloadContentWorker extends Worker {
                 }
             }
             Thread thread = threads.getThreadByIdx(parent);
-            checkNotNull(thread);
+            Objects.requireNonNull(thread);
             checkParentComplete(thread.getParent());
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);

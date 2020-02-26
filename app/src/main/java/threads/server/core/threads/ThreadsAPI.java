@@ -13,9 +13,6 @@ import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
 
-import static androidx.core.util.Preconditions.checkArgument;
-import static androidx.core.util.Preconditions.checkNotNull;
-
 
 public class ThreadsAPI {
     private final static String TAG = ThreadsAPI.class.getSimpleName();
@@ -23,7 +20,7 @@ public class ThreadsAPI {
     private final ThreadsDatabase threadsDatabase;
 
     ThreadsAPI(@NonNull ThreadsDatabase threadsDatabase) {
-        checkNotNull(threadsDatabase);
+
         this.threadsDatabase = threadsDatabase;
     }
 
@@ -60,7 +57,6 @@ public class ThreadsAPI {
     }
 
     public void setThreadStatus(long idx, Status status) {
-        checkNotNull(status);
         getThreadsDatabase().threadDao().setStatus(idx, status);
     }
 
@@ -75,7 +71,7 @@ public class ThreadsAPI {
 
     @Nullable
     public String getMimeType(@NonNull Thread thread) {
-        checkNotNull(thread);
+
         return getThreadsDatabase().threadDao().getMimeType(thread.getIdx());
     }
 
@@ -87,33 +83,29 @@ public class ThreadsAPI {
 
 
     public void setMimeType(@NonNull Thread thread, @NonNull String mimeType) {
-        checkNotNull(thread);
-        checkNotNull(mimeType);
+
         getThreadsDatabase().threadDao().setMimeType(thread.getIdx(), mimeType);
     }
 
     public void setThreadMimeType(long idx, @NonNull String mimeType) {
-        checkNotNull(mimeType);
+
         getThreadsDatabase().threadDao().setMimeType(idx, mimeType);
     }
 
     @NonNull
     public Thread createThread(long parent) {
-        checkArgument(parent >= 0);
+
         return Thread.createThread(parent);
 
     }
 
 
     private boolean isReferenced(@NonNull CID cid) {
-        checkNotNull(cid);
+
         return getThreadsDatabase().threadDao().references(cid) > 0;
     }
 
     private void removeThread(@NonNull IPFS ipfs, @NonNull Thread thread) {
-        checkNotNull(ipfs);
-        checkNotNull(thread);
-
 
         getThreadsDatabase().threadDao().removeThreads(thread);
 
@@ -146,7 +138,7 @@ public class ThreadsAPI {
     }
 
     public void removeThreads(@NonNull IPFS ipfs, long... idxs) {
-        checkNotNull(ipfs);
+
         List<Thread> threads = getThreadsByIdx(idxs);
         for (Thread thread : threads) {
             removeThread(ipfs, thread);
@@ -154,16 +146,12 @@ public class ThreadsAPI {
     }
 
     private void rm(@NonNull IPFS ipfs, @NonNull CID cid) {
-        checkNotNull(ipfs);
-        checkNotNull(cid);
-        checkNotNull(cid);
+
         ipfs.rm(cid);
     }
 
 
     public void removeThreads(@NonNull IPFS ipfs, @NonNull List<Thread> threads) {
-        checkNotNull(ipfs);
-        checkNotNull(threads);
 
         getThreadsDatabase().threadDao().removeThreads(
                 Iterables.toArray(threads, Thread.class));
@@ -175,7 +163,6 @@ public class ThreadsAPI {
     }
 
     public long storeThread(@NonNull Thread thread) {
-        checkNotNull(thread);
         return getThreadsDatabase().threadDao().insertThread(thread);
     }
 
@@ -190,18 +177,18 @@ public class ThreadsAPI {
     }
 
     public void setThreadName(long idx, @NonNull String name) {
-        checkNotNull(name);
+
         getThreadsDatabase().threadDao().setName(idx, name);
     }
 
     public void setThreadContent(long idx, @NonNull CID cid) {
-        checkNotNull(cid);
+
         Multihash.fromBase58(cid.getCid());
         getThreadsDatabase().threadDao().setContent(idx, cid);
     }
 
     public void setThreadThumbnail(long idx, @NonNull CID image) {
-        checkNotNull(image);
+
         getThreadsDatabase().threadDao().setThumbnail(idx, image);
     }
 
@@ -257,19 +244,18 @@ public class ThreadsAPI {
 
     @NonNull
     public List<Thread> getThreadsByContentAndParent(@NonNull CID cid, long thread) {
-        checkNotNull(cid);
+
         return getThreadsDatabase().threadDao().getThreadsByContentAndParent(cid, thread);
     }
 
     @NonNull
     public List<Thread> getThreadsByContent(@NonNull CID cid) {
-        checkNotNull(cid);
+
         return getThreadsDatabase().threadDao().getThreadsByContent(cid);
     }
 
     public List<Thread> getSeedingThreadsByQuery(String query) {
 
-        checkNotNull(query);
         String searchQuery = query.trim();
         if (!searchQuery.startsWith("%")) {
             searchQuery = "%" + searchQuery;
@@ -281,7 +267,7 @@ public class ThreadsAPI {
     }
 
     public void setThreadProgress(long idx, int progress) {
-        checkArgument(progress >= 0 && progress <= 100);
+
         getThreadsDatabase().threadDao().setProgress(idx, progress);
     }
 

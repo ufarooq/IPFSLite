@@ -8,8 +8,6 @@ import java.util.Objects;
 
 import threads.server.core.threads.Thread;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class PinsDiffCallback extends DiffUtil.Callback {
     private final List<Thread> mOldList;
     private final List<Thread> mNewList;
@@ -41,8 +39,7 @@ public class PinsDiffCallback extends DiffUtil.Callback {
     }
 
     private boolean sameContent(@NonNull Thread t, @NonNull Thread o) {
-        checkNotNull(t);
-        checkNotNull(o);
+
         if (t == o) return true;
         return t.isPinned() == o.isPinned() &&
                 t.isDeleting() == o.isDeleting() &&

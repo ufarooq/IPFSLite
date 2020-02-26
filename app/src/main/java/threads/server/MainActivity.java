@@ -72,7 +72,6 @@ import threads.server.work.ConnectionWorker;
 import threads.server.work.LoadNotificationsWorker;
 import threads.server.work.LoadPeersWorker;
 
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class MainActivity extends AppCompatActivity implements
         NavigationView.OnNavigationItemSelectedListener,
@@ -123,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements
             case R.id.nav_id: {
                 try {
                     PID pid = IPFS.getPID(getApplicationContext());
-                    checkNotNull(pid);
+                    Objects.requireNonNull(pid);
                     ShowAccountDialogFragment.newInstance(pid.getPid()).show(
                             getSupportFragmentManager(), ShowAccountDialogFragment.TAG);
                 } catch (Throwable e) {
@@ -229,7 +228,7 @@ public class MainActivity extends AppCompatActivity implements
             case R.id.nav_inbox: {
                 try {
                     PID pid = IPFS.getPID(this);
-                    checkNotNull(pid);
+                    Objects.requireNonNull(pid);
                     String address = AddressType.getAddress(pid, AddressType.NOTIFICATION);
                     Uri uri = Uri.parse(getAddressLink(address));
 
@@ -257,7 +256,7 @@ public class MainActivity extends AppCompatActivity implements
             serviceInfo.setServiceType(serviceType);
             serviceInfo.setPort(port);
             mNsdManager = (NsdManager) getSystemService(Context.NSD_SERVICE);
-            checkNotNull(mNsdManager);
+            Objects.requireNonNull(mNsdManager);
             mNsdManager.registerService(serviceInfo, NsdManager.PROTOCOL_DNS_SD,
                     RegistrationService.getInstance());
 
@@ -290,7 +289,7 @@ public class MainActivity extends AppCompatActivity implements
                             }
                             if (connect) {
 
-                                // todo whay sometimes not working URGENT
+                                // todo sometimes not working URGENT
                                 Multihash.fromBase58(serviceName);
 
                                 PID pid = PID.create(serviceName);
@@ -504,7 +503,7 @@ public class MainActivity extends AppCompatActivity implements
 
 
         PID host = IPFS.getPID(getApplicationContext());
-        checkNotNull(host);
+        Objects.requireNonNull(host);
         int port = IPFS.getSwarmPort(getApplicationContext());
         registerService(port, host.getPid());
 
@@ -530,7 +529,6 @@ public class MainActivity extends AppCompatActivity implements
 
 
     public void storeText(@NonNull String text) {
-        checkNotNull(text);
 
         final THREADS threads = THREADS.getInstance(getApplicationContext());
         final IPFS ipfs = IPFS.getInstance(getApplicationContext());
@@ -541,7 +539,7 @@ public class MainActivity extends AppCompatActivity implements
             try {
 
                 PID pid = IPFS.getPID(getApplicationContext());
-                checkNotNull(pid);
+                Objects.requireNonNull(pid);
 
                 String mimeType = MimeType.PLAIN_MIME_TYPE;
 
@@ -555,7 +553,7 @@ public class MainActivity extends AppCompatActivity implements
 
                 try {
                     CID cid = ipfs.storeText(text);
-                    checkNotNull(cid);
+                    Objects.requireNonNull(cid);
 
 
                     // cleanup of entries with same CID and hierarchy
@@ -612,16 +610,19 @@ public class MainActivity extends AppCompatActivity implements
     private void handleSend(ShareCompat.IntentReader intentReader) {
 
         try {
-
+            Objects.requireNonNull(intentReader);
             if (intentReader.isMultipleShare()) {
                 for (int i = 0; i < intentReader.getStreamCount(); i++) {
-                    UploadService.invoke(getApplicationContext(), intentReader.getStream(i));
+                    UploadService.invoke(getApplicationContext(), Objects.requireNonNull(intentReader.getStream(i)));
                 }
             } else {
                 Uri uri = intentReader.getStream();
+                Objects.requireNonNull(uri);
                 String type = intentReader.getType();
                 if ("text/plain".equals(type)) {
-                    String text = intentReader.getText().toString();
+                    CharSequence textObject = intentReader.getText();
+                    Objects.requireNonNull(textObject);
+                    String text = textObject.toString();
                     if (!text.isEmpty()) {
                         CodecDecider result = CodecDecider.evaluate(text);
 
@@ -636,6 +637,7 @@ public class MainActivity extends AppCompatActivity implements
                     }
                 } else if ("text/html".equals(type)) {
                     String html = intentReader.getHtmlText();
+                    Objects.requireNonNull(html);
                     if (!html.isEmpty()) {
                         storeText(html);
                     }
@@ -658,7 +660,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
 
-    private class PagerAdapter extends FragmentStatePagerAdapter {
+    private static class PagerAdapter extends FragmentStatePagerAdapter {
 
 
         PagerAdapter(FragmentManager fm) {

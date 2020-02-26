@@ -14,10 +14,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
+import java.util.Objects;
+
 import threads.server.R;
 import threads.server.utils.MimeType;
 
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class WebViewDialogFragment extends DialogFragment {
 
@@ -27,7 +28,7 @@ public class WebViewDialogFragment extends DialogFragment {
 
 
     public static WebViewDialogFragment newInstance(@NonNull String data) {
-        checkNotNull(data);
+
         Bundle bundle = new Bundle();
         bundle.putString(DATA, data);
 
@@ -57,7 +58,7 @@ public class WebViewDialogFragment extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
 
         Bundle args = getArguments();
-        checkNotNull(args);
+        Objects.requireNonNull(args);
         String data = args.getString(DATA);
 
         WebView wv = new WebView(getContext());

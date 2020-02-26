@@ -27,12 +27,12 @@ import androidx.core.app.ShareCompat;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentActivity;
 
+import java.util.Objects;
+
 import threads.server.MainActivity;
 import threads.server.R;
 import threads.server.core.events.EVENTS;
 import threads.server.provider.FileDocumentsProvider;
-
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class ShowAccountDialogFragment extends DialogFragment implements DialogInterface.OnClickListener {
     public static final String TAG = ShowAccountDialogFragment.class.getSimpleName();
@@ -48,7 +48,7 @@ public class ShowAccountDialogFragment extends DialogFragment implements DialogI
     }
 
     public static ShowAccountDialogFragment newInstance(@NonNull String pid) {
-        checkNotNull(pid);
+
 
         Bundle bundle = new Bundle();
         bundle.putString(PID, pid);
@@ -78,9 +78,9 @@ public class ShowAccountDialogFragment extends DialogFragment implements DialogI
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
         Bundle bundle = getArguments();
-        checkNotNull(bundle);
+        Objects.requireNonNull(bundle);
         code = bundle.getString(PID);
-        checkNotNull(code);
+        Objects.requireNonNull(code);
 
         message = getString(R.string.account_access);
 
@@ -148,8 +148,7 @@ public class ShowAccountDialogFragment extends DialogFragment implements DialogI
     }
 
     private void shareQRCode(@NonNull String code, @NonNull String message) {
-        checkNotNull(code);
-        checkNotNull(message);
+
         try {
 
             Uri uri = FileDocumentsProvider.getUriForBitmap(code);

@@ -1,7 +1,6 @@
 package threads.server.fragments;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -21,10 +20,12 @@ import android.view.inputmethod.InputMethodManager;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentActivity;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import threads.ipfs.CID;
@@ -34,8 +35,6 @@ import threads.server.core.events.EVENTS;
 import threads.server.services.DownloaderService;
 import threads.server.utils.CodecDecider;
 import threads.server.work.ConnectionWorker;
-
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class EditMultihashDialogFragment extends DialogFragment {
     public static final String TAG = EditMultihashDialogFragment.class.getSimpleName();
@@ -47,17 +46,20 @@ public class EditMultihashDialogFragment extends DialogFragment {
     private TextInputLayout edit_multihash_layout;
     private TextInputEditText multihash;
     private Context mContext;
+    private FragmentActivity mActivity;
 
     @Override
     public void onDetach() {
         super.onDetach();
         mContext = null;
+        mActivity = null;
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
+        mActivity = getActivity();
     }
 
 
@@ -65,14 +67,11 @@ public class EditMultihashDialogFragment extends DialogFragment {
     @NonNull
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
-        Activity activity = getActivity();
-        checkNotNull(activity);
-
 
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
 
 
-        LayoutInflater inflater = activity.getLayoutInflater();
+        LayoutInflater inflater = mActivity.getLayoutInflater();
 
 
         @SuppressLint("InflateParams") View view = inflater.inflate(R.layout.edit_view, null);
@@ -117,7 +116,7 @@ public class EditMultihashDialogFragment extends DialogFragment {
 
 
                     Editable text = multihash.getText();
-                    checkNotNull(text);
+                    Objects.requireNonNull(text);
                     String hash = text.toString();
 
                     downloadMultihash(hash);
@@ -149,7 +148,7 @@ public class EditMultihashDialogFragment extends DialogFragment {
         if (dialog instanceof AlertDialog) {
             AlertDialog alertDialog = (AlertDialog) dialog;
             Editable text = multihash.getText();
-            checkNotNull(text);
+            Objects.requireNonNull(text);
             String multi = text.toString();
 
 
@@ -198,7 +197,6 @@ public class EditMultihashDialogFragment extends DialogFragment {
     }
 
     private void downloadMultihash(@NonNull String codec) {
-        checkNotNull(codec);
 
         try {
             CodecDecider codecDecider = CodecDecider.evaluate(codec);

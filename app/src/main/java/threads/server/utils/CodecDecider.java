@@ -12,8 +12,6 @@ import java.net.URI;
 import threads.ipfs.Multihash;
 import threads.server.core.peers.Content;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 
 public class CodecDecider {
 
@@ -26,7 +24,7 @@ public class CodecDecider {
     }
 
     public static CodecDecider evaluate(@NonNull String code) {
-        checkNotNull(code);
+
         CodecDecider codecDecider = new CodecDecider();
 
 
@@ -100,7 +98,7 @@ public class CodecDecider {
     }
 
     private void setContent(@NonNull Content map) {
-        checkNotNull(map);
+
         this.map = map;
     }
 

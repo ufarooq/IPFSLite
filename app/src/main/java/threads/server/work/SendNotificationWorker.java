@@ -16,6 +16,7 @@ import androidx.work.WorkerParameters;
 import com.google.gson.Gson;
 
 import java.util.List;
+import java.util.Objects;
 
 import threads.iota.EntityService;
 import threads.ipfs.Encryption;
@@ -27,8 +28,6 @@ import threads.server.core.peers.AddressType;
 import threads.server.core.peers.Content;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
-
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class SendNotificationWorker extends Worker {
 
@@ -42,9 +41,7 @@ public class SendNotificationWorker extends Worker {
     }
 
     private static void send(@NonNull Context context, @NonNull String pid, @NonNull String cid) {
-        checkNotNull(context);
-        checkNotNull(pid);
-        checkNotNull(cid);
+
         Constraints.Builder builder = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED);
 
@@ -69,9 +66,7 @@ public class SendNotificationWorker extends Worker {
     public static void sendUsers(@NonNull Context context,
                                  @NonNull List<User> users,
                                  @NonNull String cid) {
-        checkNotNull(context);
-        checkNotNull(users);
-        checkNotNull(cid);
+
         WorkManager.getInstance(context).cancelUniqueWork(LoadNotificationsWorker.TAG);
         for (User user : users) {
             send(context, user.getPid(), cid);
@@ -83,10 +78,10 @@ public class SendNotificationWorker extends Worker {
     public Result doWork() {
 
         String pid = getInputData().getString(Content.PID);
-        checkNotNull(pid);
+        Objects.requireNonNull(pid);
 
         String cid = getInputData().getString(Content.CID);
-        checkNotNull(cid);
+        Objects.requireNonNull(cid);
         long start = System.currentTimeMillis();
 
         Log.e(TAG, " start [" + cid + "]...");
@@ -107,15 +102,12 @@ public class SendNotificationWorker extends Worker {
 
     private void notify(@NonNull String pid, @NonNull String cid, long startTime) {
 
-        checkNotNull(pid);
-        checkNotNull(cid);
-
         try {
             Gson gson = new Gson();
             PEERS peers = PEERS.getInstance(getApplicationContext());
             PID host = IPFS.getPID(getApplicationContext());
             EVENTS events = EVENTS.getInstance(getApplicationContext());
-            checkNotNull(host);
+            Objects.requireNonNull(host);
 
             EntityService entityService = EntityService.getInstance(getApplicationContext());
             String address = AddressType.getAddress(

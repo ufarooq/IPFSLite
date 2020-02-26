@@ -84,10 +84,10 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
     // Android (LICENSE done)
-    implementation "androidx.work:work-runtime:2.3.1"
+    implementation "androidx.work:work-runtime:2.3.2"
 
     // Android (LICENSE done)
-    implementation 'com.google.android.material:material:1.2.0-alpha04'
+    implementation 'com.google.android.material:material:1.2.0-alpha05'
 
     // Android (LICENSE done)
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0-alpha03'
@@ -108,8 +108,9 @@ dependencies {
     implementation 'com.amulyakhare:com.amulyakhare.textdrawable:1.0.1'
 
     // API (LICENSE done)
-    implementation 'androidx.room:room-runtime:2.2.3'
+    implementation 'androidx.room:room-runtime:2.2.4'
 
+    // TODO remove API
     // API (LICENSE done)
     implementation 'com.google.guava:guava:28.2-jre'
 
@@ -123,7 +124,7 @@ dependencies {
     implementation 'threads.mobile:ipfs:0.4.7'
 
     // API (LICENSE done)
-    implementation 'threads.core:ipfs:0.5.8'
+    implementation 'threads.core:ipfs:0.5.9'
 
     // API (LICENSE done)
     implementation 'com.google.code.gson:gson:2.8.6'
@@ -137,7 +138,7 @@ dependencies {
     // API (LICENSE done)
     implementation 'androidx.recyclerview:recyclerview-selection:1.0.0'
 
-    annotationProcessor 'androidx.room:room-compiler:2.2.3'
+    annotationProcessor 'androidx.room:room-compiler:2.2.4'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
 
 }

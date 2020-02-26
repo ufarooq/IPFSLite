@@ -16,15 +16,11 @@ import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.work.DownloadThreadWorker;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class DownloaderService {
 
     private static final String TAG = DownloaderService.class.getSimpleName();
 
     public static void download(@NonNull Context context, @NonNull CID cid) {
-        checkNotNull(context);
-        checkNotNull(cid);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {

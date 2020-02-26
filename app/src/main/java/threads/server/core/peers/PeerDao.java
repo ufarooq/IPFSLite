@@ -17,9 +17,6 @@ public interface PeerDao {
     @Query("DELETE FROM Peer")
     void clear();
 
-    @Query("SELECT * FROM Peer WHERE pid = :pid")
-    Peer getPeerByPid(String pid);
-
     @Query("SELECT * FROM Peer")
     LiveData<List<Peer>> getLiveDataPeers();
 

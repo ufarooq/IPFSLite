@@ -1,6 +1,7 @@
 package threads.server.fragments;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.SearchManager;
 import android.content.ClipData;
@@ -51,6 +52,7 @@ import com.google.zxing.integration.android.IntentResult;
 import java.io.OutputStream;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
@@ -79,8 +81,6 @@ import threads.server.utils.ThreadsViewAdapter;
 import threads.server.work.ConnectionWorker;
 import threads.server.work.DownloadThreadWorker;
 import threads.server.work.LoadNotificationsWorker;
-
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class ThreadsFragment extends Fragment implements
         SwipeRefreshLayout.OnRefreshListener, ThreadsViewAdapter.ThreadsViewAdapterListener {
@@ -121,7 +121,7 @@ public class ThreadsFragment extends Fragment implements
         mListener = (ThreadsFragment.ActionListener) mActivity;
         isTablet = getResources().getBoolean(R.bool.isTablet);
         PackageManager pm = mContext.getPackageManager();
-        hasCamera = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA);
+        hasCamera = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
     }
 
     @Override
@@ -238,7 +238,7 @@ public class ThreadsFragment extends Fragment implements
 
         SearchManager searchManager = (SearchManager)
                 mActivity.getSystemService(Context.SEARCH_SERVICE);
-        checkNotNull(searchManager);
+        Objects.requireNonNull(searchManager);
 
         MenuItem searchMenuItem = menu.findItem(R.id.action_search);
 
@@ -261,7 +261,7 @@ public class ThreadsFragment extends Fragment implements
         });
         mSearchView.setIconifiedByDefault(true);
         String query = mSelectionViewModel.getQuery().getValue();
-        checkNotNull(query);
+        Objects.requireNonNull(query);
         mSearchView.setQuery(query, true);
         mSearchView.setIconified(query.isEmpty());
 
@@ -389,7 +389,7 @@ public class ThreadsFragment extends Fragment implements
         mSelectionViewModel = new ViewModelProvider(mActivity).get(SelectionViewModel.class);
 
 
-        mSelectionViewModel.getParentThread().observe(this, (threadIdx) -> {
+        mSelectionViewModel.getParentThread().observe(getViewLifecycleOwner(), (threadIdx) -> {
 
             if (threadIdx != null) {
 
@@ -405,11 +405,11 @@ public class ThreadsFragment extends Fragment implements
 
         });
 
-        mSelectionViewModel.getQuery().observe(this, (query) -> {
+        mSelectionViewModel.getQuery().observe(getViewLifecycleOwner(), (query) -> {
 
             if (query != null) {
                 Long parent = mSelectionViewModel.getParentThread().getValue();
-                checkNotNull(parent);
+                Objects.requireNonNull(parent);
                 updateDirectory(parent, query);
             }
 
@@ -516,7 +516,7 @@ public class ThreadsFragment extends Fragment implements
             LiveData<List<Thread>> liveData = mThreadViewModel.getVisibleChildrenByQuery(parent, query);
             observer.set(liveData);
 
-            liveData.observe(this, (threads) -> {
+            liveData.observe(getViewLifecycleOwner(), (threads) -> {
 
                 if (threads != null) {
 
@@ -624,10 +624,9 @@ public class ThreadsFragment extends Fragment implements
 
     }
 
+    @SuppressLint("RestrictedApi")
     @Override
     public void invokeAction(@NonNull Thread thread, @NonNull View view) {
-        checkNotNull(thread);
-        checkNotNull(view);
 
 
         try {
@@ -705,11 +704,11 @@ public class ThreadsFragment extends Fragment implements
         executor.submit(() -> {
             try {
                 Thread thread = threads.getThreadByIdx(idx);
-                checkNotNull(thread);
+                Objects.requireNonNull(thread);
                 ComponentName[] names = {new ComponentName(
                         mActivity.getApplicationContext(), MainActivity.class)};
                 CID cid = thread.getContent();
-                checkNotNull(cid);
+                Objects.requireNonNull(cid);
                 Uri uri = FileDocumentsProvider.getUriForBitmap(cid.getCid());
                 Intent intent = ShareCompat.IntentBuilder.from(mActivity)
                         .setStream(uri)
@@ -751,7 +750,7 @@ public class ThreadsFragment extends Fragment implements
             executor.submit(() -> {
 
                 Thread thread = threadsAPI.getThreadByIdx(idx);
-                checkNotNull(thread);
+                Objects.requireNonNull(thread);
 
                 threadContent = thread.getContent();
 
@@ -778,7 +777,7 @@ public class ThreadsFragment extends Fragment implements
     }
 
     private void clickThreadPublish(@NonNull Thread thread, boolean pinned) {
-        checkNotNull(thread);
+
         if (pinned) {
 
             if (thread.isDir()) {
@@ -918,7 +917,6 @@ public class ThreadsFragment extends Fragment implements
 
     @Override
     public void onClick(@NonNull Thread thread) {
-        checkNotNull(thread);
 
         if (SystemClock.elapsedRealtime() - mLastClickTime < 500) {
             return;
@@ -962,7 +960,7 @@ public class ThreadsFragment extends Fragment implements
 
         } else {
             Long idx = mSelectionViewModel.getParentThread().getValue();
-            checkNotNull(idx);
+            Objects.requireNonNull(idx);
             final THREADS threads = THREADS.getInstance(mContext);
             final EVENTS events = EVENTS.getInstance(mContext);
             ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -992,7 +990,7 @@ public class ThreadsFragment extends Fragment implements
             executor.submit(() -> {
                 try {
                     CID cid = threads.getThreadContent(idx);
-                    checkNotNull(cid);
+                    Objects.requireNonNull(cid);
                     String multihash = cid.getCid();
 
                     InfoDialogFragment.newInstance(multihash,
@@ -1021,12 +1019,12 @@ public class ThreadsFragment extends Fragment implements
         executor.submit(() -> {
             try {
                 Thread thread = threads.getThreadByIdx(idx);
-                checkNotNull(thread);
+                Objects.requireNonNull(thread);
 
                 if (thread.isSeeding()) {
 
                     CID cid = thread.getContent();
-                    checkNotNull(cid);
+                    Objects.requireNonNull(cid);
 
 
                     String mimeType = thread.getMimeType();
@@ -1060,7 +1058,7 @@ public class ThreadsFragment extends Fragment implements
 
     @Override
     public void invokeDownload(@NonNull Thread thread) {
-        checkNotNull(thread);
+
 
         if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
             return;
@@ -1084,7 +1082,6 @@ public class ThreadsFragment extends Fragment implements
 
     @Override
     public void invokePauseAction(@NonNull Thread thread) {
-        checkNotNull(thread);
 
         if (SystemClock.elapsedRealtime() - mLastClickTime < CLICK_OFFSET) {
             return;
@@ -1137,8 +1134,6 @@ public class ThreadsFragment extends Fragment implements
 
 
     private void downloadMultihash(@NonNull String codec) {
-        checkNotNull(codec);
-
 
         try {
             CodecDecider codecDecider = CodecDecider.evaluate(codec);
@@ -1159,7 +1154,7 @@ public class ThreadsFragment extends Fragment implements
     private void clickMultihashWork() {
         PackageManager pm = mContext.getPackageManager();
         try {
-            if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+            if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
                 IntentIntegrator integrator = IntentIntegrator.forSupportFragment(this);
                 integrator.setOrientationLocked(false);
                 integrator.initiateScan();

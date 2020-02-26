@@ -24,8 +24,6 @@ import threads.server.MainActivity;
 import threads.server.R;
 import threads.server.work.ConnectionWorker;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 
 public class DaemonService extends Service {
 
@@ -46,7 +44,7 @@ public class DaemonService extends Service {
     };
 
     public static void invoke(@NonNull Context context, boolean startDaemon) {
-        checkNotNull(context);
+
         try {
             Intent intent = new Intent(context, DaemonService.class);
             intent.putExtra(START_DAEMON, startDaemon);
@@ -57,7 +55,7 @@ public class DaemonService extends Service {
     }
 
     private static void createChannel(@NonNull Context context) {
-        checkNotNull(context);
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             try {
                 CharSequence name = context.getString(R.string.daemon_channel_name);
@@ -87,7 +85,7 @@ public class DaemonService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        checkNotNull(intent);
+
         if (intent.getBooleanExtra(START_DAEMON, false)) {
 
             startForeground(NOTIFICATION_ID, buildNotification());

@@ -3,8 +3,6 @@ package threads.server.core.threads;
 import androidx.annotation.NonNull;
 import androidx.room.TypeConverter;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 
 public enum Status {
     UNKNOWN(0),
@@ -14,13 +12,13 @@ public enum Status {
     private final Integer code;
 
     Status(@NonNull Integer code) {
-        checkNotNull(code);
+
         this.code = code;
     }
 
     @TypeConverter
     public static Status toStatus(Integer status) {
-        checkNotNull(status);
+
         if (status.equals(Status.SUCCESS.getCode())) {
             return Status.SUCCESS;
         } else if (status.equals(Status.FAILURE.getCode())) {
@@ -34,7 +32,7 @@ public enum Status {
 
     @TypeConverter
     public static Integer toInteger(Status status) {
-        checkNotNull(status);
+
         return status.getCode();
     }
 

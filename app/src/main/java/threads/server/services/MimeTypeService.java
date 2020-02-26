@@ -7,13 +7,11 @@ import androidx.annotation.NonNull;
 import threads.server.R;
 import threads.server.utils.MimeType;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class MimeTypeService {
 
 
     public static int getMediaResource(@NonNull String mimeType) {
-        checkNotNull(mimeType);
+
         if (!mimeType.isEmpty()) {
             if (mimeType.equals(MimeType.OCTET_MIME_TYPE)) {
                 return R.drawable.file_star;

@@ -14,12 +14,11 @@ import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
 import java.util.List;
+import java.util.Objects;
 
 import threads.server.core.contents.CDS;
 import threads.server.core.contents.Content;
 import threads.server.core.peers.PEERS;
-
-import static androidx.core.util.Preconditions.checkNotNull;
 
 public class DownloadContentsWorker extends Worker {
 
@@ -32,7 +31,7 @@ public class DownloadContentsWorker extends Worker {
     }
 
     public static void download(@NonNull Context context, @NonNull String pid) {
-        checkNotNull(context);
+
         Constraints.Builder builder = new Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED);
 
@@ -60,7 +59,7 @@ public class DownloadContentsWorker extends Worker {
 
         long start = System.currentTimeMillis();
         String pid = getInputData().getString(threads.server.core.peers.Content.PID);
-        checkNotNull(pid);
+        Objects.requireNonNull(pid);
 
         try {
             CDS contentService = CDS.getInstance(getApplicationContext());

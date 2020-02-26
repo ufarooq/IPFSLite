@@ -12,12 +12,10 @@ import threads.server.core.threads.Thread;
 import threads.server.work.DownloadContentWorker;
 import threads.server.work.DownloadThreadWorker;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class WorkerService {
 
     public static void cancelThreadDownload(@NonNull Context context, long idx) {
-        checkNotNull(context);
+
 
         THREADS.getInstance(context).resetThreadLeaching(idx);
         WorkManager.getInstance(context).cancelUniqueWork(
@@ -34,7 +32,7 @@ public class WorkerService {
 
 
     public static void markThreadDownload(@NonNull Context context, long idx) {
-        checkNotNull(context);
+
         THREADS.getInstance(context).setThreadLeaching(idx);
 
         List<Thread> threadList = THREADS.getInstance(context).getChildren(idx);

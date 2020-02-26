@@ -1,6 +1,7 @@
 package threads.server.fragments;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -62,8 +63,6 @@ import threads.server.utils.UsersViewAdapter;
 import threads.server.work.ConnectUserWorker;
 import threads.server.work.ConnectionWorker;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class PeersFragment extends Fragment implements
         SwipeRefreshLayout.OnRefreshListener, UsersViewAdapter.UsersViewAdapterListener {
 
@@ -86,7 +85,7 @@ public class PeersFragment extends Fragment implements
     private FloatingActionButton mMainFab;
 
     private static void checkUsers(@NonNull Context context) {
-        checkNotNull(context);
+
         try {
 
             PEERS peers = PEERS.getInstance(context);
@@ -138,7 +137,7 @@ public class PeersFragment extends Fragment implements
         mListener = (PeersFragment.ActionListener) mActivity;
         isTablet = getResources().getBoolean(R.bool.isTablet);
         PackageManager pm = mContext.getPackageManager();
-        hasCamera = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA);
+        hasCamera = pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
         run.set(true);
         peersOnlineStatus();
     }
@@ -320,7 +319,7 @@ public class PeersFragment extends Fragment implements
 
 
         UsersViewModel messagesViewModel = new ViewModelProvider(this).get(UsersViewModel.class);
-        messagesViewModel.getUsers().observe(this, (peers) -> {
+        messagesViewModel.getUsers().observe(getViewLifecycleOwner(), (peers) -> {
 
             try {
                 if (peers != null) {
@@ -494,10 +493,9 @@ public class PeersFragment extends Fragment implements
 
     }
 
+    @SuppressLint("RestrictedApi")
     @Override
     public void invokeGeneralAction(@NonNull User user, @NonNull View view) {
-        checkNotNull(user);
-        checkNotNull(view);
 
         try {
             boolean senderBlocked = user.isBlocked();
@@ -556,7 +554,7 @@ public class PeersFragment extends Fragment implements
 
     @Override
     public void invokeAbortDialing(@NonNull User user) {
-        checkNotNull(user);
+
         if (SystemClock.elapsedRealtime() - mLastClickTime < 500) {
             return;
         }
@@ -600,13 +598,10 @@ public class PeersFragment extends Fragment implements
     }
 
     private void clickUserDelete(@NonNull String pid) {
-        checkNotNull(pid);
-
         deleteUser(pid);
     }
 
     private void clickUserBlock(@NonNull String pid, boolean value) {
-        checkNotNull(pid);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -626,7 +621,7 @@ public class PeersFragment extends Fragment implements
     }
 
     private void clickUserInfo(@NonNull User user) {
-        checkNotNull(user);
+
         try {
             InfoDialogFragment.newInstance(user.getPid(),
                     getString(R.string.peer_id),
@@ -639,7 +634,6 @@ public class PeersFragment extends Fragment implements
     }
 
     private void connectUser(@NonNull String pid) {
-        checkNotNull(pid);
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
@@ -696,7 +690,7 @@ public class PeersFragment extends Fragment implements
         try {
             PackageManager pm = mActivity.getPackageManager();
 
-            if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA)) {
+            if (pm.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY)) {
                 IntentIntegrator integrator = IntentIntegrator.forSupportFragment(this);
                 integrator.setOrientationLocked(false);
                 integrator.initiateScan();
@@ -711,7 +705,6 @@ public class PeersFragment extends Fragment implements
 
 
     private void clickConnectPeer(@NonNull String pid) {
-        checkNotNull(pid);
 
         // CHECKED if pid is valid
         try {
@@ -748,7 +741,7 @@ public class PeersFragment extends Fragment implements
     }
 
     private void deleteUser(@NonNull String pid) {
-        checkNotNull(pid);
+
         try {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.submit(() -> PEERS.getInstance(mContext).removeUser(pid));

@@ -8,8 +8,6 @@ import java.util.Objects;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 
-import static androidx.core.util.Preconditions.checkNotNull;
-
 public class IPFSData {
     @NonNull
     private final String multihash;
@@ -17,8 +15,7 @@ public class IPFSData {
     private final IPFS ipfs;
 
     private IPFSData(@Nullable IPFS ipfs, @NonNull String multihash) {
-        checkNotNull(ipfs);
-        checkNotNull(multihash);
+
         this.ipfs = ipfs;
         this.multihash = multihash;
     }
