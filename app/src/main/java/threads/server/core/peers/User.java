@@ -143,12 +143,6 @@ public class User {
                 Objects.equals(publicKey, user.getPublicKey());
     }
 
-    @NonNull
-    public PID getPID() {
-        return PID.create(pid);
-    }
-
-
     @Nullable
     public String getAgent() {
         return agent;

@@ -11,8 +11,8 @@
         android:id="@+id/account_icon"
         android:layout_width="48dp"
         android:layout_height="48dp"
-        android:scaleType="center"
         android:layout_weight="0"
+        android:scaleType="center"
         tools:ignore="ContentDescription" />
 
     <TextView

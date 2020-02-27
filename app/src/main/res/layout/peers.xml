@@ -16,9 +16,9 @@
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_gravity="center"
-        android:scaleType="center"
         android:layout_weight="0"
         android:background="@android:color/transparent"
+        android:scaleType="center"
         tools:ignore="ContentDescription" />
 
     <TextView

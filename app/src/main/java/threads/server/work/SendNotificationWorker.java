@@ -110,8 +110,7 @@ public class SendNotificationWorker extends Worker {
             Objects.requireNonNull(host);
 
             EntityService entityService = EntityService.getInstance(getApplicationContext());
-            String address = AddressType.getAddress(
-                    PID.create(pid), AddressType.NOTIFICATION);
+            String address = AddressType.getAddress(pid);
 
             String publicKey = peers.getUserPublicKey(pid);
             boolean isLite = peers.getUserIsLite(pid);

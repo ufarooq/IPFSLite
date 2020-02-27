@@ -229,7 +229,7 @@ public class MainActivity extends AppCompatActivity implements
                 try {
                     PID pid = IPFS.getPID(this);
                     Objects.requireNonNull(pid);
-                    String address = AddressType.getAddress(pid, AddressType.NOTIFICATION);
+                    String address = AddressType.getAddress(pid.getPid());
                     Uri uri = Uri.parse(getAddressLink(address));
 
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
@@ -558,7 +558,7 @@ public class MainActivity extends AppCompatActivity implements
 
                     // cleanup of entries with same CID and hierarchy
                     List<Thread> sameEntries = threads.getThreadsByContentAndParent(cid, 0L);
-                    threads.removeThreads(ipfs, sameEntries);
+                    threads.removeThreads(sameEntries);
 
                     threads.setThreadName(idx, cid.getCid());
                     threads.setThreadContent(idx, cid);

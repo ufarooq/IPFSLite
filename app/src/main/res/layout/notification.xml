@@ -19,11 +19,11 @@
         android:id="@+id/action_turn_off"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:scaleType="center"
         android:layout_gravity="center"
         android:background="@android:color/transparent"
         android:clickable="true"
         android:focusable="true"
+        android:scaleType="center"
         android:src="@drawable/access_point_network_off"
         tools:ignore="ContentDescription" />
 </LinearLayout>

@@ -389,7 +389,7 @@ public class FileDocumentsProvider extends DocumentsProvider {
     }
 
     @NonNull
-    private File getContentFile(@NonNull CID cid) {
+    private File getContentFile(@NonNull CID cid) throws Exception {
 
         File file = new File(ipfs.getCacheDir(), cid.getCid());
         if (!file.exists()) {

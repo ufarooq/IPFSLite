@@ -75,7 +75,7 @@ public class LoadNotificationsWorker extends Worker {
             EntityService entityService = EntityService.getInstance(getApplicationContext());
             CDS contentService = CDS.getInstance(getApplicationContext());
 
-            String address = AddressType.getAddress(host, AddressType.NOTIFICATION);
+            String address = AddressType.getAddress(host.getPid());
             List<Entity> entities = entityService.loadEntities(getApplicationContext(), address);
 
             for (Entity entity : entities) {

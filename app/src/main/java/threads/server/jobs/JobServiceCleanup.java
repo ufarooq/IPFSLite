@@ -24,15 +24,13 @@ import threads.server.core.contents.Content;
 import threads.server.core.contents.ContentDatabase;
 import threads.server.services.LiteService;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 
 public class JobServiceCleanup extends JobService {
 
     private static final String TAG = JobServiceCleanup.class.getSimpleName();
 
     public static void cleanup(@NonNull Context context) {
-        checkNotNull(context);
+
         JobScheduler jobScheduler = (JobScheduler) context.getApplicationContext()
                 .getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler != null) {

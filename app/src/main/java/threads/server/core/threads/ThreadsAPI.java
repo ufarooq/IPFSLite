@@ -5,8 +5,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.google.common.collect.Iterables;
-
 import java.util.List;
 
 import threads.ipfs.CID;
@@ -151,10 +149,8 @@ public class ThreadsAPI {
     }
 
 
-    public void removeThreads(@NonNull IPFS ipfs, @NonNull List<Thread> threads) {
-
-        getThreadsDatabase().threadDao().removeThreads(
-                Iterables.toArray(threads, Thread.class));
+    public void removeThreads(@NonNull List<Thread> threads) {
+        getThreadsDatabase().threadDao().removeThreads(threads);
     }
 
 

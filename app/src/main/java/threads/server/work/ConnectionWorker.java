@@ -24,7 +24,6 @@ import threads.server.core.peers.User;
 
 public class ConnectionWorker extends Worker {
 
-
     @SuppressWarnings("SpellCheckingInspection")
     @NonNull
     private static final List<String> Bootstrap = new ArrayList<>(Arrays.asList(

@@ -82,6 +82,9 @@ public interface ThreadDao {
     @Delete
     void removeThreads(Thread... threads);
 
+    @Delete
+    void removeThreads(List<Thread> threads);
+
     @Query("UPDATE Thread SET publishing = 0 WHERE idx = :idx")
     void resetThreadPublishing(long idx);
 

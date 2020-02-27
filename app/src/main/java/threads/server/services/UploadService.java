@@ -261,7 +261,7 @@ public class UploadService extends Service {
 
                     // cleanup of entries with same CID and hierarchy
                     List<Thread> sameEntries = threads.getThreadsByContentAndParent(cid, 0L);
-                    threads.removeThreads(ipfs, sameEntries);
+                    threads.removeThreads(sameEntries);
 
 
                     threads.setThreadContent(idx, cid);

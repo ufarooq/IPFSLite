@@ -21,6 +21,7 @@ public class Content {
     @ColumnInfo(name = "timestamp")
     private long timestamp;
 
+    @SuppressWarnings("CanBeFinal")
     @ColumnInfo(name = "finished")
     private boolean finished;
 

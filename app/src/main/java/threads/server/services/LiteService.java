@@ -125,6 +125,7 @@ public class LiteService {
         editor.apply();
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     @NonNull
     public static LiteService getInstance(@NonNull Context context) {
         Objects.requireNonNull(context);
