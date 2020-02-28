@@ -86,9 +86,8 @@ public class UploadService extends Service {
     }
 
     @Nullable
-    public static CID getThumbnail(@NonNull Context context,
-                                   @NonNull Uri uri,
-                                   @NonNull String mimeType) {
+    private static CID getThumbnail(@NonNull Context context, @NonNull Uri uri,
+                                    @NonNull String mimeType) {
 
         CID cid = null;
         byte[] bytes = null;

@@ -46,13 +46,16 @@ public class EditPeerDialogFragment extends DialogFragment {
     private Context mContext;
     private FragmentActivity mActivity;
 
+    public static EditPeerDialogFragment newInstance() {
+        return new EditPeerDialogFragment();
+    }
+
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         mContext = context;
         mActivity = getActivity();
     }
-
 
     private void isValidMultihash(Dialog dialog) {
         if (dialog instanceof AlertDialog) {

@@ -171,7 +171,7 @@ public class LiteService {
 
                 peers.setUserDialing(user.getPid(), Network.isConnected(context));
 
-                ConnectionWorker.connect(context, false);
+                ConnectionWorker.connect(context, false);// TODO looks like a chain here
                 ConnectUserWorker.connect(context, user.getPid());
             } catch (Throwable e) {
                 Log.e(TAG, "" + e.getLocalizedMessage(), e);

@@ -14,14 +14,8 @@ public interface UserDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insertUsers(User... users);
 
-    @Query("DELETE FROM User")
-    void clear();
-
     @Query("SELECT * FROM User")
     List<User> getUsers();
-
-    @Query("SELECT * FROM User WHERE blocked = 0 AND lite = 1")
-    List<User> getNonBlockedLiteUsers();
 
     @Query("SELECT * FROM User WHERE blocked = 0 AND lite = 1")
     LiveData<List<User>> getLiveDataNonBlockedLiteUsers();

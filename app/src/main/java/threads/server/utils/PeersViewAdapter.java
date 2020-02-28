@@ -105,13 +105,9 @@ public class PeersViewAdapter extends RecyclerView.Adapter<PeersViewAdapter.View
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        // each data item is just a string in this case
-        final View view;
 
         ViewHolder(View v) {
             super(v);
-            view = v;
-
         }
     }
 

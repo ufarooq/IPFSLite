@@ -42,11 +42,11 @@ public class PEERS extends PeersAPI {
     }
 
 
-    public static class Builder {
+    static class Builder {
         UsersDatabase usersDatabase = null;
         PeersDatabase peersDatabase = null;
 
-        public PEERS build() {
+        PEERS build() {
 
             return new PEERS(this);
         }

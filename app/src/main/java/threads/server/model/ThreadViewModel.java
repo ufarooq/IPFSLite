@@ -35,7 +35,4 @@ public class ThreadViewModel extends AndroidViewModel {
         return threadsDatabase.threadDao().getLiveDataVisibleChildrenByQuery(thread, searchQuery);
     }
 
-    public LiveData<List<Thread>> getThreads() {
-        return threadsDatabase.threadDao().getLiveDataThreads();
-    }
 }

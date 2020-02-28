@@ -733,8 +733,8 @@ public class PeersFragment extends Fragment implements
 
     private void clickEditPeer() {
         try {
-            EditPeerDialogFragment editPeerDialogFragment = new EditPeerDialogFragment();
-            editPeerDialogFragment.show(getChildFragmentManager(), EditPeerDialogFragment.TAG);
+            EditPeerDialogFragment.newInstance().show(
+                    getChildFragmentManager(), EditPeerDialogFragment.TAG);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);
         }

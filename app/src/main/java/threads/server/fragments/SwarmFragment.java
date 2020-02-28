@@ -33,7 +33,7 @@ import threads.server.work.LoadPeersWorker;
 public class SwarmFragment extends Fragment implements
         SwipeRefreshLayout.OnRefreshListener, PeersViewAdapter.PeersViewAdapterListener {
 
-    public static final String TAG = SwarmFragment.class.getSimpleName();
+    private static final String TAG = SwarmFragment.class.getSimpleName();
     private static final int CLICK_OFFSET = 500;
     private PeersViewAdapter peersViewAdapter;
     private Context mContext;

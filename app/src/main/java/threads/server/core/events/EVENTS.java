@@ -52,7 +52,7 @@ public class EVENTS extends EventsAPI {
         threadError.start();
     }
 
-    public void permission(@NonNull String content) {
+    private void permission(@NonNull String content) {
 
         storeEvent(createEvent(PERMISSION, content));
     }

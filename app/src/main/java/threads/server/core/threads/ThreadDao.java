@@ -22,14 +22,8 @@ public interface ThreadDao {
     @Query("SELECT * FROM Thread")
     List<Thread> getThreads();
 
-    @Query("SELECT * FROM Thread")
-    LiveData<List<Thread>> getLiveDataThreads();
-
     @Query("SELECT * FROM Thread  WHERE pinned = 1 AND deleting = 0")
     LiveData<List<Thread>> getLiveDataPinnedThreads();
-
-    @Query("DELETE FROM Thread")
-    void clear();
 
     @Query("SELECT * FROM Thread WHERE pinned = :pinned")
     List<Thread> getThreadsByPinned(boolean pinned);

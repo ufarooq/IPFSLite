@@ -7,7 +7,11 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import org.iota.jota.utils.Constants;
+import org.iota.jota.utils.TrytesConverter;
+
 import threads.iota.EntityService;
+import threads.iota.IOTA;
 import threads.ipfs.ConnMgrConfig;
 import threads.ipfs.IPFS;
 import threads.ipfs.RoutingConfig;
@@ -50,6 +54,14 @@ public class InitApplication extends Application {
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putInt(TIMEOUT_KEY, timeout);
         editor.apply();
+    }
+
+    @NonNull
+    public static String getAddress(@NonNull String pid) {
+
+        String address = TrytesConverter.asciiToTrytes(pid);
+        return IOTA.addChecksum(address.substring(0, Constants.ADDRESS_LENGTH_WITHOUT_CHECKSUM));
+
     }
 
     public static void runUpdatesIfNecessary(@NonNull Context context) {

@@ -205,9 +205,7 @@ public class ThumbnailService {
             this.fileSize = fileSize;
         }
 
-        public static FileDetails create(@NonNull String fileName,
-                                         @NonNull String mimeType,
-                                         long fileSize) {
+        static FileDetails create(@NonNull String fileName, @NonNull String mimeType, long fileSize) {
             return new FileDetails(fileName, mimeType, fileSize);
         }
 

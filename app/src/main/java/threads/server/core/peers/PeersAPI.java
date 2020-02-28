@@ -33,6 +33,7 @@ public class PeersAPI {
     }
 
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isUserBlocked(@NonNull PID user) {
 
         return isUserBlocked(user.getPid());
@@ -55,13 +56,6 @@ public class PeersAPI {
 
         return Peer.createPeer(pid);
     }
-
-
-    @NonNull
-    public List<Peer> getPeers() {
-        return getPeersDatabase().peersDao().getPeers();
-    }
-
 
     public void storePeers(@NonNull List<Peer> peers) {
         getPeersDatabase().peersDao().insertPeers(peers);
@@ -104,10 +98,6 @@ public class PeersAPI {
         return getUsersDatabase().userDao().getUsers();
     }
 
-    @NonNull
-    public List<User> getNonBlockedLiteUsers() {
-        return getUsersDatabase().userDao().getNonBlockedLiteUsers();
-    }
 
     public void setUserConnected(@NonNull PID user) {
 

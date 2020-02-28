@@ -68,13 +68,6 @@ public class ThreadsAPI {
 
 
     @Nullable
-    public String getMimeType(@NonNull Thread thread) {
-
-        return getThreadsDatabase().threadDao().getMimeType(thread.getIdx());
-    }
-
-
-    @Nullable
     public String getThreadMimeType(long idx) {
         return getThreadsDatabase().threadDao().getMimeType(idx);
     }
@@ -151,11 +144,6 @@ public class ThreadsAPI {
 
     public void removeThreads(@NonNull List<Thread> threads) {
         getThreadsDatabase().threadDao().removeThreads(threads);
-    }
-
-
-    public List<Thread> getThreads() {
-        return getThreadsDatabase().threadDao().getThreads();
     }
 
     public long storeThread(@NonNull Thread thread) {

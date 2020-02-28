@@ -23,8 +23,8 @@ import threads.ipfs.Encryption;
 import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
 import threads.ipfs.PID;
+import threads.server.InitApplication;
 import threads.server.core.contents.CDS;
-import threads.server.core.peers.AddressType;
 import threads.server.core.peers.Content;
 import threads.server.services.LiteService;
 
@@ -75,7 +75,7 @@ public class LoadNotificationsWorker extends Worker {
             EntityService entityService = EntityService.getInstance(getApplicationContext());
             CDS contentService = CDS.getInstance(getApplicationContext());
 
-            String address = AddressType.getAddress(host.getPid());
+            String address = InitApplication.getAddress(host.getPid());
             List<Entity> entities = entityService.loadEntities(getApplicationContext(), address);
 
             for (Entity entity : entities) {
@@ -88,8 +88,6 @@ public class LoadNotificationsWorker extends Worker {
                     continue;
                 }
                 if (data != null) {
-
-                    IPFS ipfs = IPFS.getInstance(getApplicationContext());
 
                     if (data.containsKey(Content.PID) && data.containsKey(Content.CID)) {
                         try {

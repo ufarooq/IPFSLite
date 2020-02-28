@@ -45,7 +45,6 @@ import threads.ipfs.CID;
 import threads.ipfs.IPFS;
 import threads.ipfs.Multihash;
 import threads.ipfs.PID;
-import threads.server.core.peers.AddressType;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
 import threads.server.fragments.DontShowAgainFragmentDialog;
@@ -229,7 +228,7 @@ public class MainActivity extends AppCompatActivity implements
                 try {
                     PID pid = IPFS.getPID(this);
                     Objects.requireNonNull(pid);
-                    String address = AddressType.getAddress(pid.getPid());
+                    String address = InitApplication.getAddress(pid.getPid());
                     Uri uri = Uri.parse(getAddressLink(address));
 
                     Intent intent = new Intent(Intent.ACTION_VIEW, uri);
@@ -528,7 +527,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
 
-    public void storeText(@NonNull String text) {
+    private void storeText(@NonNull String text) {
 
         final THREADS threads = THREADS.getInstance(getApplicationContext());
         final IPFS ipfs = IPFS.getInstance(getApplicationContext());
@@ -616,8 +615,6 @@ public class MainActivity extends AppCompatActivity implements
                     UploadService.invoke(getApplicationContext(), Objects.requireNonNull(intentReader.getStream(i)));
                 }
             } else {
-                Uri uri = intentReader.getStream();
-                Objects.requireNonNull(uri);
                 String type = intentReader.getType();
                 if ("text/plain".equals(type)) {
                     CharSequence textObject = intentReader.getText();
@@ -642,6 +639,8 @@ public class MainActivity extends AppCompatActivity implements
                         storeText(html);
                     }
                 } else {
+                    Uri uri = intentReader.getStream();
+                    Objects.requireNonNull(uri);
                     UploadService.invoke(getApplicationContext(), uri);
                 }
             }

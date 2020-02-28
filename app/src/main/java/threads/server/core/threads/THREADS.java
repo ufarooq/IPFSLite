@@ -6,7 +6,7 @@ import androidx.annotation.NonNull;
 import androidx.room.Room;
 
 public class THREADS extends ThreadsAPI {
-    public static final String TAG = THREADS.class.getSimpleName();
+
     private static THREADS INSTANCE = null;
 
     private THREADS(final THREADS.Builder builder) {
@@ -39,11 +39,11 @@ public class THREADS extends ThreadsAPI {
     }
 
 
-    public static class Builder {
+    static class Builder {
 
         ThreadsDatabase threadsDatabase = null;
 
-        public THREADS build() {
+        THREADS build() {
 
             return new THREADS(this);
         }

@@ -22,9 +22,9 @@ import threads.iota.EntityService;
 import threads.ipfs.Encryption;
 import threads.ipfs.IPFS;
 import threads.ipfs.PID;
+import threads.server.InitApplication;
 import threads.server.R;
 import threads.server.core.events.EVENTS;
-import threads.server.core.peers.AddressType;
 import threads.server.core.peers.Content;
 import threads.server.core.peers.PEERS;
 import threads.server.core.peers.User;
@@ -110,7 +110,7 @@ public class SendNotificationWorker extends Worker {
             Objects.requireNonNull(host);
 
             EntityService entityService = EntityService.getInstance(getApplicationContext());
-            String address = AddressType.getAddress(pid);
+            String address = InitApplication.getAddress(pid);
 
             String publicKey = peers.getUserPublicKey(pid);
             boolean isLite = peers.getUserIsLite(pid);

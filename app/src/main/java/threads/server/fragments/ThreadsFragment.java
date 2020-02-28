@@ -1168,9 +1168,7 @@ public class ThreadsFragment extends Fragment implements
 
     private void clickEditMultihash() {
         try {
-            EditMultihashDialogFragment editMultihashDialogFragment =
-                    new EditMultihashDialogFragment();
-            editMultihashDialogFragment.show(getChildFragmentManager(),
+            EditMultihashDialogFragment.newInstance().show(getChildFragmentManager(),
                     EditMultihashDialogFragment.TAG);
         } catch (Throwable e) {
             Log.e(TAG, "" + e.getLocalizedMessage(), e);

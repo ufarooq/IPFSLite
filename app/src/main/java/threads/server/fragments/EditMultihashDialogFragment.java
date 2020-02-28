@@ -48,6 +48,10 @@ public class EditMultihashDialogFragment extends DialogFragment {
     private Context mContext;
     private FragmentActivity mActivity;
 
+    public static EditMultihashDialogFragment newInstance() {
+        return new EditMultihashDialogFragment();
+    }
+
     @Override
     public void onDetach() {
         super.onDetach();
@@ -61,7 +65,6 @@ public class EditMultihashDialogFragment extends DialogFragment {
         mContext = context;
         mActivity = getActivity();
     }
-
 
     @Override
     @NonNull
