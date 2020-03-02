@@ -43,7 +43,6 @@ import java.util.concurrent.Executors;
 import de.psdev.licensesdialog.LicensesDialogFragment;
 import threads.ipfs.CID;
 import threads.ipfs.IPFS;
-import threads.ipfs.Multihash;
 import threads.ipfs.PID;
 import threads.server.core.threads.THREADS;
 import threads.server.core.threads.Thread;
@@ -70,6 +69,7 @@ import threads.server.utils.PermissionAction;
 import threads.server.work.ConnectionWorker;
 import threads.server.work.LoadNotificationsWorker;
 import threads.server.work.LoadPeersWorker;
+import threads.server.work.SwarmConnectWorker;
 
 
 public class MainActivity extends AppCompatActivity implements
@@ -261,8 +261,6 @@ public class MainActivity extends AppCompatActivity implements
 
             PID host = IPFS.getPID(getApplicationContext());
 
-            IPFS ipfs = IPFS.getInstance(getApplicationContext());
-
             DiscoveryService discovery = DiscoveryService.getInstance();
             discovery.setOnServiceFoundListener((info) -> {
 
@@ -287,26 +285,10 @@ public class MainActivity extends AppCompatActivity implements
                                 connect = !Objects.equals(host.getPid(), serviceName);
                             }
                             if (connect) {
-
-                                // todo sometimes not working URGENT
-                                Multihash.fromBase58(serviceName);
-
-                                PID pid = PID.create(serviceName);
-                                if (!ipfs.isConnected(pid)) {
-
-                                    InetAddress inetAddress = serviceInfo.getHost();
-                                    String pre = "/ip4";
-                                    if (inetAddress instanceof Inet6Address) {
-                                        pre = "/ip6";
-                                    }
-                                    String multiAddress = pre + serviceInfo.getHost().toString() +
-                                            "/tcp/" + serviceInfo.getPort() + "/" +
-                                            IPFS.Style.p2p + "/" + pid.getPid();
-
-                                    int timeout = InitApplication.getConnectionTimeout(getApplicationContext());
-                                    ExecutorService executor = Executors.newSingleThreadExecutor();
-                                    executor.submit(() -> ipfs.swarmConnect(multiAddress, timeout));
-                                }
+                                InetAddress inetAddress = serviceInfo.getHost();
+                                SwarmConnectWorker.connect(getApplicationContext(),
+                                        serviceName, serviceInfo.getHost().toString(),
+                                        serviceInfo.getPort(), inetAddress instanceof Inet6Address);
                             }
                         } catch (Throwable e) {
                             Log.e(TAG, "" + e.getLocalizedMessage(), e);
@@ -334,9 +316,6 @@ public class MainActivity extends AppCompatActivity implements
 
         setSupportActionBar(mToolbar);
         mToolbar.setSubtitle(R.string.files);
-
-        // LITE service is necessary to start the daemon
-        LiteService.getInstance(getApplicationContext());
 
         mSelectionViewModel = new ViewModelProvider(this).get(SelectionViewModel.class);
 

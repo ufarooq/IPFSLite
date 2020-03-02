@@ -75,7 +75,7 @@ public class InitApplication extends Application {
                 // Experimental Features
                 IPFS.setQUICEnabled(context, true);
                 IPFS.setPreferTLS(context, true);
-
+                IPFS.setPubSubEnabled(context, false);
 
                 IPFS.setSwarmPort(context, 4001);
                 IPFS.setRoutingType(context, RoutingConfig.TypeEnum.dhtclient);

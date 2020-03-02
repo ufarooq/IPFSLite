@@ -59,9 +59,6 @@ public class JobServicePublisher extends JobService {
         executor.submit(() -> {
             long start = System.currentTimeMillis();
             try {
-                // LITE service is necessary to start the daemon
-                LiteService.getInstance(getApplicationContext());
-
 
                 THREADS threads = THREADS.getInstance(getApplicationContext());
                 List<Thread> list = threads.getPinnedThreads();

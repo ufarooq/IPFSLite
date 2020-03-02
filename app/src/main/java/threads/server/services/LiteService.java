@@ -16,7 +16,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import threads.ipfs.IPFS;
 import threads.ipfs.PID;
 import threads.server.R;
 import threads.server.core.events.EVENTS;
@@ -38,10 +37,7 @@ public class LiteService {
     private static final String AUTO_DOWNLOAD_KEY = "autoDownloadKey";
     private static final String SEND_NOTIFICATIONS_ENABLED_KEY = "sendNotificationKey";
     private static final String RECEIVE_NOTIFICATIONS_ENABLED_KEY = "receiveNotificationKey";
-    private static LiteService INSTANCE = null;
 
-    private LiteService() {
-    }
 
 
     public static boolean isAutoDownload(@NonNull Context context) {
@@ -123,24 +119,6 @@ public class LiteService {
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putBoolean(RECEIVE_NOTIFICATIONS_ENABLED_KEY, enable);
         editor.apply();
-    }
-
-    @SuppressWarnings("UnusedReturnValue")
-    @NonNull
-    public static LiteService getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
-        if (INSTANCE == null) {
-            synchronized (LiteService.class) {
-
-                if (INSTANCE == null) {
-                    INSTANCE = new LiteService();
-                    IPFS ipfs = IPFS.getInstance(context);
-                    ipfs.daemon("/go-ipfs/05.0-dev/lite", false);
-                }
-            }
-
-        }
-        return INSTANCE;
     }
 
 

@@ -120,7 +120,7 @@ dependencies {
     implementation 'threads.mobile:ipfs:0.4.8'
 
     // API (LICENSE done)
-    implementation 'threads.core:ipfs:0.6.1'
+    implementation 'threads.core:ipfs:0.6.2'
 
     // API (LICENSE done)
     implementation 'com.google.code.gson:gson:2.8.6'
