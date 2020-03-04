@@ -18,7 +18,7 @@ import threads.ipfs.RoutingConfig;
 import threads.server.jobs.JobServiceCleanup;
 import threads.server.jobs.JobServicePublisher;
 import threads.server.services.LiteService;
-import threads.server.utils.ProgressChannel;
+import threads.server.work.DownloadContentWorker;
 
 public class InitApplication extends Application {
     private static final String APP_KEY = "AppKey";
@@ -138,12 +138,10 @@ public class InitApplication extends Application {
         // periodic jobs
         JobServicePublisher.publish(getApplicationContext());
 
-        // todo the service calls rm functions
-        // todo also it calls LiteService
         JobServiceCleanup.cleanup(getApplicationContext());
 
 
-        ProgressChannel.createProgressChannel(getApplicationContext());
+        DownloadContentWorker.createChannel(getApplicationContext());
     }
 
 

@@ -39,7 +39,6 @@ public class LiteService {
     private static final String RECEIVE_NOTIFICATIONS_ENABLED_KEY = "receiveNotificationKey";
 
 
-
     public static boolean isAutoDownload(@NonNull Context context) {
         Objects.requireNonNull(context);
         SharedPreferences sharedPref = context.getSharedPreferences(
