@@ -42,11 +42,11 @@
     <string name="no_sharing_peers">Currently no IPFS Lite peers are available in your Peers list to share data with.</string>
     <string name="select_files">File Chooser</string>
     <string name="action_select_all">Select All</string>
-    <string name="auto_relay_support">Enable Auto Relay</string>
+    <string name="auto_relay_support" translatable="false">Enable Auto Relay</string>
     <string name="application_settings">Application Settings</string>
     <string name="general_settings">General Settings</string>
     <string name="no_activity_found_to_handle_uri">No application found which support this kind of file.</string>
-    <string name="action_scan_cid">Scan Content (CID)</string>
+    <string name="action_scan_cid" translatable="false">Scan Content (CID)</string>
     <string name="action_edit_cid">Edit Content (CID)</string>
     <string name="action_upload">Upload</string>
     <string name="connection_timeout">Connection Timeout %1$s[s]</string>
@@ -55,11 +55,11 @@
     <string name="permission_camera_denied">Permission camera denied</string>
 
 
-    <string name="dht_support">Enable DHT Routing</string>
-    <string name="prefer_tls">Prefer TLS</string>
-    <string name="experimental_settings">Experimental Settings</string>
+    <string name="dht_support" translatable="false">Enable DHT Routing</string>
+    <string name="prefer_tls" translatable="false">Prefer TLS</string>
+    <string name="experimental_settings" translatable="false">Experimental Settings</string>
     <string name="auto_nat_service_enabled">Enable Auto NAT Service</string>
-    <string name="relay_hop_enabled">Enable Relay Hop</string>
+    <string name="relay_hop_enabled" translatable="false">Enable Relay Hop</string>
     <string name="swarm_settings">Swarm Settings</string>
     <string name="config">Config</string>
     <string name="send_to">Send to</string>
@@ -80,7 +80,7 @@
     <br><strong>3. Public IP Address</strong>
     <br><br>In <strong>Publisher Service</strong> Settings additional behavioral adoptions can be made
     ]]></string>
-    <string name="publisher_service_settings">Publisher Service</string>
+    <string name="publisher_service_settings" translatable="false">Publisher Service</string>
     <string name="gateway">Gateway</string>
     <string name="support_automatic_download">Automatic Download</string>
     <string name="success_notification">Sending notification to peer \"%1$s\" [%2$s s]</string>

@@ -6,7 +6,7 @@
         android:id="@+id/action_mode_delete"
         android:icon="@drawable/delete"
         android:orderInCategory="5"
-        android:title="@string/action_delete"
+        android:title="@string/"
         android:visible="true"
         app:iconTint="?android:textColorSecondary"
         app:showAsAction="ifRoom" />

@@ -231,14 +231,14 @@ public class ThreadsViewAdapter extends RecyclerView.Adapter<ThreadsViewAdapter.
         String fileSize;
         long size = thread.getSize();
 
-        if (size < 1024) {
+        if (size < 1000) {
             fileSize = String.valueOf(size);
             return mContext.getString(R.string.link_format, dateInfo, fileSize);
-        } else if (size < 1024 * 1024) {
-            fileSize = String.valueOf((double) (size / 1024));
+        } else if (size < 1000 * 1000) {
+            fileSize = String.valueOf((double) (size / 1000));
             return mContext.getString(R.string.link_format_kb, dateInfo, fileSize);
         } else {
-            fileSize = String.valueOf((double) (size / (1024 * 1024)));
+            fileSize = String.valueOf((double) (size / (1000 * 1000)));
             return mContext.getString(R.string.link_format_mb, dateInfo, fileSize);
         }
     }
